@@ -215,16 +215,15 @@ public static class RefactoringTools
                 // Solution mode - full semantic analysis
                 var solution = await GetOrLoadSolution(solutionPath);
                 var document = GetDocumentByPath(solution, filePath);
-                if (document == null)
-                    return $"Error: File {filePath} not found in solution";
+                if (document != null)
+                    return await ExtractMethodWithSolution(document, selectionRange, methodName);
 
-                return await ExtractMethodWithSolution(document, selectionRange, methodName);
-            }
-            else
-            {
-                // Single file mode - direct syntax tree manipulation
+                // Fallback to single file mode when file isn't part of the solution
                 return await ExtractMethodSingleFile(filePath, selectionRange, methodName);
             }
+
+            // Single file mode - direct syntax tree manipulation
+            return await ExtractMethodSingleFile(filePath, selectionRange, methodName);
         }
         catch (Exception ex)
         {
@@ -394,16 +393,15 @@ public static class RefactoringTools
                 // Solution mode - full semantic analysis
                 var solution = await GetOrLoadSolution(solutionPath);
                 var document = GetDocumentByPath(solution, filePath);
-                if (document == null)
-                    return $"Error: File {filePath} not found in solution";
+                if (document != null)
+                    return await IntroduceFieldWithSolution(document, selectionRange, fieldName, accessModifier);
 
-                return await IntroduceFieldWithSolution(document, selectionRange, fieldName, accessModifier);
-            }
-            else
-            {
-                // Single file mode - direct syntax tree manipulation
+                // Fallback to single file mode when file isn't part of the solution
                 return await IntroduceFieldSingleFile(filePath, selectionRange, fieldName, accessModifier);
             }
+
+            // Single file mode - direct syntax tree manipulation
+            return await IntroduceFieldSingleFile(filePath, selectionRange, fieldName, accessModifier);
         }
         catch (Exception ex)
         {
@@ -552,16 +550,15 @@ public static class RefactoringTools
                 // Solution mode - full semantic analysis
                 var solution = await GetOrLoadSolution(solutionPath);
                 var document = GetDocumentByPath(solution, filePath);
-                if (document == null)
-                    return $"Error: File {filePath} not found in solution";
+                if (document != null)
+                    return await IntroduceVariableWithSolution(document, selectionRange, variableName);
 
-                return await IntroduceVariableWithSolution(document, selectionRange, variableName);
-            }
-            else
-            {
-                // Single file mode - direct syntax tree manipulation
+                // Fallback to single file mode when file isn't part of the solution
                 return await IntroduceVariableSingleFile(filePath, selectionRange, variableName);
             }
+
+            // Single file mode - direct syntax tree manipulation
+            return await IntroduceVariableSingleFile(filePath, selectionRange, variableName);
         }
         catch (Exception ex)
         {
@@ -699,16 +696,15 @@ public static class RefactoringTools
                 // Solution mode - full semantic analysis
                 var solution = await GetOrLoadSolution(solutionPath);
                 var document = GetDocumentByPath(solution, filePath);
-                if (document == null)
-                    return $"Error: File {filePath} not found in solution";
+                if (document != null)
+                    return await MakeFieldReadonlyWithSolution(document, fieldLine);
 
-                return await MakeFieldReadonlyWithSolution(document, fieldLine);
-            }
-            else
-            {
-                // Single file mode - direct syntax tree manipulation
+                // Fallback to single file mode when file isn't part of the solution
                 return await MakeFieldReadonlySingleFile(filePath, fieldLine);
             }
+
+            // Single file mode - direct syntax tree manipulation
+            return await MakeFieldReadonlySingleFile(filePath, fieldLine);
         }
         catch (Exception ex)
         {
@@ -1101,15 +1097,14 @@ public static class RefactoringTools
             {
                 var solution = await GetOrLoadSolution(solutionPath);
                 var document = GetDocumentByPath(solution, filePath);
-                if (document == null)
-                    return $"Error: File {filePath} not found in solution";
+                if (document != null)
+                    return await ConvertToStaticWithInstanceWithSolution(document, methodLine, instanceParameterName);
 
-                return await ConvertToStaticWithInstanceWithSolution(document, methodLine, instanceParameterName);
-            }
-            else
-            {
+                // Fallback to single file mode when file isn't part of the solution
                 return await ConvertToStaticWithInstanceSingleFile(filePath, methodLine, instanceParameterName);
             }
+
+            return await ConvertToStaticWithInstanceSingleFile(filePath, methodLine, instanceParameterName);
         }
         catch (Exception ex)
         {
@@ -1453,6 +1448,67 @@ public static class RefactoringTools
         return $"Successfully moved instance method to {targetClass} in {document.FilePath}";
     }
 
+    private static async Task<string> MoveInstanceMethodSingleFile(string filePath, int methodLine, string targetClass, string accessMemberName, string accessMemberType)
+    {
+        if (!File.Exists(filePath))
+            return $"Error: File {filePath} not found";
+
+        var sourceText = await File.ReadAllTextAsync(filePath);
+        var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
+        var syntaxRoot = await syntaxTree.GetRootAsync();
+        var textLines = SourceText.From(sourceText).Lines;
+
+        var method = syntaxRoot.DescendantNodes()
+            .OfType<MethodDeclarationSyntax>()
+            .FirstOrDefault(m => textLines.GetLineFromPosition(m.SpanStart).LineNumber + 1 == methodLine);
+        if (method == null)
+            return $"Error: No method found at line {methodLine}";
+
+        var originClass = method.Parent as ClassDeclarationSyntax;
+        if (originClass == null)
+            return $"Error: Method at line {methodLine} is not inside a class";
+
+        var targetClassDecl = syntaxRoot.DescendantNodes()
+            .OfType<ClassDeclarationSyntax>()
+            .FirstOrDefault(c => c.Identifier.ValueText == targetClass);
+        if (targetClassDecl == null)
+            return $"Error: Target class '{targetClass}' not found";
+
+        ClassDeclarationSyntax newOriginClass = originClass.RemoveNode(method, SyntaxRemoveOptions.KeepNoTrivia);
+
+        if (accessMemberType == "field")
+        {
+            var field = SyntaxFactory.FieldDeclaration(
+                    SyntaxFactory.VariableDeclaration(
+                        SyntaxFactory.ParseTypeName(targetClass),
+                        SyntaxFactory.SeparatedList(new[] { SyntaxFactory.VariableDeclarator(accessMemberName)
+                            .WithInitializer(SyntaxFactory.EqualsValueClause(
+                                SyntaxFactory.ObjectCreationExpression(SyntaxFactory.ParseTypeName(targetClass))
+                                    .WithArgumentList(SyntaxFactory.ArgumentList()))) }))
+                ).AddModifiers(SyntaxFactory.Token(SyntaxKind.PrivateKeyword));
+
+            newOriginClass = newOriginClass.AddMembers(field);
+        }
+        else if (accessMemberType == "property")
+        {
+            var prop = SyntaxFactory.PropertyDeclaration(SyntaxFactory.ParseTypeName(targetClass), accessMemberName)
+                .AddModifiers(SyntaxFactory.Token(SyntaxKind.PrivateKeyword))
+                .AddAccessorListAccessors(
+                    SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
+                    SyntaxFactory.AccessorDeclaration(SyntaxKind.SetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)));
+            newOriginClass = newOriginClass.AddMembers(prop);
+        }
+
+        var newTargetClass = targetClassDecl.AddMembers(method.WithLeadingTrivia());
+
+        var newRoot = syntaxRoot.ReplaceNode(originClass, newOriginClass).ReplaceNode(targetClassDecl, newTargetClass);
+        var workspace = new AdhocWorkspace();
+        var formatted = Formatter.Format(newRoot, workspace);
+        await File.WriteAllTextAsync(filePath, formatted.ToFullString());
+
+        return $"Successfully moved instance method to {targetClass} in {filePath} (single file mode)";
+    }
+
     [McpServerTool, Description("Move a static method to another class")]
     public static async Task<string> MoveStaticMethod(
         [Description("Path to the solution file (.sln)")] string solutionPath,
@@ -1474,17 +1530,20 @@ public static class RefactoringTools
         [Description("Type of access member (field, property, variable)")] string accessMemberType = "field",
         [Description("Path to the solution file (.sln)")] string? solutionPath = null)
     {
-        if (solutionPath == null)
-            return "Error: Solution path is required for moving instance methods";
-
         try
         {
-            var solution = await GetOrLoadSolution(solutionPath);
-            var document = GetDocumentByPath(solution, filePath);
-            if (document == null)
-                return $"Error: File {filePath} not found in solution";
+            if (solutionPath != null)
+            {
+                var solution = await GetOrLoadSolution(solutionPath);
+                var document = GetDocumentByPath(solution, filePath);
+                if (document != null)
+                    return await MoveInstanceMethodWithSolution(document, methodLine, targetClass, accessMemberName, accessMemberType);
 
-            return await MoveInstanceMethodWithSolution(document, methodLine, targetClass, accessMemberName, accessMemberType);
+                // Fallback to single file mode when file isn't part of the solution
+                return await MoveInstanceMethodSingleFile(filePath, methodLine, targetClass, accessMemberName, accessMemberType);
+            }
+
+            return await MoveInstanceMethodSingleFile(filePath, methodLine, targetClass, accessMemberName, accessMemberType);
         }
         catch (Exception ex)
         {
