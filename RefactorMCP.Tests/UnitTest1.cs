@@ -68,10 +68,10 @@ public class RefactoringToolsTests
 
         // Act
         var result = await RefactoringTools.ExtractMethod(
-            SolutionPath,
             testFile,
             "5:9-8:10", // The validation block in the test method
-            "ValidateInputs"
+            "ValidateInputs",
+            SolutionPath
         );
 
         // Assert
@@ -92,10 +92,10 @@ public class RefactoringToolsTests
 
         // Act
         var result = await RefactoringTools.ExtractMethod(
-            SolutionPath,
             ExampleFilePath,
             "invalid-range",
-            "TestMethod"
+            "TestMethod",
+            SolutionPath
         );
 
         // Assert
@@ -112,11 +112,11 @@ public class RefactoringToolsTests
 
         // Act
         var result = await RefactoringTools.IntroduceField(
-            SolutionPath,
             testFile,
             "4:16-4:58", // The Sum() / Count expression
             "_averageValue",
-            "private"
+            "private",
+            SolutionPath
         );
 
         // Assert
@@ -139,11 +139,11 @@ public class RefactoringToolsTests
 
         // Act
         var result = await RefactoringTools.IntroduceField(
-            SolutionPath,
             testFile,
             "4:16-4:58",
             "_publicField",
-            "public"
+            "public",
+            SolutionPath
         );
 
         // Assert
@@ -160,10 +160,10 @@ public class RefactoringToolsTests
 
         // Act
         var result = await RefactoringTools.IntroduceVariable(
-            SolutionPath,
             testFile,
             "4:50-4:65", // The value * 2 + 10 expression
-            "processedValue"
+            "processedValue",
+            SolutionPath
         );
 
         // Assert
@@ -185,9 +185,9 @@ public class RefactoringToolsTests
 
         // Act
         var result = await RefactoringTools.MakeFieldReadonly(
-            SolutionPath,
             testFile,
-            4 // Line with the field declaration
+            4,
+            SolutionPath
         );
 
         // Assert
@@ -208,9 +208,9 @@ public class RefactoringToolsTests
 
         // Act
         var result = await RefactoringTools.MakeFieldReadonly(
-            SolutionPath,
             testFile,
-            4 // Line with the field declaration
+            4,
+            SolutionPath
         );
 
         // Assert
@@ -225,9 +225,9 @@ public class RefactoringToolsTests
 
         // Act
         var result = await RefactoringTools.MakeFieldReadonly(
-            SolutionPath,
             ExampleFilePath,
-            999 // Non-existent line
+            999,
+            SolutionPath
         );
 
         // Assert
@@ -242,10 +242,10 @@ public class RefactoringToolsTests
 
         // Act
         var result = await RefactoringTools.ExtractMethod(
-            SolutionPath,
             "./NonExistent.cs",
             "1:1-2:2",
-            "TestMethod"
+            "TestMethod",
+            SolutionPath
         );
 
         // Assert
@@ -265,10 +265,10 @@ public class RefactoringToolsTests
 
         // Act
         var result = await RefactoringTools.ExtractMethod(
-            SolutionPath,
             ExampleFilePath,
             range,
-            methodName
+            methodName,
+            SolutionPath
         );
 
         // Assert
@@ -292,16 +292,61 @@ public class RefactoringToolsTests
 
             // Act
             var result = await RefactoringTools.IntroduceField(
-                SolutionPath,
                 modifierTestFile,
                 "4:16-4:58",
                 $"_{modifier}Field",
-                modifier
+                modifier,
+                SolutionPath
             );
 
             // Assert
             Assert.Contains($"Successfully introduced {modifier} field", result);
         }
+    }
+
+    [Fact]
+    public async Task ConvertToStaticWithInstance_ReturnsSuccess()
+    {
+        await RefactoringTools.LoadSolution(SolutionPath);
+        var testFile = Path.Combine(TestOutputPath, "ConvertToStaticInstance.cs");
+        await CreateTestFile(testFile, GetSampleCodeForConvertToStaticInstance());
+
+        var result = await RefactoringTools.ConvertToStaticWithInstance(
+            testFile,
+            6,
+            "instance",
+            SolutionPath
+        );
+
+        Assert.Contains("Successfully converted method to static with instance parameter", result);
+
+        var modified = await File.ReadAllTextAsync(testFile);
+        Assert.Contains("static", modified);
+        Assert.Contains("instance.prefix", modified);
+    }
+
+    [Fact]
+    public async Task MoveInstanceMethod_ReturnsSuccess()
+    {
+        await RefactoringTools.LoadSolution(SolutionPath);
+        var testFile = Path.Combine(TestOutputPath, "MoveInstanceMethod.cs");
+        await CreateTestFile(testFile, GetSampleCodeForMoveInstanceMethod());
+
+        var result = await RefactoringTools.MoveInstanceMethod(
+            testFile,
+            5,
+            "Logger",
+            "_logger",
+            "field",
+            SolutionPath
+        );
+
+        Assert.Contains("Successfully moved instance method", result);
+
+        var modified = await File.ReadAllTextAsync(testFile);
+        Assert.Contains("_logger", modified);
+        Assert.Contains("class Logger", modified);
+        Assert.Contains("public void LogOperation", modified);
     }
 
     // Helper methods to create test files
@@ -380,11 +425,43 @@ using System;
 public class TestClass
 {
     private string format;
-    
+
     public TestClass()
     {
         // Constructor exists
     }
+}
+""";
+    }
+
+    private static string GetSampleCodeForConvertToStaticInstance()
+    {
+        return """
+using System;
+public class TestClass
+{
+    private string prefix = "P";
+    public string Format(int value)
+    {
+        return prefix + value;
+    }
+}
+""";
+    }
+
+    private static string GetSampleCodeForMoveInstanceMethod()
+    {
+        return """
+using System;
+public class Calculator
+{
+    public void LogOperation(string operation)
+    {
+        Console.WriteLine($"[{DateTime.Now}] {operation}");
+    }
+}
+public class Logger
+{
 }
 """;
     }
