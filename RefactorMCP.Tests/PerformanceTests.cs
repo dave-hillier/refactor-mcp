@@ -71,10 +71,10 @@ public class PerformanceTests
 
         // Act
         var result = await RefactoringTools.ExtractMethod(
-            SolutionPath,
             testFile,
             "10:9-13:10", // Extract a validation block
-            "ValidateInputs"
+            "ValidateInputs",
+            SolutionPath
         );
 
         // Assert
