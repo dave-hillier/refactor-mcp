@@ -1,0 +1,355 @@
+# RefactorMCP
+
+A Model Context Protocol (MCP) server providing automated refactoring tools for C# code transformation using Roslyn.
+
+## Features
+
+- **Solution Mode**: Full semantic analysis with cross-project dependencies
+- **Single File Mode**: Fast refactoring for simple transformations without solution loading
+- **Comprehensive Refactoring Tools**: Extract methods, introduce variables/fields, make fields readonly, and more
+- **MCP Compatible**: Works with any MCP-compatible client
+
+## Solution Mode vs Single File Mode
+
+### Solution Mode (Recommended)
+```bash
+# Full semantic analysis with type information
+extract-method ./MyFile.cs "10:5-15:20" "ExtractedMethod" ./MySolution.sln
+```
+
+Benefits:
+- ✅ Accurate type information
+- ✅ Cross-project analysis  
+- ✅ Full dependency resolution
+- ✅ Semantic validation
+
+### Single File Mode
+```bash
+# Fast refactoring without solution loading  
+extract-method ./MyFile.cs "10:5-15:20" "ExtractedMethod"
+```
+
+Benefits:
+- ✅ Faster execution
+- ✅ No solution file required
+- ✅ Works with standalone files
+- ❌ Limited type analysis (uses 'var')
+- ❌ No cross-file validation
+
+**Single file mode is suitable for:**
+- Extract Method (within same class)
+- Introduce Variable/Field (local scope)
+- Make Field Readonly (single file)
+- Basic syntax transformations
+
+**Use solution mode for:**
+- Move Method operations
+- Convert to Static (requires dependency analysis)  
+- Safe Delete (requires usage analysis)
+- Any refactoring requiring cross-references
+
+## Installation
+
+```bash
+git clone https://github.com/yourusername/RefactorMCP.git
+cd RefactorMCP
+dotnet build
+```
+
+## Usage
+
+### Command Line Testing
+
+## Technology Stack
+
+- **Microsoft.CodeAnalysis.CSharp** (4.14.0) - C# syntax analysis
+- **Microsoft.CodeAnalysis.CSharp.Workspaces** (4.14.0) - Workspace management
+- **Microsoft.CodeAnalysis.Workspaces.MSBuild** (4.14.0) - Solution loading
+- **ModelContextProtocol** (0.2.0-preview.3) - MCP server implementation
+
+## MCP Configuration
+
+To use RefactorMCP with MCP-compatible clients (like Claude Desktop, Continue, or other AI assistants), add it to your `mcp.json` configuration file.
+
+### Location of mcp.json
+
+The `mcp.json` file location depends on your operating system:
+
+- **macOS**: `~/Library/Application Support/Claude/mcp.json`
+- **Windows**: `%APPDATA%\Claude\mcp.json`
+- **Linux**: `~/.config/claude/mcp.json`
+
+### Configuration Format
+
+Add the following configuration to your `mcp.json` file:
+
+```json
+{
+  "mcpServers": {
+    "refactor-mcp": {
+      "command": "dotnet",
+      "args": [
+        "run"
+      ],
+      "cwd": "/Users/davidhillier/repos/RefactorMCP/RefactorMCP.ConsoleApp"
+    }
+  }
+}
+```
+
+### Example Configuration
+
+Replace the paths with your actual installation directory:
+
+```json
+{
+  "mcpServers": {
+    "refactor-mcp": {
+      "command": "dotnet",
+      "args": [
+        "run",
+        "--project",
+        "/Users/username/repos/RefactorMCP/RefactorMCP.ConsoleApp"
+      ],
+      "cwd": "/Users/username/repos/RefactorMCP"
+    }
+  }
+}
+```
+
+### Alternative: Using Published Binary
+
+If you prefer to publish the application as a standalone executable:
+
+1. **Publish the application**:
+   ```bash
+   dotnet publish RefactorMCP.ConsoleApp -c Release -o ./publish
+   ```
+
+2. **Update mcp.json to use the executable**:
+   ```json
+   {
+     "mcpServers": {
+       "refactor-mcp": {
+         "command": "/absolute/path/to/RefactorMCP/publish/RefactorMCP.ConsoleApp"
+       }
+     }
+   }
+   ```
+
+### Verification
+
+After configuring, restart your MCP client. The RefactorMCP tools should be available with the following capabilities:
+
+- `extract_method` - Extract code blocks into new methods
+- `introduce_field` - Create fields from expressions
+- `introduce_variable` - Create variables from expressions
+- `make_field_readonly` - Convert fields to readonly
+- `convert_to_static` - Transform methods to static
+- `move_method` - Relocate methods between classes
+- `safe_delete` - Remove unused code safely
+- `transform_property` - Convert setters to init-only
+
+## Usage
+
+### MCP Server Mode (Default)
+
+Run as an MCP server for integration with AI assistants:
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp
+```
+
+### Test Mode (CLI)
+
+Use the `--test` flag for direct command-line testing:
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --test <command> [arguments]
+```
+
+#### Available Test Commands
+
+- `list-tools` - Show all available refactoring tools
+- `load-solution <solutionPath>` - Load a solution file
+- `extract-method <solutionPath> <filePath> <range> <methodName>` - Extract code into method
+- `introduce-field <solutionPath> <filePath> <range> <fieldName> [accessModifier]` - Create field from expression
+- `introduce-variable <solutionPath> <filePath> <range> <variableName>` - Create variable from expression
+- `make-field-readonly <solutionPath> <filePath> <fieldLine>` - Make field readonly
+
+#### Quick Start Example
+
+```bash
+# List available tools
+dotnet run --project RefactorMCP.ConsoleApp -- --test list-tools
+
+# Load a solution
+dotnet run --project RefactorMCP.ConsoleApp -- --test load-solution ./RefactorMCP.sln
+
+# Extract a method (example range)
+dotnet run --project RefactorMCP.ConsoleApp -- --test extract-method \
+  "./RefactorMCP.sln" \
+  "./RefactorMCP.Tests/ExampleCode.cs" \
+  "22:9-25:34" \
+  "ValidateInputs"
+```
+
+## Range Format
+
+Code selections use the format: `"startLine:startColumn-endLine:endColumn"`
+
+- **1-based indexing** (first line/column = 1)
+- **Inclusive ranges** (includes start and end positions)
+- **Character counting** includes spaces and tabs
+
+Example: `"10:5-15:20"` selects from line 10, column 5 to line 15, column 20.
+
+## Examples
+
+### 1. Extract Method
+
+**Before**:
+```csharp
+public int Calculate(int a, int b)
+{
+    if (a < 0 || b < 0)
+    {
+        throw new ArgumentException("Negative numbers not allowed");
+    }
+    
+    var result = a + b;
+    return result;
+}
+```
+
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --test extract-method \
+  "./RefactorMCP.sln" "./MyFile.cs" "3:5-6:6" "ValidateInputs"
+```
+
+**After**:
+```csharp
+public int Calculate(int a, int b)
+{
+    ValidateInputs();
+    
+    var result = a + b;
+    return result;
+}
+
+private void ValidateInputs()
+{
+    if (a < 0 || b < 0)
+    {
+        throw new ArgumentException("Negative numbers not allowed");
+    }
+}
+```
+
+### 2. Introduce Field
+
+**Before**:
+```csharp
+public double GetAverage()
+{
+    return numbers.Sum() / (double)numbers.Count;
+}
+```
+
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --test introduce-field \
+  "./RefactorMCP.sln" "./MyFile.cs" "3:12-3:54" "_averageValue" "private"
+```
+
+**After**:
+```csharp
+private double _averageValue = numbers.Sum() / (double)numbers.Count;
+
+public double GetAverage()
+{
+    return _averageValue;
+}
+```
+
+## Complete Examples
+
+See [EXAMPLES.md](./EXAMPLES.md) for comprehensive examples of all refactoring tools, including:
+
+- Detailed before/after code samples
+- Exact command-line usage
+- Range calculation guides
+- Error handling tips
+- Advanced usage patterns
+
+The examples use the sample code in [RefactorMCP.Tests/ExampleCode.cs](./RefactorMCP.Tests/ExampleCode.cs).
+
+## Architecture
+
+### Core Components
+
+- **MSBuildWorkspace**: Loads and manages solution/project files
+- **Roslyn SyntaxTree**: Analyzes and manipulates C# code structure
+- **SemanticModel**: Provides type information and symbol resolution
+- **Formatter**: Ensures consistent code formatting after transformations
+
+### Refactoring Pipeline
+
+1. **Load Solution**: Parse .sln file and create workspace
+2. **Find Document**: Locate target file within the solution
+3. **Parse Selection**: Convert range format to syntax tree positions
+4. **Analyze Code**: Use semantic model for type and dependency analysis
+5. **Transform Syntax**: Apply refactoring using Roslyn APIs
+6. **Format Output**: Apply consistent formatting
+7. **Write Changes**: Save transformed code back to file
+
+## Development
+
+### Adding New Refactorings
+
+1. Add method to `RefactoringTools` class with `[McpServerTool]` attribute
+2. Implement using Roslyn SyntaxFactory and SyntaxNode manipulation
+3. Add test command handler in `RunTestMode` switch statement
+4. Update documentation and examples
+
+### Testing
+
+```bash
+# Run existing tests
+dotnet test
+
+# Test specific refactoring tool
+dotnet run --project RefactorMCP.ConsoleApp -- --test <tool-name> [args]
+
+# Load test solution for debugging
+dotnet run --project RefactorMCP.ConsoleApp -- --test load-solution ./RefactorMCP.sln
+```
+
+## Error Handling
+
+Common error scenarios and solutions:
+
+- **File not found**: Ensure file paths are relative to solution directory
+- **Invalid range**: Check 1-based line/column indexing
+- **No extractable code**: Verify selection contains valid statements/expressions
+- **Solution load failure**: Check .sln file path and project references
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Add tests for new functionality
+4. Update documentation and examples
+5. Submit a pull request
+
+## License
+
+[Add your license information here]
+
+## Support
+
+For issues and questions:
+- Check [EXAMPLES.md](./EXAMPLES.md) for usage guidance
+- Review error messages for specific guidance
+- Test with simple cases before complex refactorings 
