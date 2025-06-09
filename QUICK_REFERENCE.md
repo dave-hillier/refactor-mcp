@@ -1,0 +1,118 @@
+# RefactorMCP Quick Reference
+
+## Basic Commands
+
+```bash
+# Help
+dotnet run --project RefactorMCP.ConsoleApp -- --test
+
+# List all tools
+dotnet run --project RefactorMCP.ConsoleApp -- --test list-tools
+
+# Load solution (always do this first)
+dotnet run --project RefactorMCP.ConsoleApp -- --test load-solution ./RefactorMCP.sln
+```
+
+## Refactoring Commands
+
+### Extract Method
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --test extract-method \
+  "./RefactorMCP.sln" \
+  "./path/to/file.cs" \
+  "startLine:startCol-endLine:endCol" \
+  "MethodName"
+```
+
+### Introduce Field
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --test introduce-field \
+  "./RefactorMCP.sln" \
+  "./path/to/file.cs" \
+  "startLine:startCol-endLine:endCol" \
+  "fieldName" \
+  "private"
+```
+
+### Introduce Variable
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --test introduce-variable \
+  "./RefactorMCP.sln" \
+  "./path/to/file.cs" \
+  "startLine:startCol-endLine:endCol" \
+  "variableName"
+```
+
+### Make Field Readonly
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --test make-field-readonly \
+  "./RefactorMCP.sln" \
+  "./path/to/file.cs" \
+  lineNumber
+```
+
+## Range Format
+
+`"startLine:startColumn-endLine:endColumn"`
+
+- **1-based indexing** (first line = 1, first column = 1)
+- **Inclusive ranges** (includes both start and end)
+- **Count all characters** including spaces and tabs
+
+## Example File
+
+Test with: `./RefactorMCP.Tests/ExampleCode.cs`
+
+```csharp
+// Line 22-25: Extract Method example
+if (a < 0 || b < 0)
+{
+    throw new ArgumentException("Negative numbers not allowed");
+}
+
+// Line 35: Introduce Field example  
+return numbers.Sum() / (double)numbers.Count;
+
+// Line 41: Introduce Variable example
+return $"The calculation result is: {value * 2 + 10}";
+
+// Line 50: Make Field Readonly example
+private string format = "Currency";
+```
+
+## Quick Test Examples
+
+```bash
+# Extract validation logic into method
+dotnet run --project RefactorMCP.ConsoleApp -- --test extract-method \
+  "./RefactorMCP.sln" "./RefactorMCP.Tests/ExampleCode.cs" "22:9-25:10" "ValidateInputs"
+
+# Create field from calculation
+dotnet run --project RefactorMCP.ConsoleApp -- --test introduce-field \
+  "./RefactorMCP.sln" "./RefactorMCP.Tests/ExampleCode.cs" "35:16-35:58" "_averageValue" "private"
+
+# Extract complex expression to variable
+dotnet run --project RefactorMCP.ConsoleApp -- --test introduce-variable \
+  "./RefactorMCP.sln" "./RefactorMCP.Tests/ExampleCode.cs" "41:50-41:65" "processedValue"
+
+# Make format field readonly
+dotnet run --project RefactorMCP.ConsoleApp -- --test make-field-readonly \
+  "./RefactorMCP.sln" "./RefactorMCP.Tests/ExampleCode.cs" 50
+```
+
+## Common Errors
+
+| Error | Solution |
+|-------|----------|
+| File not found | Check file path relative to solution |
+| Invalid range | Verify 1-based line:column format |
+| No extractable code | Select complete statements/expressions |
+| Solution not loaded | Run load-solution command first |
+
+## Tips
+
+1. **Always load solution first**
+2. **Use exact paths** relative to solution directory  
+3. **Count carefully** for range coordinates
+4. **Test simple cases** before complex ones
+5. **Backup code** before refactoring 
