@@ -898,6 +898,91 @@ public static class RefactoringTools
         return $"Field at line {fieldLine} made readonly, but no constructors found for initialization";
     }
 
+    private static async Task<string> IntroduceParameterWithSolution(Document document, int methodLine, string selectionRange, string parameterName)
+    {
+        var sourceText = await document.GetTextAsync();
+        var syntaxRoot = await document.GetSyntaxRootAsync();
+        var textLines = sourceText.Lines;
+
+        var method = syntaxRoot!.DescendantNodes()
+            .OfType<MethodDeclarationSyntax>()
+            .FirstOrDefault(m => textLines.GetLineFromPosition(m.SpanStart).LineNumber + 1 == methodLine);
+        if (method == null)
+            return $"Error: No method found at line {methodLine}";
+
+        if (!TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
+            return "Error: Invalid selection range format";
+
+        var startPosition = textLines[startLine - 1].Start + startColumn - 1;
+        var endPosition = textLines[endLine - 1].Start + endColumn - 1;
+        var span = TextSpan.FromBounds(startPosition, endPosition);
+
+        var selectedExpression = syntaxRoot.DescendantNodes(span).OfType<ExpressionSyntax>().FirstOrDefault();
+        if (selectedExpression == null)
+            return "Error: Selected code is not a valid expression";
+
+        var semanticModel = await document.GetSemanticModelAsync();
+        var typeInfo = semanticModel!.GetTypeInfo(selectedExpression);
+        var typeName = typeInfo.Type?.ToDisplayString() ?? "object";
+
+        var parameter = SyntaxFactory.Parameter(SyntaxFactory.Identifier(parameterName))
+            .WithType(SyntaxFactory.ParseTypeName(typeName));
+        var newMethod = method.AddParameterListParameters(parameter);
+
+        var newRoot = syntaxRoot.ReplaceNode(method, newMethod);
+        newRoot = newRoot.ReplaceNode(selectedExpression, SyntaxFactory.IdentifierName(parameterName));
+
+        var formattedRoot = Formatter.Format(newRoot, document.Project.Solution.Workspace);
+        var newDocument = document.WithSyntaxRoot(formattedRoot);
+        var newText = await newDocument.GetTextAsync();
+        await File.WriteAllTextAsync(document.FilePath!, newText.ToString());
+
+        return $"Successfully introduced parameter '{parameterName}' from {selectionRange} in method at line {methodLine} in {document.FilePath} (solution mode)";
+    }
+
+    private static async Task<string> IntroduceParameterSingleFile(string filePath, int methodLine, string selectionRange, string parameterName)
+    {
+        if (!File.Exists(filePath))
+            return $"Error: File {filePath} not found";
+
+        var sourceText = await File.ReadAllTextAsync(filePath);
+        var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
+        var syntaxRoot = await syntaxTree.GetRootAsync();
+        var textLines = SourceText.From(sourceText).Lines;
+
+        var method = syntaxRoot.DescendantNodes()
+            .OfType<MethodDeclarationSyntax>()
+            .FirstOrDefault(m => textLines.GetLineFromPosition(m.SpanStart).LineNumber + 1 == methodLine);
+        if (method == null)
+            return $"Error: No method found at line {methodLine}";
+
+        if (!TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
+            return "Error: Invalid selection range format";
+
+        var startPosition = textLines[startLine - 1].Start + startColumn - 1;
+        var endPosition = textLines[endLine - 1].Start + endColumn - 1;
+        var span = TextSpan.FromBounds(startPosition, endPosition);
+
+        var selectedExpression = syntaxRoot.DescendantNodes()
+            .OfType<ExpressionSyntax>()
+            .FirstOrDefault(e => span.Contains(e.Span) || e.Span.Contains(span));
+        if (selectedExpression == null)
+            return "Error: Selected code is not a valid expression";
+
+        var parameter = SyntaxFactory.Parameter(SyntaxFactory.Identifier(parameterName))
+            .WithType(SyntaxFactory.ParseTypeName("object"));
+        var newMethod = method.AddParameterListParameters(parameter);
+
+        var newRoot = syntaxRoot.ReplaceNode(method, newMethod);
+        newRoot = newRoot.ReplaceNode(selectedExpression, SyntaxFactory.IdentifierName(parameterName));
+
+        var workspace = new AdhocWorkspace();
+        var formattedRoot = Formatter.Format(newRoot, workspace);
+        await File.WriteAllTextAsync(filePath, formattedRoot.ToFullString());
+
+        return $"Successfully introduced parameter '{parameterName}' from {selectionRange} in method at line {methodLine} in {filePath} (single file mode)";
+    }
+
     // Helper methods
     private static async Task<Solution> GetOrLoadSolution(string solutionPath)
     {
@@ -947,35 +1032,425 @@ public static class RefactoringTools
     // Placeholder implementations for remaining tools
     [McpServerTool, Description("Create a new parameter from selected code")]
     public static async Task<string> IntroduceParameter(
-        [Description("Path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Line number of the method to add parameter to")] int methodLine,
         [Description("Range in format 'startLine:startColumn-endLine:endColumn'")] string selectionRange,
-        [Description("Name for the new parameter")] string parameterName)
+        [Description("Name for the new parameter")] string parameterName,
+        [Description("Path to the solution file (.sln) - optional for single file mode")] string? solutionPath = null)
     {
-        // TODO: Implement introduce parameter refactoring using Roslyn
-        return $"Introduce parameter '{parameterName}' from {selectionRange} in method at line {methodLine} in {filePath} - Implementation in progress";
+        try
+        {
+            if (solutionPath != null)
+            {
+                var solution = await GetOrLoadSolution(solutionPath);
+                var document = GetDocumentByPath(solution, filePath);
+                if (document == null)
+                    return $"Error: File {filePath} not found in solution";
+
+                return await IntroduceParameterWithSolution(document, methodLine, selectionRange, parameterName);
+            }
+            else
+            {
+                return await IntroduceParameterSingleFile(filePath, methodLine, selectionRange, parameterName);
+            }
+        }
+        catch (Exception ex)
+        {
+            return $"Error introducing parameter: {ex.Message}";
+        }
     }
 
     [McpServerTool, Description("Transform instance method to static by converting dependencies to parameters")]
     public static async Task<string> ConvertToStaticWithParameters(
-        [Description("Path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
-        [Description("Line number of the method to convert")] int methodLine)
+        [Description("Line number of the method to convert")] int methodLine,
+        [Description("Path to the solution file (.sln) - optional for single file mode")] string? solutionPath = null)
     {
-        // TODO: Implement convert to static with parameters refactoring using Roslyn
-        return $"Convert method at line {methodLine} to static with parameters in {filePath} - Implementation in progress";
+        try
+        {
+            if (solutionPath != null)
+            {
+                var solution = await GetOrLoadSolution(solutionPath);
+                var document = GetDocumentByPath(solution, filePath);
+                if (document == null)
+                    return $"Error: File {filePath} not found in solution"; 
+
+                return await ConvertToStaticWithParametersWithSolution(document, methodLine);
+            }
+            else
+            {
+                return await ConvertToStaticWithParametersSingleFile(filePath, methodLine);
+            }
+        }
+        catch (Exception ex)
+        {
+            return $"Error converting method to static: {ex.Message}";
+        }
     }
 
     [McpServerTool, Description("Transform instance method to static by adding instance parameter")]
     public static async Task<string> ConvertToStaticWithInstance(
-        [Description("Path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Line number of the method to convert")] int methodLine,
-        [Description("Name for the instance parameter")] string instanceParameterName = "instance")
+        [Description("Name for the instance parameter")] string instanceParameterName = "instance",
+        [Description("Path to the solution file (.sln) - optional for single file mode")] string? solutionPath = null)
     {
-        // TODO: Implement convert to static with instance parameter refactoring using Roslyn
-        return $"Convert method at line {methodLine} to static with instance parameter '{instanceParameterName}' in {filePath} - Implementation in progress";
+        try
+        {
+            if (solutionPath != null)
+            {
+                var solution = await GetOrLoadSolution(solutionPath);
+                var document = GetDocumentByPath(solution, filePath);
+                if (document == null)
+                    return $"Error: File {filePath} not found in solution";
+
+                return await ConvertToStaticWithInstanceWithSolution(document, methodLine, instanceParameterName);
+            }
+            else
+            {
+                return await ConvertToStaticWithInstanceSingleFile(filePath, methodLine, instanceParameterName);
+            }
+        }
+        catch (Exception ex)
+        {
+            return $"Error converting method to static: {ex.Message}";
+        }
+    }
+
+    private static async Task<string> ConvertToStaticWithParametersWithSolution(Document document, int methodLine)
+    {
+        var sourceText = await document.GetTextAsync();
+        var syntaxRoot = await document.GetSyntaxRootAsync();
+        var textLines = sourceText.Lines;
+
+        var method = syntaxRoot!.DescendantNodes()
+            .OfType<MethodDeclarationSyntax>()
+            .FirstOrDefault(m => textLines.GetLineFromPosition(m.SpanStart).LineNumber + 1 == methodLine);
+        if (method == null)
+            return $"Error: No method found at line {methodLine}";
+
+        var semanticModel = await document.GetSemanticModelAsync();
+        var typeDecl = method.Ancestors().OfType<TypeDeclarationSyntax>().FirstOrDefault();
+        if (typeDecl == null)
+            return $"Error: Method at line {methodLine} is not inside a type";
+
+        var typeSymbol = semanticModel!.GetDeclaredSymbol(typeDecl) as INamedTypeSymbol;
+        if (typeSymbol == null)
+            return $"Error: Unable to determine containing type";
+
+        var parameterList = method.ParameterList;
+        var paramMap = new Dictionary<ISymbol, string>();
+
+        foreach (var id in method.DescendantNodes().OfType<IdentifierNameSyntax>())
+        {
+            var symbol = semanticModel.GetSymbolInfo(id).Symbol;
+            if (symbol is IFieldSymbol or IPropertySymbol &&
+                SymbolEqualityComparer.Default.Equals(symbol.ContainingType, typeSymbol) &&
+                !symbol.IsStatic)
+            {
+                if (!paramMap.ContainsKey(symbol))
+                {
+                    var name = symbol.Name;
+                    if (parameterList.Parameters.Any(p => p.Identifier.ValueText == name))
+                        name += "Param";
+                    paramMap[symbol] = name;
+
+                    var typeName = symbol switch
+                    {
+                        IFieldSymbol f => f.Type.ToDisplayString(),
+                        IPropertySymbol p => p.Type.ToDisplayString(),
+                        _ => "object"
+                    };
+
+                    var param = SyntaxFactory.Parameter(SyntaxFactory.Identifier(name))
+                        .WithType(SyntaxFactory.ParseTypeName(typeName));
+                    parameterList = parameterList.AddParameters(param);
+                }
+            }
+        }
+
+        var updatedMethod = method.ReplaceNodes(
+            method.DescendantNodes().OfType<IdentifierNameSyntax>().Where(id =>
+            {
+                var sym = semanticModel.GetSymbolInfo(id).Symbol;
+                return sym != null && paramMap.ContainsKey(sym);
+            }),
+            (old, _) =>
+            {
+                var sym = semanticModel.GetSymbolInfo(old).Symbol!;
+                return SyntaxFactory.IdentifierName(paramMap[sym]);
+            });
+
+        var modifiers = updatedMethod.Modifiers;
+        if (!modifiers.Any(m => m.IsKind(SyntaxKind.StaticKeyword)))
+            modifiers = modifiers.Add(SyntaxFactory.Token(SyntaxKind.StaticKeyword));
+
+        updatedMethod = updatedMethod.WithModifiers(modifiers)
+            .WithParameterList(parameterList);
+
+        var newRoot = syntaxRoot.ReplaceNode(method, updatedMethod);
+        var formattedRoot = Formatter.Format(newRoot, document.Project.Solution.Workspace);
+        var newDocument = document.WithSyntaxRoot(formattedRoot);
+        var newText = await newDocument.GetTextAsync();
+        await File.WriteAllTextAsync(document.FilePath!, newText.ToString());
+
+        return $"Successfully converted method to static with parameters at line {methodLine} in {document.FilePath} (solution mode)";
+    }
+
+    private static async Task<string> ConvertToStaticWithParametersSingleFile(string filePath, int methodLine)
+    {
+        if (!File.Exists(filePath))
+            return $"Error: File {filePath} not found";
+
+        var sourceText = await File.ReadAllTextAsync(filePath);
+        var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
+        var syntaxRoot = await syntaxTree.GetRootAsync();
+        var textLines = SourceText.From(sourceText).Lines;
+
+        var method = syntaxRoot.DescendantNodes()
+            .OfType<MethodDeclarationSyntax>()
+            .FirstOrDefault(m => textLines.GetLineFromPosition(m.SpanStart).LineNumber + 1 == methodLine);
+        if (method == null)
+            return $"Error: No method found at line {methodLine}";
+
+        var classDecl = method.Ancestors().OfType<ClassDeclarationSyntax>().FirstOrDefault();
+        if (classDecl == null)
+            return $"Error: Method at line {methodLine} is not inside a class";
+
+        var instanceMembers = new Dictionary<string, string>();
+        foreach (var field in classDecl.Members.OfType<FieldDeclarationSyntax>())
+        {
+            if (field.Modifiers.Any(SyntaxKind.StaticKeyword)) continue;
+            var typeName = field.Declaration.Type.ToString();
+            foreach (var variable in field.Declaration.Variables)
+            {
+                instanceMembers[variable.Identifier.ValueText] = typeName;
+            }
+        }
+
+        foreach (var prop in classDecl.Members.OfType<PropertyDeclarationSyntax>())
+        {
+            if (prop.Modifiers.Any(SyntaxKind.StaticKeyword)) continue;
+            instanceMembers[prop.Identifier.ValueText] = prop.Type.ToString();
+        }
+
+        var usedMembers = method.DescendantNodes()
+            .OfType<IdentifierNameSyntax>()
+            .Where(id => instanceMembers.ContainsKey(id.Identifier.ValueText))
+            .Select(id => id.Identifier.ValueText)
+            .Distinct()
+            .ToList();
+
+        var parameterList = method.ParameterList;
+        var renameMap = new Dictionary<string, string>();
+        foreach (var name in usedMembers)
+        {
+            var paramName = name;
+            if (parameterList.Parameters.Any(p => p.Identifier.ValueText == paramName))
+                paramName += "Param";
+            renameMap[name] = paramName;
+            var param = SyntaxFactory.Parameter(SyntaxFactory.Identifier(paramName))
+                .WithType(SyntaxFactory.ParseTypeName(instanceMembers[name]));
+            parameterList = parameterList.AddParameters(param);
+        }
+
+        var updatedMethod = method.ReplaceNodes(
+            method.DescendantNodes().OfType<IdentifierNameSyntax>()
+                .Where(id => renameMap.ContainsKey(id.Identifier.ValueText)),
+            (old, _) => SyntaxFactory.IdentifierName(renameMap[old.Identifier.ValueText]));
+
+        var modifiers = updatedMethod.Modifiers;
+        if (!modifiers.Any(m => m.IsKind(SyntaxKind.StaticKeyword)))
+            modifiers = modifiers.Add(SyntaxFactory.Token(SyntaxKind.StaticKeyword));
+
+        updatedMethod = updatedMethod.WithModifiers(modifiers)
+            .WithParameterList(parameterList);
+
+        var newRoot = syntaxRoot.ReplaceNode(method, updatedMethod);
+        var workspace = new AdhocWorkspace();
+        var formattedRoot = Formatter.Format(newRoot, workspace);
+        await File.WriteAllTextAsync(filePath, formattedRoot.ToFullString());
+
+        return $"Successfully converted method to static with parameters at line {methodLine} in {filePath} (single file mode)";
+    }
+
+    private static async Task<string> ConvertToStaticWithInstanceWithSolution(Document document, int methodLine, string instanceParameterName)
+    {
+        var sourceText = await document.GetTextAsync();
+        var syntaxRoot = await document.GetSyntaxRootAsync();
+        var textLines = sourceText.Lines;
+
+        var method = syntaxRoot!.DescendantNodes()
+            .OfType<MethodDeclarationSyntax>()
+            .FirstOrDefault(m => textLines.GetLineFromPosition(m.SpanStart).LineNumber + 1 == methodLine);
+        if (method == null)
+            return $"Error: No method found at line {methodLine}";
+
+        var semanticModel = await document.GetSemanticModelAsync();
+        var typeDecl = method.Ancestors().OfType<TypeDeclarationSyntax>().FirstOrDefault();
+        if (typeDecl == null)
+            return $"Error: Method at line {methodLine} is not inside a type";
+
+        var typeSymbol = semanticModel!.GetDeclaredSymbol(typeDecl) as INamedTypeSymbol;
+        if (typeSymbol == null)
+            return $"Error: Unable to determine containing type";
+
+        var parameter = SyntaxFactory.Parameter(SyntaxFactory.Identifier(instanceParameterName))
+            .WithType(SyntaxFactory.ParseTypeName(typeSymbol.ToDisplayString()));
+
+        var updatedMethod = method.WithParameterList(method.ParameterList.AddParameters(parameter));
+
+        updatedMethod = updatedMethod.ReplaceNodes(
+            updatedMethod.DescendantNodes().OfType<ThisExpressionSyntax>(),
+            (_, _) => SyntaxFactory.IdentifierName(instanceParameterName));
+
+        updatedMethod = updatedMethod.ReplaceNodes(
+            updatedMethod.DescendantNodes().OfType<IdentifierNameSyntax>().Where(id =>
+            {
+                var sym = semanticModel.GetSymbolInfo(id).Symbol;
+                return sym is IFieldSymbol or IPropertySymbol or IMethodSymbol &&
+                       SymbolEqualityComparer.Default.Equals(sym.ContainingType, typeSymbol) &&
+                       !sym.IsStatic && id.Parent is not MemberAccessExpressionSyntax;
+            }),
+            (old, _) => SyntaxFactory.MemberAccessExpression(
+                SyntaxKind.SimpleMemberAccessExpression,
+                SyntaxFactory.IdentifierName(instanceParameterName),
+                SyntaxFactory.IdentifierName(old.Identifier)));
+
+        var modifiers = updatedMethod.Modifiers;
+        if (!modifiers.Any(m => m.IsKind(SyntaxKind.StaticKeyword)))
+            modifiers = modifiers.Add(SyntaxFactory.Token(SyntaxKind.StaticKeyword));
+
+        updatedMethod = updatedMethod.WithModifiers(modifiers);
+
+        var newRoot = syntaxRoot.ReplaceNode(method, updatedMethod);
+        var formatted = Formatter.Format(newRoot, document.Project.Solution.Workspace);
+        var newDocument = document.WithSyntaxRoot(formatted);
+        var newText = await newDocument.GetTextAsync();
+        await File.WriteAllTextAsync(document.FilePath!, newText.ToString());
+
+        return $"Successfully converted method to static with instance parameter at line {methodLine} in {document.FilePath} (solution mode)";
+    }
+
+    private static async Task<string> ConvertToStaticWithInstanceSingleFile(string filePath, int methodLine, string instanceParameterName)
+    {
+        if (!File.Exists(filePath))
+            return $"Error: File {filePath} not found";
+
+        var sourceText = await File.ReadAllTextAsync(filePath);
+        var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
+        var syntaxRoot = await syntaxTree.GetRootAsync();
+        var textLines = SourceText.From(sourceText).Lines;
+
+        var method = syntaxRoot.DescendantNodes()
+            .OfType<MethodDeclarationSyntax>()
+            .FirstOrDefault(m => textLines.GetLineFromPosition(m.SpanStart).LineNumber + 1 == methodLine);
+        if (method == null)
+            return $"Error: No method found at line {methodLine}";
+
+        var classDecl = method.Ancestors().OfType<ClassDeclarationSyntax>().FirstOrDefault();
+        if (classDecl == null)
+            return $"Error: Method at line {methodLine} is not inside a class";
+
+        var parameter = SyntaxFactory.Parameter(SyntaxFactory.Identifier(instanceParameterName))
+            .WithType(SyntaxFactory.ParseTypeName(classDecl.Identifier.ValueText));
+
+        var updatedMethod = method.WithParameterList(method.ParameterList.AddParameters(parameter));
+
+        updatedMethod = updatedMethod.ReplaceNodes(
+            updatedMethod.DescendantNodes().OfType<ThisExpressionSyntax>(),
+            (_, _) => SyntaxFactory.IdentifierName(instanceParameterName));
+
+        var instanceMembers = classDecl.Members
+            .Where(m => m is FieldDeclarationSyntax or PropertyDeclarationSyntax or MethodDeclarationSyntax)
+            .Select(m => m switch
+            {
+                FieldDeclarationSyntax f => f.Declaration.Variables.First().Identifier.ValueText,
+                PropertyDeclarationSyntax p => p.Identifier.ValueText,
+                MethodDeclarationSyntax md => md.Identifier.ValueText,
+                _ => string.Empty
+            })
+            .Where(n => !string.IsNullOrEmpty(n))
+            .ToHashSet();
+
+        updatedMethod = updatedMethod.ReplaceNodes(
+            updatedMethod.DescendantNodes().OfType<IdentifierNameSyntax>().Where(id =>
+                instanceMembers.Contains(id.Identifier.ValueText) && id.Parent is not MemberAccessExpressionSyntax),
+            (old, _) => SyntaxFactory.MemberAccessExpression(
+                SyntaxKind.SimpleMemberAccessExpression,
+                SyntaxFactory.IdentifierName(instanceParameterName),
+                SyntaxFactory.IdentifierName(old.Identifier)));
+
+        var modifiers = updatedMethod.Modifiers;
+        if (!modifiers.Any(m => m.IsKind(SyntaxKind.StaticKeyword)))
+            modifiers = modifiers.Add(SyntaxFactory.Token(SyntaxKind.StaticKeyword));
+
+        updatedMethod = updatedMethod.WithModifiers(modifiers);
+
+        var newRoot = syntaxRoot.ReplaceNode(method, updatedMethod);
+        var workspace = new AdhocWorkspace();
+        var formatted = Formatter.Format(newRoot, workspace);
+        await File.WriteAllTextAsync(filePath, formatted.ToFullString());
+
+        return $"Successfully converted method to static with instance parameter at line {methodLine} in {filePath} (single file mode)";
+    }
+
+    private static async Task<string> MoveInstanceMethodWithSolution(Document document, int methodLine, string targetClass, string accessMemberName, string accessMemberType)
+    {
+        var sourceText = await document.GetTextAsync();
+        var syntaxRoot = await document.GetSyntaxRootAsync();
+        var textLines = sourceText.Lines;
+
+        var method = syntaxRoot!.DescendantNodes()
+            .OfType<MethodDeclarationSyntax>()
+            .FirstOrDefault(m => textLines.GetLineFromPosition(m.SpanStart).LineNumber + 1 == methodLine);
+        if (method == null)
+            return $"Error: No method found at line {methodLine}";
+
+        var originClass = method.Parent as ClassDeclarationSyntax;
+        if (originClass == null)
+            return $"Error: Method at line {methodLine} is not inside a class";
+
+        var targetClassDecl = syntaxRoot.DescendantNodes()
+            .OfType<ClassDeclarationSyntax>()
+            .FirstOrDefault(c => c.Identifier.ValueText == targetClass);
+        if (targetClassDecl == null)
+            return $"Error: Target class '{targetClass}' not found";
+
+        ClassDeclarationSyntax newOriginClass = originClass.RemoveNode(method, SyntaxRemoveOptions.KeepNoTrivia);
+
+        if (accessMemberType == "field")
+        {
+            var field = SyntaxFactory.FieldDeclaration(
+                    SyntaxFactory.VariableDeclaration(
+                        SyntaxFactory.ParseTypeName(targetClass),
+                        SyntaxFactory.SeparatedList(new[] { SyntaxFactory.VariableDeclarator(accessMemberName)
+                            .WithInitializer(SyntaxFactory.EqualsValueClause(
+                                SyntaxFactory.ObjectCreationExpression(SyntaxFactory.ParseTypeName(targetClass))
+                                    .WithArgumentList(SyntaxFactory.ArgumentList()))) }))
+                ).AddModifiers(SyntaxFactory.Token(SyntaxKind.PrivateKeyword));
+
+            newOriginClass = newOriginClass.AddMembers(field);
+        }
+        else if (accessMemberType == "property")
+        {
+            var prop = SyntaxFactory.PropertyDeclaration(SyntaxFactory.ParseTypeName(targetClass), accessMemberName)
+                .AddModifiers(SyntaxFactory.Token(SyntaxKind.PrivateKeyword))
+                .AddAccessorListAccessors(
+                    SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
+                    SyntaxFactory.AccessorDeclaration(SyntaxKind.SetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)));
+            newOriginClass = newOriginClass.AddMembers(prop);
+        }
+
+        var newTargetClass = targetClassDecl.AddMembers(method.WithLeadingTrivia());
+
+        var newRoot = syntaxRoot.ReplaceNode(originClass, newOriginClass).ReplaceNode(targetClassDecl, newTargetClass);
+        var formatted = Formatter.Format(newRoot, document.Project.Solution.Workspace);
+        var newDocument = document.WithSyntaxRoot(formatted);
+        var newText = await newDocument.GetTextAsync();
+        await File.WriteAllTextAsync(document.FilePath!, newText.ToString());
+
+        return $"Successfully moved instance method to {targetClass} in {document.FilePath}";
     }
 
     [McpServerTool, Description("Move a static method to another class")]
@@ -992,25 +1467,119 @@ public static class RefactoringTools
 
     [McpServerTool, Description("Move an instance method to another class")]
     public static async Task<string> MoveInstanceMethod(
-        [Description("Path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file containing the method")] string filePath,
         [Description("Line number of the instance method to move")] int methodLine,
         [Description("Name of the target class")] string targetClass,
         [Description("Name for the access member")] string accessMemberName,
-        [Description("Type of access member (field, property, variable)")] string accessMemberType = "field")
+        [Description("Type of access member (field, property, variable)")] string accessMemberType = "field",
+        [Description("Path to the solution file (.sln)")] string? solutionPath = null)
     {
-        // TODO: Implement move instance method refactoring using Roslyn
-        return $"Move instance method at line {methodLine} from {filePath} to class '{targetClass}' with {accessMemberType} '{accessMemberName}' - Implementation in progress";
+        if (solutionPath == null)
+            return "Error: Solution path is required for moving instance methods";
+
+        try
+        {
+            var solution = await GetOrLoadSolution(solutionPath);
+            var document = GetDocumentByPath(solution, filePath);
+            if (document == null)
+                return $"Error: File {filePath} not found in solution";
+
+            return await MoveInstanceMethodWithSolution(document, methodLine, targetClass, accessMemberName, accessMemberType);
+        }
+        catch (Exception ex)
+        {
+            return $"Error moving instance method: {ex.Message}";
+        }
     }
 
     [McpServerTool, Description("Convert property setter to init-only setter")]
     public static async Task<string> TransformSetterToInit(
-        [Description("Path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
-        [Description("Line number of the property to transform")] int propertyLine)
+        [Description("Line number of the property to transform")] int propertyLine,
+        [Description("Path to the solution file (.sln) - optional for single file mode")] string? solutionPath = null)
     {
-        // TODO: Implement transform setter to init refactoring using Roslyn
-        return $"Transform property setter to init at line {propertyLine} in {filePath} - Implementation in progress";
+        try
+        {
+            if (solutionPath != null)
+            {
+                var solution = await GetOrLoadSolution(solutionPath);
+                var document = GetDocumentByPath(solution, filePath);
+                if (document == null)
+                    return $"Error: File {filePath} not found in solution";
+
+                return await TransformSetterToInitWithSolution(document, propertyLine);
+            }
+            else
+            {
+                return await TransformSetterToInitSingleFile(filePath, propertyLine);
+            }
+        }
+        catch (Exception ex)
+        {
+            return $"Error transforming setter: {ex.Message}";
+        }
+    }
+
+    private static async Task<string> TransformSetterToInitWithSolution(Document document, int propertyLine)
+    {
+        var sourceText = await document.GetTextAsync();
+        var syntaxRoot = await document.GetSyntaxRootAsync();
+        var linePos = sourceText.Lines[propertyLine - 1].Start;
+
+        var property = syntaxRoot!.DescendantNodes()
+            .OfType<PropertyDeclarationSyntax>()
+            .FirstOrDefault(p => p.Span.Contains(linePos));
+        if (property == null)
+            return $"Error: No property found at line {propertyLine}";
+
+        var setter = property.AccessorList?.Accessors.FirstOrDefault(a => a.IsKind(SyntaxKind.SetAccessorDeclaration));
+        if (setter == null)
+            return $"Error: Property at line {propertyLine} has no setter";
+
+        var initAccessor = SyntaxFactory.AccessorDeclaration(SyntaxKind.InitAccessorDeclaration)
+            .WithSemicolonToken(setter.SemicolonToken);
+        var newProperty = property.ReplaceNode(setter, initAccessor);
+
+        var newRoot = syntaxRoot.ReplaceNode(property, newProperty);
+        var formatted = Formatter.Format(newRoot, document.Project.Solution.Workspace);
+        var newDocument = document.WithSyntaxRoot(formatted);
+        var newText = await newDocument.GetTextAsync();
+        await File.WriteAllTextAsync(document.FilePath!, newText.ToString());
+
+        return $"Successfully converted setter to init at line {propertyLine} in {document.FilePath} (solution mode)";
+    }
+
+    private static async Task<string> TransformSetterToInitSingleFile(string filePath, int propertyLine)
+    {
+        if (!File.Exists(filePath))
+            return $"Error: File {filePath} not found";
+
+        var sourceText = await File.ReadAllTextAsync(filePath);
+        var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
+        var syntaxRoot = await syntaxTree.GetRootAsync();
+        var textLines = SourceText.From(sourceText).Lines;
+        var linePos = textLines[propertyLine - 1].Start;
+
+        var property = syntaxRoot.DescendantNodes()
+            .OfType<PropertyDeclarationSyntax>()
+            .FirstOrDefault(p => p.Span.Contains(linePos));
+        if (property == null)
+            return $"Error: No property found at line {propertyLine}";
+
+        var setter = property.AccessorList?.Accessors.FirstOrDefault(a => a.IsKind(SyntaxKind.SetAccessorDeclaration));
+        if (setter == null)
+            return $"Error: Property at line {propertyLine} has no setter";
+
+        var initAccessor = SyntaxFactory.AccessorDeclaration(SyntaxKind.InitAccessorDeclaration)
+            .WithSemicolonToken(setter.SemicolonToken);
+        var newProperty = property.ReplaceNode(setter, initAccessor);
+
+        var newRoot = syntaxRoot.ReplaceNode(property, newProperty);
+        var workspace = new AdhocWorkspace();
+        var formatted = Formatter.Format(newRoot, workspace);
+        await File.WriteAllTextAsync(filePath, formatted.ToFullString());
+
+        return $"Successfully converted setter to init at line {propertyLine} in {filePath} (single file mode)";
     }
 
     [McpServerTool, Description("Safely delete a field, parameter, or variable with dependency warnings")]
