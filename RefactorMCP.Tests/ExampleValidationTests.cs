@@ -49,10 +49,10 @@ public class ExampleValidationTests
 
         // Act - Use the exact command from EXAMPLES.md
         var result = await RefactoringTools.ExtractMethod(
-            SolutionPath,
             testFile,
             "22:9-25:10", // From documentation: validation block
-            "ValidateInputs"
+            "ValidateInputs",
+            SolutionPath
         );
 
         // Assert
@@ -77,11 +77,11 @@ public class ExampleValidationTests
 
         // Act - Use the exact command from EXAMPLES.md
         var result = await RefactoringTools.IntroduceField(
-            SolutionPath,
             testFile,
             "35:16-35:58", // From documentation: Sum() / Count expression
             "_averageValue",
-            "private"
+            "private",
+            SolutionPath
         );
 
         // Assert
@@ -104,10 +104,10 @@ public class ExampleValidationTests
 
         // Act - Use the exact command from EXAMPLES.md
         var result = await RefactoringTools.IntroduceVariable(
-            SolutionPath,
             testFile,
             "41:50-41:65", // From documentation: value * 2 + 10 expression
-            "processedValue"
+            "processedValue",
+            SolutionPath
         );
 
         // Assert
@@ -130,9 +130,9 @@ public class ExampleValidationTests
 
         // Act - Use the exact command from EXAMPLES.md
         var result = await RefactoringTools.MakeFieldReadonly(
-            SolutionPath,
             testFile,
-            50 // From documentation: line with format field
+            50, // From documentation: line with format field
+            SolutionPath
         );
 
         // Assert
@@ -153,10 +153,10 @@ public class ExampleValidationTests
 
         // Use the exact command from QUICK_REFERENCE.md
         var result = await RefactoringTools.ExtractMethod(
-            SolutionPath,
             testFile,
             "22:9-25:10",
-            "ValidateInputs"
+            "ValidateInputs",
+            SolutionPath
         );
 
         Assert.Contains("Successfully extracted method", result);
@@ -172,11 +172,11 @@ public class ExampleValidationTests
 
         // Use the exact command from QUICK_REFERENCE.md
         var result = await RefactoringTools.IntroduceField(
-            SolutionPath,
             testFile,
             "35:16-35:58",
             "_averageValue",
-            "private"
+            "private",
+            SolutionPath
         );
 
         Assert.Contains("Successfully introduced private field", result);
@@ -195,11 +195,11 @@ public class ExampleValidationTests
         await RefactoringTools.LoadSolution(SolutionPath);
 
         var result = await RefactoringTools.IntroduceField(
-            SolutionPath,
             testFile,
             "35:16-35:58",
             $"_{accessModifier}Field",
-            accessModifier
+            accessModifier,
+            SolutionPath
         );
 
         Assert.Contains($"Successfully introduced {accessModifier} field", result);
@@ -225,10 +225,10 @@ public int Calculate(int a, int b)
         // The documentation says to select "if (a < 0 || b < 0)" on line 3
         // with range "3:5-3:25"
         var result = await RefactoringTools.ExtractMethod(
-            SolutionPath,
             testFile,
             "3:5-3:25", // From documentation example
-            "TestMethod"
+            "TestMethod",
+            SolutionPath
         );
 
         // This should work or give a meaningful error
@@ -242,18 +242,18 @@ public int Calculate(int a, int b)
 
         // Test documented error cases
         var fileNotFoundResult = await RefactoringTools.ExtractMethod(
-            SolutionPath,
             "./NonExistent.cs",
             "1:1-2:2",
-            "TestMethod"
+            "TestMethod",
+            SolutionPath
         );
         Assert.Contains("Error: File", fileNotFoundResult);
 
         var invalidRangeResult = await RefactoringTools.ExtractMethod(
-            SolutionPath,
             "./RefactorMCP.Tests/ExampleCode.cs",
             "invalid-range",
-            "TestMethod"
+            "TestMethod",
+            SolutionPath
         );
         Assert.Contains("Error: Invalid selection range format", invalidRangeResult);
     }
