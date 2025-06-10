@@ -40,29 +40,41 @@ static async Task RunCliMode(string[] args)
         return;
     }
 
-    var command = args[1].ToLower();
+    var command = args[1].ToLowerInvariant();
+
+    var handlers = new Dictionary<string, Func<string[], Task<string>>>(StringComparer.OrdinalIgnoreCase)
+    {
+        ["load-solution"] = TestLoadSolution,
+        ["extract-method"] = TestExtractMethod,
+        ["introduce-field"] = TestIntroduceField,
+        ["introduce-variable"] = TestIntroduceVariable,
+        ["make-field-readonly"] = TestMakeFieldReadonly,
+        ["unload-solution"] = args => Task.FromResult(TestUnloadSolution(args)),
+        ["clear-solution-cache"] = _ => Task.FromResult(ClearCacheCommand()),
+        ["convert-to-extension-method"] = TestConvertToExtensionMethod,
+        ["convert-to-static-with-parameters"] = TestConvertToStaticWithParameters,
+        ["convert-to-static-with-instance"] = TestConvertToStaticWithInstance,
+        ["introduce-parameter"] = TestIntroduceParameter,
+        ["move-static-method"] = TestMoveStaticMethod,
+        ["move-instance-method"] = TestMoveInstanceMethod,
+        ["transform-setter-to-init"] = TestTransformSetterToInit,
+        ["safe-delete-field"] = TestSafeDeleteField,
+        ["safe-delete-method"] = TestSafeDeleteMethod,
+        ["safe-delete-parameter"] = TestSafeDeleteParameter,
+        ["safe-delete-variable"] = TestSafeDeleteVariable,
+        ["list-tools"] = _ => Task.FromResult(ListAvailableTools())
+    };
 
     try
     {
-        var result = command switch
+        if (!handlers.TryGetValue(command, out var handler))
         {
-            "load-solution" => await TestLoadSolution(args),
-            "extract-method" => await TestExtractMethod(args),
-            "introduce-field" => await TestIntroduceField(args),
-            "introduce-variable" => await TestIntroduceVariable(args),
-            "make-field-readonly" => await TestMakeFieldReadonly(args),
-            "unload-solution" => TestUnloadSolution(args),
-            "clear-solution-cache" => ClearCacheCommand(),
-            "convert-to-extension-method" => await TestConvertToExtensionMethod(args),
-            "safe-delete-field" => await TestSafeDeleteField(args),
-            "safe-delete-method" => await TestSafeDeleteMethod(args),
-            "safe-delete-parameter" => await TestSafeDeleteParameter(args),
-            "safe-delete-variable" => await TestSafeDeleteVariable(args),
-            "version" => ShowVersionInfo(),
-            "list-tools" => ListAvailableTools(),
-            _ => $"Unknown command: {command}. Use --cli list-tools to see available commands."
-        };
+            Console.WriteLine($"Unknown command: {command}. Use --test list-tools to see available commands.");
+            return;
+        }
 
+
+        var result = await handler(args);
         Console.WriteLine(result);
     }
     catch (Exception ex)
@@ -78,21 +90,13 @@ static void ShowCliHelp()
     Console.WriteLine("Usage: RefactorMCP.ConsoleApp --cli <command> [arguments]");
     Console.WriteLine();
     Console.WriteLine("Available commands:");
-    Console.WriteLine("  list-tools                                    - List all available refactoring tools");
-    Console.WriteLine("  load-solution <solutionPath>                 - Test loading a solution file (not required)");
-    Console.WriteLine("  unload-solution <solutionPath>               - Remove a loaded solution from cache");
-    Console.WriteLine("  clear-solution-cache                         - Clear all cached solutions");
-    Console.WriteLine("  version                                      - Show version information");
-    Console.WriteLine("  extract-method <filePath> <range> <methodName> [solutionPath]");
-    Console.WriteLine("  introduce-field <filePath> <range> <fieldName> [accessModifier] [solutionPath]");
-    Console.WriteLine("  introduce-variable <filePath> <range> <variableName> [solutionPath]");
-    Console.WriteLine("  safe-delete-field <filePath> <fieldName> [solutionPath]");
-    Console.WriteLine("  safe-delete-method <filePath> <methodName> [solutionPath]");
-    Console.WriteLine("  safe-delete-parameter <filePath> <methodName> <parameterName> [solutionPath]");
-    Console.WriteLine("  safe-delete-variable <filePath> <range> [solutionPath]");
-    Console.WriteLine("  make-field-readonly <filePath> <fieldName> [solutionPath]");
-    Console.WriteLine("  convert-to-extension-method <filePath> <methodName> [solutionPath]");
-    Console.WriteLine("  move-instance-method <filePath> <sourceClass> <methodName> <targetClass> <accessMember> [memberType] [solutionPath]");
+    var toolsList = ListAvailableTools()
+        .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+        .Skip(1); // Skip heading
+    foreach (var tool in toolsList)
+        Console.WriteLine($"  {tool}");
+    Console.WriteLine("  list-tools - List all available refactoring tools");
+
     Console.WriteLine();
     Console.WriteLine("Examples:");
     Console.WriteLine("  --cli load-solution ./MySolution.sln");
@@ -108,27 +112,28 @@ static void ShowCliHelp()
 
 static string ListAvailableTools()
 {
-    var tools = new[]
-    {
-        "load-solution - Load a solution file for refactoring operations (not required)",
-        "extract-method - Extract selected code into a new method",
-        "introduce-field - Create a new field from selected code",
-        "introduce-variable - Create a new variable from selected code",
-        "make-field-readonly - Make a field readonly and move initialization to constructors",
-        "convert-to-extension-method - Convert an instance method to an extension method",
-        "introduce-parameter - Create a new parameter from selected code",
-        "convert-to-static-with-parameters - Transform instance method to static",
-        "convert-to-static-with-instance - Transform instance method to static with instance parameter",
-        "move-static-method - Move a static method to another class",
-        "move-instance-method - Move an instance method to another class",
-        "transform-setter-to-init - Convert property setter to init-only setter",
-        "safe-delete-field - Safely delete an unused field",
-        "safe-delete-method - Safely delete an unused method",
-        "safe-delete-parameter - Safely delete an unused parameter",
-        "safe-delete-variable - Safely delete a local variable"
-    };
+    var toolNames = typeof(RefactoringTools)
+        .GetMethods(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)
+        .Where(m => m.GetCustomAttributes(typeof(McpServerToolAttribute), false).Length > 0)
+        .Select(m => ToKebabCase(m.Name))
+        .OrderBy(n => n)
+        .ToArray();
 
-    return "Available refactoring tools:\n" + string.Join("\n", tools);
+    return "Available refactoring tools:\n" + string.Join("\n", toolNames);
+
+    static string ToKebabCase(string name)
+    {
+        var sb = new StringBuilder();
+        for (int i = 0; i < name.Length; i++)
+        {
+            var c = name[i];
+            if (char.IsUpper(c) && i > 0)
+                sb.Append('-');
+
+            sb.Append(char.ToLowerInvariant(c));
+        }
+        return sb.ToString();
+    }
 }
 
 static async Task<string> TestLoadSolution(string[] args)
@@ -270,6 +275,87 @@ static async Task<string> TestSafeDeleteVariable(string[] args)
     var solutionPath = args.Length > 4 ? args[4] : null;
 
     return await RefactoringTools.SafeDeleteVariable(filePath, range, solutionPath);
+}
+
+static async Task<string> TestConvertToStaticWithParameters(string[] args)
+{
+    if (args.Length < 4)
+        return "Error: Missing arguments. Usage: --test convert-to-static-with-parameters <filePath> <methodName> [solutionPath]";
+
+    var filePath = args[2];
+    var methodName = args[3];
+    var solutionPath = args.Length > 4 ? args[4] : null;
+
+    return await RefactoringTools.ConvertToStaticWithParameters(filePath, methodName, solutionPath);
+}
+
+static async Task<string> TestConvertToStaticWithInstance(string[] args)
+{
+    if (args.Length < 4)
+        return "Error: Missing arguments. Usage: --test convert-to-static-with-instance <filePath> <methodName> [instanceParamName] [solutionPath]";
+
+    var filePath = args[2];
+    var methodName = args[3];
+    var instanceParam = args.Length > 4 ? args[4] : "instance";
+    var solutionPath = args.Length > 5 ? args[5] : null;
+
+    return await RefactoringTools.ConvertToStaticWithInstance(filePath, methodName, instanceParam, solutionPath);
+}
+
+static async Task<string> TestIntroduceParameter(string[] args)
+{
+    if (args.Length < 6)
+        return "Error: Missing arguments. Usage: --test introduce-parameter <filePath> <methodName> <range> <parameterName> [solutionPath]";
+
+    var filePath = args[2];
+    var methodName = args[3];
+    var range = args[4];
+    var paramName = args[5];
+    var solutionPath = args.Length > 6 ? args[6] : null;
+
+    return await RefactoringTools.IntroduceParameter(filePath, methodName, range, paramName, solutionPath);
+}
+
+static async Task<string> TestMoveStaticMethod(string[] args)
+{
+    if (args.Length < 6)
+        return "Error: Missing arguments. Usage: --test move-static-method <solutionPath> <filePath> <methodName> <targetClass> [targetFilePath]";
+
+    var solutionPath = args[2];
+    var filePath = args[3];
+    var methodName = args[4];
+    var targetClass = args[5];
+    var targetFilePath = args.Length > 6 ? args[6] : null;
+
+    return await RefactoringTools.MoveStaticMethod(solutionPath, filePath, methodName, targetClass, targetFilePath);
+}
+
+static async Task<string> TestMoveInstanceMethod(string[] args)
+{
+    if (args.Length < 7)
+        return "Error: Missing arguments. Usage: --test move-instance-method <filePath> <sourceClass> <methodName> <targetClass> <accessMember> [memberType] [solutionPath]";
+
+    var filePath = args[2];
+    var sourceClass = args[3];
+    var methodName = args[4];
+    var targetClass = args[5];
+    var accessMember = args[6];
+    var memberType = args.Length > 7 ? args[7] : "field";
+    var solutionPath = args.Length > 8 ? args[8] : null;
+
+    return await RefactoringTools.MoveInstanceMethod(filePath, sourceClass, methodName, targetClass, accessMember, memberType, solutionPath);
+}
+
+static async Task<string> TestTransformSetterToInit(string[] args)
+{
+    if (args.Length < 4)
+        return "Error: Missing arguments. Usage: --test transform-setter-to-init <filePath> <propertyName> [solutionPath]";
+
+    var filePath = args[2];
+    var propertyName = args[3];
+    var solutionPath = args.Length > 4 ? args[4] : null;
+
+    return await RefactoringTools.TransformSetterToInit(filePath, propertyName, solutionPath);
 }
 
 [McpServerToolType]
