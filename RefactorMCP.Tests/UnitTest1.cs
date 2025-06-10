@@ -21,7 +21,7 @@ public class RefactoringToolsTests
         // Start from the current directory and walk up to find the solution file
         var currentDir = Directory.GetCurrentDirectory();
         var dir = new DirectoryInfo(currentDir);
-        
+
         while (dir != null)
         {
             var solutionFile = Path.Combine(dir.FullName, "RefactorMCP.sln");
@@ -31,7 +31,7 @@ public class RefactoringToolsTests
             }
             dir = dir.Parent;
         }
-        
+
         // Fallback to relative path
         return "./RefactorMCP.sln";
     }
@@ -69,7 +69,7 @@ public class RefactoringToolsTests
         // Act
         var result = await RefactoringTools.ExtractMethod(
             testFile,
-            "5:9-8:10", // The validation block in the test method
+            "7:9-10:10", // The validation block in the test method
             "ValidateInputs",
             SolutionPath
         );
@@ -155,7 +155,7 @@ public class RefactoringToolsTests
         // Act
         var result = await RefactoringTools.IntroduceVariable(
             testFile,
-            "4:50-4:65", // The value * 2 + 10 expression
+            "42:50-42:63", // The value * 2 + 10 expression
             "processedValue",
             SolutionPath
         );
@@ -178,7 +178,7 @@ public class RefactoringToolsTests
         // Act
         var result = await RefactoringTools.MakeFieldReadonly(
             testFile,
-            4,
+            52,
             SolutionPath
         );
 
@@ -302,7 +302,7 @@ public class RefactoringToolsTests
 
         var result = await RefactoringTools.ConvertToStaticWithInstance(
             testFile,
-            6,
+            46,
             "instance",
             SolutionPath
         );
@@ -321,7 +321,7 @@ public class RefactoringToolsTests
 
         var result = await RefactoringTools.MoveInstanceMethod(
             testFile,
-            5,
+            69,
             "Logger",
             "_logger",
             "field",
@@ -377,7 +377,13 @@ public class TestClass
 
     private static string GetSampleCodeForMakeFieldReadonlyNoInit()
     {
-        return File.ReadAllText(Path.Combine(Path.GetDirectoryName(SolutionPath)!, "RefactorMCP.Tests", "ExampleCode.cs"));
+        return """
+using System;
+public class TestClass
+{
+    private string description;
+}
+""";
     }
 
     private static string GetSampleCodeForConvertToStaticInstance()
@@ -399,7 +405,7 @@ public class CliIntegrationTests
         // Start from the current directory and walk up to find the solution file
         var currentDir = Directory.GetCurrentDirectory();
         var dir = new DirectoryInfo(currentDir);
-        
+
         while (dir != null)
         {
             var solutionFile = Path.Combine(dir.FullName, "RefactorMCP.sln");
@@ -409,7 +415,7 @@ public class CliIntegrationTests
             }
             dir = dir.Parent;
         }
-        
+
         // Fallback to relative path
         return "./RefactorMCP.sln";
     }
@@ -430,7 +436,7 @@ public class CliIntegrationTests
         var expectedTools = new[]
         {
             "load-solution",
-            "extract-method", 
+            "extract-method",
             "introduce-field",
             "introduce-variable",
             "make-field-readonly"

@@ -24,7 +24,7 @@ public class ExampleValidationTests
         // Start from the current directory and walk up to find the solution file
         var currentDir = Directory.GetCurrentDirectory();
         var dir = new DirectoryInfo(currentDir);
-        
+
         while (dir != null)
         {
             var solutionFile = Path.Combine(dir.FullName, "RefactorMCP.sln");
@@ -34,7 +34,7 @@ public class ExampleValidationTests
             }
             dir = dir.Parent;
         }
-        
+
         // Fallback to relative path
         return "./RefactorMCP.sln";
     }
@@ -73,7 +73,7 @@ public class ExampleValidationTests
         // Act - Use the exact command from EXAMPLES.md
         var result = await RefactoringTools.IntroduceField(
             testFile,
-            "35:16-35:58", // From documentation: Sum() / Count expression
+            "36:20-36:56", // From documentation: Sum() / Count expression
             "_averageValue",
             "private",
             SolutionPath
@@ -97,7 +97,7 @@ public class ExampleValidationTests
         // Act - Use the exact command from EXAMPLES.md
         var result = await RefactoringTools.IntroduceVariable(
             testFile,
-            "41:50-41:65", // From documentation: value * 2 + 10 expression
+            "42:50-42:63", // From documentation: value * 2 + 10 expression
             "processedValue",
             SolutionPath
         );
@@ -120,7 +120,7 @@ public class ExampleValidationTests
         // Act - Use the exact command from EXAMPLES.md
         var result = await RefactoringTools.MakeFieldReadonly(
             testFile,
-            50, // From documentation: line with format field
+            52, // From documentation: line with format field
             SolutionPath
         );
 
@@ -160,7 +160,7 @@ public class ExampleValidationTests
         // Use the exact command from QUICK_REFERENCE.md
         var result = await RefactoringTools.IntroduceField(
             testFile,
-            "35:16-35:58",
+            "36:20-36:56",
             "_averageValue",
             "private",
             SolutionPath
@@ -183,7 +183,7 @@ public class ExampleValidationTests
 
         var result = await RefactoringTools.IntroduceField(
             testFile,
-            "35:16-35:58",
+            "36:20-36:56",
             $"_{accessModifier}Field",
             accessModifier,
             SolutionPath
@@ -275,4 +275,4 @@ public int Calculate(int a, int b)
     {
         return File.ReadAllText(Path.Combine(Path.GetDirectoryName(SolutionPath)!, "RefactorMCP.Tests", "ExampleCode.cs"));
     }
-} 
+}
