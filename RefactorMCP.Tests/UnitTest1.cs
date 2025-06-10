@@ -353,6 +353,26 @@ public class RefactoringToolsTests : IDisposable
     }
 
     [Fact]
+    public async Task MoveStaticMethod_ReturnsSuccess()
+    {
+        await RefactoringTools.LoadSolution(SolutionPath);
+        var testFile = Path.Combine(TestOutputPath, "MoveStaticMethod.cs");
+        await CreateTestFile(testFile, GetSampleCodeForMoveStaticMethod());
+
+        var result = await RefactoringTools.MoveStaticMethod(
+            SolutionPath,
+            testFile,
+            "FormatCurrency",
+            "MathUtilities"
+        );
+
+        Assert.Contains("Successfully moved static method", result);
+        var fileContent = await File.ReadAllTextAsync(testFile);
+        Assert.DoesNotContain("static string FormatCurrency", fileContent);
+        Assert.Contains("class MathUtilities", fileContent);
+    }
+
+    [Fact]
     public async Task MoveInstanceMethod_ReturnsSuccess()
     {
         await RefactoringTools.LoadSolution(SolutionPath);
@@ -447,6 +467,11 @@ public class TestClass
     }
 
     private static string GetSampleCodeForConvertToStaticInstance()
+    {
+        return File.ReadAllText(Path.Combine(Path.GetDirectoryName(SolutionPath)!, "RefactorMCP.Tests", "ExampleCode.cs"));
+    }
+
+    private static string GetSampleCodeForMoveStaticMethod()
     {
         return File.ReadAllText(Path.Combine(Path.GetDirectoryName(SolutionPath)!, "RefactorMCP.Tests", "ExampleCode.cs"));
     }
