@@ -74,7 +74,8 @@ namespace RefactorMCP.Tests.Examples
         // Example for Safe Delete - unused parameter
         public int Multiply(int x, int y, int unusedParam)
         {
-            return x * y; // unusedParam can be safely deleted
+            // This parameter is unused and can be safely deleted
+            return x * y;
         }
 
         // Example for Safe Delete - unused method and variable
