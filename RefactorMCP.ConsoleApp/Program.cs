@@ -12,9 +12,9 @@ using System.ComponentModel;
 using System.Text;
 
 // Parse command line arguments
-if (args.Length > 0 && args[0] == "--test")
+if (args.Length > 0 && args[0] == "--cli")
 {
-    await RunTestMode(args);
+    await RunCliMode(args);
     return;
 }
 
@@ -32,11 +32,11 @@ builder.Services
 
 await builder.Build().RunAsync();
 
-static async Task RunTestMode(string[] args)
+static async Task RunCliMode(string[] args)
 {
     if (args.Length < 2)
     {
-        ShowTestModeHelp();
+        ShowCliHelp();
         return;
     }
 
@@ -73,6 +73,7 @@ static async Task RunTestMode(string[] args)
             return;
         }
 
+
         var result = await handler(args);
         Console.WriteLine(result);
     }
@@ -83,10 +84,10 @@ static async Task RunTestMode(string[] args)
     }
 }
 
-static void ShowTestModeHelp()
+static void ShowCliHelp()
 {
-    Console.WriteLine("RefactorMCP Test Mode");
-    Console.WriteLine("Usage: RefactorMCP.ConsoleApp --test <command> [arguments]");
+    Console.WriteLine("RefactorMCP CLI Mode");
+    Console.WriteLine("Usage: RefactorMCP.ConsoleApp --cli <command> [arguments]");
     Console.WriteLine();
     Console.WriteLine("Available commands:");
     var toolsList = ListAvailableTools()
@@ -95,13 +96,15 @@ static void ShowTestModeHelp()
     foreach (var tool in toolsList)
         Console.WriteLine($"  {tool}");
     Console.WriteLine("  list-tools - List all available refactoring tools");
+
     Console.WriteLine();
     Console.WriteLine("Examples:");
-    Console.WriteLine("  --test load-solution ./MySolution.sln");
-    Console.WriteLine("  --test extract-method ./MyFile.cs \"10:5-15:20\" \"ExtractedMethod\"");
-    Console.WriteLine("  --test extract-method ./MyFile.cs \"10:5-15:20\" \"ExtractedMethod\" ./MySolution.sln");
-    Console.WriteLine("  --test introduce-field ./MyFile.cs \"12:10-12:25\" \"_myField\" \"private\"");
-    Console.WriteLine("  --test make-field-readonly ./MyFile.cs 15");
+    Console.WriteLine("  --cli load-solution ./MySolution.sln");
+    Console.WriteLine("  --cli extract-method ./MyFile.cs \"10:5-15:20\" \"ExtractedMethod\"");
+    Console.WriteLine("  --cli extract-method ./MyFile.cs \"10:5-15:20\" \"ExtractedMethod\" ./MySolution.sln");
+    Console.WriteLine("  --cli introduce-field ./MyFile.cs \"12:10-12:25\" \"_myField\" \"private\"");
+    Console.WriteLine("  --cli make-field-readonly ./MyFile.cs 15");
+    Console.WriteLine("  --cli version");
     Console.WriteLine();
     Console.WriteLine("Range format: \"startLine:startColumn-endLine:endColumn\" (1-based)");
     Console.WriteLine("Note: Solution path is optional. When omitted, single file mode is used with limited semantic analysis.");
@@ -136,7 +139,7 @@ static string ListAvailableTools()
 static async Task<string> TestLoadSolution(string[] args)
 {
     if (args.Length < 3)
-        return "Error: Missing solution path. Usage: --test load-solution <solutionPath>";
+        return "Error: Missing solution path. Usage: --cli load-solution <solutionPath>";
 
     var solutionPath = args[2];
     return await RefactoringTools.LoadSolution(solutionPath);
@@ -145,7 +148,7 @@ static async Task<string> TestLoadSolution(string[] args)
 static async Task<string> TestExtractMethod(string[] args)
 {
     if (args.Length < 5)
-        return "Error: Missing arguments. Usage: --test extract-method <filePath> <range> <methodName> [solutionPath]";
+        return "Error: Missing arguments. Usage: --cli extract-method <filePath> <range> <methodName> [solutionPath]";
 
     var filePath = args[2];
     var range = args[3];
@@ -158,7 +161,7 @@ static async Task<string> TestExtractMethod(string[] args)
 static async Task<string> TestIntroduceField(string[] args)
 {
     if (args.Length < 5)
-        return "Error: Missing arguments. Usage: --test introduce-field <filePath> <range> <fieldName> [accessModifier] [solutionPath]";
+        return "Error: Missing arguments. Usage: --cli introduce-field <filePath> <range> <fieldName> [accessModifier] [solutionPath]";
 
     var filePath = args[2];
     var range = args[3];
@@ -172,7 +175,7 @@ static async Task<string> TestIntroduceField(string[] args)
 static async Task<string> TestIntroduceVariable(string[] args)
 {
     if (args.Length < 5)
-        return "Error: Missing arguments. Usage: --test introduce-variable <filePath> <range> <variableName> [solutionPath]";
+        return "Error: Missing arguments. Usage: --cli introduce-variable <filePath> <range> <variableName> [solutionPath]";
 
     var filePath = args[2];
     var range = args[3];
@@ -185,7 +188,7 @@ static async Task<string> TestIntroduceVariable(string[] args)
 static async Task<string> TestMakeFieldReadonly(string[] args)
 {
     if (args.Length < 4)
-        return "Error: Missing arguments. Usage: --test make-field-readonly <filePath> <fieldName> [solutionPath]";
+        return "Error: Missing arguments. Usage: --cli make-field-readonly <filePath> <fieldName> [solutionPath]";
 
     var filePath = args[2];
     var fieldName = args[3];
@@ -197,7 +200,7 @@ static async Task<string> TestMakeFieldReadonly(string[] args)
 static string TestUnloadSolution(string[] args)
 {
     if (args.Length < 3)
-        return "Error: Missing solution path. Usage: --test unload-solution <solutionPath>";
+        return "Error: Missing solution path. Usage: --cli unload-solution <solutionPath>";
 
     var solutionPath = args[2];
     return RefactoringTools.UnloadSolution(solutionPath);
@@ -208,10 +211,15 @@ static string ClearCacheCommand()
     return RefactoringTools.ClearSolutionCache();
 }
 
+static string ShowVersionInfo()
+{
+    return RefactoringTools.Version();
+}
+
 static async Task<string> TestConvertToExtensionMethod(string[] args)
 {
     if (args.Length < 4)
-        return "Error: Missing arguments. Usage: --test convert-to-extension-method <filePath> <methodName> [solutionPath]";
+        return "Error: Missing arguments. Usage: --cli convert-to-extension-method <filePath> <methodName> [solutionPath]";
 
     var filePath = args[2];
     var methodName = args[3];
@@ -223,7 +231,7 @@ static async Task<string> TestConvertToExtensionMethod(string[] args)
 static async Task<string> TestSafeDeleteField(string[] args)
 {
     if (args.Length < 4)
-        return "Error: Missing arguments. Usage: --test safe-delete-field <filePath> <fieldName> [solutionPath]";
+        return "Error: Missing arguments. Usage: --cli safe-delete-field <filePath> <fieldName> [solutionPath]";
 
     var filePath = args[2];
     var fieldName = args[3];
@@ -235,7 +243,7 @@ static async Task<string> TestSafeDeleteField(string[] args)
 static async Task<string> TestSafeDeleteMethod(string[] args)
 {
     if (args.Length < 4)
-        return "Error: Missing arguments. Usage: --test safe-delete-method <filePath> <methodName> [solutionPath]";
+        return "Error: Missing arguments. Usage: --cli safe-delete-method <filePath> <methodName> [solutionPath]";
 
     var filePath = args[2];
     var methodName = args[3];
@@ -247,7 +255,7 @@ static async Task<string> TestSafeDeleteMethod(string[] args)
 static async Task<string> TestSafeDeleteParameter(string[] args)
 {
     if (args.Length < 5)
-        return "Error: Missing arguments. Usage: --test safe-delete-parameter <filePath> <methodName> <parameterName> [solutionPath]";
+        return "Error: Missing arguments. Usage: --cli safe-delete-parameter <filePath> <methodName> <parameterName> [solutionPath]";
 
     var filePath = args[2];
     var methodName = args[3];
@@ -260,7 +268,7 @@ static async Task<string> TestSafeDeleteParameter(string[] args)
 static async Task<string> TestSafeDeleteVariable(string[] args)
 {
     if (args.Length < 4)
-        return "Error: Missing arguments. Usage: --test safe-delete-variable <filePath> <range> [solutionPath]";
+        return "Error: Missing arguments. Usage: --cli safe-delete-variable <filePath> <range> [solutionPath]";
 
     var filePath = args[2];
     var range = args[3];
@@ -353,203 +361,4 @@ static async Task<string> TestTransformSetterToInit(string[] args)
 [McpServerToolType]
 public static partial class RefactoringTools
 {
-    [McpServerTool, Description("Convert an instance method to an extension method in a static class")]
-    public static async Task<string> ConvertToExtensionMethod(
-        [Description("Path to the C# file")] string filePath,
-        [Description("Name of the instance method to convert")] string methodName,
-        [Description("Name of the extension class - optional")] string? extensionClass = null,
-        [Description("Path to the solution file (.sln) - optional for single file mode")] string? solutionPath = null)
-    {
-        try
-        {
-            if (solutionPath != null)
-            {
-                var solution = await GetOrLoadSolution(solutionPath);
-                var document = GetDocumentByPath(solution, filePath);
-                if (document != null)
-                    return await ConvertToExtensionMethodWithSolution(document, methodName, extensionClass);
-
-                return await ConvertToExtensionMethodSingleFile(filePath, methodName, extensionClass);
-            }
-
-            return await ConvertToExtensionMethodSingleFile(filePath, methodName, extensionClass);
-        }
-        catch (Exception ex)
-        {
-            return $"Error converting to extension method: {ex.Message}";
-        }
-    }
-
-    private static async Task<string> ConvertToExtensionMethodWithSolution(Document document, string methodName, string? extensionClass)
-    {
-        var sourceText = await document.GetTextAsync();
-        var syntaxRoot = await document.GetSyntaxRootAsync();
-
-        var method = syntaxRoot!.DescendantNodes()
-            .OfType<MethodDeclarationSyntax>()
-            .FirstOrDefault(m => m.Identifier.ValueText == methodName);
-        if (method == null)
-            return $"Error: No method named '{methodName}' found";
-
-        var semanticModel = await document.GetSemanticModelAsync();
-        var classDecl = method.Ancestors().OfType<ClassDeclarationSyntax>().FirstOrDefault();
-        if (classDecl == null)
-            return $"Error: Method '{methodName}' is not inside a class";
-
-        var className = classDecl.Identifier.ValueText;
-        var extClassName = extensionClass ?? className + "Extensions";
-        var paramName = char.ToLower(className[0]) + className.Substring(1);
-
-        var thisParam = SyntaxFactory.Parameter(SyntaxFactory.Identifier(paramName))
-            .WithType(SyntaxFactory.ParseTypeName(className))
-            .AddModifiers(SyntaxFactory.Token(SyntaxKind.ThisKeyword));
-
-        var updatedMethod = method.WithParameterList(method.ParameterList.AddParameters(thisParam));
-
-        updatedMethod = updatedMethod.ReplaceNodes(
-            updatedMethod.DescendantNodes().OfType<ThisExpressionSyntax>(),
-            (_, _) => SyntaxFactory.IdentifierName(paramName));
-
-        updatedMethod = updatedMethod.ReplaceNodes(
-            updatedMethod.DescendantNodes().OfType<IdentifierNameSyntax>().Where(id =>
-            {
-                var sym = semanticModel!.GetSymbolInfo(id).Symbol;
-                return sym is IFieldSymbol or IPropertySymbol or IMethodSymbol &&
-                       SymbolEqualityComparer.Default.Equals(sym.ContainingType, semanticModel.GetDeclaredSymbol(classDecl)) &&
-                       !sym.IsStatic && id.Parent is not MemberAccessExpressionSyntax;
-            }),
-            (old, _) => SyntaxFactory.MemberAccessExpression(
-                SyntaxKind.SimpleMemberAccessExpression,
-                SyntaxFactory.IdentifierName(paramName),
-                SyntaxFactory.IdentifierName(old.Identifier)));
-
-        var modifiers = updatedMethod.Modifiers;
-        if (!modifiers.Any(m => m.IsKind(SyntaxKind.StaticKeyword)))
-            modifiers = modifiers.Add(SyntaxFactory.Token(SyntaxKind.StaticKeyword));
-
-        updatedMethod = updatedMethod.WithModifiers(modifiers);
-
-        var newRoot = syntaxRoot.RemoveNode(method, SyntaxRemoveOptions.KeepNoTrivia);
-
-        var extClass = newRoot.DescendantNodes().OfType<ClassDeclarationSyntax>()
-            .FirstOrDefault(c => c.Identifier.ValueText == extClassName);
-        if (extClass != null)
-        {
-            var updatedClass = extClass.AddMembers(updatedMethod);
-            newRoot = newRoot.ReplaceNode(extClass, updatedClass);
-        }
-        else
-        {
-            var extensionClassDecl = SyntaxFactory.ClassDeclaration(extClassName)
-                .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.StaticKeyword))
-                .AddMembers(updatedMethod);
-
-            if (classDecl.Parent is NamespaceDeclarationSyntax ns)
-            {
-                var updatedNs = ns.AddMembers(extensionClassDecl);
-                newRoot = newRoot.ReplaceNode(ns, updatedNs);
-            }
-            else
-            {
-                newRoot = ((CompilationUnitSyntax)newRoot).AddMembers(extensionClassDecl);
-            }
-        }
-
-        var formatted = Formatter.Format(newRoot, document.Project.Solution.Workspace);
-        var newDocument = document.WithSyntaxRoot(formatted);
-        var newText = await newDocument.GetTextAsync();
-        await File.WriteAllTextAsync(document.FilePath!, newText.ToString());
-
-        return $"Successfully converted method '{methodName}' to extension method in {document.FilePath} (solution mode)";
-    }
-
-    private static async Task<string> ConvertToExtensionMethodSingleFile(string filePath, string methodName, string? extensionClass)
-    {
-        if (!File.Exists(filePath))
-            return $"Error: File {filePath} not found";
-
-        var sourceText = await File.ReadAllTextAsync(filePath);
-        var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
-        var syntaxRoot = await syntaxTree.GetRootAsync();
-
-        var method = syntaxRoot.DescendantNodes()
-            .OfType<MethodDeclarationSyntax>()
-            .FirstOrDefault(m => m.Identifier.ValueText == methodName);
-        if (method == null)
-            return $"Error: No method named '{methodName}' found";
-
-        var classDecl = method.Ancestors().OfType<ClassDeclarationSyntax>().FirstOrDefault();
-        if (classDecl == null)
-            return $"Error: Method '{methodName}' is not inside a class";
-
-        var className = classDecl.Identifier.ValueText;
-        var extClassName = extensionClass ?? className + "Extensions";
-        var paramName = char.ToLower(className[0]) + className.Substring(1);
-
-        var thisParam = SyntaxFactory.Parameter(SyntaxFactory.Identifier(paramName))
-            .WithType(SyntaxFactory.ParseTypeName(className))
-            .AddModifiers(SyntaxFactory.Token(SyntaxKind.ThisKeyword));
-
-        var updatedMethod = method.WithParameterList(method.ParameterList.AddParameters(thisParam));
-
-        updatedMethod = updatedMethod.ReplaceNodes(
-            updatedMethod.DescendantNodes().OfType<ThisExpressionSyntax>(),
-            (_, _) => SyntaxFactory.IdentifierName(paramName));
-
-        var instanceMembers = classDecl.Members
-            .Where(m => m is FieldDeclarationSyntax or PropertyDeclarationSyntax)
-            .Select(m => m switch
-            {
-                FieldDeclarationSyntax f => f.Declaration.Variables.First().Identifier.ValueText,
-                PropertyDeclarationSyntax p => p.Identifier.ValueText,
-                _ => string.Empty
-            })
-            .Where(n => !string.IsNullOrEmpty(n))
-            .ToHashSet();
-
-        updatedMethod = updatedMethod.ReplaceNodes(
-            updatedMethod.DescendantNodes().OfType<IdentifierNameSyntax>().Where(id =>
-                instanceMembers.Contains(id.Identifier.ValueText) && id.Parent is not MemberAccessExpressionSyntax),
-            (old, _) => SyntaxFactory.MemberAccessExpression(
-                SyntaxKind.SimpleMemberAccessExpression,
-                SyntaxFactory.IdentifierName(paramName),
-                SyntaxFactory.IdentifierName(old.Identifier)));
-
-        var modifiers = updatedMethod.Modifiers;
-        if (!modifiers.Any(m => m.IsKind(SyntaxKind.StaticKeyword)))
-            modifiers = modifiers.Add(SyntaxFactory.Token(SyntaxKind.StaticKeyword));
-
-        updatedMethod = updatedMethod.WithModifiers(modifiers);
-
-        var newRoot = syntaxRoot.RemoveNode(method, SyntaxRemoveOptions.KeepNoTrivia);
-
-        var extClass = newRoot.DescendantNodes().OfType<ClassDeclarationSyntax>()
-            .FirstOrDefault(c => c.Identifier.ValueText == extClassName);
-        if (extClass != null)
-        {
-            var updatedClass = extClass.AddMembers(updatedMethod);
-            newRoot = newRoot.ReplaceNode(extClass, updatedClass);
-        }
-        else
-        {
-            var extensionClassDecl = SyntaxFactory.ClassDeclaration(extClassName)
-                .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.StaticKeyword))
-                .AddMembers(updatedMethod);
-
-            if (classDecl.Parent is NamespaceDeclarationSyntax ns)
-            {
-                var updatedNs = ns.AddMembers(extensionClassDecl);
-                newRoot = newRoot.ReplaceNode(ns, updatedNs);
-            }
-            else
-            {
-                newRoot = ((CompilationUnitSyntax)newRoot).AddMembers(extensionClassDecl);
-            }
-        }
-
-        var formatted = Formatter.Format(newRoot, SharedWorkspace);
-        await File.WriteAllTextAsync(filePath, formatted.ToFullString());
-
-        return $"Successfully converted method '{methodName}' to extension method in {filePath} (single file mode)";
-    }
 }
