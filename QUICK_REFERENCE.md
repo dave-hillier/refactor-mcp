@@ -11,7 +11,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --test
 # List all tools
 dotnet run --project RefactorMCP.ConsoleApp -- --test list-tools
 
-# Load solution (always do this first)
+# Load solution (not required)
 dotnet run --project RefactorMCP.ConsoleApp -- --test load-solution ./RefactorMCP.sln
 # Unload solution when done
 dotnet run --project RefactorMCP.ConsoleApp -- --test unload-solution ./RefactorMCP.sln
