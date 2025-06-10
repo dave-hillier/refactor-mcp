@@ -101,6 +101,16 @@ dotnet run --project RefactorMCP.ConsoleApp -- --test convert-to-static-with-ins
   "instanceName"
 ```
 
+### Move Static Method
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --test move-static-method \
+  "./RefactorMCP.sln" \
+  "./path/to/file.cs" \
+  methodName \
+  TargetClass \
+  "./optional/target.cs"
+```
+
 ### Move Instance Method
 ```bash
 dotnet run --project RefactorMCP.ConsoleApp -- --test move-instance-method \
@@ -187,6 +197,9 @@ dotnet run --project RefactorMCP.ConsoleApp -- --test convert-to-static-with-par
 # Convert method to static with instance
 dotnet run --project RefactorMCP.ConsoleApp -- --test convert-to-static-with-instance \
   "./RefactorMCP.sln" "./RefactorMCP.Tests/ExampleCode.cs" GetFormattedNumber "calculator"
+# Move static method to MathUtilities
+dotnet run --project RefactorMCP.ConsoleApp -- --test move-static-method \
+  "./RefactorMCP.sln" "./RefactorMCP.Tests/ExampleCode.cs" FormatCurrency MathUtilities
 # Convert method to extension
 dotnet run --project RefactorMCP.ConsoleApp -- --test convert-to-extension-method \
   "./RefactorMCP.sln" "./RefactorMCP.Tests/ExampleCode.cs" GetFormattedNumber

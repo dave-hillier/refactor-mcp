@@ -298,7 +298,40 @@ public static class CalculatorExtensions
 }
 ```
 
-## 9. Safe Delete Parameter
+## 9. Move Static Method
+
+**Purpose**: Move a static method to another class.
+
+### Example
+**Before** (in `ExampleCode.cs` line 63):
+```csharp
+public static string FormatCurrency(decimal amount)
+{
+    return $"${amount:F2}";
+}
+```
+
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --test move-static-method \
+  "./RefactorMCP.sln" \
+  "./RefactorMCP.Tests/ExampleCode.cs" \
+  FormatCurrency \
+  MathUtilities
+```
+
+**After**:
+```csharp
+public class MathUtilities
+{
+    public static string FormatCurrency(decimal amount)
+    {
+        return $"${amount:F2}";
+    }
+}
+```
+
+## 10. Safe Delete Parameter
 
 **Purpose**: Remove an unused method parameter and update call sites.
 
@@ -396,7 +429,7 @@ make-field-readonly - Make a field readonly and move initialization to construct
 introduce-parameter - Create a new parameter from selected code (TODO)
 convert-to-static-with-parameters - Transform instance method to static (TODO)
 convert-to-static-with-instance - Transform instance method to static with instance parameter (TODO)
-move-static-method - Move a static method to another class (TODO)
+move-static-method - Move a static method to another class
 move-instance-method - Move an instance method to another class
 transform-setter-to-init - Convert property setter to init-only setter (TODO)
 safe-delete - Safely delete a field, parameter, or variable (TODO)

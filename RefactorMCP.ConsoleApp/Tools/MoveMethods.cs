@@ -153,8 +153,68 @@ public static partial class RefactoringTools
         [Description("Name of the target class")] string targetClass,
         [Description("Path to the target file (optional, will create if doesn't exist)")] string? targetFilePath = null)
     {
-        // TODO: Implement move static method refactoring using Roslyn
-        return $"Move static method '{methodName}' from {filePath} to class '{targetClass}' - Implementation in progress";
+        try
+        {
+            if (!File.Exists(filePath))
+                return $"Error: File {filePath} not found";
+
+            var sourceText = await File.ReadAllTextAsync(filePath);
+            var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
+            var syntaxRoot = await syntaxTree.GetRootAsync();
+
+            var method = syntaxRoot.DescendantNodes()
+                .OfType<MethodDeclarationSyntax>()
+                .FirstOrDefault(m => m.Identifier.ValueText == methodName &&
+                                    m.Modifiers.Any(SyntaxKind.StaticKeyword));
+            if (method == null)
+                return $"Error: Static method '{methodName}' not found";
+
+            var targetPath = targetFilePath ?? filePath;
+            SyntaxNode targetRoot;
+
+            if (File.Exists(targetPath))
+            {
+                var targetText = await File.ReadAllTextAsync(targetPath);
+                targetRoot = await CSharpSyntaxTree.ParseText(targetText).GetRootAsync();
+            }
+            else
+            {
+                targetRoot = SyntaxFactory.CompilationUnit();
+            }
+
+            var targetClassDecl = targetRoot.DescendantNodes()
+                .OfType<ClassDeclarationSyntax>()
+                .FirstOrDefault(c => c.Identifier.ValueText == targetClass);
+
+            if (targetClassDecl == null)
+            {
+                var newClass = SyntaxFactory.ClassDeclaration(targetClass)
+                    .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
+                    .AddMembers(method.WithLeadingTrivia());
+
+                targetRoot = ((CompilationUnitSyntax)targetRoot).AddMembers(newClass);
+            }
+            else
+            {
+                var newTarget = targetClassDecl.AddMembers(method.WithLeadingTrivia());
+                targetRoot = targetRoot.ReplaceNode(targetClassDecl, newTarget);
+            }
+
+            var newSourceRoot = syntaxRoot.RemoveNode(method, SyntaxRemoveOptions.KeepNoTrivia);
+
+            var workspace = new AdhocWorkspace();
+            var formattedSource = Formatter.Format(newSourceRoot, workspace);
+            var formattedTarget = Formatter.Format(targetRoot, workspace);
+
+            await File.WriteAllTextAsync(filePath, formattedSource.ToFullString());
+            await File.WriteAllTextAsync(targetPath, formattedTarget.ToFullString());
+
+            return $"Successfully moved static method '{methodName}' to {targetClass} in {targetPath}";
+        }
+        catch (Exception ex)
+        {
+            return $"Error moving static method: {ex.Message}";
+        }
     }
     [McpServerTool, Description("Move an instance method to another class (preferred for large-file refactoring)")]
     public static async Task<string> MoveInstanceMethod(
