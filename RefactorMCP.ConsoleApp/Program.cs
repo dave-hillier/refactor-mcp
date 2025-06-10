@@ -62,14 +62,15 @@ static async Task RunCliMode(string[] args)
         ["safe-delete-method"] = TestSafeDeleteMethod,
         ["safe-delete-parameter"] = TestSafeDeleteParameter,
         ["safe-delete-variable"] = TestSafeDeleteVariable,
-        ["list-tools"] = _ => Task.FromResult(ListAvailableTools())
+        ["list-tools"] = _ => Task.FromResult(ListAvailableTools()),
+        ["version"] = _ => Task.FromResult(ShowVersionInfo())
     };
 
     try
     {
         if (!handlers.TryGetValue(command, out var handler))
         {
-            Console.WriteLine($"Unknown command: {command}. Use --test list-tools to see available commands.");
+            Console.WriteLine($"Unknown command: {command}. Use --cli list-tools to see available commands.");
             return;
         }
 
@@ -280,7 +281,7 @@ static async Task<string> TestSafeDeleteVariable(string[] args)
 static async Task<string> TestConvertToStaticWithParameters(string[] args)
 {
     if (args.Length < 4)
-        return "Error: Missing arguments. Usage: --test convert-to-static-with-parameters <filePath> <methodName> [solutionPath]";
+        return "Error: Missing arguments. Usage: --cli convert-to-static-with-parameters <filePath> <methodName> [solutionPath]";
 
     var filePath = args[2];
     var methodName = args[3];
@@ -292,7 +293,7 @@ static async Task<string> TestConvertToStaticWithParameters(string[] args)
 static async Task<string> TestConvertToStaticWithInstance(string[] args)
 {
     if (args.Length < 4)
-        return "Error: Missing arguments. Usage: --test convert-to-static-with-instance <filePath> <methodName> [instanceParamName] [solutionPath]";
+        return "Error: Missing arguments. Usage: --cli convert-to-static-with-instance <filePath> <methodName> [instanceParamName] [solutionPath]";
 
     var filePath = args[2];
     var methodName = args[3];
@@ -305,7 +306,7 @@ static async Task<string> TestConvertToStaticWithInstance(string[] args)
 static async Task<string> TestIntroduceParameter(string[] args)
 {
     if (args.Length < 6)
-        return "Error: Missing arguments. Usage: --test introduce-parameter <filePath> <methodName> <range> <parameterName> [solutionPath]";
+        return "Error: Missing arguments. Usage: --cli introduce-parameter <filePath> <methodName> <range> <parameterName> [solutionPath]";
 
     var filePath = args[2];
     var methodName = args[3];
@@ -319,7 +320,7 @@ static async Task<string> TestIntroduceParameter(string[] args)
 static async Task<string> TestMoveStaticMethod(string[] args)
 {
     if (args.Length < 6)
-        return "Error: Missing arguments. Usage: --test move-static-method <solutionPath> <filePath> <methodName> <targetClass> [targetFilePath]";
+        return "Error: Missing arguments. Usage: --cli move-static-method <solutionPath> <filePath> <methodName> <targetClass> [targetFilePath]";
 
     var solutionPath = args[2];
     var filePath = args[3];
@@ -333,7 +334,7 @@ static async Task<string> TestMoveStaticMethod(string[] args)
 static async Task<string> TestMoveInstanceMethod(string[] args)
 {
     if (args.Length < 7)
-        return "Error: Missing arguments. Usage: --test move-instance-method <filePath> <sourceClass> <methodName> <targetClass> <accessMember> [memberType] [solutionPath]";
+        return "Error: Missing arguments. Usage: --cli move-instance-method <filePath> <sourceClass> <methodName> <targetClass> <accessMember> [memberType] [solutionPath]";
 
     var filePath = args[2];
     var sourceClass = args[3];
@@ -349,7 +350,7 @@ static async Task<string> TestMoveInstanceMethod(string[] args)
 static async Task<string> TestTransformSetterToInit(string[] args)
 {
     if (args.Length < 4)
-        return "Error: Missing arguments. Usage: --test transform-setter-to-init <filePath> <propertyName> [solutionPath]";
+        return "Error: Missing arguments. Usage: --cli transform-setter-to-init <filePath> <propertyName> [solutionPath]";
 
     var filePath = args[2];
     var propertyName = args[3];

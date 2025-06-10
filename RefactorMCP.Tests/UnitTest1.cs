@@ -536,28 +536,51 @@ public class CliIntegrationTests
     public async Task CliTestMode_AllToolsListed_ReturnsExpectedTools()
     {
         // Test that all expected tools are available
-        var expectedTools = new[]
+        var expectedCommands = new[]
         {
+            "list-tools",
             "load-solution",
             "extract-method",
             "introduce-field",
             "introduce-variable",
             "make-field-readonly",
+            "unload-solution",
+            "clear-solution-cache",
+            "convert-to-extension-method",
+            "convert-to-static-with-parameters",
+            "convert-to-static-with-instance",
+            "introduce-parameter",
+            "move-static-method",
+            "move-instance-method",
+            "transform-setter-to-init",
+            "safe-delete-field",
+            "safe-delete-method",
+            "safe-delete-parameter",
+            "safe-delete-variable",
             "version"
         };
 
-        // Verify RefactoringTools class has all the expected methods
-        var type = typeof(RefactoringTools);
-        var methods = type.GetMethods(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+        var refactoringMethods = typeof(RefactoringTools)
+            .GetMethods(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
 
-        foreach (var tool in expectedTools)
+        foreach (var command in expectedCommands)
         {
-            var methodName = tool.Replace("-", "")
-                .Split('-')
-                .Select(word => char.ToUpper(word[0]) + word[1..])
-                .Aggregate((a, b) => a + b);
+            if (command == "list-tools")
+            {
+                var progType = typeof(RefactoringTools).Assembly.GetType("Program");
+                Assert.NotNull(progType);
+                var progMethod = progType!.GetMethods(System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
+                    .FirstOrDefault(m => m.Name.Contains("ListAvailableTools"));
+                Assert.NotNull(progMethod);
+                continue;
+            }
 
-            var method = methods.FirstOrDefault(m => m.Name.Equals(methodName, StringComparison.OrdinalIgnoreCase));
+            var pascal = string.Concat(command
+                .Split('-')
+                .Select(w => char.ToUpper(w[0]) + w[1..]));
+
+            var method = refactoringMethods.FirstOrDefault(m =>
+                m.Name.Equals(pascal, StringComparison.OrdinalIgnoreCase));
             Assert.NotNull(method);
         }
     }
