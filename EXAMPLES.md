@@ -367,7 +367,7 @@ introduce-parameter - Create a new parameter from selected code (TODO)
 convert-to-static-with-parameters - Transform instance method to static (TODO)
 convert-to-static-with-instance - Transform instance method to static with instance parameter (TODO)
 move-static-method - Move a static method to another class (TODO)
-move-instance-method - Move an instance method to another class (TODO)
+move-instance-method - Move an instance method to another class
 transform-setter-to-init - Convert property setter to init-only setter (TODO)
 safe-delete - Safely delete a field, parameter, or variable (TODO)
 
