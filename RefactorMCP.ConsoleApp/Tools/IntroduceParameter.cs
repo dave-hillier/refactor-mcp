@@ -8,7 +8,7 @@ using Microsoft.CodeAnalysis.Text;
 
 public static partial class RefactoringTools
 {
-    private static async Task<string> IntroduceParameterWithSolution(Document document, int methodLine, string selectionRange, string parameterName)
+    private static async Task<string> IntroduceParameterWithSolution(Document document, string methodName, string selectionRange, string parameterName)
     {
         var sourceText = await document.GetTextAsync();
         var syntaxRoot = await document.GetSyntaxRootAsync();
@@ -16,9 +16,9 @@ public static partial class RefactoringTools
 
         var method = syntaxRoot!.DescendantNodes()
             .OfType<MethodDeclarationSyntax>()
-            .FirstOrDefault(m => textLines.GetLineFromPosition(m.SpanStart).LineNumber + 1 == methodLine);
+            .FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            return $"Error: No method found at line {methodLine}";
+            return $"Error: No method named '{methodName}' found";
 
         if (!TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
             return "Error: Invalid selection range format";
@@ -47,10 +47,10 @@ public static partial class RefactoringTools
         var newText = await newDocument.GetTextAsync();
         await File.WriteAllTextAsync(document.FilePath!, newText.ToString());
 
-        return $"Successfully introduced parameter '{parameterName}' from {selectionRange} in method at line {methodLine} in {document.FilePath} (solution mode)";
+        return $"Successfully introduced parameter '{parameterName}' from {selectionRange} in method '{methodName}' in {document.FilePath} (solution mode)";
     }
 
-    private static async Task<string> IntroduceParameterSingleFile(string filePath, int methodLine, string selectionRange, string parameterName)
+    private static async Task<string> IntroduceParameterSingleFile(string filePath, string methodName, string selectionRange, string parameterName)
     {
         if (!File.Exists(filePath))
             return $"Error: File {filePath} not found";
@@ -62,9 +62,9 @@ public static partial class RefactoringTools
 
         var method = syntaxRoot.DescendantNodes()
             .OfType<MethodDeclarationSyntax>()
-            .FirstOrDefault(m => textLines.GetLineFromPosition(m.SpanStart).LineNumber + 1 == methodLine);
+            .FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            return $"Error: No method found at line {methodLine}";
+            return $"Error: No method named '{methodName}' found";
 
         if (!TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
             return "Error: Invalid selection range format";
@@ -90,12 +90,12 @@ public static partial class RefactoringTools
         var formattedRoot = Formatter.Format(newRoot, workspace);
         await File.WriteAllTextAsync(filePath, formattedRoot.ToFullString());
 
-        return $"Successfully introduced parameter '{parameterName}' from {selectionRange} in method at line {methodLine} in {filePath} (single file mode)";
+        return $"Successfully introduced parameter '{parameterName}' from {selectionRange} in method '{methodName}' in {filePath} (single file mode)";
     }
     [McpServerTool, Description("Create a new parameter from selected code (preferred for large-file refactoring)")]
     public static async Task<string> IntroduceParameter(
         [Description("Path to the C# file")] string filePath,
-        [Description("Line number of the method to add parameter to")] int methodLine,
+        [Description("Name of the method to add parameter to")] string methodName,
         [Description("Range in format 'startLine:startColumn-endLine:endColumn'")] string selectionRange,
         [Description("Name for the new parameter")] string parameterName,
         [Description("Path to the solution file (.sln) - optional for single file mode")] string? solutionPath = null)
@@ -109,11 +109,11 @@ public static partial class RefactoringTools
                 if (document == null)
                     return $"Error: File {filePath} not found in solution";
 
-                return await IntroduceParameterWithSolution(document, methodLine, selectionRange, parameterName);
+                return await IntroduceParameterWithSolution(document, methodName, selectionRange, parameterName);
             }
             else
             {
-                return await IntroduceParameterSingleFile(filePath, methodLine, selectionRange, parameterName);
+                return await IntroduceParameterSingleFile(filePath, methodName, selectionRange, parameterName);
             }
         }
         catch (Exception ex)

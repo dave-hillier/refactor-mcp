@@ -160,7 +160,7 @@ public void SetFormat(string newFormat)
 dotnet run --project RefactorMCP.ConsoleApp -- --test make-field-readonly \
   "./RefactorMCP.sln" \
   "./RefactorMCP.Tests/ExampleCode.cs" \
-  50
+  format
 ```
 
 **After**:
@@ -225,7 +225,7 @@ public string GetFormattedNumber(int number)
 dotnet run --project RefactorMCP.ConsoleApp -- --test convert-to-static-with-parameters \
   "./RefactorMCP.sln" \
   "./RefactorMCP.Tests/ExampleCode.cs" \
-  46
+  GetFormattedNumber
 ```
 
 **After**:
@@ -254,7 +254,7 @@ public string GetFormattedNumber(int number)
 dotnet run --project RefactorMCP.ConsoleApp -- --test convert-to-static-with-instance \
   "./RefactorMCP.sln" \
   "./RefactorMCP.Tests/ExampleCode.cs" \
-  46 \
+  GetFormattedNumber \
   "calculator"
 ```
 
@@ -284,7 +284,7 @@ public string GetFormattedNumber(int number)
 dotnet run --project RefactorMCP.ConsoleApp -- --test convert-to-extension-method \
   "./RefactorMCP.sln" \
   "./RefactorMCP.Tests/ExampleCode.cs" \
-  46
+  GetFormattedNumber
 ```
 
 **After**:
@@ -397,7 +397,7 @@ introduce-parameter - Create a new parameter from selected code (TODO)
 convert-to-static-with-parameters - Transform instance method to static (TODO)
 convert-to-static-with-instance - Transform instance method to static with instance parameter (TODO)
 move-static-method - Move a static method to another class (TODO)
-move-instance-method - Move an instance method to another class (TODO)
+move-instance-method - Move an instance method to another class
 transform-setter-to-init - Convert property setter to init-only setter (TODO)
 safe-delete - Safely delete a field, parameter, or variable (TODO)
 

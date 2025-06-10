@@ -185,6 +185,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --test <command> [arguments]
 - `introduce-parameter <solutionPath> <filePath> <methodLine> <range> <parameterName>` - Create parameter from expression
 - `convert-to-static-with-parameters <solutionPath> <filePath> <methodLine>` - Convert instance method to static with parameters
 - `convert-to-static-with-instance <solutionPath> <filePath> <methodLine> [instanceName]` - Convert instance method to static with explicit instance
+- `move-instance-method <filePath> <sourceClass> <methodName> <targetClass> <accessMember> [memberType] [solutionPath]` - Move an instance method to another class
 
 #### Quick Start Example
 
@@ -208,7 +209,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --test extract-method \
 dotnet run --project RefactorMCP.ConsoleApp -- --test convert-to-extension-method \
   "./RefactorMCP.sln" \
   "./RefactorMCP.Tests/ExampleCode.cs" \
-  46
+  GetFormattedNumber
 ```
 
 ## Range Format
@@ -327,7 +328,7 @@ public string GetFormattedNumber(int number)
 **Command**:
 ```bash
 dotnet run --project RefactorMCP.ConsoleApp -- --test convert-to-static-with-parameters \
-  "./RefactorMCP.sln" "./MyFile.cs" 46
+  "./RefactorMCP.sln" "./MyFile.cs" GetFormattedNumber
 ```
 
 **After**:
@@ -351,7 +352,7 @@ public string GetFormattedNumber(int number)
 **Command**:
 ```bash
 dotnet run --project RefactorMCP.ConsoleApp -- --test convert-to-static-with-instance \
-  "./RefactorMCP.sln" "./MyFile.cs" 46 "calculator"
+  "./RefactorMCP.sln" "./MyFile.cs" GetFormattedNumber "calculator"
 ```
 
 **After**:
