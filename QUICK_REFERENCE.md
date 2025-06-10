@@ -17,6 +17,8 @@ dotnet run --project RefactorMCP.ConsoleApp -- --test load-solution ./RefactorMC
 dotnet run --project RefactorMCP.ConsoleApp -- --test unload-solution ./RefactorMCP.sln
 # Clear all cached solutions
 dotnet run --project RefactorMCP.ConsoleApp -- --test clear-solution-cache
+# Show version information
+dotnet run --project RefactorMCP.ConsoleApp -- --test version
 ```
 
 ## Refactoring Commands
