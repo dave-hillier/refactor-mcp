@@ -172,8 +172,15 @@ public static partial class RefactoringTools
         var containingClass = containingMethod.Ancestors().OfType<ClassDeclarationSyntax>().FirstOrDefault();
         if (containingClass != null)
         {
-            var updatedClass = containingClass.AddMembers(newMethod);
-            newRoot = newRoot.ReplaceNode(containingClass, updatedClass);
+            var currentClass = newRoot.DescendantNodes()
+                .OfType<ClassDeclarationSyntax>()
+                .FirstOrDefault(c => c.Identifier.Text == containingClass.Identifier.Text);
+
+            if (currentClass != null)
+            {
+                var updatedClass = currentClass.AddMembers(newMethod);
+                newRoot = newRoot.ReplaceNode(currentClass, updatedClass);
+            }
         }
 
         // Format and write back to file
