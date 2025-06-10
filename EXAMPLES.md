@@ -174,7 +174,97 @@ public Calculator(string op)
 // SetFormat method would need to be removed or refactored since field is now readonly
 ```
 
-## 5. Load Solution (Utility Command)
+## 5. Introduce Parameter
+
+**Purpose**: Extract an expression into a new method parameter.
+
+### Example
+**Before** (in `ExampleCode.cs` line 41):
+```csharp
+public string FormatResult(int value)
+{
+    return $"The calculation result is: {value * 2 + 10}";
+}
+```
+
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --test introduce-parameter \
+  "./RefactorMCP.sln" \
+  "./RefactorMCP.Tests/ExampleCode.cs" \
+  40 \
+  "41:50-41:65" \
+  "processedValue"
+```
+
+**After**:
+```csharp
+public string FormatResult(int value, int processedValue)
+{
+    return $"The calculation result is: {processedValue}";
+}
+```
+
+## 6. Convert to Static with Parameters
+
+**Purpose**: Convert an instance method to static by turning field and property usages into parameters.
+
+### Example
+**Before** (in `ExampleCode.cs` line 46):
+```csharp
+public string GetFormattedNumber(int number)
+{
+    return $"{operatorSymbol}: {number}";
+}
+```
+
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --test convert-to-static-with-parameters \
+  "./RefactorMCP.sln" \
+  "./RefactorMCP.Tests/ExampleCode.cs" \
+  46
+```
+
+**After**:
+```csharp
+public static string GetFormattedNumber(string operatorSymbol, int number)
+{
+    return $"{operatorSymbol}: {number}";
+}
+```
+
+## 7. Convert to Static with Instance
+
+**Purpose**: Convert an instance method to static and add an explicit instance parameter for member access.
+
+### Example
+**Before** (same as previous example):
+```csharp
+public string GetFormattedNumber(int number)
+{
+    return $"{operatorSymbol}: {number}";
+}
+```
+
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --test convert-to-static-with-instance \
+  "./RefactorMCP.sln" \
+  "./RefactorMCP.Tests/ExampleCode.cs" \
+  46 \
+  "calculator"
+```
+
+**After**:
+```csharp
+public static string GetFormattedNumber(Calculator calculator, int number)
+{
+    return $"{calculator.operatorSymbol}: {number}";
+}
+```
+
+## 8. Load Solution (Utility Command)
 
 **Purpose**: Load and validate a solution file before performing refactorings.
 
@@ -189,7 +279,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --test load-solution "./RefactorM
 Successfully loaded solution 'RefactorMCP.sln' with 2 projects: RefactorMCP.ConsoleApp, RefactorMCP.Tests
 ```
 
-## 6. Unload Solution (Utility Command)
+## 9. Unload Solution (Utility Command)
 
 **Purpose**: Remove a loaded solution from the in-memory cache.
 
@@ -204,7 +294,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --test unload-solution "./Refacto
 Unloaded solution 'RefactorMCP.sln' from cache
 ```
 
-## 7. Clear Solution Cache (Utility Command)
+## 10. Clear Solution Cache (Utility Command)
 
 **Purpose**: Remove all cached solutions when projects change on disk.
 
@@ -218,7 +308,8 @@ dotnet run --project RefactorMCP.ConsoleApp -- --test clear-solution-cache
 ```
 Cleared all cached solutions
 ```
-## 8. List Tools (Utility Command)
+
+## 11. List Tools (Utility Command)
 
 **Purpose**: Display all available refactoring tools and their status.
 
@@ -245,6 +336,7 @@ move-static-method - Move a static method to another class (TODO)
 move-instance-method - Move an instance method to another class (TODO)
 transform-setter-to-init - Convert property setter to init-only setter (TODO)
 safe-delete - Safely delete a field, parameter, or variable (TODO)
+
 ```
 
 ## Range Format
