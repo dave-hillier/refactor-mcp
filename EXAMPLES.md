@@ -419,7 +419,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --test list-tools
 **Output**:
 ```
 Available refactoring tools:
-load-solution - Load a solution file for refactoring operations
+load-solution - Load a solution file for refactoring operations (not required)
 unload-solution - Remove a loaded solution from cache
 clear-solution-cache - Clear all cached solutions
 extract-method - Extract selected code into a new method
