@@ -264,7 +264,39 @@ public static string GetFormattedNumber(Calculator calculator, int number)
 }
 ```
 
-## 8. Load Solution (Utility Command)
+## 8. Convert To Extension Method
+
+**Purpose**: Transform an instance method into an extension method in a static class.
+
+### Example
+**Before** (in `ExampleCode.cs` line 46):
+```csharp
+public string GetFormattedNumber(int number)
+{
+    return $"{operatorSymbol}: {number}"; // Uses instance field
+}
+```
+
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --test convert-to-extension-method \
+  "./RefactorMCP.sln" \
+  "./RefactorMCP.Tests/ExampleCode.cs" \
+  46
+```
+
+**After**:
+```csharp
+public static class CalculatorExtensions
+{
+    public static string GetFormattedNumber(this Calculator calculator, int number)
+    {
+        return $"{calculator.operatorSymbol}: {number}";
+    }
+}
+```
+
+## 6. Load Solution (Utility Command)
 
 **Purpose**: Load and validate a solution file before performing refactorings.
 

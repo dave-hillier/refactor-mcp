@@ -6,7 +6,7 @@ A Model Context Protocol (MCP) server providing automated refactoring tools for 
 
 - **Solution Mode**: Full semantic analysis with cross-project dependencies
 - **Single File Mode**: Fast refactoring for simple transformations without solution loading
-- **Comprehensive Refactoring Tools**: Extract methods, introduce variables/fields, make fields readonly, and more
+- **Comprehensive Refactoring Tools**: Extract methods, introduce variables/fields, make fields readonly, convert methods to extension methods, and more
 - **MCP Compatible**: Works with any MCP-compatible client
 
 ## Solution Mode vs Single File Mode
@@ -44,7 +44,8 @@ Benefits:
 
 **Use solution mode for:**
 - Move Method operations
-- Convert to Static (requires dependency analysis)
+- Convert to Static (requires dependency analysis)  
+- Convert to Extension Method (for instance methods)
 - Safe Delete (requires usage analysis)
 - Any refactoring requiring cross-references
 
@@ -148,6 +149,7 @@ After configuring, restart your MCP client. The RefactorMCP tools should be avai
 - `introduce_field` - Create fields from expressions
 - `introduce_variable` - Create variables from expressions
 - `make_field_readonly` - Convert fields to readonly
+- `convert_to_extension_method` - Transform instance methods into extension methods
 - `convert_to_static` - Transform methods to static
 - `move_method` - Relocate methods between classes
 - `safe_delete` - Remove unused code safely
@@ -198,6 +200,14 @@ dotnet run --project RefactorMCP.ConsoleApp -- --test extract-method \
   "./RefactorMCP.Tests/ExampleCode.cs" \
   "22:9-25:34" \
   "ValidateInputs"
+```
+
+```bash
+# Convert instance method to extension
+dotnet run --project RefactorMCP.ConsoleApp -- --test convert-to-extension-method \
+  "./RefactorMCP.sln" \
+  "./RefactorMCP.Tests/ExampleCode.cs" \
+  46
 ```
 
 ## Range Format
