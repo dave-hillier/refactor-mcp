@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis;
 
 public static partial class RefactoringTools
 {
-    [McpServerTool, Description("Safely delete a field, parameter, or variable with dependency warnings")]
+    [McpServerTool, Description("Safely delete a field, parameter, or variable with dependency warnings (preferred for large-file refactoring)")]
     public static async Task<string> SafeDelete(
         [Description("Path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
