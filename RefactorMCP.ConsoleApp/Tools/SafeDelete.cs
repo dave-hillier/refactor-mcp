@@ -150,7 +150,7 @@ public static partial class RefactoringTools
     private static async Task<string> SafeDeleteFieldSingleFile(string filePath, string fieldName)
     {
         if (!File.Exists(filePath))
-            return $"Error: File {filePath} not found";
+            return $"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})";
 
         var sourceText = await File.ReadAllTextAsync(filePath);
         var tree = CSharpSyntaxTree.ParseText(sourceText);
@@ -204,7 +204,7 @@ public static partial class RefactoringTools
     private static async Task<string> SafeDeleteMethodSingleFile(string filePath, string methodName)
     {
         if (!File.Exists(filePath))
-            return $"Error: File {filePath} not found";
+            return $"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})";
 
         var sourceText = await File.ReadAllTextAsync(filePath);
         var tree = CSharpSyntaxTree.ParseText(sourceText);
@@ -273,7 +273,7 @@ public static partial class RefactoringTools
     private static async Task<string> SafeDeleteParameterSingleFile(string filePath, string methodName, string parameterName)
     {
         if (!File.Exists(filePath))
-            return $"Error: File {filePath} not found";
+            return $"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})";
 
         var sourceText = await File.ReadAllTextAsync(filePath);
         var tree = CSharpSyntaxTree.ParseText(sourceText);
@@ -348,7 +348,7 @@ public static partial class RefactoringTools
     private static async Task<string> SafeDeleteVariableSingleFile(string filePath, string selectionRange)
     {
         if (!File.Exists(filePath))
-            return $"Error: File {filePath} not found";
+            return $"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})";
 
         var sourceText = await File.ReadAllTextAsync(filePath);
         var tree = CSharpSyntaxTree.ParseText(sourceText);
