@@ -8,7 +8,7 @@ using Microsoft.CodeAnalysis.Text;
 
 public static partial class RefactoringTools
 {
-    [McpServerTool, Description("Convert property setter to init-only setter")]
+    [McpServerTool, Description("Convert property setter to init-only setter (preferred for large-file refactoring)")]
     public static async Task<string> TransformSetterToInit(
         [Description("Path to the C# file")] string filePath,
         [Description("Line number of the property to transform")] int propertyLine,

@@ -8,7 +8,7 @@ using System.IO;
 
 public static partial class RefactoringTools
 {
-    [McpServerTool, Description("Load a solution file for refactoring operations")]
+    [McpServerTool, Description("Load a solution file for refactoring operations (preferred for large-file refactoring)")]
     public static async Task<string> LoadSolution(
         [Description("Path to the solution file (.sln)")] string solutionPath)
     {
