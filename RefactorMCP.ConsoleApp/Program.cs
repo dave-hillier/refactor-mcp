@@ -58,6 +58,7 @@ static async Task RunTestMode(string[] args)
             "safe-delete-method" => await TestSafeDeleteMethod(args),
             "safe-delete-parameter" => await TestSafeDeleteParameter(args),
             "safe-delete-variable" => await TestSafeDeleteVariable(args),
+            "version" => ShowVersionInfo(),
             "list-tools" => ListAvailableTools(),
             _ => $"Unknown command: {command}. Use --test list-tools to see available commands."
         };
@@ -81,6 +82,7 @@ static void ShowTestModeHelp()
     Console.WriteLine("  load-solution <solutionPath>                 - Test loading a solution file (not required)");
     Console.WriteLine("  unload-solution <solutionPath>               - Remove a loaded solution from cache");
     Console.WriteLine("  clear-solution-cache                         - Clear all cached solutions");
+    Console.WriteLine("  version                                      - Show version information");
     Console.WriteLine("  extract-method <filePath> <range> <methodName> [solutionPath]");
     Console.WriteLine("  introduce-field <filePath> <range> <fieldName> [accessModifier] [solutionPath]");
     Console.WriteLine("  introduce-variable <filePath> <range> <variableName> [solutionPath]");
@@ -98,6 +100,7 @@ static void ShowTestModeHelp()
     Console.WriteLine("  --test extract-method ./MyFile.cs \"10:5-15:20\" \"ExtractedMethod\" ./MySolution.sln");
     Console.WriteLine("  --test introduce-field ./MyFile.cs \"12:10-12:25\" \"_myField\" \"private\"");
     Console.WriteLine("  --test make-field-readonly ./MyFile.cs 15");
+    Console.WriteLine("  --test version");
     Console.WriteLine();
     Console.WriteLine("Range format: \"startLine:startColumn-endLine:endColumn\" (1-based)");
     Console.WriteLine("Note: Solution path is optional. When omitted, single file mode is used with limited semantic analysis.");
@@ -201,6 +204,11 @@ static string TestUnloadSolution(string[] args)
 static string ClearCacheCommand()
 {
     return RefactoringTools.ClearSolutionCache();
+}
+
+static string ShowVersionInfo()
+{
+    return RefactoringTools.Version();
 }
 
 static async Task<string> TestConvertToExtensionMethod(string[] args)

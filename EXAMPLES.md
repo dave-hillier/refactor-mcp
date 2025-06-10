@@ -436,6 +436,21 @@ safe-delete - Safely delete a field, parameter, or variable (TODO)
 
 ```
 
+## 12. Version Info (Utility Command)
+
+**Purpose**: Display the current build version and timestamp.
+
+### Example
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --test version
+```
+
+**Expected Output**:
+```
+Version: 1.0.0.0 (Build 2024-01-01 00:00:00Z)
+```
+
 ## Range Format
 
 All refactoring commands that require selecting code use the range format:
