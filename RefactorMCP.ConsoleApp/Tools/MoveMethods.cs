@@ -169,10 +169,18 @@ public static partial class RefactoringTools
             if (method == null)
                 return $"Error: Static method '{methodName}' not found";
 
-            var targetPath = targetFilePath ?? filePath;
-            SyntaxNode targetRoot;
+            var targetPath = targetFilePath ?? Path.Combine(Path.GetDirectoryName(filePath)!, $"{targetClass}.cs");
+            var sameFile = targetPath == filePath;
 
-            if (File.Exists(targetPath))
+            // Remove the original method
+            var newSourceRoot = syntaxRoot.RemoveNode(method, SyntaxRemoveOptions.KeepNoTrivia);
+
+            SyntaxNode targetRoot;
+            if (sameFile)
+            {
+                targetRoot = newSourceRoot;
+            }
+            else if (File.Exists(targetPath))
             {
                 var targetText = await File.ReadAllTextAsync(targetPath);
                 targetRoot = await CSharpSyntaxTree.ParseText(targetText).GetRootAsync();
@@ -200,13 +208,16 @@ public static partial class RefactoringTools
                 targetRoot = targetRoot.ReplaceNode(targetClassDecl, newTarget);
             }
 
-            var newSourceRoot = syntaxRoot.RemoveNode(method, SyntaxRemoveOptions.KeepNoTrivia);
-
             var workspace = new AdhocWorkspace();
-            var formattedSource = Formatter.Format(newSourceRoot, workspace);
             var formattedTarget = Formatter.Format(targetRoot, workspace);
 
-            await File.WriteAllTextAsync(filePath, formattedSource.ToFullString());
+            if (!sameFile)
+            {
+                var formattedSource = Formatter.Format(newSourceRoot, workspace);
+                await File.WriteAllTextAsync(filePath, formattedSource.ToFullString());
+            }
+
+            Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
             await File.WriteAllTextAsync(targetPath, formattedTarget.ToFullString());
 
             return $"Successfully moved static method '{methodName}' to {targetClass} in {targetPath}";
