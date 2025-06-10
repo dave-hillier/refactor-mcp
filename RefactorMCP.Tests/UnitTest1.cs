@@ -500,7 +500,7 @@ public class TestClass
     }
 }
 
-// Integration tests for the CLI test mode
+// Integration tests for the CLI mode
 public class CliIntegrationTests
 {
     private static string GetSolutionPath()

@@ -12,9 +12,9 @@ using System.ComponentModel;
 using System.Text;
 
 // Parse command line arguments
-if (args.Length > 0 && args[0] == "--test")
+if (args.Length > 0 && args[0] == "--cli")
 {
-    await RunTestMode(args);
+    await RunCliMode(args);
     return;
 }
 
@@ -32,11 +32,11 @@ builder.Services
 
 await builder.Build().RunAsync();
 
-static async Task RunTestMode(string[] args)
+static async Task RunCliMode(string[] args)
 {
     if (args.Length < 2)
     {
-        ShowTestModeHelp();
+        ShowCliHelp();
         return;
     }
 
@@ -60,7 +60,7 @@ static async Task RunTestMode(string[] args)
             "safe-delete-variable" => await TestSafeDeleteVariable(args),
             "version" => ShowVersionInfo(),
             "list-tools" => ListAvailableTools(),
-            _ => $"Unknown command: {command}. Use --test list-tools to see available commands."
+            _ => $"Unknown command: {command}. Use --cli list-tools to see available commands."
         };
 
         Console.WriteLine(result);
@@ -72,10 +72,10 @@ static async Task RunTestMode(string[] args)
     }
 }
 
-static void ShowTestModeHelp()
+static void ShowCliHelp()
 {
-    Console.WriteLine("RefactorMCP Test Mode");
-    Console.WriteLine("Usage: RefactorMCP.ConsoleApp --test <command> [arguments]");
+    Console.WriteLine("RefactorMCP CLI Mode");
+    Console.WriteLine("Usage: RefactorMCP.ConsoleApp --cli <command> [arguments]");
     Console.WriteLine();
     Console.WriteLine("Available commands:");
     Console.WriteLine("  list-tools                                    - List all available refactoring tools");
@@ -95,12 +95,12 @@ static void ShowTestModeHelp()
     Console.WriteLine("  move-instance-method <filePath> <sourceClass> <methodName> <targetClass> <accessMember> [memberType] [solutionPath]");
     Console.WriteLine();
     Console.WriteLine("Examples:");
-    Console.WriteLine("  --test load-solution ./MySolution.sln");
-    Console.WriteLine("  --test extract-method ./MyFile.cs \"10:5-15:20\" \"ExtractedMethod\"");
-    Console.WriteLine("  --test extract-method ./MyFile.cs \"10:5-15:20\" \"ExtractedMethod\" ./MySolution.sln");
-    Console.WriteLine("  --test introduce-field ./MyFile.cs \"12:10-12:25\" \"_myField\" \"private\"");
-    Console.WriteLine("  --test make-field-readonly ./MyFile.cs 15");
-    Console.WriteLine("  --test version");
+    Console.WriteLine("  --cli load-solution ./MySolution.sln");
+    Console.WriteLine("  --cli extract-method ./MyFile.cs \"10:5-15:20\" \"ExtractedMethod\"");
+    Console.WriteLine("  --cli extract-method ./MyFile.cs \"10:5-15:20\" \"ExtractedMethod\" ./MySolution.sln");
+    Console.WriteLine("  --cli introduce-field ./MyFile.cs \"12:10-12:25\" \"_myField\" \"private\"");
+    Console.WriteLine("  --cli make-field-readonly ./MyFile.cs 15");
+    Console.WriteLine("  --cli version");
     Console.WriteLine();
     Console.WriteLine("Range format: \"startLine:startColumn-endLine:endColumn\" (1-based)");
     Console.WriteLine("Note: Solution path is optional. When omitted, single file mode is used with limited semantic analysis.");
@@ -134,7 +134,7 @@ static string ListAvailableTools()
 static async Task<string> TestLoadSolution(string[] args)
 {
     if (args.Length < 3)
-        return "Error: Missing solution path. Usage: --test load-solution <solutionPath>";
+        return "Error: Missing solution path. Usage: --cli load-solution <solutionPath>";
 
     var solutionPath = args[2];
     return await RefactoringTools.LoadSolution(solutionPath);
@@ -143,7 +143,7 @@ static async Task<string> TestLoadSolution(string[] args)
 static async Task<string> TestExtractMethod(string[] args)
 {
     if (args.Length < 5)
-        return "Error: Missing arguments. Usage: --test extract-method <filePath> <range> <methodName> [solutionPath]";
+        return "Error: Missing arguments. Usage: --cli extract-method <filePath> <range> <methodName> [solutionPath]";
 
     var filePath = args[2];
     var range = args[3];
@@ -156,7 +156,7 @@ static async Task<string> TestExtractMethod(string[] args)
 static async Task<string> TestIntroduceField(string[] args)
 {
     if (args.Length < 5)
-        return "Error: Missing arguments. Usage: --test introduce-field <filePath> <range> <fieldName> [accessModifier] [solutionPath]";
+        return "Error: Missing arguments. Usage: --cli introduce-field <filePath> <range> <fieldName> [accessModifier] [solutionPath]";
 
     var filePath = args[2];
     var range = args[3];
@@ -170,7 +170,7 @@ static async Task<string> TestIntroduceField(string[] args)
 static async Task<string> TestIntroduceVariable(string[] args)
 {
     if (args.Length < 5)
-        return "Error: Missing arguments. Usage: --test introduce-variable <filePath> <range> <variableName> [solutionPath]";
+        return "Error: Missing arguments. Usage: --cli introduce-variable <filePath> <range> <variableName> [solutionPath]";
 
     var filePath = args[2];
     var range = args[3];
@@ -183,7 +183,7 @@ static async Task<string> TestIntroduceVariable(string[] args)
 static async Task<string> TestMakeFieldReadonly(string[] args)
 {
     if (args.Length < 4)
-        return "Error: Missing arguments. Usage: --test make-field-readonly <filePath> <fieldName> [solutionPath]";
+        return "Error: Missing arguments. Usage: --cli make-field-readonly <filePath> <fieldName> [solutionPath]";
 
     var filePath = args[2];
     var fieldName = args[3];
@@ -195,7 +195,7 @@ static async Task<string> TestMakeFieldReadonly(string[] args)
 static string TestUnloadSolution(string[] args)
 {
     if (args.Length < 3)
-        return "Error: Missing solution path. Usage: --test unload-solution <solutionPath>";
+        return "Error: Missing solution path. Usage: --cli unload-solution <solutionPath>";
 
     var solutionPath = args[2];
     return RefactoringTools.UnloadSolution(solutionPath);
@@ -214,7 +214,7 @@ static string ShowVersionInfo()
 static async Task<string> TestConvertToExtensionMethod(string[] args)
 {
     if (args.Length < 4)
-        return "Error: Missing arguments. Usage: --test convert-to-extension-method <filePath> <methodName> [solutionPath]";
+        return "Error: Missing arguments. Usage: --cli convert-to-extension-method <filePath> <methodName> [solutionPath]";
 
     var filePath = args[2];
     var methodName = args[3];
@@ -226,7 +226,7 @@ static async Task<string> TestConvertToExtensionMethod(string[] args)
 static async Task<string> TestSafeDeleteField(string[] args)
 {
     if (args.Length < 4)
-        return "Error: Missing arguments. Usage: --test safe-delete-field <filePath> <fieldName> [solutionPath]";
+        return "Error: Missing arguments. Usage: --cli safe-delete-field <filePath> <fieldName> [solutionPath]";
 
     var filePath = args[2];
     var fieldName = args[3];
@@ -238,7 +238,7 @@ static async Task<string> TestSafeDeleteField(string[] args)
 static async Task<string> TestSafeDeleteMethod(string[] args)
 {
     if (args.Length < 4)
-        return "Error: Missing arguments. Usage: --test safe-delete-method <filePath> <methodName> [solutionPath]";
+        return "Error: Missing arguments. Usage: --cli safe-delete-method <filePath> <methodName> [solutionPath]";
 
     var filePath = args[2];
     var methodName = args[3];
@@ -250,7 +250,7 @@ static async Task<string> TestSafeDeleteMethod(string[] args)
 static async Task<string> TestSafeDeleteParameter(string[] args)
 {
     if (args.Length < 5)
-        return "Error: Missing arguments. Usage: --test safe-delete-parameter <filePath> <methodName> <parameterName> [solutionPath]";
+        return "Error: Missing arguments. Usage: --cli safe-delete-parameter <filePath> <methodName> <parameterName> [solutionPath]";
 
     var filePath = args[2];
     var methodName = args[3];
@@ -263,7 +263,7 @@ static async Task<string> TestSafeDeleteParameter(string[] args)
 static async Task<string> TestSafeDeleteVariable(string[] args)
 {
     if (args.Length < 4)
-        return "Error: Missing arguments. Usage: --test safe-delete-variable <filePath> <range> [solutionPath]";
+        return "Error: Missing arguments. Usage: --cli safe-delete-variable <filePath> <range> [solutionPath]";
 
     var filePath = args[2];
     var range = args[3];
