@@ -87,9 +87,15 @@ public static partial class RefactoringTools
         var containingClass = selectedExpression.Ancestors().OfType<ClassDeclarationSyntax>().FirstOrDefault();
         if (containingClass != null)
         {
-            var updatedClass = containingClass.WithMembers(
-                containingClass.Members.Insert(0, fieldDeclaration));
-            newRoot = newRoot.ReplaceNode(containingClass, updatedClass);
+            var currentClass = newRoot.DescendantNodes()
+                .OfType<ClassDeclarationSyntax>()
+                .FirstOrDefault(c => c.Identifier.Text == containingClass.Identifier.Text);
+
+            if (currentClass != null)
+            {
+                var updatedClass = currentClass.WithMembers(currentClass.Members.Insert(0, fieldDeclaration));
+                newRoot = newRoot.ReplaceNode(currentClass, updatedClass);
+            }
         }
 
         var formattedRoot = Formatter.Format(newRoot, document.Project.Solution.Workspace);
