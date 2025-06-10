@@ -9,7 +9,7 @@ namespace RefactorMCP.Tests;
 /// Tests that validate all examples in EXAMPLES.md work correctly
 /// These tests ensure our documentation is accurate and examples are functional
 /// </summary>
-public class ExampleValidationTests
+public class ExampleValidationTests : IDisposable
 {
     private static readonly string SolutionPath = GetSolutionPath();
     private const string TestOutputPath = "./RefactorMCP.Tests/TestOutput/Examples";
@@ -17,6 +17,14 @@ public class ExampleValidationTests
     public ExampleValidationTests()
     {
         Directory.CreateDirectory(TestOutputPath);
+    }
+
+    public void Dispose()
+    {
+        if (Directory.Exists(TestOutputPath))
+        {
+            Directory.Delete(TestOutputPath, true);
+        }
     }
 
     private static string GetSolutionPath()
@@ -55,11 +63,10 @@ public class ExampleValidationTests
             SolutionPath
         );
 
-        // Assert
+        // Assert result text and file contents
         Assert.Contains("Successfully extracted method", result);
-        Assert.Contains("ValidateInputs", result);
-
-        // File modification verification skipped
+        var fileContent = await File.ReadAllTextAsync(testFile);
+        Assert.Contains("ValidateInputs();", fileContent);
     }
 
     [Fact]
@@ -79,11 +86,10 @@ public class ExampleValidationTests
             SolutionPath
         );
 
-        // Assert
+        // Assert result text and file contents
         Assert.Contains("Successfully introduced private field", result);
-        Assert.Contains("_averageValue", result);
-
-        // File modification verification skipped
+        var fileContent = await File.ReadAllTextAsync(testFile);
+        Assert.Contains("_averageValue", fileContent);
     }
 
     [Fact]
@@ -102,11 +108,10 @@ public class ExampleValidationTests
             SolutionPath
         );
 
-        // Assert
+        // Assert result text and file contents
         Assert.Contains("Successfully introduced variable", result);
-        Assert.Contains("processedValue", result);
-
-        // File modification verification skipped
+        var fileContent = await File.ReadAllTextAsync(testFile);
+        Assert.Contains("processedValue", fileContent);
     }
 
     [Fact]
@@ -124,10 +129,10 @@ public class ExampleValidationTests
             SolutionPath
         );
 
-        // Assert
+        // Assert result text and file contents
         Assert.Contains("Successfully made field readonly", result);
-
-        // File modification verification skipped
+        var fileContent = await File.ReadAllTextAsync(testFile);
+        Assert.Contains("readonly string format", fileContent);
     }
 
     [Fact]
@@ -147,6 +152,7 @@ public class ExampleValidationTests
         );
 
         Assert.Contains("Successfully extracted method", result);
+        var fileContent = await File.ReadAllTextAsync(testFile);
     }
 
     [Fact]
@@ -167,6 +173,8 @@ public class ExampleValidationTests
         );
 
         Assert.Contains("Successfully introduced private field", result);
+        var fileContent = await File.ReadAllTextAsync(testFile);
+        Assert.Contains("_averageValue", fileContent);
     }
 
     [Theory]
@@ -190,6 +198,8 @@ public class ExampleValidationTests
         );
 
         Assert.Contains($"Successfully introduced {accessModifier} field", result);
+        var fileContent = await File.ReadAllTextAsync(testFile);
+        Assert.Contains($"_{accessModifier}Field", fileContent);
     }
 
     [Fact]
