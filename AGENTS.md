@@ -11,8 +11,8 @@ This repository implements a Model Context Protocol (MCP) server that exposes re
 
 ## Updating Documentation
 
-- Document the new agent in **README.md** and **EXAMPLES.md**.
-- Provide a short usage snippet in **QUICK_REFERENCE.md**.
+- Document the new agent in **README.md** and **docs/EXAMPLES.md**.
+- Provide a short usage snippet in **docs/QUICK_REFERENCE.md**.
 - Include a minimal example in the test suite under `RefactorMCP.Tests`.
 
 ## Formatting and Testing

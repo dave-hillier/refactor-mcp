@@ -420,7 +420,7 @@ public class MathUtilities
 
 ## Complete Examples
 
-See [EXAMPLES.md](./EXAMPLES.md) for comprehensive examples of all refactoring tools, including:
+See [EXAMPLES.md](./docs/EXAMPLES.md) for comprehensive examples of all refactoring tools, including:
 
 - Detailed before/after code samples
 - Exact command-line usage
@@ -495,6 +495,6 @@ Common error scenarios and solutions:
 ## Support
 
 For issues and questions:
-- Check [EXAMPLES.md](./EXAMPLES.md) for usage guidance
+- Check [EXAMPLES.md](./docs/EXAMPLES.md) for usage guidance
 - Review error messages for specific guidance
 - Test with simple cases before complex refactorings 
