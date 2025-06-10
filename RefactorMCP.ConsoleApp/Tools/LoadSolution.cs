@@ -1,5 +1,7 @@
 using ModelContextProtocol.Server;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.MSBuild;
+using Microsoft.Extensions.Caching.Memory;
 using System.ComponentModel;
 using System.IO;
 
@@ -17,7 +19,7 @@ public static partial class RefactoringTools
                 return $"Error: Solution file not found at {solutionPath}";
             }
 
-            if (_loadedSolutions.TryGetValue(solutionPath, out var cached))
+            if (_solutionCache.TryGetValue(solutionPath, out Solution? cached))
             {
                 var cachedProjects = cached.Projects.Select(p => p.Name).ToList();
                 return $"Successfully loaded solution '{Path.GetFileName(solutionPath)}' with {cachedProjects.Count} projects: {string.Join(", ", cachedProjects)}";
@@ -26,7 +28,7 @@ public static partial class RefactoringTools
             using var workspace = MSBuildWorkspace.Create();
             var solution = await workspace.OpenSolutionAsync(solutionPath);
 
-            _loadedSolutions[solutionPath] = solution;
+            _solutionCache.Set(solutionPath, solution);
 
             var projects = solution.Projects.Select(p => p.Name).ToList();
             return $"Successfully loaded solution '{Path.GetFileName(solutionPath)}' with {projects.Count} projects: {string.Join(", ", projects)}";
