@@ -189,7 +189,36 @@ dotnet run --project RefactorMCP.ConsoleApp -- --test load-solution "./RefactorM
 Successfully loaded solution 'RefactorMCP.sln' with 2 projects: RefactorMCP.ConsoleApp, RefactorMCP.Tests
 ```
 
-## 6. List Tools (Utility Command)
+## 6. Unload Solution (Utility Command)
+
+**Purpose**: Remove a loaded solution from the in-memory cache.
+
+### Example
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --test unload-solution "./RefactorMCP.sln"
+```
+
+**Expected Output**:
+```
+Unloaded solution 'RefactorMCP.sln' from cache
+```
+
+## 7. Clear Solution Cache (Utility Command)
+
+**Purpose**: Remove all cached solutions when projects change on disk.
+
+### Example
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --test clear-solution-cache
+```
+
+**Expected Output**:
+```
+Cleared all cached solutions
+```
+## 8. List Tools (Utility Command)
 
 **Purpose**: Display all available refactoring tools and their status.
 
@@ -203,6 +232,8 @@ dotnet run --project RefactorMCP.ConsoleApp -- --test list-tools
 ```
 Available refactoring tools:
 load-solution - Load a solution file for refactoring operations
+unload-solution - Remove a loaded solution from cache
+clear-solution-cache - Clear all cached solutions
 extract-method - Extract selected code into a new method
 introduce-field - Create a new field from selected code
 introduce-variable - Create a new variable from selected code

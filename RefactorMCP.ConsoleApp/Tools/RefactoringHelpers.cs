@@ -1,21 +1,22 @@
 using ModelContextProtocol.Server;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.MSBuild;
-using System.Collections.Generic;
+using Microsoft.Extensions.Caching.Memory;
+
 
 
 public static partial class RefactoringTools
 {
-    private static readonly Dictionary<string, Solution> _loadedSolutions = new();
+    private static MemoryCache _solutionCache = new(new MemoryCacheOptions());
 
     private static async Task<Solution> GetOrLoadSolution(string solutionPath)
     {
-        if (_loadedSolutions.TryGetValue(solutionPath, out var cachedSolution))
-            return cachedSolution;
+        if (_solutionCache.TryGetValue(solutionPath, out Solution? cachedSolution))
+            return cachedSolution!;
 
         using var workspace = MSBuildWorkspace.Create();
         var solution = await workspace.OpenSolutionAsync(solutionPath);
-        _loadedSolutions[solutionPath] = solution;
+        _solutionCache.Set(solutionPath, solution);
         return solution;
     }
 
