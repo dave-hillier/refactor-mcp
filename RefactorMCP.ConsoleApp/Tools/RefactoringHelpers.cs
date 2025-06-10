@@ -2,12 +2,18 @@ using ModelContextProtocol.Server;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.MSBuild;
 using Microsoft.Extensions.Caching.Memory;
+using System;
 
 
 
 public static partial class RefactoringTools
 {
     private static MemoryCache _solutionCache = new(new MemoryCacheOptions());
+
+    private static readonly Lazy<AdhocWorkspace> _workspace =
+        new(() => new AdhocWorkspace());
+
+    internal static AdhocWorkspace SharedWorkspace => _workspace.Value;
 
     private static async Task<Solution> GetOrLoadSolution(string solutionPath)
     {

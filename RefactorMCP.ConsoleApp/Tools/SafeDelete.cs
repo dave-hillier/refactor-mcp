@@ -174,8 +174,7 @@ public static partial class RefactoringTools
             newRoot = root.ReplaceNode(field, field.WithDeclaration(newDecl));
         }
 
-        var workspace = new AdhocWorkspace();
-        var formatted = Formatter.Format(newRoot, workspace);
+        var formatted = Formatter.Format(newRoot, SharedWorkspace);
         await File.WriteAllTextAsync(filePath, formatted.ToFullString());
         return $"Successfully deleted field '{fieldName}' in {filePath} (single file mode)";
     }
@@ -220,8 +219,7 @@ public static partial class RefactoringTools
             return $"Error: Method '{methodName}' is referenced";
 
         var newRoot = root.RemoveNode(method, SyntaxRemoveOptions.KeepNoTrivia);
-        var workspace = new AdhocWorkspace();
-        var formatted = Formatter.Format(newRoot, workspace);
+        var formatted = Formatter.Format(newRoot, SharedWorkspace);
         await File.WriteAllTextAsync(filePath, formatted.ToFullString());
         return $"Successfully deleted method '{methodName}' in {filePath} (single file mode)";
     }
@@ -304,8 +302,7 @@ public static partial class RefactoringTools
 
         var newMethod = method.WithParameterList(method.ParameterList.WithParameters(method.ParameterList.Parameters.Remove(parameter)));
         root = root.ReplaceNode(method, newMethod);
-        var workspace = new AdhocWorkspace();
-        var formatted = Formatter.Format(root, workspace);
+        var formatted = Formatter.Format(root, SharedWorkspace);
         await File.WriteAllTextAsync(filePath, formatted.ToFullString());
         return $"Successfully deleted parameter '{parameterName}' from method '{methodName}' in {filePath} (single file mode)";
     }
@@ -382,8 +379,7 @@ public static partial class RefactoringTools
             newRoot = root.ReplaceNode(statement, statement.WithDeclaration(newDecl));
         }
 
-        var workspace = new AdhocWorkspace();
-        var formatted = Formatter.Format(newRoot, workspace);
+        var formatted = Formatter.Format(newRoot, SharedWorkspace);
         await File.WriteAllTextAsync(filePath, formatted.ToFullString());
         return $"Successfully deleted variable '{name}' in {filePath} (single file mode)";
     }

@@ -185,8 +185,7 @@ public static partial class RefactoringTools
             .WithParameterList(parameterList);
 
         var newRoot = syntaxRoot.ReplaceNode(method, updatedMethod);
-        var workspace = new AdhocWorkspace();
-        var formattedRoot = Formatter.Format(newRoot, workspace);
+        var formattedRoot = Formatter.Format(newRoot, SharedWorkspace);
         await File.WriteAllTextAsync(filePath, formattedRoot.ToFullString());
 
         return $"Successfully converted method '{methodName}' to static with parameters in {filePath} (single file mode)";
