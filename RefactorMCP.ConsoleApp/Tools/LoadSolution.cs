@@ -1,6 +1,7 @@
 using ModelContextProtocol.Server;
 using Microsoft.CodeAnalysis.MSBuild;
 using System.ComponentModel;
+using System.IO;
 
 
 public static partial class RefactoringTools
@@ -14,6 +15,12 @@ public static partial class RefactoringTools
             if (!File.Exists(solutionPath))
             {
                 return $"Error: Solution file not found at {solutionPath}";
+            }
+
+            if (_loadedSolutions.TryGetValue(solutionPath, out var cached))
+            {
+                var cachedProjects = cached.Projects.Select(p => p.Name).ToList();
+                return $"Successfully loaded solution '{Path.GetFileName(solutionPath)}' with {cachedProjects.Count} projects: {string.Join(", ", cachedProjects)}";
             }
 
             using var workspace = MSBuildWorkspace.Create();

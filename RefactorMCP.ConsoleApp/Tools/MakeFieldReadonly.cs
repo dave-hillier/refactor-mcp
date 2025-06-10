@@ -5,6 +5,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Text;
+using System.Linq;
 
 public static partial class RefactoringTools
 {
@@ -32,7 +33,7 @@ public static partial class RefactoringTools
         }
         catch (Exception ex)
         {
-            return $"Error making field readonly: {ex.Message}";
+            return $"Error: {ex.Message}";
         }
     }
 
@@ -41,7 +42,10 @@ public static partial class RefactoringTools
         var sourceText = await document.GetTextAsync();
         var syntaxRoot = await document.GetSyntaxRootAsync();
 
-        var linePosition = sourceText.Lines[fieldLine - 1].Start;
+        var line = sourceText.Lines[fieldLine - 1];
+        var lineText = line.ToString();
+        var nonWs = lineText.TakeWhile(char.IsWhiteSpace).Count();
+        var linePosition = line.Start + nonWs;
         var fieldDeclaration = syntaxRoot!.DescendantNodes()
             .OfType<FieldDeclarationSyntax>()
             .FirstOrDefault(f => f.Span.Contains(linePosition));
@@ -134,7 +138,10 @@ public static partial class RefactoringTools
         var syntaxRoot = await syntaxTree.GetRootAsync();
         var textLines = SourceText.From(sourceText).Lines;
 
-        var linePosition = textLines[fieldLine - 1].Start;
+        var line = textLines[fieldLine - 1];
+        var lineText = line.ToString();
+        var nonWs = lineText.TakeWhile(char.IsWhiteSpace).Count();
+        var linePosition = line.Start + nonWs;
         var fieldDeclaration = syntaxRoot.DescendantNodes()
             .OfType<FieldDeclarationSyntax>()
             .FirstOrDefault(f => f.Span.Contains(linePosition));
