@@ -211,7 +211,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli convert-to-extension-method
 
 | Error | Solution |
 |-------|----------|
-| File not found | Check file path relative to solution |
+| File not found | Check file path relative to solution. The error lists the current working directory |
 | Invalid range | Verify 1-based line:column format |
 | No extractable code | Select complete statements/expressions |
 | Solution not loaded | Run load-solution command first |

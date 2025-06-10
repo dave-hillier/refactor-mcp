@@ -109,7 +109,7 @@ public static partial class RefactoringTools
     private static async Task<string> IntroduceFieldSingleFile(string filePath, string selectionRange, string fieldName, string accessModifier)
     {
         if (!File.Exists(filePath))
-            return $"Error: File {filePath} not found";
+            return $"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})";
 
         var sourceText = await File.ReadAllTextAsync(filePath);
         var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);

@@ -21,7 +21,7 @@ public static partial class RefactoringTools
                 var solution = await GetOrLoadSolution(solutionPath);
                 var document = GetDocumentByPath(solution, filePath);
                 if (document == null)
-                    return $"Error: File {filePath} not found in solution";
+                    return $"Error: File {filePath} not found in solution (current dir: {Directory.GetCurrentDirectory()})";
 
                 return await ConvertToStaticWithParametersWithSolution(document, methodName);
             }
@@ -119,7 +119,7 @@ public static partial class RefactoringTools
     private static async Task<string> ConvertToStaticWithParametersSingleFile(string filePath, string methodName)
     {
         if (!File.Exists(filePath))
-            return $"Error: File {filePath} not found";
+            return $"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})";
 
         var sourceText = await File.ReadAllTextAsync(filePath);
         var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
