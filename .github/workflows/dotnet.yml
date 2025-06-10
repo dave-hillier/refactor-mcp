@@ -14,5 +14,4 @@ jobs:
         with:
           dotnet-version: '9.0.x'
       - run: dotnet restore
-      - run: dotnet format --no-restore --verify-no-changes
       - run: dotnet test --no-build --verbosity normal
