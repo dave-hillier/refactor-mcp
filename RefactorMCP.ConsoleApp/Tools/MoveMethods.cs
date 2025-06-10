@@ -79,7 +79,7 @@ public static partial class RefactoringTools
     private static async Task<string> MoveInstanceMethodSingleFile(string filePath, string sourceClass, string methodName, string targetClass, string accessMemberName, string accessMemberType)
     {
         if (!File.Exists(filePath))
-            return $"Error: File {filePath} not found";
+            return $"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})";
 
         var sourceText = await File.ReadAllTextAsync(filePath);
         var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
@@ -155,7 +155,7 @@ public static partial class RefactoringTools
         try
         {
             if (!File.Exists(filePath))
-                return $"Error: File {filePath} not found";
+                return $"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})";
 
             var sourceText = await File.ReadAllTextAsync(filePath);
             var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);

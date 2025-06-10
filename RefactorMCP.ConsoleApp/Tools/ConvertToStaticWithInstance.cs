@@ -97,7 +97,7 @@ public static partial class RefactoringTools
     private static async Task<string> ConvertToStaticWithInstanceSingleFile(string filePath, string methodName, string instanceParameterName)
     {
         if (!File.Exists(filePath))
-            return $"Error: File {filePath} not found";
+            return $"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})";
 
         var sourceText = await File.ReadAllTextAsync(filePath);
         var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
