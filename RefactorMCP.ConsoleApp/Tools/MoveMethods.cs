@@ -127,7 +127,7 @@ public static partial class RefactoringTools
         return $"Successfully moved instance method to {targetClass} in {filePath} (single file mode)";
     }
 
-    [McpServerTool, Description("Move a static method to another class")]
+    [McpServerTool, Description("Move a static method to another class (preferred for large-file refactoring)")]
     public static async Task<string> MoveStaticMethod(
         [Description("Path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file containing the method")] string filePath,
@@ -138,7 +138,7 @@ public static partial class RefactoringTools
         // TODO: Implement move static method refactoring using Roslyn
         return $"Move static method at line {methodLine} from {filePath} to class '{targetClass}' - Implementation in progress";
     }
-    [McpServerTool, Description("Move an instance method to another class")]
+    [McpServerTool, Description("Move an instance method to another class (preferred for large-file refactoring)")]
     public static async Task<string> MoveInstanceMethod(
         [Description("Path to the C# file containing the method")] string filePath,
         [Description("Line number of the instance method to move")] int methodLine,
