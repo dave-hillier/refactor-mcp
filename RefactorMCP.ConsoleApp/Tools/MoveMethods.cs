@@ -9,6 +9,7 @@ using Microsoft.CodeAnalysis.Text;
 
 public static partial class RefactoringTools
 {
+
     private static async Task<string> MoveInstanceMethodWithSolution(Document document, string sourceClass, string methodName, string targetClass, string accessMemberName, string accessMemberType)
     {
         var sourceText = await document.GetTextAsync();
@@ -23,7 +24,7 @@ public static partial class RefactoringTools
             .OfType<MethodDeclarationSyntax>()
             .FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            return $"Error: Method '{methodName}' not found in class '{sourceClass}'";
+            return $"Error: No method named '{methodName}' found";
 
         var targetClassDecl = syntaxRoot.DescendantNodes()
             .OfType<ClassDeclarationSyntax>()
@@ -74,6 +75,7 @@ public static partial class RefactoringTools
         return $"Successfully moved instance method to {targetClass} in {document.FilePath}";
     }
 
+
     private static async Task<string> MoveInstanceMethodSingleFile(string filePath, string sourceClass, string methodName, string targetClass, string accessMemberName, string accessMemberType)
     {
         if (!File.Exists(filePath))
@@ -82,6 +84,7 @@ public static partial class RefactoringTools
         var sourceText = await File.ReadAllTextAsync(filePath);
         var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
         var syntaxRoot = await syntaxTree.GetRootAsync();
+
         var originClass = syntaxRoot.DescendantNodes()
             .OfType<ClassDeclarationSyntax>()
             .FirstOrDefault(c => c.Identifier.ValueText == sourceClass);
@@ -92,7 +95,7 @@ public static partial class RefactoringTools
             .OfType<MethodDeclarationSyntax>()
             .FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            return $"Error: Method '{methodName}' not found in class '{sourceClass}'";
+            return $"Error: No method named '{methodName}' found";
 
         var targetClassDecl = syntaxRoot.DescendantNodes()
             .OfType<ClassDeclarationSyntax>()
@@ -146,12 +149,12 @@ public static partial class RefactoringTools
     public static async Task<string> MoveStaticMethod(
         [Description("Path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file containing the method")] string filePath,
-        [Description("Line number of the static method to move")] int methodLine,
+        [Description("Name of the static method to move")] string methodName,
         [Description("Name of the target class")] string targetClass,
         [Description("Path to the target file (optional, will create if doesn't exist)")] string? targetFilePath = null)
     {
         // TODO: Implement move static method refactoring using Roslyn
-        return $"Move static method at line {methodLine} from {filePath} to class '{targetClass}' - Implementation in progress";
+        return $"Move static method '{methodName}' from {filePath} to class '{targetClass}' - Implementation in progress";
     }
     [McpServerTool, Description("Move an instance method to another class (preferred for large-file refactoring)")]
     public static async Task<string> MoveInstanceMethod(
