@@ -10,13 +10,13 @@ Using the MCP tools is the preferred method for refactoring large files where ma
 Before performing any refactoring, you need to load a solution:
 
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --test load-solution ./RefactorMCP.sln
+dotnet run --project RefactorMCP.ConsoleApp -- --cli load-solution ./RefactorMCP.sln
 ```
 
-### Test Mode Usage
-All examples use the test mode syntax:
+### CLI Mode Usage
+All examples use the CLI syntax:
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --test <command> [arguments]
+dotnet run --project RefactorMCP.ConsoleApp -- --cli <command> [arguments]
 ```
 
 ## 1. Extract Method
@@ -43,7 +43,7 @@ public int Calculate(int a, int b)
 
 **Command**:
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --test extract-method \
+dotnet run --project RefactorMCP.ConsoleApp -- --cli extract-method \
   "./RefactorMCP.sln" \
   "./RefactorMCP.Tests/ExampleCode.cs" \
   "22:9-25:34" \
@@ -86,7 +86,7 @@ public double GetAverage()
 
 **Command**:
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --test introduce-field \
+dotnet run --project RefactorMCP.ConsoleApp -- --cli introduce-field \
   "./RefactorMCP.sln" \
   "./RefactorMCP.Tests/ExampleCode.cs" \
   "35:16-35:58" \
@@ -119,7 +119,7 @@ public string FormatResult(int value)
 
 **Command**:
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --test introduce-variable \
+dotnet run --project RefactorMCP.ConsoleApp -- --cli introduce-variable \
   "./RefactorMCP.sln" \
   "./RefactorMCP.Tests/ExampleCode.cs" \
   "41:50-41:65" \
@@ -157,7 +157,7 @@ public void SetFormat(string newFormat)
 
 **Command**:
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --test make-field-readonly \
+dotnet run --project RefactorMCP.ConsoleApp -- --cli make-field-readonly \
   "./RefactorMCP.sln" \
   "./RefactorMCP.Tests/ExampleCode.cs" \
   format
@@ -191,7 +191,7 @@ public string FormatResult(int value)
 
 **Command**:
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --test introduce-parameter \
+dotnet run --project RefactorMCP.ConsoleApp -- --cli introduce-parameter \
   "./RefactorMCP.sln" \
   "./RefactorMCP.Tests/ExampleCode.cs" \
   40 \
@@ -222,7 +222,7 @@ public string GetFormattedNumber(int number)
 
 **Command**:
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --test convert-to-static-with-parameters \
+dotnet run --project RefactorMCP.ConsoleApp -- --cli convert-to-static-with-parameters \
   "./RefactorMCP.sln" \
   "./RefactorMCP.Tests/ExampleCode.cs" \
   GetFormattedNumber
@@ -251,7 +251,7 @@ public string GetFormattedNumber(int number)
 
 **Command**:
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --test convert-to-static-with-instance \
+dotnet run --project RefactorMCP.ConsoleApp -- --cli convert-to-static-with-instance \
   "./RefactorMCP.sln" \
   "./RefactorMCP.Tests/ExampleCode.cs" \
   GetFormattedNumber \
@@ -281,7 +281,7 @@ public string GetFormattedNumber(int number)
 
 **Command**:
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --test convert-to-extension-method \
+dotnet run --project RefactorMCP.ConsoleApp -- --cli convert-to-extension-method \
   "./RefactorMCP.sln" \
   "./RefactorMCP.Tests/ExampleCode.cs" \
   GetFormattedNumber
@@ -313,7 +313,7 @@ public static string FormatCurrency(decimal amount)
 
 **Command**:
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --test move-static-method \
+dotnet run --project RefactorMCP.ConsoleApp -- --cli move-static-method \
   "./RefactorMCP.sln" \
   "./RefactorMCP.Tests/ExampleCode.cs" \
   FormatCurrency \
@@ -346,7 +346,7 @@ public int Multiply(int x, int y, int unusedParam)
 
 **Command**:
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --test safe-delete-parameter \
+dotnet run --project RefactorMCP.ConsoleApp -- --cli safe-delete-parameter \
   "./RefactorMCP.sln" \
   "./RefactorMCP.Tests/ExampleCode.cs" \
   Multiply \
@@ -368,7 +368,7 @@ public int Multiply(int x, int y)
 ### Example
 **Command**:
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --test load-solution "./RefactorMCP.sln"
+dotnet run --project RefactorMCP.ConsoleApp -- --cli load-solution "./RefactorMCP.sln"
 ```
 
 **Expected Output**:
@@ -383,7 +383,7 @@ Successfully loaded solution 'RefactorMCP.sln' with 2 projects: RefactorMCP.Cons
 ### Example
 **Command**:
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --test unload-solution "./RefactorMCP.sln"
+dotnet run --project RefactorMCP.ConsoleApp -- --cli unload-solution "./RefactorMCP.sln"
 ```
 
 **Expected Output**:
@@ -398,7 +398,7 @@ Unloaded solution 'RefactorMCP.sln' from cache
 ### Example
 **Command**:
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --test clear-solution-cache
+dotnet run --project RefactorMCP.ConsoleApp -- --cli clear-solution-cache
 ```
 
 **Expected Output**:
@@ -413,7 +413,7 @@ Cleared all cached solutions
 ### Example
 **Command**:
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --test list-tools
+dotnet run --project RefactorMCP.ConsoleApp -- --cli list-tools
 ```
 
 **Output**:
@@ -434,6 +434,21 @@ move-instance-method - Move an instance method to another class
 transform-setter-to-init - Convert property setter to init-only setter (TODO)
 safe-delete - Safely delete a field, parameter, or variable (TODO)
 
+```
+
+## 12. Version Info (Utility Command)
+
+**Purpose**: Display the current build version and timestamp.
+
+### Example
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli version
+```
+
+**Expected Output**:
+```
+Version: 1.0.0.0 (Build 2024-01-01 00:00:00Z)
 ```
 
 ## Range Format
@@ -512,13 +527,13 @@ You can perform multiple refactorings in sequence:
 
 ```bash
 # First, extract a method
-dotnet run --project RefactorMCP.ConsoleApp -- --test extract-method "./RefactorMCP.sln" "./MyFile.cs" "10:5-15:20" "ExtractedMethod"
+dotnet run --project RefactorMCP.ConsoleApp -- --cli extract-method "./RefactorMCP.sln" "./MyFile.cs" "10:5-15:20" "ExtractedMethod"
 
 # Then, make a field readonly
-dotnet run --project RefactorMCP.ConsoleApp -- --test make-field-readonly "./RefactorMCP.sln" "./MyFile.cs" 25
+dotnet run --project RefactorMCP.ConsoleApp -- --cli make-field-readonly "./RefactorMCP.sln" "./MyFile.cs" 25
 
 # Finally, introduce a variable
-dotnet run --project RefactorMCP.ConsoleApp -- --test introduce-variable "./RefactorMCP.sln" "./MyFile.cs" "30:10-30:35" "tempValue"
+dotnet run --project RefactorMCP.ConsoleApp -- --cli introduce-variable "./RefactorMCP.sln" "./MyFile.cs" "30:10-30:35" "tempValue"
 ```
 
 ### Working with Different Projects
@@ -526,8 +541,8 @@ If your solution has multiple projects, make sure to specify the correct file pa
 
 ```bash
 # For a file in the main project
-dotnet run --project RefactorMCP.ConsoleApp -- --test extract-method "./RefactorMCP.sln" "./RefactorMCP.ConsoleApp/MyFile.cs" "10:5-15:20" "ExtractedMethod"
+dotnet run --project RefactorMCP.ConsoleApp -- --cli extract-method "./RefactorMCP.sln" "./RefactorMCP.ConsoleApp/MyFile.cs" "10:5-15:20" "ExtractedMethod"
 
 # For a file in the test project  
-dotnet run --project RefactorMCP.ConsoleApp -- --test extract-method "./RefactorMCP.sln" "./RefactorMCP.Tests/TestFile.cs" "5:1-8:10" "TestMethod"
+dotnet run --project RefactorMCP.ConsoleApp -- --cli extract-method "./RefactorMCP.sln" "./RefactorMCP.Tests/TestFile.cs" "5:1-8:10" "TestMethod"
 ``` 

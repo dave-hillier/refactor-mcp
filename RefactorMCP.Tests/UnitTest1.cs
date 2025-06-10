@@ -75,6 +75,14 @@ public class RefactoringToolsTests : IDisposable
         Assert.Contains("Error: Solution file not found", result);
     }
 
+    [Fact]
+    public void Version_ReturnsInfo()
+    {
+        var result = RefactoringTools.Version();
+        Assert.Contains("Version:", result);
+        Assert.Contains("Build", result);
+    }
+
     [Fact(Skip = "Refactoring does not generate method in single-file mode yet")]
     public async Task ExtractMethod_ValidSelection_ReturnsSuccess()
     {
@@ -492,7 +500,7 @@ public class TestClass
     }
 }
 
-// Integration tests for the CLI test mode
+// Integration tests for the CLI mode
 public class CliIntegrationTests
 {
     private static string GetSolutionPath()
@@ -534,7 +542,8 @@ public class CliIntegrationTests
             "extract-method",
             "introduce-field",
             "introduce-variable",
-            "make-field-readonly"
+            "make-field-readonly",
+            "version"
         };
 
         // Verify RefactoringTools class has all the expected methods
