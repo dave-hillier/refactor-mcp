@@ -138,8 +138,7 @@ public static partial class RefactoringTools
         var newTargetClass = targetClassDecl.AddMembers(updatedMethod.WithLeadingTrivia());
 
         var newRoot = syntaxRoot.ReplaceNode(originClass, newOriginClass).ReplaceNode(targetClassDecl, newTargetClass);
-        var workspace = new AdhocWorkspace();
-        var formatted = Formatter.Format(newRoot, workspace);
+        var formatted = Formatter.Format(newRoot, SharedWorkspace);
         await File.WriteAllTextAsync(filePath, formatted.ToFullString());
 
         return $"Successfully moved instance method to {targetClass} in {filePath} (single file mode)";
@@ -208,12 +207,11 @@ public static partial class RefactoringTools
                 targetRoot = targetRoot.ReplaceNode(targetClassDecl, newTarget);
             }
 
-            var workspace = new AdhocWorkspace();
-            var formattedTarget = Formatter.Format(targetRoot, workspace);
+            var formattedTarget = Formatter.Format(targetRoot, SharedWorkspace);
 
             if (!sameFile)
             {
-                var formattedSource = Formatter.Format(newSourceRoot, workspace);
+                var formattedSource = Formatter.Format(newSourceRoot, SharedWorkspace);
                 await File.WriteAllTextAsync(filePath, formattedSource.ToFullString());
             }
 

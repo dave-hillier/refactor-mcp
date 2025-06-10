@@ -88,8 +88,7 @@ public static partial class RefactoringTools
         var newProperty = property.ReplaceNode(setter, initAccessor);
 
         var newRoot = syntaxRoot.ReplaceNode(property, newProperty);
-        var workspace = new AdhocWorkspace();
-        var formatted = Formatter.Format(newRoot, workspace);
+        var formatted = Formatter.Format(newRoot, SharedWorkspace);
         await File.WriteAllTextAsync(filePath, formatted.ToFullString());
 
         return $"Successfully converted setter to init for '{propertyName}' in {filePath} (single file mode)";
