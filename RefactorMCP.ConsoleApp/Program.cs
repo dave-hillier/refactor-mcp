@@ -461,8 +461,7 @@ public static partial class RefactoringTools
             }
         }
 
-        var workspace = new AdhocWorkspace();
-        var formatted = Formatter.Format(newRoot, workspace);
+        var formatted = Formatter.Format(newRoot, SharedWorkspace);
         await File.WriteAllTextAsync(filePath, formatted.ToFullString());
 
         return $"Successfully converted method '{methodName}' to extension method in {filePath} (single file mode)";

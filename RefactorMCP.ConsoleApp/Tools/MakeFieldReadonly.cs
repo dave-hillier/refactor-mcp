@@ -192,8 +192,7 @@ public static partial class RefactoringTools
                     var newRoot = syntaxRoot.ReplaceNode(containingClass, updatedClass);
 
                     // Format and write back to file
-                    var workspace = new AdhocWorkspace();
-                    var formattedRoot = Formatter.Format(newRoot, workspace);
+                    var formattedRoot = Formatter.Format(newRoot, SharedWorkspace);
                     await File.WriteAllTextAsync(filePath, formattedRoot.ToFullString());
 
                     return $"Successfully made field '{fieldName}' readonly and moved initialization to constructors in {filePath}";
@@ -205,8 +204,7 @@ public static partial class RefactoringTools
             var newRoot = syntaxRoot.ReplaceNode(fieldDeclaration, newFieldDeclaration);
 
             // Format and write back to file
-            var workspace = new AdhocWorkspace();
-            var formattedRoot = Formatter.Format(newRoot, workspace);
+            var formattedRoot = Formatter.Format(newRoot, SharedWorkspace);
             await File.WriteAllTextAsync(filePath, formattedRoot.ToFullString());
 
             return $"Successfully made field '{fieldName}' readonly in {filePath} (single file mode)";
