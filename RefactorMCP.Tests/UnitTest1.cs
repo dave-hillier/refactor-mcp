@@ -361,7 +361,8 @@ public class RefactoringToolsTests : IDisposable
 
         var result = await RefactoringTools.MoveInstanceMethod(
             testFile,
-            69,
+            "Calculator",
+            "LogOperation",
             "Logger",
             "_logger",
             "field",

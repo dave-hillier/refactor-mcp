@@ -82,6 +82,7 @@ static void ShowTestModeHelp()
     Console.WriteLine("  introduce-variable <filePath> <range> <variableName> [solutionPath]");
     Console.WriteLine("  make-field-readonly <filePath> <fieldLine> [solutionPath]");
     Console.WriteLine("  convert-to-extension-method <filePath> <methodLine> [solutionPath]");
+    Console.WriteLine("  move-instance-method <filePath> <sourceClass> <methodName> <targetClass> <accessMember> [memberType] [solutionPath]");
     Console.WriteLine();
     Console.WriteLine("Examples:");
     Console.WriteLine("  --test load-solution ./MySolution.sln");
@@ -108,7 +109,7 @@ static string ListAvailableTools()
         "convert-to-static-with-parameters - Transform instance method to static (TODO)",
         "convert-to-static-with-instance - Transform instance method to static with instance parameter (TODO)",
         "move-static-method - Move a static method to another class (TODO)",
-        "move-instance-method - Move an instance method to another class (TODO)",
+        "move-instance-method - Move an instance method to another class",
         "transform-setter-to-init - Convert property setter to init-only setter (TODO)",
         "safe-delete - Safely delete a field, parameter, or variable (TODO)"
     };
@@ -307,7 +308,7 @@ public static partial class RefactoringTools
             }
             else
             {
-                newRoot = newRoot.AddMembers(extensionClassDecl);
+                newRoot = ((CompilationUnitSyntax)newRoot).AddMembers(extensionClassDecl);
             }
         }
 
@@ -400,7 +401,7 @@ public static partial class RefactoringTools
             }
             else
             {
-                newRoot = newRoot.AddMembers(extensionClassDecl);
+                newRoot = ((CompilationUnitSyntax)newRoot).AddMembers(extensionClassDecl);
             }
         }
 
