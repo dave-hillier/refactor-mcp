@@ -54,6 +54,10 @@ static async Task RunTestMode(string[] args)
             "unload-solution" => TestUnloadSolution(args),
             "clear-solution-cache" => ClearCacheCommand(),
             "convert-to-extension-method" => await TestConvertToExtensionMethod(args),
+            "safe-delete-field" => await TestSafeDeleteField(args),
+            "safe-delete-method" => await TestSafeDeleteMethod(args),
+            "safe-delete-parameter" => await TestSafeDeleteParameter(args),
+            "safe-delete-variable" => await TestSafeDeleteVariable(args),
             "list-tools" => ListAvailableTools(),
             _ => $"Unknown command: {command}. Use --test list-tools to see available commands."
         };
@@ -82,6 +86,10 @@ static void ShowTestModeHelp()
     Console.WriteLine("  introduce-variable <filePath> <range> <variableName> [solutionPath]");
     Console.WriteLine("  make-field-readonly <filePath> <fieldLine> [solutionPath]");
     Console.WriteLine("  convert-to-extension-method <filePath> <methodLine> [solutionPath]");
+    Console.WriteLine("  safe-delete-field <filePath> <fieldName> [solutionPath]");
+    Console.WriteLine("  safe-delete-method <filePath> <methodName> [solutionPath]");
+    Console.WriteLine("  safe-delete-parameter <filePath> <methodName> <parameterName> [solutionPath]");
+    Console.WriteLine("  safe-delete-variable <filePath> <range> [solutionPath]");
     Console.WriteLine();
     Console.WriteLine("Examples:");
     Console.WriteLine("  --test load-solution ./MySolution.sln");
@@ -110,7 +118,10 @@ static string ListAvailableTools()
         "move-static-method - Move a static method to another class (TODO)",
         "move-instance-method - Move an instance method to another class (TODO)",
         "transform-setter-to-init - Convert property setter to init-only setter (TODO)",
-        "safe-delete - Safely delete a field, parameter, or variable (TODO)"
+        "safe-delete-field - Safely delete an unused field",
+        "safe-delete-method - Safely delete an unused method",
+        "safe-delete-parameter - Safely delete an unused parameter",
+        "safe-delete-variable - Safely delete a local variable"
     };
 
     return "Available refactoring tools:\n" + string.Join("\n", tools);
@@ -203,6 +214,55 @@ static async Task<string> TestConvertToExtensionMethod(string[] args)
     var solutionPath = args.Length > 4 ? args[4] : null;
 
     return await RefactoringTools.ConvertToExtensionMethod(filePath, methodLine, null, solutionPath);
+}
+
+static async Task<string> TestSafeDeleteField(string[] args)
+{
+    if (args.Length < 4)
+        return "Error: Missing arguments. Usage: --test safe-delete-field <filePath> <fieldName> [solutionPath]";
+
+    var filePath = args[2];
+    var fieldName = args[3];
+    var solutionPath = args.Length > 4 ? args[4] : null;
+
+    return await RefactoringTools.SafeDeleteField(filePath, fieldName, solutionPath);
+}
+
+static async Task<string> TestSafeDeleteMethod(string[] args)
+{
+    if (args.Length < 4)
+        return "Error: Missing arguments. Usage: --test safe-delete-method <filePath> <methodName> [solutionPath]";
+
+    var filePath = args[2];
+    var methodName = args[3];
+    var solutionPath = args.Length > 4 ? args[4] : null;
+
+    return await RefactoringTools.SafeDeleteMethod(filePath, methodName, solutionPath);
+}
+
+static async Task<string> TestSafeDeleteParameter(string[] args)
+{
+    if (args.Length < 5)
+        return "Error: Missing arguments. Usage: --test safe-delete-parameter <filePath> <methodName> <parameterName> [solutionPath]";
+
+    var filePath = args[2];
+    var methodName = args[3];
+    var parameterName = args[4];
+    var solutionPath = args.Length > 5 ? args[5] : null;
+
+    return await RefactoringTools.SafeDeleteParameter(filePath, methodName, parameterName, solutionPath);
+}
+
+static async Task<string> TestSafeDeleteVariable(string[] args)
+{
+    if (args.Length < 4)
+        return "Error: Missing arguments. Usage: --test safe-delete-variable <filePath> <range> [solutionPath]";
+
+    var filePath = args[2];
+    var range = args[3];
+    var solutionPath = args.Length > 4 ? args[4] : null;
+
+    return await RefactoringTools.SafeDeleteVariable(filePath, range, solutionPath);
 }
 
 [McpServerToolType]

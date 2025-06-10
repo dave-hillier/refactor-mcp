@@ -136,6 +136,25 @@ public class ExampleValidationTests : IDisposable
     }
 
     [Fact]
+    public async Task Example_SafeDeleteParameter_UnusedParam_WorksAsDocumented()
+    {
+        var testFile = Path.Combine(TestOutputPath, "SafeDeleteParameter.cs");
+        await CreateTestFile(testFile, GetCalculatorCodeForSafeDelete());
+        await RefactoringTools.LoadSolution(SolutionPath);
+
+        var result = await RefactoringTools.SafeDeleteParameter(
+            testFile,
+            "Multiply",
+            "unusedParam",
+            SolutionPath
+        );
+
+        Assert.Contains("Successfully deleted parameter", result);
+        var fileContent = await File.ReadAllTextAsync(testFile);
+        Assert.DoesNotContain("unusedParam", fileContent);
+    }
+
+    [Fact]
     public async Task QuickReference_ExtractMethod_WorksAsDocumented()
     {
         // Test the quick reference example
@@ -282,6 +301,12 @@ public int Calculate(int a, int b)
 
     // Exact code from our ExampleCode.cs for Make Field Readonly
     private static string GetCalculatorCodeForMakeFieldReadonly()
+    {
+        return File.ReadAllText(Path.Combine(Path.GetDirectoryName(SolutionPath)!, "RefactorMCP.Tests", "ExampleCode.cs"));
+    }
+
+    // Exact code from our ExampleCode.cs for Safe Delete
+    private static string GetCalculatorCodeForSafeDelete()
     {
         return File.ReadAllText(Path.Combine(Path.GetDirectoryName(SolutionPath)!, "RefactorMCP.Tests", "ExampleCode.cs"));
     }
