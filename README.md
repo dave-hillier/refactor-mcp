@@ -185,6 +185,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --test <command> [arguments]
 - `introduce-parameter <solutionPath> <filePath> <methodLine> <range> <parameterName>` - Create parameter from expression
 - `convert-to-static-with-parameters <solutionPath> <filePath> <methodLine>` - Convert instance method to static with parameters
 - `convert-to-static-with-instance <solutionPath> <filePath> <methodLine> [instanceName]` - Convert instance method to static with explicit instance
+- `move-static-method <solutionPath> <filePath> <methodName> <targetClass> [targetFile]` - Move a static method to another class
 - `move-instance-method <filePath> <sourceClass> <methodName> <targetClass> <accessMember> [memberType] [solutionPath]` - Move an instance method to another class
 
 #### Quick Start Example
@@ -384,6 +385,36 @@ dotnet run --project RefactorMCP.ConsoleApp -- --test safe-delete-parameter \
 public int Multiply(int x, int y)
 {
     return x * y;
+}
+```
+
+### 7. Move Static Method
+
+**Before**:
+```csharp
+public static string FormatCurrency(decimal amount)
+{
+    return $"${amount:F2}";
+}
+```
+
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --test move-static-method \
+  "./RefactorMCP.sln" \
+  "./RefactorMCP.Tests/ExampleCode.cs" \
+  "FormatCurrency" \
+  "MathUtilities"
+```
+
+**After**:
+```csharp
+public class MathUtilities
+{
+    public static string FormatCurrency(decimal amount)
+    {
+        return $"${amount:F2}";
+    }
 }
 ```
 
