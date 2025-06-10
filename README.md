@@ -363,6 +363,30 @@ public static string GetFormattedNumber(Calculator calculator, int number)
 }
 ```
 
+### 6. Safe Delete Parameter
+
+**Before**:
+```csharp
+public int Multiply(int x, int y, int unusedParam)
+{
+    return x * y;
+}
+```
+
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --test safe-delete-parameter \
+  "./RefactorMCP.Tests/ExampleCode.cs" "Multiply" "unusedParam" "./RefactorMCP.sln"
+```
+
+**After**:
+```csharp
+public int Multiply(int x, int y)
+{
+    return x * y;
+}
+```
+
 ## Complete Examples
 
 See [EXAMPLES.md](./EXAMPLES.md) for comprehensive examples of all refactoring tools, including:

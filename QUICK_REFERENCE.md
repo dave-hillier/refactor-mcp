@@ -65,6 +65,15 @@ dotnet run --project RefactorMCP.ConsoleApp -- --test convert-to-extension-metho
   methodName
 ```
 
+### Safe Delete Parameter
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --test safe-delete-parameter \
+  "./RefactorMCP.sln" \
+  "./path/to/file.cs" \
+  MethodName \
+  parameterName
+```
+
 ### Introduce Parameter
 ```bash
 dotnet run --project RefactorMCP.ConsoleApp -- --test introduce-parameter \
