@@ -494,7 +494,7 @@ To select `if (a < 0 || b < 0)` on line 3:
 
 1. **File not found**:
    ```
-   Error: File ./path/to/file.cs not found in solution
+   Error: File ./path/to/file.cs not found in solution (current dir: /your/working/dir)
    ```
 
 2. **Invalid range format**:

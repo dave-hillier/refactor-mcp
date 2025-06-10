@@ -476,7 +476,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli load-solution ./RefactorMCP
 
 Common error scenarios and solutions:
 
-- **File not found**: Ensure file paths are relative to solution directory
+- **File not found**: Ensure file paths are relative to the solution directory. The error message now includes the current working directory for reference.
 - **Invalid range**: Check 1-based line/column indexing
 - **No extractable code**: Verify selection contains valid statements/expressions
 - **Solution load failure**: Check .sln file path and project references
