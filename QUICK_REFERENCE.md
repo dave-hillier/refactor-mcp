@@ -55,6 +55,14 @@ dotnet run --project RefactorMCP.ConsoleApp -- --test make-field-readonly \
   lineNumber
 ```
 
+### Convert To Extension Method
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --test convert-to-extension-method \
+  "./RefactorMCP.sln" \
+  "./path/to/file.cs" \
+  lineNumber
+```
+
 ### Introduce Parameter
 ```bash
 dotnet run --project RefactorMCP.ConsoleApp -- --test introduce-parameter \
@@ -80,6 +88,12 @@ dotnet run --project RefactorMCP.ConsoleApp -- --test convert-to-static-with-ins
   "./path/to/file.cs" \
   methodLine \
   "instanceName"
+### Convert To Extension Method
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --test convert-to-extension-method \
+  "./RefactorMCP.sln" \
+  "./path/to/file.cs" \
+  lineNumber
 ```
 
 ## Range Format
@@ -133,6 +147,10 @@ dotnet run --project RefactorMCP.ConsoleApp -- --test introduce-variable \
 dotnet run --project RefactorMCP.ConsoleApp -- --test make-field-readonly \
   "./RefactorMCP.sln" "./RefactorMCP.Tests/ExampleCode.cs" 50
 
+# Convert method to extension
+dotnet run --project RefactorMCP.ConsoleApp -- --test convert-to-extension-method \
+  "./RefactorMCP.sln" "./RefactorMCP.Tests/ExampleCode.cs" 46
+
 # Introduce parameter from expression
 dotnet run --project RefactorMCP.ConsoleApp -- --test introduce-parameter \
   "./RefactorMCP.sln" "./RefactorMCP.Tests/ExampleCode.cs" 40 "41:50-41:65" "processedValue"
@@ -144,6 +162,9 @@ dotnet run --project RefactorMCP.ConsoleApp -- --test convert-to-static-with-par
 # Convert method to static with instance
 dotnet run --project RefactorMCP.ConsoleApp -- --test convert-to-static-with-instance \
   "./RefactorMCP.sln" "./RefactorMCP.Tests/ExampleCode.cs" 46 "calculator"
+# Convert method to extension
+dotnet run --project RefactorMCP.ConsoleApp -- --test convert-to-extension-method \
+  "./RefactorMCP.sln" "./RefactorMCP.Tests/ExampleCode.cs" 46
 ```
 
 ## Common Errors

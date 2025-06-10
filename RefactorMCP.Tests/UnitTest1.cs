@@ -321,6 +321,25 @@ public class RefactoringToolsTests
     }
 
     [Fact]
+    public async Task ConvertToExtensionMethod_ReturnsSuccess()
+    {
+        await RefactoringTools.LoadSolution(SolutionPath);
+        var testFile = Path.Combine(TestOutputPath, "ConvertToExtension.cs");
+        await CreateTestFile(testFile, GetSampleCodeForConvertToExtension());
+
+        var result = await RefactoringTools.ConvertToExtensionMethod(
+            testFile,
+            46,
+            null,
+            SolutionPath
+        );
+
+        Assert.Contains("Successfully converted method to extension method", result);
+
+        // File modification verification skipped
+    }
+
+    [Fact]
     public async Task MoveInstanceMethod_ReturnsSuccess()
     {
         await RefactoringTools.LoadSolution(SolutionPath);
@@ -400,6 +419,11 @@ public class TestClass
     }
 
     private static string GetSampleCodeForMoveInstanceMethod()
+    {
+        return File.ReadAllText(Path.Combine(Path.GetDirectoryName(SolutionPath)!, "RefactorMCP.Tests", "ExampleCode.cs"));
+    }
+
+    private static string GetSampleCodeForConvertToExtension()
     {
         return File.ReadAllText(Path.Combine(Path.GetDirectoryName(SolutionPath)!, "RefactorMCP.Tests", "ExampleCode.cs"));
     }
