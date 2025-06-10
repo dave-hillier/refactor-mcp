@@ -90,6 +90,20 @@ dotnet run --project RefactorMCP.ConsoleApp -- --test convert-to-static-with-ins
   "./path/to/file.cs" \
   methodLine \
   "instanceName"
+```
+
+### Move Instance Method
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --test move-instance-method \
+  "./RefactorMCP.sln" \
+  "./path/to/file.cs" \
+  "SourceClass" \
+  "MethodName" \
+  "TargetClass" \
+  "memberName" \
+  "field"
+```
+
 ### Convert To Extension Method
 ```bash
 dotnet run --project RefactorMCP.ConsoleApp -- --test convert-to-extension-method \
