@@ -11,6 +11,10 @@ dotnet run --project RefactorMCP.ConsoleApp -- --test list-tools
 
 # Load solution (always do this first)
 dotnet run --project RefactorMCP.ConsoleApp -- --test load-solution ./RefactorMCP.sln
+# Unload solution when done
+dotnet run --project RefactorMCP.ConsoleApp -- --test unload-solution ./RefactorMCP.sln
+# Clear all cached solutions
+dotnet run --project RefactorMCP.ConsoleApp -- --test clear-solution-cache
 ```
 
 ## Refactoring Commands
@@ -115,4 +119,5 @@ dotnet run --project RefactorMCP.ConsoleApp -- --test make-field-readonly \
 2. **Use exact paths** relative to solution directory  
 3. **Count carefully** for range coordinates
 4. **Test simple cases** before complex ones
-5. **Backup code** before refactoring 
+5. **Backup code** before refactoring
+6. **Clear cache** if projects change on disk

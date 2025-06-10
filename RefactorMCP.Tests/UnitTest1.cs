@@ -49,6 +49,14 @@ public class RefactoringToolsTests
     }
 
     [Fact]
+    public async Task UnloadSolution_RemovesCachedSolution()
+    {
+        await RefactoringTools.LoadSolution(SolutionPath);
+        var result = RefactoringTools.UnloadSolution(SolutionPath);
+        Assert.Contains("Unloaded solution", result);
+    }
+
+    [Fact]
     public async Task LoadSolution_InvalidPath_ReturnsError()
     {
         // Act

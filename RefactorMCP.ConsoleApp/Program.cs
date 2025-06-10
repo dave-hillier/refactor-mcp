@@ -51,6 +51,8 @@ static async Task RunTestMode(string[] args)
             "introduce-field" => await TestIntroduceField(args),
             "introduce-variable" => await TestIntroduceVariable(args),
             "make-field-readonly" => await TestMakeFieldReadonly(args),
+            "unload-solution" => TestUnloadSolution(args),
+            "clear-solution-cache" => ClearCacheCommand(),
             "list-tools" => ListAvailableTools(),
             _ => $"Unknown command: {command}. Use --test list-tools to see available commands."
         };
@@ -72,6 +74,8 @@ static void ShowTestModeHelp()
     Console.WriteLine("Available commands:");
     Console.WriteLine("  list-tools                                    - List all available refactoring tools");
     Console.WriteLine("  load-solution <solutionPath>                 - Test loading a solution file");
+    Console.WriteLine("  unload-solution <solutionPath>               - Remove a loaded solution from cache");
+    Console.WriteLine("  clear-solution-cache                         - Clear all cached solutions");
     Console.WriteLine("  extract-method <filePath> <range> <methodName> [solutionPath]");
     Console.WriteLine("  introduce-field <filePath> <range> <fieldName> [accessModifier] [solutionPath]");
     Console.WriteLine("  introduce-variable <filePath> <range> <variableName> [solutionPath]");
@@ -169,6 +173,20 @@ static async Task<string> TestMakeFieldReadonly(string[] args)
     var solutionPath = args.Length > 4 ? args[4] : null;
 
     return await RefactoringTools.MakeFieldReadonly(filePath, fieldLine, solutionPath);
+}
+
+static string TestUnloadSolution(string[] args)
+{
+    if (args.Length < 3)
+        return "Error: Missing solution path. Usage: --test unload-solution <solutionPath>";
+
+    var solutionPath = args[2];
+    return RefactoringTools.UnloadSolution(solutionPath);
+}
+
+static string ClearCacheCommand()
+{
+    return RefactoringTools.ClearSolutionCache();
 }
 [McpServerToolType]
 public static partial class RefactoringTools
