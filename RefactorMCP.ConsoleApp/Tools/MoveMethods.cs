@@ -1,5 +1,6 @@
 using ModelContextProtocol.Server;
 using System.ComponentModel;
+using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -8,21 +9,22 @@ using Microsoft.CodeAnalysis.Text;
 
 public static partial class RefactoringTools
 {
-    private static async Task<string> MoveInstanceMethodWithSolution(Document document, string methodName, string targetClass, string accessMemberName, string accessMemberType)
+
+    private static async Task<string> MoveInstanceMethodWithSolution(Document document, string sourceClass, string methodName, string targetClass, string accessMemberName, string accessMemberType)
     {
         var sourceText = await document.GetTextAsync();
         var syntaxRoot = await document.GetSyntaxRootAsync();
-        var textLines = sourceText.Lines;
+        var originClass = syntaxRoot!.DescendantNodes()
+            .OfType<ClassDeclarationSyntax>()
+            .FirstOrDefault(c => c.Identifier.ValueText == sourceClass);
+        if (originClass == null)
+            return $"Error: Source class '{sourceClass}' not found";
 
-        var method = syntaxRoot!.DescendantNodes()
+        var method = originClass.Members
             .OfType<MethodDeclarationSyntax>()
             .FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
             return $"Error: No method named '{methodName}' found";
-
-        var originClass = method.Parent as ClassDeclarationSyntax;
-        if (originClass == null)
-            return $"Error: Method '{methodName}' is not inside a class";
 
         var targetClassDecl = syntaxRoot.DescendantNodes()
             .OfType<ClassDeclarationSyntax>()
@@ -55,7 +57,14 @@ public static partial class RefactoringTools
             newOriginClass = newOriginClass.AddMembers(prop);
         }
 
-        var newTargetClass = targetClassDecl.AddMembers(method.WithLeadingTrivia());
+        var updatedMethod = method;
+        if (!method.Modifiers.Any(m => m.IsKind(SyntaxKind.PublicKeyword)))
+        {
+            var mods = method.Modifiers.Where(m => !m.IsKind(SyntaxKind.PrivateKeyword) && !m.IsKind(SyntaxKind.ProtectedKeyword) && !m.IsKind(SyntaxKind.InternalKeyword));
+            updatedMethod = method.WithModifiers(SyntaxFactory.TokenList(mods).Add(SyntaxFactory.Token(SyntaxKind.PublicKeyword)));
+        }
+
+        var newTargetClass = targetClassDecl.AddMembers(updatedMethod.WithLeadingTrivia());
 
         var newRoot = syntaxRoot.ReplaceNode(originClass, newOriginClass).ReplaceNode(targetClassDecl, newTargetClass);
         var formatted = Formatter.Format(newRoot, document.Project.Solution.Workspace);
@@ -66,7 +75,8 @@ public static partial class RefactoringTools
         return $"Successfully moved instance method to {targetClass} in {document.FilePath}";
     }
 
-    private static async Task<string> MoveInstanceMethodSingleFile(string filePath, string methodName, string targetClass, string accessMemberName, string accessMemberType)
+
+    private static async Task<string> MoveInstanceMethodSingleFile(string filePath, string sourceClass, string methodName, string targetClass, string accessMemberName, string accessMemberType)
     {
         if (!File.Exists(filePath))
             return $"Error: File {filePath} not found";
@@ -75,15 +85,17 @@ public static partial class RefactoringTools
         var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
         var syntaxRoot = await syntaxTree.GetRootAsync();
 
-        var method = syntaxRoot.DescendantNodes()
+        var originClass = syntaxRoot.DescendantNodes()
+            .OfType<ClassDeclarationSyntax>()
+            .FirstOrDefault(c => c.Identifier.ValueText == sourceClass);
+        if (originClass == null)
+            return $"Error: Source class '{sourceClass}' not found";
+
+        var method = originClass.Members
             .OfType<MethodDeclarationSyntax>()
             .FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
             return $"Error: No method named '{methodName}' found";
-
-        var originClass = method.Parent as ClassDeclarationSyntax;
-        if (originClass == null)
-            return $"Error: Method '{methodName}' is not inside a class";
 
         var targetClassDecl = syntaxRoot.DescendantNodes()
             .OfType<ClassDeclarationSyntax>()
@@ -116,7 +128,14 @@ public static partial class RefactoringTools
             newOriginClass = newOriginClass.AddMembers(prop);
         }
 
-        var newTargetClass = targetClassDecl.AddMembers(method.WithLeadingTrivia());
+        var updatedMethod = method;
+        if (!method.Modifiers.Any(m => m.IsKind(SyntaxKind.PublicKeyword)))
+        {
+            var mods = method.Modifiers.Where(m => !m.IsKind(SyntaxKind.PrivateKeyword) && !m.IsKind(SyntaxKind.ProtectedKeyword) && !m.IsKind(SyntaxKind.InternalKeyword));
+            updatedMethod = method.WithModifiers(SyntaxFactory.TokenList(mods).Add(SyntaxFactory.Token(SyntaxKind.PublicKeyword)));
+        }
+
+        var newTargetClass = targetClassDecl.AddMembers(updatedMethod.WithLeadingTrivia());
 
         var newRoot = syntaxRoot.ReplaceNode(originClass, newOriginClass).ReplaceNode(targetClassDecl, newTargetClass);
         var workspace = new AdhocWorkspace();
@@ -140,7 +159,8 @@ public static partial class RefactoringTools
     [McpServerTool, Description("Move an instance method to another class (preferred for large-file refactoring)")]
     public static async Task<string> MoveInstanceMethod(
         [Description("Path to the C# file containing the method")] string filePath,
-        [Description("Name of the instance method to move")] string methodName,
+        [Description("Name of the source class containing the method")] string sourceClass,
+        [Description("Name of the method to move")] string methodName,
         [Description("Name of the target class")] string targetClass,
         [Description("Name for the access member")] string accessMemberName,
         [Description("Type of access member (field, property, variable)")] string accessMemberType = "field",
@@ -153,13 +173,13 @@ public static partial class RefactoringTools
                 var solution = await GetOrLoadSolution(solutionPath);
                 var document = GetDocumentByPath(solution, filePath);
                 if (document != null)
-                    return await MoveInstanceMethodWithSolution(document, methodName, targetClass, accessMemberName, accessMemberType);
+                    return await MoveInstanceMethodWithSolution(document, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
 
                 // Fallback to single file mode when file isn't part of the solution
-                return await MoveInstanceMethodSingleFile(filePath, methodName, targetClass, accessMemberName, accessMemberType);
+                return await MoveInstanceMethodSingleFile(filePath, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
             }
 
-            return await MoveInstanceMethodSingleFile(filePath, methodName, targetClass, accessMemberName, accessMemberType);
+            return await MoveInstanceMethodSingleFile(filePath, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
         }
         catch (Exception ex)
         {
