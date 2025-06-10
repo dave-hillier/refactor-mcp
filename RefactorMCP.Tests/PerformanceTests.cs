@@ -27,7 +27,7 @@ public class PerformanceTests
         // Start from the current directory and walk up to find the solution file
         var currentDir = Directory.GetCurrentDirectory();
         var dir = new DirectoryInfo(currentDir);
-        
+
         while (dir != null)
         {
             var solutionFile = Path.Combine(dir.FullName, "RefactorMCP.sln");
@@ -37,7 +37,7 @@ public class PerformanceTests
             }
             dir = dir.Parent;
         }
-        
+
         // Fallback to relative path
         return "./RefactorMCP.sln";
     }
@@ -50,11 +50,11 @@ public class PerformanceTests
 
         // Act
         var result = await RefactoringTools.LoadSolution(SolutionPath);
-        
+
         // Assert
         stopwatch.Stop();
         _output.WriteLine($"Solution loading took: {stopwatch.ElapsedMilliseconds}ms");
-        
+
         Assert.Contains("Successfully loaded solution", result);
         Assert.True(stopwatch.ElapsedMilliseconds < 10000, "Solution loading should complete within 10 seconds");
     }
@@ -66,7 +66,7 @@ public class PerformanceTests
         var testFile = Path.Combine(TestOutputPath, "LargeFileTest.cs");
         await CreateLargeTestFile(testFile);
         await RefactoringTools.LoadSolution(SolutionPath);
-        
+
         var stopwatch = Stopwatch.StartNew();
 
         // Act
@@ -80,7 +80,7 @@ public class PerformanceTests
         // Assert
         stopwatch.Stop();
         _output.WriteLine($"Extract method on large file took: {stopwatch.ElapsedMilliseconds}ms");
-        
+
         Assert.Contains("Successfully extracted method", result);
         Assert.True(stopwatch.ElapsedMilliseconds < 5000, "Extract method should complete within 5 seconds");
     }
@@ -97,15 +97,25 @@ public class PerformanceTests
 
         // Act - Perform multiple refactorings in sequence
         var extractResult = await RefactoringTools.ExtractMethod(
-            SolutionPath, testFile, "8:9-11:10", "ValidateInputs"
+            testFile,
+            "8:9-11:10",
+            "ValidateInputs",
+            SolutionPath
         );
 
         var fieldResult = await RefactoringTools.IntroduceField(
-            SolutionPath, testFile, "15:16-15:40", "_calculatedValue", "private"
+            testFile,
+            "15:16-15:40",
+            "_calculatedValue",
+            "private",
+            SolutionPath
         );
 
         var variableResult = await RefactoringTools.IntroduceVariable(
-            SolutionPath, testFile, "19:20-19:35", "processedValue"
+            testFile,
+            "19:20-19:35",
+            "processedValue",
+            SolutionPath
         );
 
         // Assert
@@ -137,9 +147,9 @@ public class PerformanceTests
 
         Assert.Contains("Successfully loaded solution", firstResult);
         Assert.Contains("Successfully loaded solution", secondResult);
-        
+
         // Second load should be faster due to caching
-        Assert.True(secondStopwatch.ElapsedMilliseconds <= firstStopwatch.ElapsedMilliseconds, 
+        Assert.True(secondStopwatch.ElapsedMilliseconds <= firstStopwatch.ElapsedMilliseconds,
             "Second solution load should be faster or equal due to caching");
     }
 
@@ -160,7 +170,10 @@ public class PerformanceTests
             await File.WriteAllTextAsync(testFileCopy, await File.ReadAllTextAsync(testFile));
 
             await RefactoringTools.ExtractMethod(
-                SolutionPath, testFileCopy, "8:9-11:10", $"ValidateInputs{i}"
+                testFileCopy,
+                "8:9-11:10",
+                $"ValidateInputs{i}",
+                SolutionPath
             );
         }
 
@@ -255,4 +268,4 @@ namespace PerformanceTests
         Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
         await File.WriteAllTextAsync(filePath, content);
     }
-} 
+}
