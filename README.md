@@ -1,6 +1,6 @@
 # RefactorMCP
 
-A Model Context Protocol (MCP) server providing automated refactoring tools for C# code transformation using Roslyn.
+A Model Context Protocol (MCP) server providing automated refactoring tools for C# code transformation using Roslyn. Using these tools through MCP is the preferred way to refactor, especially when working with large files.
 
 ## Features
 
@@ -8,10 +8,11 @@ A Model Context Protocol (MCP) server providing automated refactoring tools for 
 - **Single File Mode**: Fast refactoring for simple transformations without solution loading
 - **Comprehensive Refactoring Tools**: Extract methods, introduce variables/fields, make fields readonly, convert methods to extension methods, and more
 - **MCP Compatible**: Works with any MCP-compatible client
+- **Preferred for Large Files**: Invoking these tools via MCP is recommended for large code files
 
 ## Solution Mode vs Single File Mode
 
-### Solution Mode (Recommended)
+### Solution Mode (Preferred for Large Files)
 ```bash
 # Full semantic analysis with type information
 extract-method ./MyFile.cs "10:5-15:20" "ExtractedMethod" ./MySolution.sln

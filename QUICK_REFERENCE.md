@@ -1,5 +1,7 @@
 # RefactorMCP Quick Reference
 
+Using these tools through the MCP interface is the preferred approach for refactoring, especially when dealing with large files.
+
 ## Basic Commands
 
 ```bash

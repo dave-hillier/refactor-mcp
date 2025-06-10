@@ -2,6 +2,8 @@
 
 This document provides comprehensive examples for all refactoring tools available in RefactorMCP. Each example shows the before/after code and the exact CLI commands to perform the refactoring.
 
+Using the MCP tools is the preferred method for refactoring large files where manual edits become cumbersome.
+
 ## Getting Started
 
 ### Loading a Solution
