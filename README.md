@@ -181,10 +181,10 @@ dotnet run --project RefactorMCP.ConsoleApp -- --test <command> [arguments]
 - `extract-method <solutionPath> <filePath> <range> <methodName>` - Extract code into method
 - `introduce-field <solutionPath> <filePath> <range> <fieldName> [accessModifier]` - Create field from expression
 - `introduce-variable <solutionPath> <filePath> <range> <variableName>` - Create variable from expression
-- `make-field-readonly <solutionPath> <filePath> <fieldLine>` - Make field readonly
-- `introduce-parameter <solutionPath> <filePath> <methodLine> <range> <parameterName>` - Create parameter from expression
-- `convert-to-static-with-parameters <solutionPath> <filePath> <methodLine>` - Convert instance method to static with parameters
-- `convert-to-static-with-instance <solutionPath> <filePath> <methodLine> [instanceName]` - Convert instance method to static with explicit instance
+- `make-field-readonly <solutionPath> <filePath> <fieldName>` - Make field readonly
+- `introduce-parameter <solutionPath> <filePath> <methodName> <range> <parameterName>` - Create parameter from expression
+- `convert-to-static-with-parameters <solutionPath> <filePath> <methodName>` - Convert instance method to static with parameters
+- `convert-to-static-with-instance <solutionPath> <filePath> <methodName> [instanceName]` - Convert instance method to static with explicit instance
 
 #### Quick Start Example
 
@@ -208,7 +208,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --test extract-method \
 dotnet run --project RefactorMCP.ConsoleApp -- --test convert-to-extension-method \
   "./RefactorMCP.sln" \
   "./RefactorMCP.Tests/ExampleCode.cs" \
-  46
+  GetFormattedNumber
 ```
 
 ## Range Format
@@ -327,7 +327,7 @@ public string GetFormattedNumber(int number)
 **Command**:
 ```bash
 dotnet run --project RefactorMCP.ConsoleApp -- --test convert-to-static-with-parameters \
-  "./RefactorMCP.sln" "./MyFile.cs" 46
+  "./RefactorMCP.sln" "./MyFile.cs" GetFormattedNumber
 ```
 
 **After**:
@@ -351,7 +351,7 @@ public string GetFormattedNumber(int number)
 **Command**:
 ```bash
 dotnet run --project RefactorMCP.ConsoleApp -- --test convert-to-static-with-instance \
-  "./RefactorMCP.sln" "./MyFile.cs" 46 "calculator"
+  "./RefactorMCP.sln" "./MyFile.cs" GetFormattedNumber "calculator"
 ```
 
 **After**:
