@@ -298,6 +298,36 @@ public static class CalculatorExtensions
 }
 ```
 
+## 9. Safe Delete Parameter
+
+**Purpose**: Remove an unused method parameter and update call sites.
+
+### Example
+**Before** (in `ExampleCode.cs` line 74):
+```csharp
+public int Multiply(int x, int y, int unusedParam)
+{
+    return x * y; // unusedParam can be safely deleted
+}
+```
+
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --test safe-delete-parameter \
+  "./RefactorMCP.sln" \
+  "./RefactorMCP.Tests/ExampleCode.cs" \
+  Multiply \
+  unusedParam
+```
+
+**After**:
+```csharp
+public int Multiply(int x, int y)
+{
+    return x * y;
+}
+```
+
 ## 6. Load Solution (Utility Command)
 
 **Purpose**: Load and validate a solution file before performing refactorings.

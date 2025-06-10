@@ -374,6 +374,25 @@ public class RefactoringToolsTests : IDisposable
         // File modification verification skipped
     }
 
+    [Fact]
+    public async Task SafeDeleteParameter_RemovesParameter()
+    {
+        await RefactoringTools.LoadSolution(SolutionPath);
+        var testFile = Path.Combine(TestOutputPath, "SafeDeleteParam.cs");
+        await CreateTestFile(testFile, GetSampleCodeForSafeDelete());
+
+        var result = await RefactoringTools.SafeDeleteParameter(
+            testFile,
+            "Multiply",
+            "unusedParam",
+            SolutionPath
+        );
+
+        Assert.Contains("Successfully deleted parameter", result);
+        var fileContent = await File.ReadAllTextAsync(testFile);
+        Assert.DoesNotContain("unusedParam", fileContent);
+    }
+
     // Helper methods to create test files
     private static async Task CreateTestFile(string filePath, string content)
     {
@@ -438,6 +457,11 @@ public class TestClass
     }
 
     private static string GetSampleCodeForConvertToExtension()
+    {
+        return File.ReadAllText(Path.Combine(Path.GetDirectoryName(SolutionPath)!, "RefactorMCP.Tests", "ExampleCode.cs"));
+    }
+
+    private static string GetSampleCodeForSafeDelete()
     {
         return File.ReadAllText(Path.Combine(Path.GetDirectoryName(SolutionPath)!, "RefactorMCP.Tests", "ExampleCode.cs"));
     }

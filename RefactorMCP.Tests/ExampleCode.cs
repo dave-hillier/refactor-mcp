@@ -77,6 +77,12 @@ namespace RefactorMCP.Tests.Examples
             return x * y; // unusedParam can be safely deleted
         }
 
+        // Example for Safe Delete - unused method and variable
+        private void UnusedHelper()
+        {
+            int tempValue = 0; // tempValue can be safely deleted
+        }
+
         // Example field that might be safe to delete
         private int deprecatedCounter = 0; // Not used anywhere
     }
