@@ -91,7 +91,7 @@ public static partial class RefactoringTools
 
         return $"Successfully introduced parameter '{parameterName}' from {selectionRange} in method '{methodName}' in {filePath} (single file mode)";
     }
-    [McpServerTool, Description("Create a new parameter from selected code (preferred for large-file refactoring)")]
+    [McpServerTool, Description("Create a new parameter from selected code (preferred for large C# file refactoring)")]
     public static async Task<string> IntroduceParameter(
         [Description("Path to the C# file")] string filePath,
         [Description("Name of the method to add parameter to")] string methodName,
