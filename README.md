@@ -176,6 +176,9 @@ dotnet run --project RefactorMCP.ConsoleApp -- --test <command> [arguments]
 - `introduce-field <solutionPath> <filePath> <range> <fieldName> [accessModifier]` - Create field from expression
 - `introduce-variable <solutionPath> <filePath> <range> <variableName>` - Create variable from expression
 - `make-field-readonly <solutionPath> <filePath> <fieldLine>` - Make field readonly
+- `introduce-parameter <solutionPath> <filePath> <methodLine> <range> <parameterName>` - Create parameter from expression
+- `convert-to-static-with-parameters <solutionPath> <filePath> <methodLine>` - Convert instance method to static with parameters
+- `convert-to-static-with-instance <solutionPath> <filePath> <methodLine> [instanceName]` - Convert instance method to static with explicit instance
 
 #### Quick Start Example
 
@@ -270,6 +273,78 @@ private double _averageValue = numbers.Sum() / (double)numbers.Count;
 public double GetAverage()
 {
     return _averageValue;
+}
+```
+
+### 3. Introduce Parameter
+
+**Before**:
+```csharp
+public string FormatResult(int value)
+{
+    return $"The calculation result is: {value * 2 + 10}";
+}
+```
+
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --test introduce-parameter \
+  "./RefactorMCP.sln" "./MyFile.cs" 40 "41:50-41:65" "processedValue"
+```
+
+**After**:
+```csharp
+public string FormatResult(int value, int processedValue)
+{
+    return $"The calculation result is: {processedValue}";
+}
+```
+
+### 4. Convert to Static with Parameters
+
+**Before**:
+```csharp
+public string GetFormattedNumber(int number)
+{
+    return $"{operatorSymbol}: {number}";
+}
+```
+
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --test convert-to-static-with-parameters \
+  "./RefactorMCP.sln" "./MyFile.cs" 46
+```
+
+**After**:
+```csharp
+public static string GetFormattedNumber(string operatorSymbol, int number)
+{
+    return $"{operatorSymbol}: {number}";
+}
+```
+
+### 5. Convert to Static with Instance
+
+**Before**:
+```csharp
+public string GetFormattedNumber(int number)
+{
+    return $"{operatorSymbol}: {number}";
+}
+```
+
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --test convert-to-static-with-instance \
+  "./RefactorMCP.sln" "./MyFile.cs" 46 "calculator"
+```
+
+**After**:
+```csharp
+public static string GetFormattedNumber(Calculator calculator, int number)
+{
+    return $"{calculator.operatorSymbol}: {number}";
 }
 ```
 
