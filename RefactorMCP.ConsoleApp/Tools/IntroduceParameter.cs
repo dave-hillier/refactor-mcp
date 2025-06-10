@@ -86,8 +86,7 @@ public static partial class RefactoringTools
         var newRoot = syntaxRoot.ReplaceNode(method, newMethod);
         newRoot = newRoot.ReplaceNode(selectedExpression, SyntaxFactory.IdentifierName(parameterName));
 
-        var workspace = new AdhocWorkspace();
-        var formattedRoot = Formatter.Format(newRoot, workspace);
+        var formattedRoot = Formatter.Format(newRoot, SharedWorkspace);
         await File.WriteAllTextAsync(filePath, formattedRoot.ToFullString());
 
         return $"Successfully introduced parameter '{parameterName}' from {selectionRange} in method '{methodName}' in {filePath} (single file mode)";

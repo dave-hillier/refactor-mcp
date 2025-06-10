@@ -164,8 +164,7 @@ public static partial class RefactoringTools
         }
 
         // Format and write back to file
-        var workspace = new AdhocWorkspace();
-        var formattedRoot = Formatter.Format(newRoot, workspace);
+        var formattedRoot = Formatter.Format(newRoot, SharedWorkspace);
         await File.WriteAllTextAsync(filePath, formattedRoot.ToFullString());
 
         return $"Successfully introduced {accessModifier} field '{fieldName}' from {selectionRange} in {filePath} (single file mode)";
