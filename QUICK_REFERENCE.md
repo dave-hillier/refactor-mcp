@@ -51,6 +51,33 @@ dotnet run --project RefactorMCP.ConsoleApp -- --test make-field-readonly \
   lineNumber
 ```
 
+### Introduce Parameter
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --test introduce-parameter \
+  "./RefactorMCP.sln" \
+  "./path/to/file.cs" \
+  methodLine \
+  "startLine:startCol-endLine:endCol" \
+  "parameterName"
+```
+
+### Convert to Static with Parameters
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --test convert-to-static-with-parameters \
+  "./RefactorMCP.sln" \
+  "./path/to/file.cs" \
+  methodLine
+```
+
+### Convert to Static with Instance
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --test convert-to-static-with-instance \
+  "./RefactorMCP.sln" \
+  "./path/to/file.cs" \
+  methodLine \
+  "instanceName"
+```
+
 ## Range Format
 
 `"startLine:startColumn-endLine:endColumn"`
@@ -76,6 +103,9 @@ return numbers.Sum() / (double)numbers.Count;
 // Line 41: Introduce Variable example
 return $"The calculation result is: {value * 2 + 10}";
 
+// Line 46: Convert To Static example
+return $"{operatorSymbol}: {number}";
+
 // Line 50: Make Field Readonly example
 private string format = "Currency";
 ```
@@ -98,6 +128,18 @@ dotnet run --project RefactorMCP.ConsoleApp -- --test introduce-variable \
 # Make format field readonly
 dotnet run --project RefactorMCP.ConsoleApp -- --test make-field-readonly \
   "./RefactorMCP.sln" "./RefactorMCP.Tests/ExampleCode.cs" 50
+
+# Introduce parameter from expression
+dotnet run --project RefactorMCP.ConsoleApp -- --test introduce-parameter \
+  "./RefactorMCP.sln" "./RefactorMCP.Tests/ExampleCode.cs" 40 "41:50-41:65" "processedValue"
+
+# Convert method to static with parameters
+dotnet run --project RefactorMCP.ConsoleApp -- --test convert-to-static-with-parameters \
+  "./RefactorMCP.sln" "./RefactorMCP.Tests/ExampleCode.cs" 46
+
+# Convert method to static with instance
+dotnet run --project RefactorMCP.ConsoleApp -- --test convert-to-static-with-instance \
+  "./RefactorMCP.sln" "./RefactorMCP.Tests/ExampleCode.cs" 46 "calculator"
 ```
 
 ## Common Errors
