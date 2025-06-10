@@ -80,8 +80,8 @@ static void ShowTestModeHelp()
     Console.WriteLine("  extract-method <filePath> <range> <methodName> [solutionPath]");
     Console.WriteLine("  introduce-field <filePath> <range> <fieldName> [accessModifier] [solutionPath]");
     Console.WriteLine("  introduce-variable <filePath> <range> <variableName> [solutionPath]");
-    Console.WriteLine("  make-field-readonly <filePath> <fieldLine> [solutionPath]");
-    Console.WriteLine("  convert-to-extension-method <filePath> <methodLine> [solutionPath]");
+    Console.WriteLine("  make-field-readonly <filePath> <fieldName> [solutionPath]");
+    Console.WriteLine("  convert-to-extension-method <filePath> <methodName> [solutionPath]");
     Console.WriteLine("  move-instance-method <filePath> <sourceClass> <methodName> <targetClass> <accessMember> [memberType] [solutionPath]");
     Console.WriteLine();
     Console.WriteLine("Examples:");
@@ -169,14 +169,13 @@ static async Task<string> TestIntroduceVariable(string[] args)
 static async Task<string> TestMakeFieldReadonly(string[] args)
 {
     if (args.Length < 4)
-        return "Error: Missing arguments. Usage: --test make-field-readonly <filePath> <fieldLine> [solutionPath]";
+        return "Error: Missing arguments. Usage: --test make-field-readonly <filePath> <fieldName> [solutionPath]";
 
     var filePath = args[2];
-    if (!int.TryParse(args[3], out var fieldLine))
-        return "Error: Invalid field line number";
+    var fieldName = args[3];
     var solutionPath = args.Length > 4 ? args[4] : null;
 
-    return await RefactoringTools.MakeFieldReadonly(filePath, fieldLine, solutionPath);
+    return await RefactoringTools.MakeFieldReadonly(filePath, fieldName, solutionPath);
 }
 
 static string TestUnloadSolution(string[] args)
@@ -196,14 +195,13 @@ static string ClearCacheCommand()
 static async Task<string> TestConvertToExtensionMethod(string[] args)
 {
     if (args.Length < 4)
-        return "Error: Missing arguments. Usage: --test convert-to-extension-method <filePath> <methodLine> [solutionPath]";
+        return "Error: Missing arguments. Usage: --test convert-to-extension-method <filePath> <methodName> [solutionPath]";
 
     var filePath = args[2];
-    if (!int.TryParse(args[3], out var methodLine))
-        return "Error: Invalid method line number";
+    var methodName = args[3];
     var solutionPath = args.Length > 4 ? args[4] : null;
 
-    return await RefactoringTools.ConvertToExtensionMethod(filePath, methodLine, null, solutionPath);
+    return await RefactoringTools.ConvertToExtensionMethod(filePath, methodName, null, solutionPath);
 }
 
 [McpServerToolType]
@@ -212,7 +210,7 @@ public static partial class RefactoringTools
     [McpServerTool, Description("Convert an instance method to an extension method in a static class")]
     public static async Task<string> ConvertToExtensionMethod(
         [Description("Path to the C# file")] string filePath,
-        [Description("Line number of the instance method to convert")] int methodLine,
+        [Description("Name of the instance method to convert")] string methodName,
         [Description("Name of the extension class - optional")] string? extensionClass = null,
         [Description("Path to the solution file (.sln) - optional for single file mode")] string? solutionPath = null)
     {
@@ -223,12 +221,12 @@ public static partial class RefactoringTools
                 var solution = await GetOrLoadSolution(solutionPath);
                 var document = GetDocumentByPath(solution, filePath);
                 if (document != null)
-                    return await ConvertToExtensionMethodWithSolution(document, methodLine, extensionClass);
+                    return await ConvertToExtensionMethodWithSolution(document, methodName, extensionClass);
 
-                return await ConvertToExtensionMethodSingleFile(filePath, methodLine, extensionClass);
+                return await ConvertToExtensionMethodSingleFile(filePath, methodName, extensionClass);
             }
 
-            return await ConvertToExtensionMethodSingleFile(filePath, methodLine, extensionClass);
+            return await ConvertToExtensionMethodSingleFile(filePath, methodName, extensionClass);
         }
         catch (Exception ex)
         {
@@ -236,22 +234,21 @@ public static partial class RefactoringTools
         }
     }
 
-    private static async Task<string> ConvertToExtensionMethodWithSolution(Document document, int methodLine, string? extensionClass)
+    private static async Task<string> ConvertToExtensionMethodWithSolution(Document document, string methodName, string? extensionClass)
     {
         var sourceText = await document.GetTextAsync();
         var syntaxRoot = await document.GetSyntaxRootAsync();
-        var textLines = sourceText.Lines;
 
         var method = syntaxRoot!.DescendantNodes()
             .OfType<MethodDeclarationSyntax>()
-            .FirstOrDefault(m => textLines.GetLineFromPosition(m.SpanStart).LineNumber + 1 == methodLine);
+            .FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            return $"Error: No method found at line {methodLine}";
+            return $"Error: No method named '{methodName}' found";
 
         var semanticModel = await document.GetSemanticModelAsync();
         var classDecl = method.Ancestors().OfType<ClassDeclarationSyntax>().FirstOrDefault();
         if (classDecl == null)
-            return $"Error: Method at line {methodLine} is not inside a class";
+            return $"Error: Method '{methodName}' is not inside a class";
 
         var className = classDecl.Identifier.ValueText;
         var extClassName = extensionClass ?? className + "Extensions";
@@ -317,10 +314,10 @@ public static partial class RefactoringTools
         var newText = await newDocument.GetTextAsync();
         await File.WriteAllTextAsync(document.FilePath!, newText.ToString());
 
-        return $"Successfully converted method to extension method at line {methodLine} in {document.FilePath} (solution mode)";
+        return $"Successfully converted method '{methodName}' to extension method in {document.FilePath} (solution mode)";
     }
 
-    private static async Task<string> ConvertToExtensionMethodSingleFile(string filePath, int methodLine, string? extensionClass)
+    private static async Task<string> ConvertToExtensionMethodSingleFile(string filePath, string methodName, string? extensionClass)
     {
         if (!File.Exists(filePath))
             return $"Error: File {filePath} not found";
@@ -328,17 +325,16 @@ public static partial class RefactoringTools
         var sourceText = await File.ReadAllTextAsync(filePath);
         var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
         var syntaxRoot = await syntaxTree.GetRootAsync();
-        var textLines = SourceText.From(sourceText).Lines;
 
         var method = syntaxRoot.DescendantNodes()
             .OfType<MethodDeclarationSyntax>()
-            .FirstOrDefault(m => textLines.GetLineFromPosition(m.SpanStart).LineNumber + 1 == methodLine);
+            .FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            return $"Error: No method found at line {methodLine}";
+            return $"Error: No method named '{methodName}' found";
 
         var classDecl = method.Ancestors().OfType<ClassDeclarationSyntax>().FirstOrDefault();
         if (classDecl == null)
-            return $"Error: Method at line {methodLine} is not inside a class";
+            return $"Error: Method '{methodName}' is not inside a class";
 
         var className = classDecl.Identifier.ValueText;
         var extClassName = extensionClass ?? className + "Extensions";
@@ -409,6 +405,6 @@ public static partial class RefactoringTools
         var formatted = Formatter.Format(newRoot, workspace);
         await File.WriteAllTextAsync(filePath, formatted.ToFullString());
 
-        return $"Successfully converted method to extension method at line {methodLine} in {filePath} (single file mode)";
+        return $"Successfully converted method '{methodName}' to extension method in {filePath} (single file mode)";
     }
 }

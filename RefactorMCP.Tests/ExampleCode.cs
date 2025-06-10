@@ -23,7 +23,7 @@ namespace RefactorMCP.Tests.Examples
             {
                 throw new ArgumentException("Negative numbers not allowed");
             }
-            
+
             var result = a + b;
             numbers.Add(result);
             Console.WriteLine($"Result: {result}");
@@ -96,4 +96,4 @@ namespace RefactorMCP.Tests.Examples
             Console.WriteLine($"[LOG] {message}");
         }
     }
-} 
+}

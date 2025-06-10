@@ -194,12 +194,12 @@ public class RefactoringToolsTests : IDisposable
         // Act
         var result = await RefactoringTools.MakeFieldReadonly(
             testFile,
-            52,
+            "format",
             SolutionPath
         );
 
         // Assert result text and file contents
-        Assert.Contains("Successfully made field readonly", result);
+        Assert.Contains("Successfully made field 'format' readonly", result);
         var fileContent = await File.ReadAllTextAsync(testFile);
         Assert.Contains("readonly string format", fileContent);
     }
@@ -215,12 +215,12 @@ public class RefactoringToolsTests : IDisposable
         // Act
         var result = await RefactoringTools.MakeFieldReadonly(
             testFile,
-            4,
+            "description",
             SolutionPath
         );
 
         // Assert result text and file contents
-        Assert.Contains("Successfully made field readonly", result);
+        Assert.Contains("Successfully made field 'description' readonly", result);
         var fileContent = await File.ReadAllTextAsync(testFile);
         Assert.Contains("readonly string description", fileContent);
     }
@@ -234,7 +234,7 @@ public class RefactoringToolsTests : IDisposable
         // Act
         var result = await RefactoringTools.MakeFieldReadonly(
             ExampleFilePath,
-            999,
+            "nonexistent",
             SolutionPath
         );
 
@@ -322,12 +322,12 @@ public class RefactoringToolsTests : IDisposable
 
         var result = await RefactoringTools.ConvertToStaticWithInstance(
             testFile,
-            46,
+            "GetFormattedNumber",
             "instance",
             SolutionPath
         );
 
-        Assert.Contains("Successfully converted method to static with instance parameter", result);
+        Assert.Contains("Successfully converted method 'GetFormattedNumber' to static with instance parameter", result);
         var fileContent = await File.ReadAllTextAsync(testFile);
         Assert.Contains("static string GetFormattedNumber", fileContent);
         Assert.Contains("Calculator instance", fileContent);
@@ -342,12 +342,12 @@ public class RefactoringToolsTests : IDisposable
 
         var result = await RefactoringTools.ConvertToExtensionMethod(
             testFile,
-            46,
+            "GetFormattedNumber",
             null,
             SolutionPath
         );
 
-        Assert.Contains("Successfully converted method to extension method", result);
+        Assert.Contains("Successfully converted method 'GetFormattedNumber' to extension method", result);
 
         // File modification verification skipped
     }

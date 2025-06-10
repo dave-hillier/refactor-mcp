@@ -11,7 +11,7 @@ public static partial class RefactoringTools
 {
     public static async Task<string> MakeFieldReadonly(
         [Description("Path to the C# file")] string filePath,
-        [Description("Line number of the field to make readonly")] int fieldLine,
+        [Description("Name of the field to make readonly")] string fieldName,
         [Description("Path to the solution file (.sln) - optional for single file mode")] string? solutionPath = null)
     {
         try
@@ -22,14 +22,14 @@ public static partial class RefactoringTools
                 var solution = await GetOrLoadSolution(solutionPath);
                 var document = GetDocumentByPath(solution, filePath);
                 if (document != null)
-                    return await MakeFieldReadonlyWithSolution(document, fieldLine);
+                    return await MakeFieldReadonlyWithSolution(document, fieldName);
 
                 // Fallback to single file mode when file isn't part of the solution
-                return await MakeFieldReadonlySingleFile(filePath, fieldLine);
+                return await MakeFieldReadonlySingleFile(filePath, fieldName);
             }
 
             // Single file mode - direct syntax tree manipulation
-            return await MakeFieldReadonlySingleFile(filePath, fieldLine);
+            return await MakeFieldReadonlySingleFile(filePath, fieldName);
         }
         catch (Exception ex)
         {
@@ -37,21 +37,17 @@ public static partial class RefactoringTools
         }
     }
 
-    private static async Task<string> MakeFieldReadonlyWithSolution(Document document, int fieldLine)
+    private static async Task<string> MakeFieldReadonlyWithSolution(Document document, string fieldName)
     {
         var sourceText = await document.GetTextAsync();
         var syntaxRoot = await document.GetSyntaxRootAsync();
 
-        var line = sourceText.Lines[fieldLine - 1];
-        var lineText = line.ToString();
-        var nonWs = lineText.TakeWhile(char.IsWhiteSpace).Count();
-        var linePosition = line.Start + nonWs;
         var fieldDeclaration = syntaxRoot!.DescendantNodes()
             .OfType<FieldDeclarationSyntax>()
-            .FirstOrDefault(f => f.Span.Contains(linePosition));
+            .FirstOrDefault(f => f.Declaration.Variables.Any(v => v.Identifier.ValueText == fieldName));
 
         if (fieldDeclaration == null)
-            return $"Error: No field found at line {fieldLine}";
+            return $"Error: No field named '{fieldName}' found";
 
         // Add readonly modifier
         var readonlyModifier = SyntaxFactory.Token(SyntaxKind.ReadOnlyKeyword);
@@ -110,7 +106,7 @@ public static partial class RefactoringTools
                     var newText = await newDocument.GetTextAsync();
                     await File.WriteAllTextAsync(document.FilePath!, newText.ToString());
 
-                    return $"Successfully made field readonly and moved initialization to constructors at line {fieldLine} in {document.FilePath}";
+                    return $"Successfully made field '{fieldName}' readonly and moved initialization to constructors in {document.FilePath}";
                 }
             }
         }
@@ -122,13 +118,13 @@ public static partial class RefactoringTools
             var newText = await newDocument.GetTextAsync();
             await File.WriteAllTextAsync(document.FilePath!, newText.ToString());
 
-            return $"Successfully made field readonly at line {fieldLine} in {document.FilePath}";
+            return $"Successfully made field '{fieldName}' readonly in {document.FilePath}";
         }
 
-        return $"Field at line {fieldLine} made readonly, but no constructors found for initialization";
+        return $"Field '{fieldName}' made readonly, but no constructors found for initialization";
     }
 
-    private static async Task<string> MakeFieldReadonlySingleFile(string filePath, int fieldLine)
+    private static async Task<string> MakeFieldReadonlySingleFile(string filePath, string fieldName)
     {
         if (!File.Exists(filePath))
             return $"Error: File {filePath} not found";
@@ -136,18 +132,12 @@ public static partial class RefactoringTools
         var sourceText = await File.ReadAllTextAsync(filePath);
         var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
         var syntaxRoot = await syntaxTree.GetRootAsync();
-        var textLines = SourceText.From(sourceText).Lines;
-
-        var line = textLines[fieldLine - 1];
-        var lineText = line.ToString();
-        var nonWs = lineText.TakeWhile(char.IsWhiteSpace).Count();
-        var linePosition = line.Start + nonWs;
         var fieldDeclaration = syntaxRoot.DescendantNodes()
             .OfType<FieldDeclarationSyntax>()
-            .FirstOrDefault(f => f.Span.Contains(linePosition));
+            .FirstOrDefault(f => f.Declaration.Variables.Any(v => v.Identifier.ValueText == fieldName));
 
         if (fieldDeclaration == null)
-            return $"Error: No field found at line {fieldLine}";
+            return $"Error: No field named '{fieldName}' found";
 
         // Add readonly modifier
         var readonlyModifier = SyntaxFactory.Token(SyntaxKind.ReadOnlyKeyword);
@@ -206,7 +196,7 @@ public static partial class RefactoringTools
                     var formattedRoot = Formatter.Format(newRoot, workspace);
                     await File.WriteAllTextAsync(filePath, formattedRoot.ToFullString());
 
-                    return $"Successfully made field readonly and moved initialization to constructors at line {fieldLine} in {filePath}";
+                    return $"Successfully made field '{fieldName}' readonly and moved initialization to constructors in {filePath}";
                 }
             }
         }
@@ -219,10 +209,10 @@ public static partial class RefactoringTools
             var formattedRoot = Formatter.Format(newRoot, workspace);
             await File.WriteAllTextAsync(filePath, formattedRoot.ToFullString());
 
-            return $"Successfully made field readonly at line {fieldLine} in {filePath} (single file mode)";
+            return $"Successfully made field '{fieldName}' readonly in {filePath} (single file mode)";
         }
 
-        return $"Field at line {fieldLine} made readonly, but no constructors found for initialization";
+        return $"Field '{fieldName}' made readonly, but no constructors found for initialization";
     }
 
 }
