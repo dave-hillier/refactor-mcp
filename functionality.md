@@ -1,6 +1,6 @@
 # RefactorMCP
 
-A Model Context Protocol (MCP) server providing automated refactoring tools for code transformation. 
+A Model Context Protocol (MCP) server providing automated refactoring tools for C# code transformation.
 
 Using:
 - Microsoft.CodeAnalysis.CSharp (4.14.0), 

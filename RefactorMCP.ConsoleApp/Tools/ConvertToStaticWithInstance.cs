@@ -8,7 +8,7 @@ using Microsoft.CodeAnalysis.Text;
 
 public static partial class RefactoringTools
 {
-    [McpServerTool, Description("Transform instance method to static by adding instance parameter (preferred for large-file refactoring)")]
+    [McpServerTool, Description("Transform instance method to static by adding instance parameter (preferred for large C# file refactoring)")]
     public static async Task<string> ConvertToStaticWithInstance(
         [Description("Path to the C# file")] string filePath,
         [Description("Name of the method to convert")] string methodName,

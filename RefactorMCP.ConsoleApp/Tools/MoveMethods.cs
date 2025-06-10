@@ -144,7 +144,7 @@ public static partial class RefactoringTools
         return $"Successfully moved instance method to {targetClass} in {filePath} (single file mode)";
     }
 
-    [McpServerTool, Description("Move a static method to another class (preferred for large-file refactoring)")]
+    [McpServerTool, Description("Move a static method to another class (preferred for large C# file refactoring)")]
     public static async Task<string> MoveStaticMethod(
         [Description("Path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file containing the method")] string filePath,
@@ -225,7 +225,7 @@ public static partial class RefactoringTools
             return $"Error moving static method: {ex.Message}";
         }
     }
-    [McpServerTool, Description("Move an instance method to another class (preferred for large-file refactoring)")]
+    [McpServerTool, Description("Move an instance method to another class (preferred for large C# file refactoring)")]
     public static async Task<string> MoveInstanceMethod(
         [Description("Path to the C# file containing the method")] string filePath,
         [Description("Name of the source class containing the method")] string sourceClass,

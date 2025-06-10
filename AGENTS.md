@@ -1,6 +1,6 @@
 # Coding Agents Guidelines
 
-This repository implements a Model Context Protocol (MCP) server that exposes refactoring tools as **agents**. When adding new agents or modifying existing ones, follow these guidelines.
+This repository implements a Model Context Protocol (MCP) server that exposes **C#** refactoring tools as **agents**. When adding new agents or modifying existing ones, follow these guidelines.
 
 ## Creating a New Agent
 
