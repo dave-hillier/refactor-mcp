@@ -2,7 +2,7 @@
 
 RefactorMCP now supports **Single File Mode** - a fast refactoring option that works without requiring a solution file. This mode provides direct syntax tree manipulation for simple refactoring operations.
 
-For large files, the MCP-based tools remain the preferred approach because they handle extensive edits more reliably.
+For large **C#** files, the MCP-based tools remain the preferred approach because they handle extensive edits more reliably.
 
 ## Overview
 
