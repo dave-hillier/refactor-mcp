@@ -166,12 +166,12 @@ Run as an MCP server for integration with AI assistants:
 dotnet run --project RefactorMCP.ConsoleApp
 ```
 
-### Test Mode (CLI)
+### CLI Mode
 
-Use the `--test` flag for direct command-line testing:
+Use the `--cli` flag for direct command-line testing:
 
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --test <command> [arguments]
+dotnet run --project RefactorMCP.ConsoleApp -- --cli <command> [arguments]
 ```
 
 #### Available Test Commands
@@ -193,13 +193,13 @@ dotnet run --project RefactorMCP.ConsoleApp -- --test <command> [arguments]
 
 ```bash
 # List available tools
-dotnet run --project RefactorMCP.ConsoleApp -- --test list-tools
+dotnet run --project RefactorMCP.ConsoleApp -- --cli list-tools
 
 # Load a solution (not required)
-dotnet run --project RefactorMCP.ConsoleApp -- --test load-solution ./RefactorMCP.sln
+dotnet run --project RefactorMCP.ConsoleApp -- --cli load-solution ./RefactorMCP.sln
 
 # Extract a method (example range)
-dotnet run --project RefactorMCP.ConsoleApp -- --test extract-method \
+dotnet run --project RefactorMCP.ConsoleApp -- --cli extract-method \
   "./RefactorMCP.sln" \
   "./RefactorMCP.Tests/ExampleCode.cs" \
   "22:9-25:34" \
@@ -208,7 +208,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --test extract-method \
 
 ```bash
 # Convert instance method to extension
-dotnet run --project RefactorMCP.ConsoleApp -- --test convert-to-extension-method \
+dotnet run --project RefactorMCP.ConsoleApp -- --cli convert-to-extension-method \
   "./RefactorMCP.sln" \
   "./RefactorMCP.Tests/ExampleCode.cs" \
   GetFormattedNumber
@@ -244,7 +244,7 @@ public int Calculate(int a, int b)
 
 **Command**:
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --test extract-method \
+dotnet run --project RefactorMCP.ConsoleApp -- --cli extract-method \
   "./RefactorMCP.sln" "./MyFile.cs" "3:5-6:6" "ValidateInputs"
 ```
 
@@ -279,7 +279,7 @@ public double GetAverage()
 
 **Command**:
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --test introduce-field \
+dotnet run --project RefactorMCP.ConsoleApp -- --cli introduce-field \
   "./RefactorMCP.sln" "./MyFile.cs" "3:12-3:54" "_averageValue" "private"
 ```
 
@@ -305,7 +305,7 @@ public string FormatResult(int value)
 
 **Command**:
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --test introduce-parameter \
+dotnet run --project RefactorMCP.ConsoleApp -- --cli introduce-parameter \
   "./RefactorMCP.sln" "./MyFile.cs" 40 "41:50-41:65" "processedValue"
 ```
 
@@ -329,7 +329,7 @@ public string GetFormattedNumber(int number)
 
 **Command**:
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --test convert-to-static-with-parameters \
+dotnet run --project RefactorMCP.ConsoleApp -- --cli convert-to-static-with-parameters \
   "./RefactorMCP.sln" "./MyFile.cs" GetFormattedNumber
 ```
 
@@ -353,7 +353,7 @@ public string GetFormattedNumber(int number)
 
 **Command**:
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --test convert-to-static-with-instance \
+dotnet run --project RefactorMCP.ConsoleApp -- --cli convert-to-static-with-instance \
   "./RefactorMCP.sln" "./MyFile.cs" GetFormattedNumber "calculator"
 ```
 
@@ -377,7 +377,7 @@ public int Multiply(int x, int y, int unusedParam)
 
 **Command**:
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --test safe-delete-parameter \
+dotnet run --project RefactorMCP.ConsoleApp -- --cli safe-delete-parameter \
   "./RefactorMCP.Tests/ExampleCode.cs" "Multiply" "unusedParam" "./RefactorMCP.sln"
 ```
 
@@ -401,7 +401,7 @@ public static string FormatCurrency(decimal amount)
 
 **Command**:
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --test move-static-method \
+dotnet run --project RefactorMCP.ConsoleApp -- --cli move-static-method \
   "./RefactorMCP.sln" \
   "./RefactorMCP.Tests/ExampleCode.cs" \
   "FormatCurrency" \
@@ -466,10 +466,10 @@ The examples use the sample code in [RefactorMCP.Tests/ExampleCode.cs](./Refacto
 dotnet test
 
 # Test specific refactoring tool
-dotnet run --project RefactorMCP.ConsoleApp -- --test <tool-name> [args]
+dotnet run --project RefactorMCP.ConsoleApp -- --cli <tool-name> [args]
 
 # Load test solution for debugging
-dotnet run --project RefactorMCP.ConsoleApp -- --test load-solution ./RefactorMCP.sln
+dotnet run --project RefactorMCP.ConsoleApp -- --cli load-solution ./RefactorMCP.sln
 ```
 
 ## Error Handling

@@ -62,7 +62,7 @@ dotnet test RefactorMCP.Tests/RefactorMCP.Tests.csproj \
 
 ## Manual Testing
 
-For thorough testing of the refactoring functionality, use the CLI test mode:
+For thorough testing of the refactoring functionality, use the CLI mode:
 
 ```bash
 # Build and test with actual files
@@ -70,8 +70,8 @@ dotnet build RefactorMCP.ConsoleApp/RefactorMCP.ConsoleApp.csproj
 
 # Test with existing example file
 cd RefactorMCP.ConsoleApp
-dotnet run -- --test load-solution ../RefactorMCP.sln
-dotnet run -- --test extract-method ../RefactorMCP.sln ../RefactorMCP.Tests/ExampleCode.cs "22:9-25:10" "ValidateInputs"
+dotnet run -- --cli load-solution ../RefactorMCP.sln
+dotnet run -- --cli extract-method ../RefactorMCP.sln ../RefactorMCP.Tests/ExampleCode.cs "22:9-25:10" "ValidateInputs"
 ```
 
 ## Future Improvements

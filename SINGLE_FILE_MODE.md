@@ -83,16 +83,16 @@ The refactoring engine automatically detects which mode to use:
 
 ```bash
 # Extract Method (Single File Mode)
-dotnet run --project RefactorMCP.ConsoleApp -- --test extract-method ./MyFile.cs "10:5-15:20" "ExtractedMethod"
+dotnet run --project RefactorMCP.ConsoleApp -- --cli extract-method ./MyFile.cs "10:5-15:20" "ExtractedMethod"
 
 # Extract Method (Solution Mode)  
-dotnet run --project RefactorMCP.ConsoleApp -- --test extract-method ./MyFile.cs "10:5-15:20" "ExtractedMethod" ./MySolution.sln
+dotnet run --project RefactorMCP.ConsoleApp -- --cli extract-method ./MyFile.cs "10:5-15:20" "ExtractedMethod" ./MySolution.sln
 
 # Introduce Variable (Single File Mode)
-dotnet run --project RefactorMCP.ConsoleApp -- --test introduce-variable ./MyFile.cs "12:10-12:25" "myVariable"
+dotnet run --project RefactorMCP.ConsoleApp -- --cli introduce-variable ./MyFile.cs "12:10-12:25" "myVariable"
 
 # Make Field Readonly (Single File Mode)
-dotnet run --project RefactorMCP.ConsoleApp -- --test make-field-readonly ./MyFile.cs 15
+dotnet run --project RefactorMCP.ConsoleApp -- --cli make-field-readonly ./MyFile.cs 15
 ```
 
 ### MCP Tool Calls
@@ -142,13 +142,13 @@ If you were using the old parameter order, update your calls:
 
 ```bash
 # OLD
---test extract-method ./MySolution.sln ./MyFile.cs "10:5-15:20" "ExtractedMethod"
+--cli extract-method ./MySolution.sln ./MyFile.cs "10:5-15:20" "ExtractedMethod"
 
 # NEW (Solution Mode)  
---test extract-method ./MyFile.cs "10:5-15:20" "ExtractedMethod" ./MySolution.sln
+--cli extract-method ./MyFile.cs "10:5-15:20" "ExtractedMethod" ./MySolution.sln
 
 # NEW (Single File Mode)
---test extract-method ./MyFile.cs "10:5-15:20" "ExtractedMethod"
+--cli extract-method ./MyFile.cs "10:5-15:20" "ExtractedMethod"
 ```
 
 ### For MCP Clients
