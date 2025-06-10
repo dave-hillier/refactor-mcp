@@ -44,9 +44,12 @@ Benefits:
 
 **Use solution mode for:**
 - Move Method operations
-- Convert to Static (requires dependency analysis)  
+- Convert to Static (requires dependency analysis)
 - Safe Delete (requires usage analysis)
 - Any refactoring requiring cross-references
+
+### Solution Cache
+Loaded solutions are cached in memory for faster access. Use `unload-solution` to remove a single entry or `clear-solution-cache` to reset the cache when projects change on disk.
 
 ## Installation
 
