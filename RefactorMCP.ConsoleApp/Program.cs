@@ -78,7 +78,7 @@ static void ShowTestModeHelp()
     Console.WriteLine();
     Console.WriteLine("Available commands:");
     Console.WriteLine("  list-tools                                    - List all available refactoring tools");
-    Console.WriteLine("  load-solution <solutionPath>                 - Test loading a solution file");
+    Console.WriteLine("  load-solution <solutionPath>                 - Test loading a solution file (not required)");
     Console.WriteLine("  unload-solution <solutionPath>               - Remove a loaded solution from cache");
     Console.WriteLine("  clear-solution-cache                         - Clear all cached solutions");
     Console.WriteLine("  extract-method <filePath> <range> <methodName> [solutionPath]");
@@ -107,7 +107,7 @@ static string ListAvailableTools()
 {
     var tools = new[]
     {
-        "load-solution - Load a solution file for refactoring operations",
+        "load-solution - Load a solution file for refactoring operations (not required)",
         "extract-method - Extract selected code into a new method",
         "introduce-field - Create a new field from selected code",
         "introduce-variable - Create a new variable from selected code",

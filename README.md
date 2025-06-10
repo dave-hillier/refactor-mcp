@@ -177,7 +177,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --test <command> [arguments]
 #### Available Test Commands
 
 - `list-tools` - Show all available refactoring tools
-- `load-solution <solutionPath>` - Load a solution file
+- `load-solution <solutionPath>` - Load a solution file (not required)
 - `extract-method <solutionPath> <filePath> <range> <methodName>` - Extract code into method
 - `introduce-field <solutionPath> <filePath> <range> <fieldName> [accessModifier]` - Create field from expression
 - `introduce-variable <solutionPath> <filePath> <range> <variableName>` - Create variable from expression
@@ -194,7 +194,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --test <command> [arguments]
 # List available tools
 dotnet run --project RefactorMCP.ConsoleApp -- --test list-tools
 
-# Load a solution
+# Load a solution (not required)
 dotnet run --project RefactorMCP.ConsoleApp -- --test load-solution ./RefactorMCP.sln
 
 # Extract a method (example range)
