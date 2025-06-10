@@ -4,8 +4,8 @@ This repository implements a Model Context Protocol (MCP) server that exposes re
 
 ## Creating a New Agent
 
-1. Add a new static method in `RefactorMCP.ConsoleApp/Program.cs` and annotate it with `[McpServerTool]`.
-2. Include clear `Description` attributes for every parameter. They are used by clients for help text.
+1. Add a new static method in the `RefactorMCP.ConsoleApp/Tools/` directory as a partial class extension of `RefactoringTools`.
+2. Decorate the method with `[McpServerTool]` and include a `[Description]` for every parameter so clients can display helpful text.
 3. Keep method names concise and use `CamelCase`.
 4. For complex logic, extract helper functions rather than writing large methods.
 
@@ -18,5 +18,5 @@ This repository implements a Model Context Protocol (MCP) server that exposes re
 ## Formatting and Testing
 
 - Run `dotnet format` to ensure consistent C# style.
-- Run `dotnet test` before submitting changes.
+- Run `dotnet test` before committing your changes.
 
