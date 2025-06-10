@@ -11,7 +11,7 @@ public static partial class RefactoringTools
     [McpServerTool, Description("Convert property setter to init-only setter (preferred for large-file refactoring)")]
     public static async Task<string> TransformSetterToInit(
         [Description("Path to the C# file")] string filePath,
-        [Description("Line number of the property to transform")] int propertyLine,
+        [Description("Name of the property to transform")] string propertyName,
         [Description("Path to the solution file (.sln) - optional for single file mode")] string? solutionPath = null)
     {
         try
@@ -23,11 +23,11 @@ public static partial class RefactoringTools
                 if (document == null)
                     return $"Error: File {filePath} not found in solution";
 
-                return await TransformSetterToInitWithSolution(document, propertyLine);
+                return await TransformSetterToInitWithSolution(document, propertyName);
             }
             else
             {
-                return await TransformSetterToInitSingleFile(filePath, propertyLine);
+                return await TransformSetterToInitSingleFile(filePath, propertyName);
             }
         }
         catch (Exception ex)
@@ -36,21 +36,20 @@ public static partial class RefactoringTools
         }
     }
 
-    private static async Task<string> TransformSetterToInitWithSolution(Document document, int propertyLine)
+    private static async Task<string> TransformSetterToInitWithSolution(Document document, string propertyName)
     {
         var sourceText = await document.GetTextAsync();
         var syntaxRoot = await document.GetSyntaxRootAsync();
-        var linePos = sourceText.Lines[propertyLine - 1].Start;
 
         var property = syntaxRoot!.DescendantNodes()
             .OfType<PropertyDeclarationSyntax>()
-            .FirstOrDefault(p => p.Span.Contains(linePos));
+            .FirstOrDefault(p => p.Identifier.ValueText == propertyName);
         if (property == null)
-            return $"Error: No property found at line {propertyLine}";
+            return $"Error: No property named '{propertyName}' found";
 
         var setter = property.AccessorList?.Accessors.FirstOrDefault(a => a.IsKind(SyntaxKind.SetAccessorDeclaration));
         if (setter == null)
-            return $"Error: Property at line {propertyLine} has no setter";
+            return $"Error: Property '{propertyName}' has no setter";
 
         var initAccessor = SyntaxFactory.AccessorDeclaration(SyntaxKind.InitAccessorDeclaration)
             .WithSemicolonToken(setter.SemicolonToken);
@@ -62,10 +61,10 @@ public static partial class RefactoringTools
         var newText = await newDocument.GetTextAsync();
         await File.WriteAllTextAsync(document.FilePath!, newText.ToString());
 
-        return $"Successfully converted setter to init at line {propertyLine} in {document.FilePath} (solution mode)";
+        return $"Successfully converted setter to init for '{propertyName}' in {document.FilePath} (solution mode)";
     }
 
-    private static async Task<string> TransformSetterToInitSingleFile(string filePath, int propertyLine)
+    private static async Task<string> TransformSetterToInitSingleFile(string filePath, string propertyName)
     {
         if (!File.Exists(filePath))
             return $"Error: File {filePath} not found";
@@ -73,18 +72,16 @@ public static partial class RefactoringTools
         var sourceText = await File.ReadAllTextAsync(filePath);
         var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
         var syntaxRoot = await syntaxTree.GetRootAsync();
-        var textLines = SourceText.From(sourceText).Lines;
-        var linePos = textLines[propertyLine - 1].Start;
 
         var property = syntaxRoot.DescendantNodes()
             .OfType<PropertyDeclarationSyntax>()
-            .FirstOrDefault(p => p.Span.Contains(linePos));
+            .FirstOrDefault(p => p.Identifier.ValueText == propertyName);
         if (property == null)
-            return $"Error: No property found at line {propertyLine}";
+            return $"Error: No property named '{propertyName}' found";
 
         var setter = property.AccessorList?.Accessors.FirstOrDefault(a => a.IsKind(SyntaxKind.SetAccessorDeclaration));
         if (setter == null)
-            return $"Error: Property at line {propertyLine} has no setter";
+            return $"Error: Property '{propertyName}' has no setter";
 
         var initAccessor = SyntaxFactory.AccessorDeclaration(SyntaxKind.InitAccessorDeclaration)
             .WithSemicolonToken(setter.SemicolonToken);
@@ -95,6 +92,6 @@ public static partial class RefactoringTools
         var formatted = Formatter.Format(newRoot, workspace);
         await File.WriteAllTextAsync(filePath, formatted.ToFullString());
 
-        return $"Successfully converted setter to init at line {propertyLine} in {filePath} (single file mode)";
+        return $"Successfully converted setter to init for '{propertyName}' in {filePath} (single file mode)";
     }
 }

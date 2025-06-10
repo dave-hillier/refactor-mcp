@@ -125,12 +125,12 @@ public class ExampleValidationTests : IDisposable
         // Act - Use the exact command from EXAMPLES.md
         var result = await RefactoringTools.MakeFieldReadonly(
             testFile,
-            52, // From documentation: line with format field
+            "format", // From documentation: line with format field
             SolutionPath
         );
 
         // Assert result text and file contents
-        Assert.Contains("Successfully made field readonly", result);
+        Assert.Contains("Successfully made field 'format' readonly", result);
         var fileContent = await File.ReadAllTextAsync(testFile);
         Assert.Contains("readonly string format", fileContent);
     }

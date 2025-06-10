@@ -160,7 +160,7 @@ public void SetFormat(string newFormat)
 dotnet run --project RefactorMCP.ConsoleApp -- --test make-field-readonly \
   "./RefactorMCP.sln" \
   "./RefactorMCP.Tests/ExampleCode.cs" \
-  50
+  format
 ```
 
 **After**:
@@ -225,7 +225,7 @@ public string GetFormattedNumber(int number)
 dotnet run --project RefactorMCP.ConsoleApp -- --test convert-to-static-with-parameters \
   "./RefactorMCP.sln" \
   "./RefactorMCP.Tests/ExampleCode.cs" \
-  46
+  GetFormattedNumber
 ```
 
 **After**:
@@ -254,7 +254,7 @@ public string GetFormattedNumber(int number)
 dotnet run --project RefactorMCP.ConsoleApp -- --test convert-to-static-with-instance \
   "./RefactorMCP.sln" \
   "./RefactorMCP.Tests/ExampleCode.cs" \
-  46 \
+  GetFormattedNumber \
   "calculator"
 ```
 
@@ -284,7 +284,7 @@ public string GetFormattedNumber(int number)
 dotnet run --project RefactorMCP.ConsoleApp -- --test convert-to-extension-method \
   "./RefactorMCP.sln" \
   "./RefactorMCP.Tests/ExampleCode.cs" \
-  46
+  GetFormattedNumber
 ```
 
 **After**:
