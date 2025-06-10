@@ -11,7 +11,7 @@ public static partial class RefactoringTools
     [McpServerTool, Description("Transform instance method to static by converting dependencies to parameters (preferred for large-file refactoring)")]
     public static async Task<string> ConvertToStaticWithParameters(
         [Description("Path to the C# file")] string filePath,
-        [Description("Line number of the method to convert")] int methodLine,
+        [Description("Name of the method to convert")] string methodName,
         [Description("Path to the solution file (.sln) - optional for single file mode")] string? solutionPath = null)
     {
         try
@@ -23,11 +23,11 @@ public static partial class RefactoringTools
                 if (document == null)
                     return $"Error: File {filePath} not found in solution";
 
-                return await ConvertToStaticWithParametersWithSolution(document, methodLine);
+                return await ConvertToStaticWithParametersWithSolution(document, methodName);
             }
             else
             {
-                return await ConvertToStaticWithParametersSingleFile(filePath, methodLine);
+                return await ConvertToStaticWithParametersSingleFile(filePath, methodName);
             }
         }
         catch (Exception ex)
@@ -37,22 +37,21 @@ public static partial class RefactoringTools
     }
 
 
-    private static async Task<string> ConvertToStaticWithParametersWithSolution(Document document, int methodLine)
+    private static async Task<string> ConvertToStaticWithParametersWithSolution(Document document, string methodName)
     {
         var sourceText = await document.GetTextAsync();
         var syntaxRoot = await document.GetSyntaxRootAsync();
-        var textLines = sourceText.Lines;
 
         var method = syntaxRoot!.DescendantNodes()
             .OfType<MethodDeclarationSyntax>()
-            .FirstOrDefault(m => textLines.GetLineFromPosition(m.SpanStart).LineNumber + 1 == methodLine);
+            .FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            return $"Error: No method found at line {methodLine}";
+            return $"Error: No method named '{methodName}' found";
 
         var semanticModel = await document.GetSemanticModelAsync();
         var typeDecl = method.Ancestors().OfType<TypeDeclarationSyntax>().FirstOrDefault();
         if (typeDecl == null)
-            return $"Error: Method at line {methodLine} is not inside a type";
+            return $"Error: Method '{methodName}' is not inside a type";
 
         var typeSymbol = semanticModel!.GetDeclaredSymbol(typeDecl) as INamedTypeSymbol;
         if (typeSymbol == null)
@@ -114,10 +113,10 @@ public static partial class RefactoringTools
         var newText = await newDocument.GetTextAsync();
         await File.WriteAllTextAsync(document.FilePath!, newText.ToString());
 
-        return $"Successfully converted method to static with parameters at line {methodLine} in {document.FilePath} (solution mode)";
+        return $"Successfully converted method '{methodName}' to static with parameters in {document.FilePath} (solution mode)";
     }
 
-    private static async Task<string> ConvertToStaticWithParametersSingleFile(string filePath, int methodLine)
+    private static async Task<string> ConvertToStaticWithParametersSingleFile(string filePath, string methodName)
     {
         if (!File.Exists(filePath))
             return $"Error: File {filePath} not found";
@@ -125,17 +124,16 @@ public static partial class RefactoringTools
         var sourceText = await File.ReadAllTextAsync(filePath);
         var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
         var syntaxRoot = await syntaxTree.GetRootAsync();
-        var textLines = SourceText.From(sourceText).Lines;
 
         var method = syntaxRoot.DescendantNodes()
             .OfType<MethodDeclarationSyntax>()
-            .FirstOrDefault(m => textLines.GetLineFromPosition(m.SpanStart).LineNumber + 1 == methodLine);
+            .FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            return $"Error: No method found at line {methodLine}";
+            return $"Error: No method named '{methodName}' found";
 
         var classDecl = method.Ancestors().OfType<ClassDeclarationSyntax>().FirstOrDefault();
         if (classDecl == null)
-            return $"Error: Method at line {methodLine} is not inside a class";
+            return $"Error: Method '{methodName}' is not inside a class";
 
         var instanceMembers = new Dictionary<string, string>();
         foreach (var field in classDecl.Members.OfType<FieldDeclarationSyntax>())
@@ -191,6 +189,6 @@ public static partial class RefactoringTools
         var formattedRoot = Formatter.Format(newRoot, workspace);
         await File.WriteAllTextAsync(filePath, formattedRoot.ToFullString());
 
-        return $"Successfully converted method to static with parameters at line {methodLine} in {filePath} (single file mode)";
+        return $"Successfully converted method '{methodName}' to static with parameters in {filePath} (single file mode)";
     }
 }
