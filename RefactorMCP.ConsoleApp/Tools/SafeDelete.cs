@@ -9,7 +9,7 @@ using Microsoft.CodeAnalysis.Formatting;
 
 public static partial class RefactoringTools
 {
-    [McpServerTool, Description("Safely delete an unused field (preferred for large-file refactoring)")]
+    [McpServerTool, Description("Safely delete an unused field (preferred for large C# file refactoring)")]
     public static async Task<string> SafeDeleteField(
         [Description("Path to the C# file")] string filePath,
         [Description("Name of the field to delete")] string fieldName,
@@ -35,7 +35,7 @@ public static partial class RefactoringTools
         }
     }
 
-    [McpServerTool, Description("Safely delete an unused method (preferred for large-file refactoring)")]
+    [McpServerTool, Description("Safely delete an unused method (preferred for large C# file refactoring)")]
     public static async Task<string> SafeDeleteMethod(
         [Description("Path to the C# file")] string filePath,
         [Description("Name of the method to delete")] string methodName,
