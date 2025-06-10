@@ -10,6 +10,14 @@ A Model Context Protocol (MCP) server providing automated refactoring tools for 
 - **MCP Compatible**: Works with any MCP-compatible client
 - **Preferred for Large Files**: Invoking these tools via MCP is recommended for large code files
 
+## Documentation
+
+Additional guides live in the [docs](./docs/) folder:
+
+- [Quick Reference](./docs/QUICK_REFERENCE.md)
+- [Single File Mode](./docs/SINGLE_FILE_MODE.md)
+- [Full Examples](./docs/EXAMPLES.md)
+
 ## Solution Mode vs Single File Mode
 
 ### Solution Mode (Preferred for Large Files)
@@ -420,7 +428,7 @@ public class MathUtilities
 
 ## Complete Examples
 
-See [EXAMPLES.md](./EXAMPLES.md) for comprehensive examples of all refactoring tools, including:
+See [EXAMPLES.md](./docs/EXAMPLES.md) for comprehensive examples of all refactoring tools, including:
 
 - Detailed before/after code samples
 - Exact command-line usage
@@ -495,6 +503,6 @@ Common error scenarios and solutions:
 ## Support
 
 For issues and questions:
-- Check [EXAMPLES.md](./EXAMPLES.md) for usage guidance
+- Check [EXAMPLES.md](./docs/EXAMPLES.md) for usage guidance
 - Review error messages for specific guidance
 - Test with simple cases before complex refactorings 
