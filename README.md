@@ -181,10 +181,11 @@ dotnet run --project RefactorMCP.ConsoleApp -- --test <command> [arguments]
 - `extract-method <solutionPath> <filePath> <range> <methodName>` - Extract code into method
 - `introduce-field <solutionPath> <filePath> <range> <fieldName> [accessModifier]` - Create field from expression
 - `introduce-variable <solutionPath> <filePath> <range> <variableName>` - Create variable from expression
-- `make-field-readonly <solutionPath> <filePath> <fieldName>` - Make field readonly
-- `introduce-parameter <solutionPath> <filePath> <methodName> <range> <parameterName>` - Create parameter from expression
-- `convert-to-static-with-parameters <solutionPath> <filePath> <methodName>` - Convert instance method to static with parameters
-- `convert-to-static-with-instance <solutionPath> <filePath> <methodName> [instanceName]` - Convert instance method to static with explicit instance
+- `make-field-readonly <solutionPath> <filePath> <fieldLine>` - Make field readonly
+- `introduce-parameter <solutionPath> <filePath> <methodLine> <range> <parameterName>` - Create parameter from expression
+- `convert-to-static-with-parameters <solutionPath> <filePath> <methodLine>` - Convert instance method to static with parameters
+- `convert-to-static-with-instance <solutionPath> <filePath> <methodLine> [instanceName]` - Convert instance method to static with explicit instance
+- `move-instance-method <filePath> <sourceClass> <methodName> <targetClass> <accessMember> [memberType] [solutionPath]` - Move an instance method to another class
 
 #### Quick Start Example
 
