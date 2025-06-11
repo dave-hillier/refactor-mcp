@@ -33,7 +33,7 @@ public class AnalyzeRefactoringOpportunitiesTests : IDisposable
     public async Task AnalyzeExampleCode_ReturnsSuggestions()
     {
         await RefactoringTools.LoadSolution(SolutionPath);
-        var result = await RefactoringTools.AnalyzeRefactoringOpportunities(ExampleFilePath, SolutionPath);
+        var result = await RefactoringTools.AnalyzeRefactoringOpportunities(SolutionPath, ExampleFilePath);
         Assert.Contains("safe-delete-field", result, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("safe-delete-method", result, StringComparison.OrdinalIgnoreCase);
     }

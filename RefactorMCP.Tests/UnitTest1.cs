@@ -96,10 +96,10 @@ public class RefactoringToolsTests : IDisposable
 
         // Act
         var result = await RefactoringTools.ExtractMethod(
+            SolutionPath,
             testFile,
             "7:9-10:10", // The validation block in the test method
-            "ValidateInputs",
-            SolutionPath
+            "ValidateInputs"
         );
 
         // Assert result text and file contents
@@ -117,10 +117,10 @@ public class RefactoringToolsTests : IDisposable
         // Act
         await Assert.ThrowsAsync<McpException>(async () =>
             await RefactoringTools.ExtractMethod(
+                SolutionPath,
                 ExampleFilePath,
                 "invalid-range",
-                "TestMethod",
-                SolutionPath));
+                "TestMethod"));
     }
 
     [Fact]
@@ -133,11 +133,11 @@ public class RefactoringToolsTests : IDisposable
 
         // Act
         var result = await RefactoringTools.IntroduceField(
+            SolutionPath,
             testFile,
             "4:16-4:58", // The Sum() / Count expression
             "_averageValue",
-            "private",
-            SolutionPath
+            "private"
         );
 
         // Assert result text and file contents
@@ -156,11 +156,11 @@ public class RefactoringToolsTests : IDisposable
 
         // Act
         var result = await RefactoringTools.IntroduceField(
+            SolutionPath,
             testFile,
             "4:16-4:58",
             "_publicField",
-            "public",
-            SolutionPath
+            "public"
         );
 
         // Assert result text and file contents
@@ -179,10 +179,10 @@ public class RefactoringToolsTests : IDisposable
 
         // Act
         var result = await RefactoringTools.IntroduceVariable(
+            SolutionPath,
             testFile,
             "42:50-42:63", // The value * 2 + 10 expression
-            "processedValue",
-            SolutionPath
+            "processedValue"
         );
 
         // Assert result text and file contents
@@ -201,9 +201,9 @@ public class RefactoringToolsTests : IDisposable
 
         // Act
         var result = await RefactoringTools.MakeFieldReadonly(
+            SolutionPath,
             testFile,
-            "format",
-            SolutionPath
+            "format"
         );
 
         // Assert result text and file contents
@@ -222,9 +222,9 @@ public class RefactoringToolsTests : IDisposable
 
         // Act
         var result = await RefactoringTools.MakeFieldReadonly(
+            SolutionPath,
             testFile,
-            "description",
-            SolutionPath
+            "description"
         );
 
         // Assert result text and file contents
@@ -242,9 +242,9 @@ public class RefactoringToolsTests : IDisposable
         // Act
         await Assert.ThrowsAsync<McpException>(async () =>
             await RefactoringTools.MakeFieldReadonly(
+                SolutionPath,
                 ExampleFilePath,
-                "nonexistent",
-                SolutionPath));
+                "nonexistent"));
     }
 
     [Fact]
@@ -256,10 +256,10 @@ public class RefactoringToolsTests : IDisposable
         // Act
         await Assert.ThrowsAsync<McpException>(async () =>
             await RefactoringTools.ExtractMethod(
+                SolutionPath,
                 "./NonExistent.cs",
                 "1:1-2:2",
-                "TestMethod",
-                SolutionPath));
+                "TestMethod"));
     }
 
     [Theory]
@@ -275,10 +275,10 @@ public class RefactoringToolsTests : IDisposable
         // Act
         await Assert.ThrowsAsync<McpException>(async () =>
             await RefactoringTools.ExtractMethod(
+                SolutionPath,
                 ExampleFilePath,
                 range,
-                methodName,
-                SolutionPath));
+                methodName));
     }
 
     [Fact]
@@ -298,11 +298,11 @@ public class RefactoringToolsTests : IDisposable
 
             // Act
             var result = await RefactoringTools.IntroduceField(
+                SolutionPath,
                 modifierTestFile,
                 "4:16-4:58",
                 $"_{modifier}Field",
-                modifier,
-                SolutionPath
+                modifier
             );
 
             // Assert result text and file contents
@@ -320,10 +320,10 @@ public class RefactoringToolsTests : IDisposable
         await CreateTestFile(testFile, GetSampleCodeForConvertToStaticInstance());
 
         var result = await RefactoringTools.ConvertToStaticWithInstance(
+            SolutionPath,
             testFile,
             "GetFormattedNumber",
-            "instance",
-            SolutionPath
+            "instance"
         );
 
         Assert.Contains("Successfully converted method 'GetFormattedNumber' to static with instance parameter", result);
@@ -340,10 +340,10 @@ public class RefactoringToolsTests : IDisposable
         await CreateTestFile(testFile, GetSampleCodeForConvertToExtension());
 
         var result = await RefactoringTools.ConvertToExtensionMethod(
+            SolutionPath,
             testFile,
             "GetFormattedNumber",
-            null,
-            SolutionPath
+            null
         );
 
         Assert.Contains("Successfully converted method 'GetFormattedNumber' to extension method", result);
@@ -413,13 +413,13 @@ public class RefactoringToolsTests : IDisposable
         await CreateTestFile(testFile, GetSampleCodeForMoveInstanceMethod());
 
         var result = await RefactoringTools.MoveInstanceMethod(
+            SolutionPath,
             testFile,
             "Calculator",
             "LogOperation",
             "Logger",
             "_logger",
-            "field",
-            SolutionPath
+            "field"
         );
 
         Assert.Contains("Successfully moved instance method", result);
@@ -435,13 +435,13 @@ public class RefactoringToolsTests : IDisposable
         await CreateTestFile(testFile, GetSampleCodeForMoveInstanceMethod());
 
         var result = await RefactoringTools.MoveInstanceMethod(
+            SolutionPath,
             testFile,
             "Calculator",
             "LogOperation",
             "Logger",
             "_logger",
-            "field",
-            SolutionPath
+            "field"
         );
 
         Assert.Contains("Successfully moved instance method", result);
@@ -466,13 +466,13 @@ public class RefactoringToolsTests : IDisposable
         await CreateTestFile(testFile, GetSampleCodeForMoveInstanceMethod());
 
         var result = await RefactoringTools.MoveInstanceMethod(
+            SolutionPath,
             testFile,
             "Calculator",
             "LogOperation",
             "NewLogger",
             "_logger",
-            "field",
-            SolutionPath
+            "field"
         );
 
         Assert.Contains("Successfully moved instance method", result);
@@ -490,13 +490,13 @@ public class RefactoringToolsTests : IDisposable
         var targetFile = Path.Combine(Path.GetDirectoryName(testFile)!, "Logger.cs");
 
         var result = await RefactoringTools.MoveInstanceMethod(
+            SolutionPath,
             testFile,
             "Calculator",
             "LogOperation",
             "Logger",
             "_logger",
             "field",
-            SolutionPath,
             targetFile
         );
 
@@ -526,10 +526,10 @@ public class RefactoringToolsTests : IDisposable
         await CreateTestFile(testFile, GetSampleCodeForSafeDelete());
 
         var result = await RefactoringTools.SafeDeleteParameter(
+            SolutionPath,
             testFile,
             "Multiply",
-            "unusedParam",
-            SolutionPath
+            "unusedParam"
         );
 
         Assert.Contains("Successfully deleted parameter", result);
@@ -547,32 +547,32 @@ public class RefactoringToolsTests : IDisposable
 
         // Act
         var result = await RefactoringTools.MoveInstanceMethod(
+            SolutionPath,
             testFile,
             "OrderProcessor",
-            "ProcessPayment", 
+            "ProcessPayment",
             "PaymentService",
             "_paymentService",
-            "field",
-            SolutionPath
+            "field"
         );
 
         // Assert
         Assert.Contains("Successfully moved instance method", result);
         var fileContent = await File.ReadAllTextAsync(testFile);
-        
+
         // Verify the method was removed from source class
         var tree = CSharpSyntaxTree.ParseText(fileContent);
         var root = tree.GetRoot();
         var sourceClass = root.DescendantNodes()
             .OfType<ClassDeclarationSyntax>()
             .First(c => c.Identifier.ValueText == "OrderProcessor");
-        Assert.DoesNotContain(sourceClass.Members.OfType<MethodDeclarationSyntax>(), 
+        Assert.DoesNotContain(sourceClass.Members.OfType<MethodDeclarationSyntax>(),
             m => m.Identifier.ValueText == "ProcessPayment");
-        
+
         // Verify the access member field was added to source class
         var fields = sourceClass.Members.OfType<FieldDeclarationSyntax>();
         Assert.Contains(fields, f => f.Declaration.Variables.Any(v => v.Identifier.ValueText == "_paymentService"));
-        
+
         // Verify the method was added to target class with public modifier
         var targetClass = root.DescendantNodes()
             .OfType<ClassDeclarationSyntax>()
@@ -593,13 +593,13 @@ public class RefactoringToolsTests : IDisposable
         // Act & Assert
         await Assert.ThrowsAsync<McpException>(async () =>
             await RefactoringTools.MoveInstanceMethod(
+                SolutionPath,
                 testFile,
                 "OrderProcessor",
                 "NonExistentMethod",  // This method doesn't exist
                 "PaymentService",
                 "_paymentService",
-                "field",
-                SolutionPath
+                "field"
             ));
     }
 
@@ -614,13 +614,13 @@ public class RefactoringToolsTests : IDisposable
         // Act & Assert
         await Assert.ThrowsAsync<McpException>(async () =>
             await RefactoringTools.MoveInstanceMethod(
+                SolutionPath,
                 testFile,
                 "NonExistentClass",  // This class doesn't exist
                 "ProcessPayment",
                 "PaymentService",
                 "_paymentService",
-                "field",
-                SolutionPath
+                "field"
             ));
     }
 
@@ -635,52 +635,52 @@ public class RefactoringToolsTests : IDisposable
 
         // Act
         var result = await RefactoringTools.MoveInstanceMethod(
+            SolutionPath,
             testFile,
             "OrderProcessor",
             "ProcessPayment",
             "NewPaymentService",
             "PaymentHandler",
             "property",  // Using property instead of field
-            SolutionPath,
             targetFile
         );
 
         // Assert
         Assert.Contains("Successfully moved instance method", result);
         Assert.True(File.Exists(targetFile), "Target file should be created");
-        
+
         var sourceContent = await File.ReadAllTextAsync(testFile);
         var targetContent = await File.ReadAllTextAsync(targetFile);
-        
+
         // Verify method was REMOVED from source class (this is the key assertion)
         var sourceTree = CSharpSyntaxTree.ParseText(sourceContent);
         var sourceRoot = sourceTree.GetRoot();
         var sourceClass = sourceRoot.DescendantNodes()
             .OfType<ClassDeclarationSyntax>()
             .First(c => c.Identifier.ValueText == "OrderProcessor");
-        Assert.DoesNotContain(sourceClass.Members.OfType<MethodDeclarationSyntax>(), 
+        Assert.DoesNotContain(sourceClass.Members.OfType<MethodDeclarationSyntax>(),
             m => m.Identifier.ValueText == "ProcessPayment");
-        
+
         // Verify property was added to source class
         var properties = sourceClass.Members.OfType<PropertyDeclarationSyntax>();
         Assert.Contains(properties, p => p.Identifier.ValueText == "PaymentHandler");
-        
+
         // Verify method was added to target file with correct class and public modifier
         Assert.Contains("class NewPaymentService", targetContent);
         Assert.Contains("public bool ProcessPayment", targetContent);
         Assert.Contains("decimal amount, string cardNumber", targetContent);
-        
+
         // Verify usings were copied to target file
         Assert.Contains("using System;", targetContent);
         Assert.Contains("using System.Collections.Generic;", targetContent);
-        
+
         // Verify the target class has the method
         var targetTree = CSharpSyntaxTree.ParseText(targetContent);
         var targetRoot = targetTree.GetRoot();
         var targetClass = targetRoot.DescendantNodes()
             .OfType<ClassDeclarationSyntax>()
             .First(c => c.Identifier.ValueText == "NewPaymentService");
-        Assert.Contains(targetClass.Members.OfType<MethodDeclarationSyntax>(), 
+        Assert.Contains(targetClass.Members.OfType<MethodDeclarationSyntax>(),
             m => m.Identifier.ValueText == "ProcessPayment");
     }
 
@@ -688,7 +688,7 @@ public class RefactoringToolsTests : IDisposable
     public async Task MoveInstanceMethod_WithinSameFile_ShouldRemoveFromSource()
     {
         // Test moving a method within the same file - this should work correctly
-        
+
         // Arrange
         await RefactoringTools.LoadSolution(SolutionPath);
         var testFile = Path.Combine(TestOutputPath, "MoveInstanceSameFile.cs");
@@ -696,39 +696,39 @@ public class RefactoringToolsTests : IDisposable
 
         // Act - move to existing PaymentService class in same file
         var result = await RefactoringTools.MoveInstanceMethod(
+            SolutionPath,
             testFile,
             "OrderProcessor",
             "ProcessPayment",
             "PaymentService",
             "_paymentService",
-            "field",
-            SolutionPath
-            // No targetFilePath - should move within same file
+            "field"
+        // No targetFilePath - should move within same file
         );
 
         // Assert
         Assert.Contains("Successfully moved instance method", result);
-        
+
         var sourceContent = await File.ReadAllTextAsync(testFile);
         var sourceTree = CSharpSyntaxTree.ParseText(sourceContent);
         var sourceRoot = sourceTree.GetRoot();
-        
+
         // Verify method was removed from OrderProcessor
         var orderProcessorClass = sourceRoot.DescendantNodes()
             .OfType<ClassDeclarationSyntax>()
             .First(c => c.Identifier.ValueText == "OrderProcessor");
-        Assert.DoesNotContain(orderProcessorClass.Members.OfType<MethodDeclarationSyntax>(), 
+        Assert.DoesNotContain(orderProcessorClass.Members.OfType<MethodDeclarationSyntax>(),
             m => m.Identifier.ValueText == "ProcessPayment");
-            
+
         // Verify field was added to OrderProcessor
         var fields = orderProcessorClass.Members.OfType<FieldDeclarationSyntax>();
         Assert.Contains(fields, f => f.Declaration.Variables.Any(v => v.Identifier.ValueText == "_paymentService"));
-        
+
         // Verify method was added to PaymentService
         var paymentServiceClass = sourceRoot.DescendantNodes()
             .OfType<ClassDeclarationSyntax>()
             .First(c => c.Identifier.ValueText == "PaymentService");
-        Assert.Contains(paymentServiceClass.Members.OfType<MethodDeclarationSyntax>(), 
+        Assert.Contains(paymentServiceClass.Members.OfType<MethodDeclarationSyntax>(),
             m => m.Identifier.ValueText == "ProcessPayment");
     }
 

@@ -10,27 +10,19 @@ using Microsoft.CodeAnalysis.Text;
 public static partial class RefactoringTools
 {
     public static async Task<string> IntroduceField(
+        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Range in format 'startLine:startColumn-endLine:endColumn'")] string selectionRange,
         [Description("Name for the new field")] string fieldName,
-        [Description("Access modifier (private, public, protected, internal)")] string accessModifier = "private",
-        [Description("Path to the solution file (.sln) - optional for single file mode")] string? solutionPath = null)
+        [Description("Access modifier (private, public, protected, internal)")] string accessModifier = "private")
     {
         try
         {
-            if (solutionPath != null)
-            {
-                // Solution mode - full semantic analysis
-                var solution = await GetOrLoadSolution(solutionPath);
-                var document = GetDocumentByPath(solution, filePath);
-                if (document != null)
-                    return await IntroduceFieldWithSolution(document, selectionRange, fieldName, accessModifier);
+            var solution = await GetOrLoadSolution(solutionPath);
+            var document = GetDocumentByPath(solution, filePath);
+            if (document != null)
+                return await IntroduceFieldWithSolution(document, selectionRange, fieldName, accessModifier);
 
-                // Fallback to single file mode when file isn't part of the solution
-                return await IntroduceFieldSingleFile(filePath, selectionRange, fieldName, accessModifier);
-            }
-
-            // Single file mode - direct syntax tree manipulation
             return await IntroduceFieldSingleFile(filePath, selectionRange, fieldName, accessModifier);
         }
         catch (Exception ex)

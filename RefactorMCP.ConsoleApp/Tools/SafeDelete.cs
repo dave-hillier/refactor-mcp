@@ -12,21 +12,16 @@ public static partial class RefactoringTools
 {
     [McpServerTool, Description("Safely delete an unused field (preferred for large C# file refactoring)")]
     public static async Task<string> SafeDeleteField(
+        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
-        [Description("Name of the field to delete")] string fieldName,
-        [Description("Path to the solution file (.sln) - optional for single file mode")] string? solutionPath = null)
+        [Description("Name of the field to delete")] string fieldName)
     {
         try
         {
-            if (solutionPath != null)
-            {
-                var solution = await GetOrLoadSolution(solutionPath);
-                var document = GetDocumentByPath(solution, filePath);
-                if (document != null)
-                    return await SafeDeleteFieldWithSolution(document, fieldName);
-
-                return await SafeDeleteFieldSingleFile(filePath, fieldName);
-            }
+            var solution = await GetOrLoadSolution(solutionPath);
+            var document = GetDocumentByPath(solution, filePath);
+            if (document != null)
+                return await SafeDeleteFieldWithSolution(document, fieldName);
 
             return await SafeDeleteFieldSingleFile(filePath, fieldName);
         }
@@ -38,21 +33,16 @@ public static partial class RefactoringTools
 
     [McpServerTool, Description("Safely delete an unused method (preferred for large C# file refactoring)")]
     public static async Task<string> SafeDeleteMethod(
+        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
-        [Description("Name of the method to delete")] string methodName,
-        [Description("Path to the solution file (.sln) - optional for single file mode")] string? solutionPath = null)
+        [Description("Name of the method to delete")] string methodName)
     {
         try
         {
-            if (solutionPath != null)
-            {
-                var solution = await GetOrLoadSolution(solutionPath);
-                var document = GetDocumentByPath(solution, filePath);
-                if (document != null)
-                    return await SafeDeleteMethodWithSolution(document, methodName);
-
-                return await SafeDeleteMethodSingleFile(filePath, methodName);
-            }
+            var solution = await GetOrLoadSolution(solutionPath);
+            var document = GetDocumentByPath(solution, filePath);
+            if (document != null)
+                return await SafeDeleteMethodWithSolution(document, methodName);
 
             return await SafeDeleteMethodSingleFile(filePath, methodName);
         }
@@ -64,22 +54,17 @@ public static partial class RefactoringTools
 
     [McpServerTool, Description("Safely delete an unused parameter from a method")]
     public static async Task<string> SafeDeleteParameter(
+        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Name of the method containing the parameter")] string methodName,
-        [Description("Name of the parameter to delete")] string parameterName,
-        [Description("Path to the solution file (.sln) - optional for single file mode")] string? solutionPath = null)
+        [Description("Name of the parameter to delete")] string parameterName)
     {
         try
         {
-            if (solutionPath != null)
-            {
-                var solution = await GetOrLoadSolution(solutionPath);
-                var document = GetDocumentByPath(solution, filePath);
-                if (document != null)
-                    return await SafeDeleteParameterWithSolution(document, methodName, parameterName);
-
-                return await SafeDeleteParameterSingleFile(filePath, methodName, parameterName);
-            }
+            var solution = await GetOrLoadSolution(solutionPath);
+            var document = GetDocumentByPath(solution, filePath);
+            if (document != null)
+                return await SafeDeleteParameterWithSolution(document, methodName, parameterName);
 
             return await SafeDeleteParameterSingleFile(filePath, methodName, parameterName);
         }
@@ -91,21 +76,16 @@ public static partial class RefactoringTools
 
     [McpServerTool, Description("Safely delete a local variable using a line range")]
     public static async Task<string> SafeDeleteVariable(
+        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
-        [Description("Range of the variable declaration in format 'startLine:startCol-endLine:endCol'")] string selectionRange,
-        [Description("Path to the solution file (.sln) - optional for single file mode")] string? solutionPath = null)
+        [Description("Range of the variable declaration in format 'startLine:startCol-endLine:endCol'")] string selectionRange)
     {
         try
         {
-            if (solutionPath != null)
-            {
-                var solution = await GetOrLoadSolution(solutionPath);
-                var document = GetDocumentByPath(solution, filePath);
-                if (document != null)
-                    return await SafeDeleteVariableWithSolution(document, selectionRange);
-
-                return await SafeDeleteVariableSingleFile(filePath, selectionRange);
-            }
+            var solution = await GetOrLoadSolution(solutionPath);
+            var document = GetDocumentByPath(solution, filePath);
+            if (document != null)
+                return await SafeDeleteVariableWithSolution(document, selectionRange);
 
             return await SafeDeleteVariableSingleFile(filePath, selectionRange);
         }
