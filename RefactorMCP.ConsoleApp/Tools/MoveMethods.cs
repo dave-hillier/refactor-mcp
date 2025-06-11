@@ -90,7 +90,7 @@ public static partial class RefactoringTools
     }
 
 
-    private static async Task<string> MoveInstanceMethodSingleFile(string filePath, string sourceClass, string methodName, string targetClass, string accessMemberName, string accessMemberType)
+    private static async Task<string> MoveInstanceMethodSingleFile(string filePath, string sourceClass, string methodName, string targetClass, string accessMemberName, string accessMemberType, string? targetFilePath)
     {
         if (!File.Exists(filePath))
             return $"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})";
@@ -163,13 +163,66 @@ public static partial class RefactoringTools
             updatedMethod = method.WithModifiers(SyntaxFactory.TokenList(mods).Add(SyntaxFactory.Token(SyntaxKind.PublicKeyword)));
         }
 
-        var newTargetClass = targetClassDecl.AddMembers(updatedMethod.WithLeadingTrivia());
+        var targetPath = targetFilePath ?? filePath;
+        var sameFile = targetPath == filePath;
 
-        var newRoot = workingRoot.ReplaceNode(originClass, newOriginClass).ReplaceNode(targetClassDecl, newTargetClass);
-        var formatted = Formatter.Format(newRoot, SharedWorkspace);
-        await File.WriteAllTextAsync(filePath, formatted.ToFullString());
+        var sourceCompilationUnit = (CompilationUnitSyntax)syntaxRoot;
+        var sourceUsings = sourceCompilationUnit.Usings.ToList();
 
-        return $"Successfully moved instance method to {targetClass} in {filePath} (single file mode)";
+        SyntaxNode targetRoot;
+        if (sameFile)
+        {
+            targetRoot = workingRoot;
+        }
+        else if (File.Exists(targetPath))
+        {
+            var targetText = await File.ReadAllTextAsync(targetPath);
+            targetRoot = await CSharpSyntaxTree.ParseText(targetText).GetRootAsync();
+        }
+        else
+        {
+            targetRoot = SyntaxFactory.CompilationUnit();
+        }
+
+        var targetCompilationUnit = (CompilationUnitSyntax)targetRoot;
+        var targetUsingNames = targetCompilationUnit.Usings
+            .Select(u => u.Name.ToString())
+            .ToHashSet();
+        var missingUsings = sourceUsings
+            .Where(u => !targetUsingNames.Contains(u.Name.ToString()))
+            .ToArray();
+        if (missingUsings.Length > 0)
+        {
+            targetCompilationUnit = targetCompilationUnit.AddUsings(missingUsings);
+            targetRoot = targetCompilationUnit;
+        }
+
+        var newTargetClass = targetRoot.DescendantNodes()
+            .OfType<ClassDeclarationSyntax>()
+            .FirstOrDefault(c => c.Identifier.ValueText == targetClass);
+        if (newTargetClass == null)
+        {
+            var newClass = SyntaxFactory.ClassDeclaration(targetClass)
+                .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
+                .AddMembers(updatedMethod.WithLeadingTrivia());
+            targetRoot = ((CompilationUnitSyntax)targetRoot).AddMembers(newClass);
+        }
+        else
+        {
+            var replaced = newTargetClass.AddMembers(updatedMethod.WithLeadingTrivia());
+            targetRoot = targetRoot.ReplaceNode(newTargetClass, replaced);
+        }
+
+        var newSourceRoot = workingRoot.ReplaceNode(originClass, newOriginClass);
+
+        var formattedSource = Formatter.Format(newSourceRoot, SharedWorkspace);
+        await File.WriteAllTextAsync(filePath, formattedSource.ToFullString());
+
+        var formattedTarget = Formatter.Format(targetRoot, SharedWorkspace);
+        Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
+        await File.WriteAllTextAsync(targetPath, formattedTarget.ToFullString());
+
+        return $"Successfully moved instance method to {targetClass} in {targetPath}";
     }
 
     [McpServerTool, Description("Move a static method to another class (preferred for large C# file refactoring)")]
@@ -278,7 +331,8 @@ public static partial class RefactoringTools
         [Description("Name of the target class")] string targetClass,
         [Description("Name for the access member")] string accessMemberName,
         [Description("Type of access member (field, property, variable)")] string accessMemberType = "field",
-        [Description("Path to the solution file (.sln)")] string? solutionPath = null)
+        [Description("Path to the solution file (.sln)")] string? solutionPath = null,
+        [Description("Path to the target file (optional, will create if doesn't exist)")] string? targetFilePath = null)
     {
         try
         {
@@ -290,10 +344,10 @@ public static partial class RefactoringTools
                     return await MoveInstanceMethodWithSolution(document, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
 
                 // Fallback to single file mode when file isn't part of the solution
-                return await MoveInstanceMethodSingleFile(filePath, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
+                return await MoveInstanceMethodSingleFile(filePath, sourceClass, methodName, targetClass, accessMemberName, accessMemberType, targetFilePath);
             }
 
-            return await MoveInstanceMethodSingleFile(filePath, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
+            return await MoveInstanceMethodSingleFile(filePath, sourceClass, methodName, targetClass, accessMemberName, accessMemberType, targetFilePath);
         }
         catch (Exception ex)
         {
