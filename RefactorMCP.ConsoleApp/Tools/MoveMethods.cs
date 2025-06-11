@@ -22,8 +22,31 @@ public static partial class RefactoringTools
         if (method == null)
             return ThrowMcpException($"Error: Static method '{methodName}' not found");
 
-        var withoutMethod = root.RemoveNode(method, SyntaxRemoveOptions.KeepNoTrivia);
-        var targetClassDecl = withoutMethod.DescendantNodes()
+        // Prepare stub in the original class that delegates to the moved method
+        var argumentList = SyntaxFactory.ArgumentList(
+            SyntaxFactory.SeparatedList(
+                method.ParameterList.Parameters
+                    .Select(p => SyntaxFactory.Argument(SyntaxFactory.IdentifierName(p.Identifier)))));
+
+        var invocation = SyntaxFactory.InvocationExpression(
+            SyntaxFactory.MemberAccessExpression(
+                SyntaxKind.SimpleMemberAccessExpression,
+                SyntaxFactory.IdentifierName(targetClass),
+                SyntaxFactory.IdentifierName(methodName)),
+            argumentList);
+
+        bool isVoid = method.ReturnType is PredefinedTypeSyntax pts && pts.Keyword.IsKind(SyntaxKind.VoidKeyword);
+        StatementSyntax callStatement = isVoid
+            ? SyntaxFactory.ExpressionStatement(invocation)
+            : SyntaxFactory.ReturnStatement(invocation);
+
+        var stubMethod = method.WithBody(SyntaxFactory.Block(callStatement))
+            .WithExpressionBody(null)
+            .WithSemicolonToken(default);
+
+        var rootWithStub = root.ReplaceNode(method, stubMethod);
+
+        var targetClassDecl = rootWithStub.DescendantNodes()
             .OfType<ClassDeclarationSyntax>()
             .FirstOrDefault(c => c.Identifier.ValueText == targetClass);
 
@@ -33,12 +56,12 @@ public static partial class RefactoringTools
             var newClass = SyntaxFactory.ClassDeclaration(targetClass)
                 .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
                 .AddMembers(method.WithLeadingTrivia());
-            newRoot = ((CompilationUnitSyntax)withoutMethod).AddMembers(newClass);
+            newRoot = ((CompilationUnitSyntax)rootWithStub).AddMembers(newClass);
         }
         else
         {
             var updatedClass = targetClassDecl.AddMembers(method.WithLeadingTrivia());
-            newRoot = withoutMethod.ReplaceNode(targetClassDecl, updatedClass);
+            newRoot = rootWithStub.ReplaceNode(targetClassDecl, updatedClass);
         }
 
         var formatted = Formatter.Format(newRoot, SharedWorkspace);
@@ -62,16 +85,45 @@ public static partial class RefactoringTools
         if (method == null)
             return ThrowMcpException($"Error: No method named '{methodName}' found");
 
-        var withoutMethod = root.RemoveNode(method, SyntaxRemoveOptions.KeepNoTrivia);
+        // Build call to the moved method for the stub
+        var argumentList = SyntaxFactory.ArgumentList(
+            SyntaxFactory.SeparatedList(
+                method.ParameterList.Parameters
+                    .Select(p => SyntaxFactory.Argument(SyntaxFactory.IdentifierName(p.Identifier)))));
 
-        var currentOriginClass = withoutMethod.DescendantNodes()
-            .OfType<ClassDeclarationSyntax>()
-            .First(c => c.Identifier.ValueText == sourceClass);
+        var accessExpression = SyntaxFactory.IdentifierName(accessMemberName);
+        var invocation = SyntaxFactory.InvocationExpression(
+            SyntaxFactory.MemberAccessExpression(
+                SyntaxKind.SimpleMemberAccessExpression,
+                accessExpression,
+                SyntaxFactory.IdentifierName(methodName)),
+            argumentList);
 
-        var newOriginClass = currentOriginClass;
-        if (accessMemberType == "field")
+        bool isVoid = method.ReturnType is PredefinedTypeSyntax pts && pts.Keyword.IsKind(SyntaxKind.VoidKeyword);
+        StatementSyntax callStatement = isVoid
+            ? SyntaxFactory.ExpressionStatement(invocation)
+            : SyntaxFactory.ReturnStatement(invocation);
+
+        var stubMethod = method.WithBody(SyntaxFactory.Block(callStatement))
+            .WithExpressionBody(null)
+            .WithSemicolonToken(default);
+
+        // Replace the original method with the stub
+        var originMembers = originClass.Members.Select(m => m == method ? (MemberDeclarationSyntax)stubMethod : m).ToList();
+
+        // Create the access member
+        MemberDeclarationSyntax accessMember = null!;
+        if (accessMemberType == "property")
         {
-            var field = SyntaxFactory.FieldDeclaration(
+            accessMember = SyntaxFactory.PropertyDeclaration(SyntaxFactory.ParseTypeName(targetClass), accessMemberName)
+                .AddModifiers(SyntaxFactory.Token(SyntaxKind.PrivateKeyword))
+                .AddAccessorListAccessors(
+                    SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
+                    SyntaxFactory.AccessorDeclaration(SyntaxKind.SetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)));
+        }
+        else
+        {
+            accessMember = SyntaxFactory.FieldDeclaration(
                     SyntaxFactory.VariableDeclaration(
                         SyntaxFactory.ParseTypeName(targetClass),
                         SyntaxFactory.SeparatedList(new[]
@@ -80,31 +132,24 @@ public static partial class RefactoringTools
                                 .WithInitializer(SyntaxFactory.EqualsValueClause(
                                     SyntaxFactory.ObjectCreationExpression(SyntaxFactory.ParseTypeName(targetClass))
                                         .WithArgumentList(SyntaxFactory.ArgumentList())))
-                        }))
-                )
+                        })))
                 .AddModifiers(SyntaxFactory.Token(SyntaxKind.PrivateKeyword));
-            newOriginClass = newOriginClass.AddMembers(field);
-        }
-        else if (accessMemberType == "property")
-        {
-            var prop = SyntaxFactory.PropertyDeclaration(SyntaxFactory.ParseTypeName(targetClass), accessMemberName)
-                .AddModifiers(SyntaxFactory.Token(SyntaxKind.PrivateKeyword))
-                .AddAccessorListAccessors(
-                    SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
-                    SyntaxFactory.AccessorDeclaration(SyntaxKind.SetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)));
-            newOriginClass = newOriginClass.AddMembers(prop);
         }
 
-        var updatedMethod = method;
+        originMembers.Insert(0, accessMember);
+        var newOriginClass = originClass.WithMembers(SyntaxFactory.List(originMembers));
+
+        // Ensure moved method is public in the target class
+        var movedMethod = method;
         if (!method.Modifiers.Any(m => m.IsKind(SyntaxKind.PublicKeyword)))
         {
             var mods = method.Modifiers.Where(m => !m.IsKind(SyntaxKind.PrivateKeyword) && !m.IsKind(SyntaxKind.ProtectedKeyword) && !m.IsKind(SyntaxKind.InternalKeyword));
-            updatedMethod = method.WithModifiers(SyntaxFactory.TokenList(mods).Add(SyntaxFactory.Token(SyntaxKind.PublicKeyword)));
+            movedMethod = method.WithModifiers(SyntaxFactory.TokenList(mods).Add(SyntaxFactory.Token(SyntaxKind.PublicKeyword)));
         }
 
-        var withOriginReplaced = withoutMethod.ReplaceNode(currentOriginClass, newOriginClass);
+        var rootWithStub = root.ReplaceNode(originClass, newOriginClass);
 
-        var targetClassDecl = withOriginReplaced.DescendantNodes()
+        var targetClassDecl = rootWithStub.DescendantNodes()
             .OfType<ClassDeclarationSyntax>()
             .FirstOrDefault(c => c.Identifier.ValueText == targetClass);
 
@@ -113,13 +158,13 @@ public static partial class RefactoringTools
         {
             var newClass = SyntaxFactory.ClassDeclaration(targetClass)
                 .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
-                .AddMembers(updatedMethod.WithLeadingTrivia());
-            newRoot = ((CompilationUnitSyntax)withOriginReplaced).AddMembers(newClass);
+                .AddMembers(movedMethod.WithLeadingTrivia());
+            newRoot = ((CompilationUnitSyntax)rootWithStub).AddMembers(newClass);
         }
         else
         {
-            var replaced = targetClassDecl.AddMembers(updatedMethod.WithLeadingTrivia());
-            newRoot = withOriginReplaced.ReplaceNode(targetClassDecl, replaced);
+            var replaced = targetClassDecl.AddMembers(movedMethod.WithLeadingTrivia());
+            newRoot = rootWithStub.ReplaceNode(targetClassDecl, replaced);
         }
 
         var formatted = Formatter.Format(newRoot, SharedWorkspace);
@@ -215,13 +260,6 @@ public static partial class RefactoringTools
         var sameFile = targetPath == filePath;
 
         var sourceText = await File.ReadAllTextAsync(filePath);
-        if (sameFile)
-        {
-            var updated = MoveInstanceMethodInSource(sourceText, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
-            await File.WriteAllTextAsync(targetPath, updated);
-            return $"Successfully moved instance method to {targetClass} in {targetPath}";
-        }
-
         var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
         var syntaxRoot = await syntaxTree.GetRootAsync();
 
@@ -387,13 +425,6 @@ public static partial class RefactoringTools
             var sourceText = await File.ReadAllTextAsync(filePath);
             var targetPath = targetFilePath ?? Path.Combine(Path.GetDirectoryName(filePath)!, $"{targetClass}.cs");
             var sameFile = targetPath == filePath;
-
-            if (sameFile)
-            {
-                var updated = MoveStaticMethodInSource(sourceText, methodName, targetClass);
-                await File.WriteAllTextAsync(targetPath, updated);
-                return $"Successfully moved static method '{methodName}' to {targetClass} in {targetPath}";
-            }
 
             var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
             var syntaxRoot = await syntaxTree.GetRootAsync();
