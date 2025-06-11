@@ -10,26 +10,18 @@ using Microsoft.CodeAnalysis.Text;
 public static partial class RefactoringTools
 {
     public static async Task<string> ExtractMethod(
+        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Range in format 'startLine:startColumn-endLine:endColumn'")] string selectionRange,
-        [Description("Name for the new method")] string methodName,
-        [Description("Path to the solution file (.sln) - optional for single file mode")] string? solutionPath = null)
+        [Description("Name for the new method")] string methodName)
     {
         try
         {
-            if (solutionPath != null)
-            {
-                // Solution mode - full semantic analysis
-                var solution = await GetOrLoadSolution(solutionPath);
-                var document = GetDocumentByPath(solution, filePath);
-                if (document != null)
-                    return await ExtractMethodWithSolution(document, selectionRange, methodName);
+            var solution = await GetOrLoadSolution(solutionPath);
+            var document = GetDocumentByPath(solution, filePath);
+            if (document != null)
+                return await ExtractMethodWithSolution(document, selectionRange, methodName);
 
-                // Fallback to single file mode when file isn't part of the solution
-                return await ExtractMethodSingleFile(filePath, selectionRange, methodName);
-            }
-
-            // Single file mode - direct syntax tree manipulation
             return await ExtractMethodSingleFile(filePath, selectionRange, methodName);
         }
         catch (Exception ex)

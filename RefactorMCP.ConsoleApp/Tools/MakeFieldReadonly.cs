@@ -11,25 +11,17 @@ using System.Linq;
 public static partial class RefactoringTools
 {
     public static async Task<string> MakeFieldReadonly(
+        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
-        [Description("Name of the field to make readonly")] string fieldName,
-        [Description("Path to the solution file (.sln) - optional for single file mode")] string? solutionPath = null)
+        [Description("Name of the field to make readonly")] string fieldName)
     {
         try
         {
-            if (solutionPath != null)
-            {
-                // Solution mode - full semantic analysis
-                var solution = await GetOrLoadSolution(solutionPath);
-                var document = GetDocumentByPath(solution, filePath);
-                if (document != null)
-                    return await MakeFieldReadonlyWithSolution(document, fieldName);
+            var solution = await GetOrLoadSolution(solutionPath);
+            var document = GetDocumentByPath(solution, filePath);
+            if (document != null)
+                return await MakeFieldReadonlyWithSolution(document, fieldName);
 
-                // Fallback to single file mode when file isn't part of the solution
-                return await MakeFieldReadonlySingleFile(filePath, fieldName);
-            }
-
-            // Single file mode - direct syntax tree manipulation
             return await MakeFieldReadonlySingleFile(filePath, fieldName);
         }
         catch (Exception ex)

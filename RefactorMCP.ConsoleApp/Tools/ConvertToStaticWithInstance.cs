@@ -11,23 +11,17 @@ public static partial class RefactoringTools
 {
     [McpServerTool, Description("Transform instance method to static by adding instance parameter (preferred for large C# file refactoring)")]
     public static async Task<string> ConvertToStaticWithInstance(
+        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Name of the method to convert")] string methodName,
-        [Description("Name for the instance parameter")] string instanceParameterName = "instance",
-        [Description("Path to the solution file (.sln) - optional for single file mode")] string? solutionPath = null)
+        [Description("Name for the instance parameter")] string instanceParameterName = "instance")
     {
         try
         {
-            if (solutionPath != null)
-            {
-                var solution = await GetOrLoadSolution(solutionPath);
-                var document = GetDocumentByPath(solution, filePath);
-                if (document != null)
-                    return await ConvertToStaticWithInstanceWithSolution(document, methodName, instanceParameterName);
-
-                // Fallback to single file mode when file isn't part of the solution
-                return await ConvertToStaticWithInstanceSingleFile(filePath, methodName, instanceParameterName);
-            }
+            var solution = await GetOrLoadSolution(solutionPath);
+            var document = GetDocumentByPath(solution, filePath);
+            if (document != null)
+                return await ConvertToStaticWithInstanceWithSolution(document, methodName, instanceParameterName);
 
             return await ConvertToStaticWithInstanceSingleFile(filePath, methodName, instanceParameterName);
         }
