@@ -169,7 +169,7 @@ public static class StringProcessorExtensions
         Assert.Equal(expected, output.Trim());
     }
 
-    [Fact(Skip = "ExtractMethod implementation needs debugging for this test case")]
+    [Fact]
     public void ExtractMethodInSource_CreatesMethod()
     {
         var input = @"class MessageHandler
@@ -193,7 +193,7 @@ public static class StringProcessorExtensions
     }
 }
 ";
-        var output = RefactoringTools.ExtractMethodInSource(input, "5:9-5:46", "DisplayProcessingMessage");
+        var output = RefactoringTools.ExtractMethodInSource(input, "5:9-5:49", "DisplayProcessingMessage");
         Assert.Equal(expected, output);
     }
 
