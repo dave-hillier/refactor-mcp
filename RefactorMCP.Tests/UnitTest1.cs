@@ -403,6 +403,28 @@ public class RefactoringToolsTests : IDisposable
     }
 
     [Fact]
+    public async Task MoveInstanceMethod_CreatesTargetClassIfMissing()
+    {
+        await RefactoringTools.LoadSolution(SolutionPath);
+        var testFile = Path.Combine(TestOutputPath, "MoveInstanceMethodMissingTarget.cs");
+        await CreateTestFile(testFile, GetSampleCodeForMoveInstanceMethod());
+
+        var result = await RefactoringTools.MoveInstanceMethod(
+            testFile,
+            "Calculator",
+            "LogOperation",
+            "NewLogger",
+            "_logger",
+            "field",
+            SolutionPath
+        );
+
+        Assert.Contains("Successfully moved instance method", result);
+        var fileContent = await File.ReadAllTextAsync(testFile);
+        Assert.Contains("class NewLogger", fileContent);
+    }
+
+    [Fact]
     public async Task SafeDeleteParameter_RemovesParameter()
     {
         await RefactoringTools.LoadSolution(SolutionPath);
