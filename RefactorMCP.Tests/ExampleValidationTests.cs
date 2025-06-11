@@ -12,7 +12,11 @@ namespace RefactorMCP.Tests;
 public class ExampleValidationTests : IDisposable
 {
     private static readonly string SolutionPath = GetSolutionPath();
-    private const string TestOutputPath = "./RefactorMCP.Tests/TestOutput/Examples";
+    private static readonly string TestOutputPath =
+        Path.Combine(Path.GetDirectoryName(SolutionPath)!,
+            "RefactorMCP.Tests",
+            "TestOutput",
+            "Examples");
 
     public ExampleValidationTests()
     {
