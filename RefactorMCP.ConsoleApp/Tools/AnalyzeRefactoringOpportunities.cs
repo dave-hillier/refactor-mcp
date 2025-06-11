@@ -10,8 +10,8 @@ public static partial class RefactoringTools
 {
     [McpServerPrompt, Description("Analyze a C# file for refactoring opportunities like long methods or unused code")]
     public static async Task<string> AnalyzeRefactoringOpportunities(
-        [Description("Path to the C# file")] string filePath,
-        [Description("Path to the solution file (.sln) - optional for cross-file analysis")] string? solutionPath = null)
+        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Path to the C# file")] string filePath)
     {
         try
         {
@@ -20,24 +20,17 @@ public static partial class RefactoringTools
             Solution? solution = null;
             Document? document = null;
 
-            if (solutionPath != null)
+            solution = await GetOrLoadSolution(solutionPath);
+            document = GetDocumentByPath(solution, filePath);
+            if (document != null)
             {
-                solution = await GetOrLoadSolution(solutionPath);
-                document = GetDocumentByPath(solution, filePath);
-                if (document != null)
-                {
-                    syntaxTree = await document.GetSyntaxTreeAsync() ?? CSharpSyntaxTree.ParseText(await File.ReadAllTextAsync(filePath));
-                    model = await document.GetSemanticModelAsync();
-                }
-                else
-                {
-                    syntaxTree = CSharpSyntaxTree.ParseText(await File.ReadAllTextAsync(filePath));
-                    model = null;
-                }
+                syntaxTree = await document.GetSyntaxTreeAsync() ?? CSharpSyntaxTree.ParseText(await File.ReadAllTextAsync(filePath));
+                model = await document.GetSemanticModelAsync();
             }
             else
             {
                 syntaxTree = CSharpSyntaxTree.ParseText(await File.ReadAllTextAsync(filePath));
+                model = null;
             }
 
             var root = await syntaxTree.GetRootAsync();

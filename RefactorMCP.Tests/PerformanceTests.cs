@@ -75,10 +75,10 @@ public class PerformanceTests
 
         // Act
         var result = await RefactoringTools.ExtractMethod(
+            SolutionPath,
             testFile,
             "10:9-13:10", // Extract a validation block
-            "ValidateInputs",
-            SolutionPath
+            "ValidateInputs"
         );
 
         // Assert
@@ -101,25 +101,25 @@ public class PerformanceTests
 
         // Act - Perform multiple refactorings in sequence
         var extractResult = await RefactoringTools.ExtractMethod(
+            SolutionPath,
             testFile,
             "8:9-11:10",
-            "ValidateInputs",
-            SolutionPath
+            "ValidateInputs"
         );
 
         var fieldResult = await RefactoringTools.IntroduceField(
+            SolutionPath,
             testFile,
             "15:16-15:40",
             "_calculatedValue",
-            "private",
-            SolutionPath
+            "private"
         );
 
         var variableResult = await RefactoringTools.IntroduceVariable(
+            SolutionPath,
             testFile,
             "19:20-19:35",
-            "processedValue",
-            SolutionPath
+            "processedValue"
         );
 
         // Assert
@@ -174,10 +174,10 @@ public class PerformanceTests
             await File.WriteAllTextAsync(testFileCopy, await File.ReadAllTextAsync(testFile));
 
             await RefactoringTools.ExtractMethod(
+                SolutionPath,
                 testFileCopy,
                 "8:9-11:10",
-                $"ValidateInputs{i}",
-                SolutionPath
+                $"ValidateInputs{i}"
             );
         }
 

@@ -10,22 +10,17 @@ public static partial class RefactoringTools
 {
     [McpServerTool, Description("Convert an instance method to an extension method in a static class")]
     public static async Task<string> ConvertToExtensionMethod(
+        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Name of the instance method to convert")] string methodName,
-        [Description("Name of the extension class - optional")] string? extensionClass = null,
-        [Description("Path to the solution file (.sln) - optional for single file mode")] string? solutionPath = null)
+        [Description("Name of the extension class - optional")] string? extensionClass = null)
     {
         try
         {
-            if (solutionPath != null)
-            {
-                var solution = await GetOrLoadSolution(solutionPath);
-                var document = GetDocumentByPath(solution, filePath);
-                if (document != null)
-                    return await ConvertToExtensionMethodWithSolution(document, methodName, extensionClass);
-
-                return await ConvertToExtensionMethodSingleFile(filePath, methodName, extensionClass);
-            }
+            var solution = await GetOrLoadSolution(solutionPath);
+            var document = GetDocumentByPath(solution, filePath);
+            if (document != null)
+                return await ConvertToExtensionMethodWithSolution(document, methodName, extensionClass);
 
             return await ConvertToExtensionMethodSingleFile(filePath, methodName, extensionClass);
         }

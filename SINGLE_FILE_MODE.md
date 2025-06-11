@@ -15,16 +15,8 @@ Single File Mode enables quick refactoring operations on individual C# files wit
 
 ## Architecture Changes
 
-### Parameter Order Change
-All refactoring methods now accept the file path as the **first parameter** and solution path as an **optional last parameter**:
-
-```csharp
-// Old (Solution Mode Only)
-ExtractMethod(string solutionPath, string filePath, string range, string methodName)
-
-// New (Both Modes)  
-ExtractMethod(string filePath, string range, string methodName, string? solutionPath = null)
-```
+### Usage
+Single file mode is exposed only through the `*InSource` helper methods used by the unit tests. CLI tools always require a solution path.
 
 ### Mode Detection
 The refactoring engine automatically detects which mode to use:
@@ -153,7 +145,7 @@ If you were using the old parameter order, update your calls:
 
 ### For MCP Clients
 
-Update tool parameter definitions to reflect the new optional solution parameter structure.
+These helpers are primarily for unit tests and do not require a solution file.
 
 ## Technical Implementation
 

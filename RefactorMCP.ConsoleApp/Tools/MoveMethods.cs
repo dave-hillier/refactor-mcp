@@ -373,7 +373,7 @@ public static partial class RefactoringTools
 
     [McpServerTool, Description("Move a static method to another class (preferred for large C# file refactoring)")]
     public static async Task<string> MoveStaticMethod(
-        [Description("Path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file containing the method")] string filePath,
         [Description("Name of the static method to move")] string methodName,
         [Description("Name of the target class")] string targetClass,
@@ -478,27 +478,21 @@ public static partial class RefactoringTools
     }
     [McpServerTool, Description("Move an instance method to another class (preferred for large C# file refactoring)")]
     public static async Task<string> MoveInstanceMethod(
+        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file containing the method")] string filePath,
         [Description("Name of the source class containing the method")] string sourceClass,
         [Description("Name of the method to move")] string methodName,
         [Description("Name of the target class")] string targetClass,
         [Description("Name for the access member")] string accessMemberName,
         [Description("Type of access member (field, property, variable)")] string accessMemberType = "field",
-        [Description("Path to the solution file (.sln)")] string? solutionPath = null,
         [Description("Path to the target file (optional, will create if doesn't exist)")] string? targetFilePath = null)
     {
         try
         {
-            if (solutionPath != null)
-            {
-                var solution = await GetOrLoadSolution(solutionPath);
-                var document = GetDocumentByPath(solution, filePath);
-                if (document != null)
-                    return await MoveInstanceMethodWithSolution(document, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
-
-                // Fallback to single file mode when file isn't part of the solution
-                return await MoveInstanceMethodSingleFile(filePath, sourceClass, methodName, targetClass, accessMemberName, accessMemberType, targetFilePath);
-            }
+            var solution = await GetOrLoadSolution(solutionPath);
+            var document = GetDocumentByPath(solution, filePath);
+            if (document != null)
+                return await MoveInstanceMethodWithSolution(document, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
 
             return await MoveInstanceMethodSingleFile(filePath, sourceClass, methodName, targetClass, accessMemberName, accessMemberType, targetFilePath);
         }

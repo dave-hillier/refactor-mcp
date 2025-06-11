@@ -100,27 +100,20 @@ public static partial class RefactoringTools
     }
     [McpServerTool, Description("Create a new parameter from selected code (preferred for large C# file refactoring)")]
     public static async Task<string> IntroduceParameter(
+        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Name of the method to add parameter to")] string methodName,
         [Description("Range in format 'startLine:startColumn-endLine:endColumn'")] string selectionRange,
-        [Description("Name for the new parameter")] string parameterName,
-        [Description("Path to the solution file (.sln) - optional for single file mode")] string? solutionPath = null)
+        [Description("Name for the new parameter")] string parameterName)
     {
         try
         {
-            if (solutionPath != null)
-            {
-                var solution = await GetOrLoadSolution(solutionPath);
-                var document = GetDocumentByPath(solution, filePath);
-                if (document == null)
-                    return ThrowMcpException($"Error: File {filePath} not found in solution (current dir: {Directory.GetCurrentDirectory()})");
-
+            var solution = await GetOrLoadSolution(solutionPath);
+            var document = GetDocumentByPath(solution, filePath);
+            if (document != null)
                 return await IntroduceParameterWithSolution(document, methodName, selectionRange, parameterName);
-            }
-            else
-            {
-                return await IntroduceParameterSingleFile(filePath, methodName, selectionRange, parameterName);
-            }
+
+            return await IntroduceParameterSingleFile(filePath, methodName, selectionRange, parameterName);
         }
         catch (Exception ex)
         {

@@ -11,25 +11,18 @@ public static partial class RefactoringTools
 {
     [McpServerTool, Description("Convert property setter to init-only setter (preferred for large C# file refactoring)")]
     public static async Task<string> TransformSetterToInit(
+        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
-        [Description("Name of the property to transform")] string propertyName,
-        [Description("Path to the solution file (.sln) - optional for single file mode")] string? solutionPath = null)
+        [Description("Name of the property to transform")] string propertyName)
     {
         try
         {
-            if (solutionPath != null)
-            {
-                var solution = await GetOrLoadSolution(solutionPath);
-                var document = GetDocumentByPath(solution, filePath);
-                if (document == null)
-                    return ThrowMcpException($"Error: File {filePath} not found in solution (current dir: {Directory.GetCurrentDirectory()})");
-
+            var solution = await GetOrLoadSolution(solutionPath);
+            var document = GetDocumentByPath(solution, filePath);
+            if (document != null)
                 return await TransformSetterToInitWithSolution(document, propertyName);
-            }
-            else
-            {
-                return await TransformSetterToInitSingleFile(filePath, propertyName);
-            }
+
+            return await TransformSetterToInitSingleFile(filePath, propertyName);
         }
         catch (Exception ex)
         {

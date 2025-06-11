@@ -5,38 +5,15 @@ A Model Context Protocol (MCP) server providing automated refactoring tools for 
 ## Features
 
 - **Solution Mode**: Full semantic analysis with cross-project dependencies
-- **Single File Mode**: Fast refactoring for simple transformations without solution loading
+- **Single File Helpers**: In-memory transformations used for unit tests
 - **Comprehensive Refactoring Tools**: Extract methods, introduce variables/fields, make fields readonly, convert methods to extension methods, and more
 - **Analysis Prompt**: Inspect code for long methods, large classes, long parameter lists, unused methods or fields
 - **MCP Compatible**: Works with any MCP-compatible client
 - **Preferred for Large Files**: Invoking these tools via MCP is recommended for large code files
 
-## Solution Mode vs Single File Mode
+## Solution Mode
 
-### Solution Mode (Preferred for Large Files)
-```bash
-# Full semantic analysis with type information
-extract-method ./MyFile.cs "10:5-15:20" "ExtractedMethod" ./MySolution.sln
-```
-
-Benefits:
-- ✅ Accurate type information
-- ✅ Cross-project analysis  
-- ✅ Full dependency resolution
-- ✅ Semantic validation
-
-### Single File Mode
-```bash
-# Fast refactoring without solution loading  
-extract-method ./MyFile.cs "10:5-15:20" "ExtractedMethod"
-```
-
-Benefits:
-- ✅ Faster execution
-- ✅ No solution file required
-- ✅ Works with standalone files
-- ❌ Limited type analysis (uses 'var')
-- ❌ No cross-file validation
+All CLI tools require an absolute path to a solution file. The working directory is set from this path so relative file references resolve correctly. Single file helper methods are available only inside the unit tests.
 
 **Single file mode is suitable for:**
 - Extract Method (within same class)
@@ -178,7 +155,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli <command> [arguments]
 #### Available Test Commands
 
 - `list-tools` - Show all available refactoring tools
-- `load-solution <solutionPath>` - Load a solution file (not required)
+- `load-solution <solutionPath>` - Load a solution file and set the working directory
 - `extract-method <solutionPath> <filePath> <range> <methodName>` - Extract code into method
 - `introduce-field <solutionPath> <filePath> <range> <fieldName> [accessModifier]` - Create field from expression
 - `introduce-variable <solutionPath> <filePath> <range> <variableName>` - Create variable from expression
@@ -187,9 +164,9 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli <command> [arguments]
 - `convert-to-static-with-parameters <solutionPath> <filePath> <methodLine>` - Convert instance method to static with parameters
 - `convert-to-static-with-instance <solutionPath> <filePath> <methodLine> [instanceName]` - Convert instance method to static with explicit instance
 - `move-static-method <solutionPath> <filePath> <methodName> <targetClass> [targetFile]` - Move a static method to another class
-- `move-instance-method <filePath> <sourceClass> <methodName> <targetClass> <accessMember> [memberType] [solutionPath]` - Move an instance method to another class
+- `move-instance-method <solutionPath> <filePath> <sourceClass> <methodName> <targetClass> <accessMember> [memberType] [targetFile]` - Move an instance method to another class
 - `version` - Show build version and timestamp
-- `analyze-refactoring-opportunities <filePath> [solutionPath]` - Prompt for refactoring suggestions (long methods, long parameter lists, unused code)
+- `analyze-refactoring-opportunities <solutionPath> <filePath>` - Prompt for refactoring suggestions (long methods, long parameter lists, unused code)
 
 #### Quick Start Example
 
@@ -197,7 +174,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli <command> [arguments]
 # List available tools
 dotnet run --project RefactorMCP.ConsoleApp -- --cli list-tools
 
-# Load a solution (not required)
+# Load a solution
 dotnet run --project RefactorMCP.ConsoleApp -- --cli load-solution ./RefactorMCP.sln
 
 # Extract a method (example range)
