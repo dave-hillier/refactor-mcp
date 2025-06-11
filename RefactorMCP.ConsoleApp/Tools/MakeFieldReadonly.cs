@@ -1,4 +1,5 @@
 using ModelContextProtocol.Server;
+using ModelContextProtocol;
 using System.ComponentModel;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -33,7 +34,7 @@ public static partial class RefactoringTools
         }
         catch (Exception ex)
         {
-            return $"Error: {ex.Message}";
+            throw new McpException($"Error: {ex.Message}", ex);
         }
     }
 
@@ -47,7 +48,7 @@ public static partial class RefactoringTools
             .FirstOrDefault(f => f.Declaration.Variables.Any(v => v.Identifier.ValueText == fieldName));
 
         if (fieldDeclaration == null)
-            return $"Error: No field named '{fieldName}' found";
+            return ThrowMcpException($"Error: No field named '{fieldName}' found");
 
         // Add readonly modifier
         var readonlyModifier = SyntaxFactory.Token(SyntaxKind.ReadOnlyKeyword);
@@ -127,7 +128,7 @@ public static partial class RefactoringTools
     private static async Task<string> MakeFieldReadonlySingleFile(string filePath, string fieldName)
     {
         if (!File.Exists(filePath))
-            return $"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})";
+            return ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
 
         var sourceText = await File.ReadAllTextAsync(filePath);
         var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
@@ -137,7 +138,7 @@ public static partial class RefactoringTools
             .FirstOrDefault(f => f.Declaration.Variables.Any(v => v.Identifier.ValueText == fieldName));
 
         if (fieldDeclaration == null)
-            return $"Error: No field named '{fieldName}' found";
+            return ThrowMcpException($"Error: No field named '{fieldName}' found");
 
         // Add readonly modifier
         var readonlyModifier = SyntaxFactory.Token(SyntaxKind.ReadOnlyKeyword);

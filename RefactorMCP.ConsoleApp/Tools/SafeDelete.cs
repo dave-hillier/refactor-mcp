@@ -1,4 +1,5 @@
 using ModelContextProtocol.Server;
+using ModelContextProtocol;
 using System.ComponentModel;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -31,7 +32,7 @@ public static partial class RefactoringTools
         }
         catch (Exception ex)
         {
-            return $"Error deleting field: {ex.Message}";
+            throw new McpException($"Error deleting field: {ex.Message}", ex);
         }
     }
 
@@ -57,7 +58,7 @@ public static partial class RefactoringTools
         }
         catch (Exception ex)
         {
-            return $"Error deleting method: {ex.Message}";
+            throw new McpException($"Error deleting method: {ex.Message}", ex);
         }
     }
 
@@ -84,7 +85,7 @@ public static partial class RefactoringTools
         }
         catch (Exception ex)
         {
-            return $"Error deleting parameter: {ex.Message}";
+            throw new McpException($"Error deleting parameter: {ex.Message}", ex);
         }
     }
 
@@ -110,7 +111,7 @@ public static partial class RefactoringTools
         }
         catch (Exception ex)
         {
-            return $"Error deleting variable: {ex.Message}";
+            throw new McpException($"Error deleting variable: {ex.Message}", ex);
         }
     }
 
@@ -121,7 +122,7 @@ public static partial class RefactoringTools
             .OfType<FieldDeclarationSyntax>()
             .FirstOrDefault(f => f.Declaration.Variables.Any(v => v.Identifier.ValueText == fieldName));
         if (field == null)
-            return $"Error: Field '{fieldName}' not found";
+            return ThrowMcpException($"Error: Field '{fieldName}' not found");
 
         var variable = field.Declaration.Variables.First(v => v.Identifier.ValueText == fieldName);
         var semanticModel = await document.GetSemanticModelAsync();
@@ -129,7 +130,7 @@ public static partial class RefactoringTools
         var refs = await SymbolFinder.FindReferencesAsync(symbol!, document.Project.Solution);
         var count = refs.SelectMany(r => r.Locations).Count() - 1;
         if (count > 0)
-            return $"Error: Field '{fieldName}' is referenced {count} time(s)";
+            return ThrowMcpException($"Error: Field '{fieldName}' is referenced {count} time(s)");
 
         SyntaxNode newRoot;
         if (field.Declaration.Variables.Count == 1)
@@ -150,7 +151,7 @@ public static partial class RefactoringTools
     private static async Task<string> SafeDeleteFieldSingleFile(string filePath, string fieldName)
     {
         if (!File.Exists(filePath))
-            return $"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})";
+            return ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
 
         var sourceText = await File.ReadAllTextAsync(filePath);
         var tree = CSharpSyntaxTree.ParseText(sourceText);
@@ -159,11 +160,11 @@ public static partial class RefactoringTools
             .OfType<FieldDeclarationSyntax>()
             .FirstOrDefault(f => f.Declaration.Variables.Any(v => v.Identifier.ValueText == fieldName));
         if (field == null)
-            return $"Error: Field '{fieldName}' not found";
+            return ThrowMcpException($"Error: Field '{fieldName}' not found");
 
         var references = root.DescendantNodes().OfType<IdentifierNameSyntax>().Count(id => id.Identifier.ValueText == fieldName);
         if (references > 1)
-            return $"Error: Field '{fieldName}' is referenced";
+            return ThrowMcpException($"Error: Field '{fieldName}' is referenced");
 
         SyntaxNode newRoot;
         if (field.Declaration.Variables.Count == 1)
@@ -184,14 +185,14 @@ public static partial class RefactoringTools
         var root = await document.GetSyntaxRootAsync();
         var method = root!.DescendantNodes().OfType<MethodDeclarationSyntax>().FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            return $"Error: Method '{methodName}' not found";
+            return ThrowMcpException($"Error: Method '{methodName}' not found");
 
         var semanticModel = await document.GetSemanticModelAsync();
         var symbol = semanticModel!.GetDeclaredSymbol(method)!;
         var refs = await SymbolFinder.FindReferencesAsync(symbol, document.Project.Solution);
         var count = refs.SelectMany(r => r.Locations).Count() - 1;
         if (count > 0)
-            return $"Error: Method '{methodName}' is referenced {count} time(s)";
+            return ThrowMcpException($"Error: Method '{methodName}' is referenced {count} time(s)");
 
         var newRoot = root.RemoveNode(method, SyntaxRemoveOptions.KeepNoTrivia);
         var formatted = Formatter.Format(newRoot, document.Project.Solution.Workspace);
@@ -204,19 +205,19 @@ public static partial class RefactoringTools
     private static async Task<string> SafeDeleteMethodSingleFile(string filePath, string methodName)
     {
         if (!File.Exists(filePath))
-            return $"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})";
+            return ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
 
         var sourceText = await File.ReadAllTextAsync(filePath);
         var tree = CSharpSyntaxTree.ParseText(sourceText);
         var root = await tree.GetRootAsync();
         var method = root.DescendantNodes().OfType<MethodDeclarationSyntax>().FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            return $"Error: Method '{methodName}' not found";
+            return ThrowMcpException($"Error: Method '{methodName}' not found");
 
         var references = root.DescendantNodes().OfType<InvocationExpressionSyntax>()
             .Count(inv => inv.Expression is IdentifierNameSyntax id && id.Identifier.ValueText == methodName);
         if (references > 0)
-            return $"Error: Method '{methodName}' is referenced";
+            return ThrowMcpException($"Error: Method '{methodName}' is referenced");
 
         var newRoot = root.RemoveNode(method, SyntaxRemoveOptions.KeepNoTrivia);
         var formatted = Formatter.Format(newRoot, SharedWorkspace);
@@ -229,11 +230,11 @@ public static partial class RefactoringTools
         var root = await document.GetSyntaxRootAsync();
         var method = root!.DescendantNodes().OfType<MethodDeclarationSyntax>().FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            return $"Error: Method '{methodName}' not found";
+            return ThrowMcpException($"Error: Method '{methodName}' not found");
 
         var parameter = method.ParameterList.Parameters.FirstOrDefault(p => p.Identifier.ValueText == parameterName);
         if (parameter == null)
-            return $"Error: Parameter '{parameterName}' not found";
+            return ThrowMcpException($"Error: Parameter '{parameterName}' not found");
 
         var semanticModel = await document.GetSemanticModelAsync();
         var methodSymbol = semanticModel!.GetDeclaredSymbol(method)!;
@@ -273,18 +274,18 @@ public static partial class RefactoringTools
     private static async Task<string> SafeDeleteParameterSingleFile(string filePath, string methodName, string parameterName)
     {
         if (!File.Exists(filePath))
-            return $"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})";
+            return ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
 
         var sourceText = await File.ReadAllTextAsync(filePath);
         var tree = CSharpSyntaxTree.ParseText(sourceText);
         var root = await tree.GetRootAsync();
         var method = root.DescendantNodes().OfType<MethodDeclarationSyntax>().FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            return $"Error: Method '{methodName}' not found";
+            return ThrowMcpException($"Error: Method '{methodName}' not found");
 
         var parameter = method.ParameterList.Parameters.FirstOrDefault(p => p.Identifier.ValueText == parameterName);
         if (parameter == null)
-            return $"Error: Parameter '{parameterName}' not found";
+            return ThrowMcpException($"Error: Parameter '{parameterName}' not found");
 
         var paramIndex = method.ParameterList.Parameters.IndexOf(parameter);
         var invocations = root.DescendantNodes().OfType<InvocationExpressionSyntax>()
@@ -312,21 +313,21 @@ public static partial class RefactoringTools
         var text = await document.GetTextAsync();
         var root = await document.GetSyntaxRootAsync();
         if (!TryParseRange(selectionRange, out var sl, out var sc, out var el, out var ec))
-            return "Error: Invalid selection range format";
+            return ThrowMcpException("Error: Invalid selection range format");
 
         var start = text.Lines[sl - 1].Start + sc - 1;
         var end = text.Lines[el - 1].Start + ec - 1;
         var span = TextSpan.FromBounds(start, end);
         var variable = root!.DescendantNodes(span).OfType<VariableDeclaratorSyntax>().FirstOrDefault();
         if (variable == null)
-            return "Error: No variable declaration found in range";
+            return ThrowMcpException("Error: No variable declaration found in range");
 
         var semanticModel = await document.GetSemanticModelAsync();
         var symbol = semanticModel!.GetDeclaredSymbol(variable)!;
         var refs = await SymbolFinder.FindReferencesAsync(symbol, document.Project.Solution);
         var count = refs.SelectMany(r => r.Locations).Count() - 1;
         if (count > 0)
-            return $"Error: Variable '{variable.Identifier.ValueText}' is referenced {count} time(s)";
+            return ThrowMcpException($"Error: Variable '{variable.Identifier.ValueText}' is referenced {count} time(s)");
 
         var statement = variable.FirstAncestorOrSelf<LocalDeclarationStatementSyntax>();
         SyntaxNode newRoot;
@@ -348,26 +349,26 @@ public static partial class RefactoringTools
     private static async Task<string> SafeDeleteVariableSingleFile(string filePath, string selectionRange)
     {
         if (!File.Exists(filePath))
-            return $"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})";
+            return ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
 
         var sourceText = await File.ReadAllTextAsync(filePath);
         var tree = CSharpSyntaxTree.ParseText(sourceText);
         var root = await tree.GetRootAsync();
         var lines = SourceText.From(sourceText).Lines;
         if (!TryParseRange(selectionRange, out var sl, out var sc, out var el, out var ec))
-            return "Error: Invalid selection range format";
+            return ThrowMcpException("Error: Invalid selection range format");
 
         var start = lines[sl - 1].Start + sc - 1;
         var end = lines[el - 1].Start + ec - 1;
         var span = TextSpan.FromBounds(start, end);
         var variable = root.DescendantNodes(span).OfType<VariableDeclaratorSyntax>().FirstOrDefault();
         if (variable == null)
-            return "Error: No variable declaration found in range";
+            return ThrowMcpException("Error: No variable declaration found in range");
 
         var name = variable.Identifier.ValueText;
         var references = root.DescendantNodes().OfType<IdentifierNameSyntax>().Count(id => id.Identifier.ValueText == name);
         if (references > 1)
-            return $"Error: Variable '{name}' is referenced";
+            return ThrowMcpException($"Error: Variable '{name}' is referenced");
 
         var statement = variable.FirstAncestorOrSelf<LocalDeclarationStatementSyntax>();
         SyntaxNode newRoot;
