@@ -66,4 +66,76 @@ public class RoslynTransformationTests
         var output = RefactoringTools.ConvertToStaticWithParametersInSource(input, "M");
         Assert.Equal(expected, output.Trim());
     }
+
+    [Fact]
+    public void ExtractMethodInSource_CreatesMethod()
+    {
+        var input = "class T\n{\n    void M()\n    {\n        Console.WriteLine(\"hi\");\n    }\n}\n";
+        var expected = "class T\n{\n    void M()\n    {\n        NewMethod();\n    }\n\n    private void NewMethod()\n    {\n        Console.WriteLine(\"hi\");\n    }\n}\n";
+        var output = RefactoringTools.ExtractMethodInSource(input, "5:9-5:34", "NewMethod");
+        Assert.Equal(expected, output);
+    }
+
+    [Fact]
+    public void IntroduceFieldInSource_AddsField()
+    {
+        var input = "class T\n{\n    int M(){return 1 + 2;}\n}\n";
+        var expected = "class T\n{\n    int M() { return sum; }\n}\n";
+        var output = RefactoringTools.IntroduceFieldInSource(input, "3:20-3:24", "sum", "private");
+        Assert.Equal(expected, output);
+    }
+
+    [Fact]
+    public void SafeDeleteFieldInSource_RemovesField()
+    {
+        var input = "class C{int f;}";
+        var expected = "class C { }";
+        var output = RefactoringTools.SafeDeleteFieldInSource(input, "f");
+        Assert.Equal(expected, output.Trim());
+    }
+
+    [Fact]
+    public void SafeDeleteMethodInSource_RemovesMethod()
+    {
+        var input = "class C{void M(){}}";
+        var expected = "class C { }";
+        var output = RefactoringTools.SafeDeleteMethodInSource(input, "M");
+        Assert.Equal(expected, output.Trim());
+    }
+
+    [Fact]
+    public void SafeDeleteParameterInSource_RemovesParameter()
+    {
+        var input = "class C{void M(int x,int y){}}";
+        var expected = "class C { void M(int x) { } }";
+        var output = RefactoringTools.SafeDeleteParameterInSource(input, "M", "y");
+        Assert.Equal(expected, output.Trim());
+    }
+
+    [Fact]
+    public void SafeDeleteVariableInSource_RemovesVariable()
+    {
+        var input = "class C{void M(){int x=1;}}";
+        var expected = "class C { void M() { } }";
+        var output = RefactoringTools.SafeDeleteVariableInSource(input, "1:18-1:25");
+        Assert.Equal(expected, output.Trim());
+    }
+
+    [Fact]
+    public void MoveInstanceMethodInSource_MovesMethod()
+    {
+        var input = "class A{void M(){}} class B{}";
+        var expected = "class A\n{\n    private B b = new B();\n}\nclass B { public void M() { } }";
+        var output = RefactoringTools.MoveInstanceMethodInSource(input, "A", "M", "B", "b", "field");
+        Assert.Equal(expected, output.Trim());
+    }
+
+    [Fact]
+    public void MoveStaticMethodInSource_MovesMethod()
+    {
+        var input = "class A{static void S(){}}";
+        var expected = "class A { }\n\npublic class B\n{\n    static void S() { }\n}";
+        var output = RefactoringTools.MoveStaticMethodInSource(input, "S", "B");
+        Assert.Equal(expected, output.Trim());
+    }
 }
