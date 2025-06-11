@@ -8,8 +8,102 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Text;
 
+public class InstanceMemberUsageChecker : CSharpSyntaxRewriter
+{
+    private readonly HashSet<string> _knownInstanceMembers;
+    public bool HasInstanceMemberUsage { get; private set; }
+
+    public InstanceMemberUsageChecker(HashSet<string> knownInstanceMembers)
+    {
+        _knownInstanceMembers = knownInstanceMembers;
+    }
+
+    public override SyntaxNode? VisitIdentifierName(IdentifierNameSyntax node)
+    {
+        var parent = node.Parent;
+        
+        // Skip if this is part of a parameter or type declaration
+        if (parent is ParameterSyntax || parent is TypeSyntax)
+        {
+            return base.VisitIdentifierName(node);
+        }
+
+        // Check if this is a known instance member being accessed
+        if (_knownInstanceMembers.Contains(node.Identifier.ValueText))
+        {
+            // If it's a member access where this identifier is the expression part (e.g., numbers.Sum())
+            // Or if it's accessed directly (e.g., numbers)
+            if (parent is MemberAccessExpressionSyntax memberAccess && memberAccess.Expression == node)
+            {
+                HasInstanceMemberUsage = true;
+            }
+            // Direct access to instance member
+            else if (parent is not MemberAccessExpressionSyntax && parent is not InvocationExpressionSyntax)
+            {
+                HasInstanceMemberUsage = true;
+            }
+        }
+
+        return base.VisitIdentifierName(node);
+    }
+}
+
+public class InstanceMemberRewriter : CSharpSyntaxRewriter
+{
+    private readonly string _parameterName;
+    private readonly HashSet<string> _knownInstanceMembers;
+
+    public InstanceMemberRewriter(string parameterName, HashSet<string> knownInstanceMembers)
+    {
+        _parameterName = parameterName;
+        _knownInstanceMembers = knownInstanceMembers;
+    }
+
+    public override SyntaxNode? VisitIdentifierName(IdentifierNameSyntax node)
+    {
+        var parent = node.Parent;
+        
+        // Skip if this is part of a parameter or type declaration
+        if (parent is ParameterSyntax || parent is TypeSyntax)
+        {
+            return base.VisitIdentifierName(node);
+        }
+
+        // Check if this is a known instance member being accessed
+        if (_knownInstanceMembers.Contains(node.Identifier.ValueText))
+        {
+            // If it's a member access where this identifier is the expression part (e.g., numbers.Sum())
+            if (parent is MemberAccessExpressionSyntax memberAccess && memberAccess.Expression == node)
+            {
+                // Replace with parameter.member (e.g., calculator.numbers)
+                return SyntaxFactory.MemberAccessExpression(
+                    SyntaxKind.SimpleMemberAccessExpression,
+                    SyntaxFactory.IdentifierName(_parameterName),
+                    node);
+            }
+            // Direct access to instance member
+            else if (parent is not MemberAccessExpressionSyntax)
+            {
+                return SyntaxFactory.MemberAccessExpression(
+                    SyntaxKind.SimpleMemberAccessExpression,
+                    SyntaxFactory.IdentifierName(_parameterName),
+                    node);
+            }
+        }
+
+        return base.VisitIdentifierName(node);
+    }
+}
+
 public static partial class RefactoringTools
 {
+    private static bool HasInstanceMemberUsage(MethodDeclarationSyntax method, HashSet<string> knownMembers)
+    {
+        var usageChecker = new InstanceMemberUsageChecker(knownMembers);
+        usageChecker.Visit(method);
+        return usageChecker.HasInstanceMemberUsage;
+    }
+
     public static string MoveStaticMethodInSource(string sourceText, string methodName, string targetClass)
     {
         var tree = CSharpSyntaxTree.ParseText(sourceText);
@@ -85,11 +179,37 @@ public static partial class RefactoringTools
         if (method == null)
             return ThrowMcpException($"Error: No method named '{methodName}' found");
 
+        // Check if method uses instance members
+        var knownMembers = new HashSet<string>();
+        foreach (var member in originClass.Members)
+        {
+            if (member is FieldDeclarationSyntax field)
+            {
+                foreach (var variable in field.Declaration.Variables)
+                {
+                    knownMembers.Add(variable.Identifier.ValueText);
+                }
+            }
+            else if (member is PropertyDeclarationSyntax property)
+            {
+                knownMembers.Add(property.Identifier.ValueText);
+            }
+        }
+
+        // Check if method uses any instance members
+        bool usesInstanceMembers = HasInstanceMemberUsage(method, knownMembers);
+
         // Build call to the moved method for the stub
-        var argumentList = SyntaxFactory.ArgumentList(
-            SyntaxFactory.SeparatedList(
-                method.ParameterList.Parameters
-                    .Select(p => SyntaxFactory.Argument(SyntaxFactory.IdentifierName(p.Identifier)))));
+        var originalParameters = method.ParameterList.Parameters
+            .Select(p => SyntaxFactory.Argument(SyntaxFactory.IdentifierName(p.Identifier))).ToList();
+        
+        // Only add 'this' as the first argument if the method uses instance members
+        if (usesInstanceMembers)
+        {
+            originalParameters.Insert(0, SyntaxFactory.Argument(SyntaxFactory.ThisExpression()));
+        }
+        
+        var argumentList = SyntaxFactory.ArgumentList(SyntaxFactory.SeparatedList(originalParameters));
 
         var accessExpression = SyntaxFactory.IdentifierName(accessMemberName);
         var invocation = SyntaxFactory.InvocationExpression(
@@ -107,9 +227,6 @@ public static partial class RefactoringTools
         var stubMethod = method.WithBody(SyntaxFactory.Block(callStatement))
             .WithExpressionBody(null)
             .WithSemicolonToken(default);
-
-        // Replace the original method with the stub
-        var originMembers = originClass.Members.Select(m => m == method ? (MemberDeclarationSyntax)stubMethod : m).ToList();
 
         // Create the access member
         MemberDeclarationSyntax accessMember = null!;
@@ -136,15 +253,46 @@ public static partial class RefactoringTools
                 .AddModifiers(SyntaxFactory.Token(SyntaxKind.PrivateKeyword));
         }
 
-        originMembers.Insert(0, accessMember);
+        // Find the insertion position for the access member (after existing fields/properties)
+        var originMembers = originClass.Members.ToList();
+        var fieldIndex = originMembers.FindLastIndex(m => m is FieldDeclarationSyntax || m is PropertyDeclarationSyntax);
+        var insertIndex = fieldIndex >= 0 ? fieldIndex + 1 : 0;
+        
+        // Insert the access member at the correct position
+        originMembers.Insert(insertIndex, accessMember);
+        
+        // Replace the original method with the stub
+        var methodIndex = originMembers.FindIndex(m => m == method);
+        if (methodIndex >= 0)
+        {
+            originMembers[methodIndex] = stubMethod;
+        }
+        
         var newOriginClass = originClass.WithMembers(SyntaxFactory.List(originMembers));
 
-        // Ensure moved method is public in the target class
+        // Create the moved method
         var movedMethod = method;
+        
+        // Only add source class parameter if method uses instance members
+        if (usesInstanceMembers)
+        {
+            var sourceParameter = SyntaxFactory.Parameter(SyntaxFactory.Identifier(sourceClass.ToLower()))
+                .WithType(SyntaxFactory.IdentifierName(sourceClass));
+            
+            var newParameters = new[] { sourceParameter }.Concat(method.ParameterList.Parameters);
+            var newParameterList = SyntaxFactory.ParameterList(SyntaxFactory.SeparatedList(newParameters));
+            movedMethod = movedMethod.WithParameterList(newParameterList);
+            
+            // Replace references to instance members with parameter access
+            var memberRewriter = new InstanceMemberRewriter(sourceClass.ToLower(), knownMembers);
+            movedMethod = (MethodDeclarationSyntax)memberRewriter.Visit(movedMethod)!;
+        }
+        
+        // Ensure moved method is public in the target class
         if (!method.Modifiers.Any(m => m.IsKind(SyntaxKind.PublicKeyword)))
         {
             var mods = method.Modifiers.Where(m => !m.IsKind(SyntaxKind.PrivateKeyword) && !m.IsKind(SyntaxKind.ProtectedKeyword) && !m.IsKind(SyntaxKind.InternalKeyword));
-            movedMethod = method.WithModifiers(SyntaxFactory.TokenList(mods).Add(SyntaxFactory.Token(SyntaxKind.PublicKeyword)));
+            movedMethod = movedMethod.WithModifiers(SyntaxFactory.TokenList(mods).Add(SyntaxFactory.Token(SyntaxKind.PublicKeyword)));
         }
 
         var rootWithStub = root.ReplaceNode(originClass, newOriginClass);
