@@ -22,4 +22,10 @@
     <ProjectReference Include="..\RefactorMCP.ConsoleApp\RefactorMCP.ConsoleApp.csproj" />
   </ItemGroup>
 
+  <!-- Exclude generated test files from compilation -->
+  <ItemGroup>
+    <Compile Remove="TestOutput\**\*.cs" />
+    <None Include="TestOutput\**\*.cs" />
+  </ItemGroup>
+
 </Project>

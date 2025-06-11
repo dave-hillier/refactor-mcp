@@ -122,7 +122,8 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli move-instance-method \
   "MethodName" \
   "TargetClass" \
   "memberName" \
-  "field"
+  "field" \
+  "./optional/target.cs"
 ```
 
 ### Convert To Extension Method
