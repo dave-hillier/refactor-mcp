@@ -3,6 +3,8 @@ using System.IO;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Linq;
 using Xunit;
 
 namespace RefactorMCP.Tests;
@@ -436,6 +438,37 @@ public class RefactoringToolsTests : IDisposable
         Assert.Contains("Successfully moved instance method", result);
 
         // File modification verification skipped
+    }
+
+    [Fact]
+    public async Task MoveInstanceMethod_SameFile_MovesMethod()
+    {
+        await RefactoringTools.LoadSolution(SolutionPath);
+        var testFile = Path.Combine(TestOutputPath, "MoveInstanceMethodSameFile.cs");
+        await CreateTestFile(testFile, GetSampleCodeForMoveInstanceMethod());
+
+        var result = await RefactoringTools.MoveInstanceMethod(
+            testFile,
+            "Calculator",
+            "LogOperation",
+            "Logger",
+            "_logger",
+            "field",
+            SolutionPath
+        );
+
+        Assert.Contains("Successfully moved instance method", result);
+        var fileContent = await File.ReadAllTextAsync(testFile);
+        var tree = CSharpSyntaxTree.ParseText(fileContent);
+        var root = tree.GetRoot();
+        var calcClass = root.DescendantNodes()
+            .OfType<ClassDeclarationSyntax>()
+            .First(c => c.Identifier.ValueText == "Calculator");
+        Assert.DoesNotContain(calcClass.Members.OfType<MethodDeclarationSyntax>(), m => m.Identifier.ValueText == "LogOperation");
+        var loggerClass = root.DescendantNodes()
+            .OfType<ClassDeclarationSyntax>()
+            .First(c => c.Identifier.ValueText == "Logger");
+        Assert.Contains(loggerClass.Members.OfType<MethodDeclarationSyntax>(), m => m.Identifier.ValueText == "LogOperation");
     }
 
     [Fact]
