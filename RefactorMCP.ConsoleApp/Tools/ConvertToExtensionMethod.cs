@@ -5,6 +5,8 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
+using System.Linq;
+using System.Collections.Generic;
 
 public static partial class RefactoringTools
 {
@@ -79,7 +81,28 @@ public static partial class RefactoringTools
 
         updatedMethod = updatedMethod.WithModifiers(modifiers);
 
-        var newRoot = syntaxRoot.RemoveNode(method, SyntaxRemoveOptions.KeepNoTrivia);
+        // Replace the original method with a wrapper that calls the new extension
+        var wrapperArgs = new List<ArgumentSyntax> { SyntaxFactory.Argument(SyntaxFactory.ThisExpression()) };
+        wrapperArgs.AddRange(method.ParameterList.Parameters.Select(p =>
+            SyntaxFactory.Argument(SyntaxFactory.IdentifierName(p.Identifier))));
+
+        var extensionInvocation = SyntaxFactory.InvocationExpression(
+            SyntaxFactory.MemberAccessExpression(
+                SyntaxKind.SimpleMemberAccessExpression,
+                SyntaxFactory.IdentifierName(extClassName),
+                SyntaxFactory.IdentifierName(method.Identifier)))
+            .WithArgumentList(SyntaxFactory.ArgumentList(SyntaxFactory.SeparatedList(wrapperArgs)));
+
+        StatementSyntax callStatement = method.ReturnType is PredefinedTypeSyntax pts &&
+                                         pts.Keyword.IsKind(SyntaxKind.VoidKeyword)
+            ? SyntaxFactory.ExpressionStatement(extensionInvocation)
+            : SyntaxFactory.ReturnStatement(extensionInvocation);
+
+        var wrapperMethod = method.WithBody(SyntaxFactory.Block(callStatement))
+            .WithExpressionBody(null)
+            .WithSemicolonToken(default);
+
+        var newRoot = syntaxRoot.ReplaceNode(method, wrapperMethod);
 
         var extClass = newRoot.DescendantNodes().OfType<ClassDeclarationSyntax>()
             .FirstOrDefault(c => c.Identifier.ValueText == extClassName);
@@ -179,7 +202,28 @@ public static partial class RefactoringTools
 
         updatedMethod = updatedMethod.WithModifiers(modifiers);
 
-        var newRoot = syntaxRoot.RemoveNode(method, SyntaxRemoveOptions.KeepNoTrivia);
+        // Replace the original method with a wrapper that calls the new extension
+        var wrapperArgs = new List<ArgumentSyntax> { SyntaxFactory.Argument(SyntaxFactory.ThisExpression()) };
+        wrapperArgs.AddRange(method.ParameterList.Parameters.Select(p =>
+            SyntaxFactory.Argument(SyntaxFactory.IdentifierName(p.Identifier))));
+
+        var extensionInvocation = SyntaxFactory.InvocationExpression(
+            SyntaxFactory.MemberAccessExpression(
+                SyntaxKind.SimpleMemberAccessExpression,
+                SyntaxFactory.IdentifierName(extClassName),
+                SyntaxFactory.IdentifierName(method.Identifier)))
+            .WithArgumentList(SyntaxFactory.ArgumentList(SyntaxFactory.SeparatedList(wrapperArgs)));
+
+        StatementSyntax callStatement = method.ReturnType is PredefinedTypeSyntax pts &&
+                                         pts.Keyword.IsKind(SyntaxKind.VoidKeyword)
+            ? SyntaxFactory.ExpressionStatement(extensionInvocation)
+            : SyntaxFactory.ReturnStatement(extensionInvocation);
+
+        var wrapperMethod = method.WithBody(SyntaxFactory.Block(callStatement))
+            .WithExpressionBody(null)
+            .WithSemicolonToken(default);
+
+        var newRoot = syntaxRoot.ReplaceNode(method, wrapperMethod);
 
         var extClass = newRoot.DescendantNodes().OfType<ClassDeclarationSyntax>()
             .FirstOrDefault(c => c.Identifier.ValueText == extClassName);
