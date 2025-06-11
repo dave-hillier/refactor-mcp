@@ -131,8 +131,16 @@ public static partial class RefactoringTools
             return ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
 
         var sourceText = await File.ReadAllTextAsync(filePath);
+        var newText = MakeFieldReadonlyInSource(sourceText, fieldName);
+        await File.WriteAllTextAsync(filePath, newText);
+
+        return $"Successfully made field '{fieldName}' readonly in {filePath} (single file mode)";
+    }
+
+    public static string MakeFieldReadonlyInSource(string sourceText, string fieldName)
+    {
         var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
-        var syntaxRoot = await syntaxTree.GetRootAsync();
+        var syntaxRoot = syntaxTree.GetRoot();
         var fieldDeclaration = syntaxRoot.DescendantNodes()
             .OfType<FieldDeclarationSyntax>()
             .FirstOrDefault(f => f.Declaration.Variables.Any(v => v.Identifier.ValueText == fieldName));
@@ -140,12 +148,10 @@ public static partial class RefactoringTools
         if (fieldDeclaration == null)
             return ThrowMcpException($"Error: No field named '{fieldName}' found");
 
-        // Add readonly modifier
         var readonlyModifier = SyntaxFactory.Token(SyntaxKind.ReadOnlyKeyword);
         var newModifiers = fieldDeclaration.Modifiers.Add(readonlyModifier);
         var newFieldDeclaration = fieldDeclaration.WithModifiers(newModifiers);
 
-        // Remove initializer if present (will be moved to constructor)
         var variable = fieldDeclaration.Declaration.Variables.First();
         var initializer = variable.Initializer;
 
@@ -156,7 +162,6 @@ public static partial class RefactoringTools
                 SyntaxFactory.SingletonSeparatedList(newVariable));
             newFieldDeclaration = newFieldDeclaration.WithDeclaration(newDeclaration);
 
-            // Find constructors and add initialization
             var containingClass = fieldDeclaration.Ancestors().OfType<ClassDeclarationSyntax>().FirstOrDefault();
             if (containingClass != null)
             {
@@ -191,27 +196,19 @@ public static partial class RefactoringTools
 
                     var updatedClass = containingClass.WithMembers(SyntaxFactory.List(newMembers));
                     var newRoot = syntaxRoot.ReplaceNode(containingClass, updatedClass);
-
-                    // Format and write back to file
                     var formattedRoot = Formatter.Format(newRoot, SharedWorkspace);
-                    await File.WriteAllTextAsync(filePath, formattedRoot.ToFullString());
-
-                    return $"Successfully made field '{fieldName}' readonly and moved initialization to constructors in {filePath}";
+                    return formattedRoot.ToFullString();
                 }
             }
         }
         else
         {
             var newRoot = syntaxRoot.ReplaceNode(fieldDeclaration, newFieldDeclaration);
-
-            // Format and write back to file
             var formattedRoot = Formatter.Format(newRoot, SharedWorkspace);
-            await File.WriteAllTextAsync(filePath, formattedRoot.ToFullString());
-
-            return $"Successfully made field '{fieldName}' readonly in {filePath} (single file mode)";
+            return formattedRoot.ToFullString();
         }
 
-        return $"Field '{fieldName}' made readonly, but no constructors found for initialization";
+        return Formatter.Format(syntaxRoot, SharedWorkspace).ToFullString();
     }
 
 }

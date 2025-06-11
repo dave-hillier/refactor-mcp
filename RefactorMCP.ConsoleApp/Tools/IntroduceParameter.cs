@@ -57,8 +57,16 @@ public static partial class RefactoringTools
             return ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
 
         var sourceText = await File.ReadAllTextAsync(filePath);
+        var newText = IntroduceParameterInSource(sourceText, methodName, selectionRange, parameterName);
+        await File.WriteAllTextAsync(filePath, newText);
+
+        return $"Successfully introduced parameter '{parameterName}' from {selectionRange} in method '{methodName}' in {filePath} (single file mode)";
+    }
+
+    public static string IntroduceParameterInSource(string sourceText, string methodName, string selectionRange, string parameterName)
+    {
         var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
-        var syntaxRoot = await syntaxTree.GetRootAsync();
+        var syntaxRoot = syntaxTree.GetRoot();
         var textLines = SourceText.From(sourceText).Lines;
 
         var method = syntaxRoot.DescendantNodes()
@@ -88,9 +96,7 @@ public static partial class RefactoringTools
         newRoot = newRoot.ReplaceNode(selectedExpression, SyntaxFactory.IdentifierName(parameterName));
 
         var formattedRoot = Formatter.Format(newRoot, SharedWorkspace);
-        await File.WriteAllTextAsync(filePath, formattedRoot.ToFullString());
-
-        return $"Successfully introduced parameter '{parameterName}' from {selectionRange} in method '{methodName}' in {filePath} (single file mode)";
+        return formattedRoot.ToFullString();
     }
     [McpServerTool, Description("Create a new parameter from selected code (preferred for large C# file refactoring)")]
     public static async Task<string> IntroduceParameter(
