@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Xunit;
 
 namespace RefactorMCP.Tests;
@@ -381,6 +383,40 @@ public class RefactoringToolsTests : IDisposable
     }
 
     [Fact]
+    public async Task MoveStaticMethod_AddsUsingsAndCompiles()
+    {
+        await RefactoringTools.LoadSolution(SolutionPath);
+        var testFile = Path.Combine(TestOutputPath, "MoveStaticWithUsings.cs");
+        await CreateTestFile(testFile, GetSampleCodeForMoveStaticMethodWithUsings());
+
+        var result = await RefactoringTools.MoveStaticMethod(
+            SolutionPath,
+            testFile,
+            "PrintList",
+            "UtilClass"
+        );
+
+        Assert.Contains("Successfully moved static method", result);
+        var targetFile = Path.Combine(Path.GetDirectoryName(testFile)!, "UtilClass.cs");
+        var fileContent = await File.ReadAllTextAsync(targetFile);
+        Assert.Contains("using System", fileContent);
+        Assert.Contains("using System.Collections.Generic", fileContent);
+
+        var syntaxTree = CSharpSyntaxTree.ParseText(fileContent);
+        var refs = ((string?)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES"))!
+            .Split(Path.PathSeparator)
+            .Select(p => MetadataReference.CreateFromFile(p));
+        var compilation = CSharpCompilation.Create(
+            "test",
+            new[] { syntaxTree },
+            refs,
+            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+
+        var diagnostics = compilation.GetDiagnostics();
+        Assert.DoesNotContain(diagnostics, d => d.Severity == DiagnosticSeverity.Error);
+    }
+
+    [Fact]
     public async Task MoveInstanceMethod_ReturnsSuccess()
     {
         await RefactoringTools.LoadSolution(SolutionPath);
@@ -482,6 +518,24 @@ public class TestClass
     private static string GetSampleCodeForMoveStaticMethod()
     {
         return File.ReadAllText(Path.Combine(Path.GetDirectoryName(SolutionPath)!, "RefactorMCP.Tests", "ExampleCode.cs"));
+    }
+
+    private static string GetSampleCodeForMoveStaticMethodWithUsings()
+    {
+        return """
+using System;
+using System.Collections.Generic;
+
+public class TestClass
+{
+    public static void PrintList(List<int> numbers)
+    {
+        Console.WriteLine(string.Join(",", numbers));
+    }
+}
+
+public class UtilClass { }
+""";
     }
 
     private static string GetSampleCodeForMoveInstanceMethod()
