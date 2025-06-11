@@ -10,11 +10,11 @@ public class ExtractMethodTests : TestBase
     [Fact]
     public async Task ExtractMethod_ValidSelection_ReturnsSuccess()
     {
-        await RefactoringTools.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath);
         var testFile = Path.Combine(TestOutputPath, "ExtractMethodTest.cs");
         await TestUtilities.CreateTestFile(testFile, TestUtilities.GetSampleCodeForExtractMethod());
 
-        var result = await RefactoringTools.ExtractMethod(
+        var result = await ExtractMethodTool.ExtractMethod(
             SolutionPath,
             testFile,
             "7:9-10:10",
@@ -28,9 +28,9 @@ public class ExtractMethodTests : TestBase
     [Fact]
     public async Task ExtractMethod_InvalidRange_ReturnsError()
     {
-        await RefactoringTools.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath);
         await Assert.ThrowsAsync<McpException>(async () =>
-            await RefactoringTools.ExtractMethod(
+            await ExtractMethodTool.ExtractMethod(
                 SolutionPath,
                 ExampleFilePath,
                 "invalid-range",
@@ -40,9 +40,9 @@ public class ExtractMethodTests : TestBase
     [Fact]
     public async Task RefactoringTools_FileNotInSolution_ReturnsError()
     {
-        await RefactoringTools.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath);
         await Assert.ThrowsAsync<McpException>(async () =>
-            await RefactoringTools.ExtractMethod(
+            await ExtractMethodTool.ExtractMethod(
                 SolutionPath,
                 "./NonExistent.cs",
                 "1:1-2:2",
@@ -56,9 +56,9 @@ public class ExtractMethodTests : TestBase
     [InlineData("1:1-2", "TestMethod")]
     public async Task ExtractMethod_InvalidRangeFormats_ReturnsError(string range, string methodName)
     {
-        await RefactoringTools.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath);
         await Assert.ThrowsAsync<McpException>(async () =>
-            await RefactoringTools.ExtractMethod(
+            await ExtractMethodTool.ExtractMethod(
                 SolutionPath,
                 ExampleFilePath,
                 range,

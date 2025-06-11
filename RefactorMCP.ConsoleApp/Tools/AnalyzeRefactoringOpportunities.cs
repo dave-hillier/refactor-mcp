@@ -6,7 +6,8 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.FindSymbols;
 using System.ComponentModel;
 
-public static partial class RefactoringTools
+[McpServerToolType, McpServerPromptType]
+public static class AnalyzeRefactoringOpportunitiesTool
 {
     [McpServerPrompt, Description("Analyze a C# file for refactoring opportunities like long methods or unused code")]
     public static async Task<string> AnalyzeRefactoringOpportunities(
@@ -20,8 +21,8 @@ public static partial class RefactoringTools
             Solution? solution = null;
             Document? document = null;
 
-            solution = await GetOrLoadSolution(solutionPath);
-            document = GetDocumentByPath(solution, filePath);
+            solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
+            document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
             if (document != null)
             {
                 syntaxTree = await document.GetSyntaxTreeAsync() ?? CSharpSyntaxTree.ParseText(await File.ReadAllTextAsync(filePath));

@@ -3,7 +3,8 @@ using System.ComponentModel;
 using System.IO;
 using System.Reflection;
 
-public static partial class RefactoringTools
+[McpServerToolType]
+public static class VersionTool
 {
     [McpServerTool, Description("Show the current version and build timestamp")]
     public static string Version()

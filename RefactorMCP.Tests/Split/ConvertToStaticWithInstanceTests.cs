@@ -10,11 +10,11 @@ public class ConvertToStaticWithInstanceTests : TestBase
     [Fact]
     public async Task ConvertToStaticWithInstance_ReturnsSuccess()
     {
-        await RefactoringTools.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath);
         var testFile = Path.Combine(TestOutputPath, "ConvertToStaticInstance.cs");
         await TestUtilities.CreateTestFile(testFile, TestUtilities.GetSampleCodeForConvertToStaticInstance());
 
-        var result = await RefactoringTools.ConvertToStaticWithInstance(
+        var result = await ConvertToStaticWithInstanceTool.ConvertToStaticWithInstance(
             SolutionPath,
             testFile,
             "GetFormattedNumber",

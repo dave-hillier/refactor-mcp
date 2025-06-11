@@ -58,10 +58,10 @@ public class ExampleValidationTests : IDisposable
         // Arrange - Create the exact code from our documentation
         var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "ExtractMethodExample.cs"));
         await CreateTestFile(testFile, GetCalculatorCodeForExtractMethod());
-        await RefactoringTools.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath);
 
         // Act - Use the exact command from EXAMPLES.md
-        var result = await RefactoringTools.ExtractMethod(
+        var result = await ExtractMethodTool.ExtractMethod(
             SolutionPath,
             testFile,
             "22:9-25:10", // From documentation: validation block
@@ -80,10 +80,10 @@ public class ExampleValidationTests : IDisposable
         // Arrange - Create the exact code from our documentation
         var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "IntroduceFieldExample.cs"));
         await CreateTestFile(testFile, GetCalculatorCodeForIntroduceField());
-        await RefactoringTools.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath);
 
         // Act - Use the exact command from EXAMPLES.md
-        var result = await RefactoringTools.IntroduceField(
+        var result = await IntroduceFieldTool.IntroduceField(
             SolutionPath,
             testFile,
             "36:20-36:56", // From documentation: Sum() / Count expression
@@ -103,10 +103,10 @@ public class ExampleValidationTests : IDisposable
         // Arrange - Create the exact code from our documentation
         var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "IntroduceVariableExample.cs"));
         await CreateTestFile(testFile, GetCalculatorCodeForIntroduceVariable());
-        await RefactoringTools.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath);
 
         // Act - Use the exact command from EXAMPLES.md
-        var result = await RefactoringTools.IntroduceVariable(
+        var result = await IntroduceVariableTool.IntroduceVariable(
             SolutionPath,
             testFile,
             "42:50-42:63", // From documentation: value * 2 + 10 expression
@@ -125,10 +125,10 @@ public class ExampleValidationTests : IDisposable
         // Arrange - Create the exact code from our documentation
         var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "MakeFieldReadonlyExample.cs"));
         await CreateTestFile(testFile, GetCalculatorCodeForMakeFieldReadonly());
-        await RefactoringTools.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath);
 
         // Act - Use the exact command from EXAMPLES.md
-        var result = await RefactoringTools.MakeFieldReadonly(
+        var result = await MakeFieldReadonlyTool.MakeFieldReadonly(
             SolutionPath,
             testFile,
             "format" // From documentation: line with format field
@@ -145,9 +145,9 @@ public class ExampleValidationTests : IDisposable
     {
         var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "SafeDeleteParameter.cs"));
         await CreateTestFile(testFile, GetCalculatorCodeForSafeDelete());
-        await RefactoringTools.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath);
 
-        var result = await RefactoringTools.SafeDeleteParameter(
+        var result = await SafeDeleteTool.SafeDeleteParameter(
             SolutionPath,
             testFile,
             "Multiply",
@@ -165,10 +165,10 @@ public class ExampleValidationTests : IDisposable
         // Test the quick reference example
         var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "QuickRefExtractMethod.cs"));
         await CreateTestFile(testFile, GetCalculatorCodeForExtractMethod());
-        await RefactoringTools.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath);
 
         // Use the exact command from QUICK_REFERENCE.md
-        var result = await RefactoringTools.ExtractMethod(
+        var result = await ExtractMethodTool.ExtractMethod(
             SolutionPath,
             testFile,
             "22:9-25:10",
@@ -185,10 +185,10 @@ public class ExampleValidationTests : IDisposable
         // Test the quick reference example
         var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "QuickRefIntroduceField.cs"));
         await CreateTestFile(testFile, GetCalculatorCodeForIntroduceField());
-        await RefactoringTools.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath);
 
         // Use the exact command from QUICK_REFERENCE.md
-        var result = await RefactoringTools.IntroduceField(
+        var result = await IntroduceFieldTool.IntroduceField(
             SolutionPath,
             testFile,
             "36:20-36:56",
@@ -211,9 +211,9 @@ public class ExampleValidationTests : IDisposable
         // Test that all documented access modifiers work
         var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, $"AccessModifier_{accessModifier}.cs"));
         await CreateTestFile(testFile, GetCalculatorCodeForIntroduceField());
-        await RefactoringTools.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath);
 
-        var result = await RefactoringTools.IntroduceField(
+        var result = await IntroduceFieldTool.IntroduceField(
             SolutionPath,
             testFile,
             "36:20-36:56",
@@ -241,12 +241,12 @@ public int Calculate(int a, int b)
 }
 """;
         await CreateTestFile(testFile, code);
-        await RefactoringTools.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath);
 
         // The documentation says to select "if (a < 0 || b < 0)" on line 3
         // with range "3:5-3:25"
         await Assert.ThrowsAsync<McpException>(async () =>
-            await RefactoringTools.ExtractMethod(
+            await ExtractMethodTool.ExtractMethod(
                 SolutionPath,
                 testFile,
                 "3:5-3:25", // From documentation example
@@ -256,18 +256,18 @@ public int Calculate(int a, int b)
     [Fact]
     public async Task ErrorHandling_DocumentedErrorCases_ReturnExpectedMessages()
     {
-        await RefactoringTools.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath);
 
         // Test documented error cases
         await Assert.ThrowsAsync<McpException>(async () =>
-            await RefactoringTools.ExtractMethod(
+            await ExtractMethodTool.ExtractMethod(
                 SolutionPath,
                 "./NonExistent.cs",
                 "1:1-2:2",
                 "TestMethod"));
 
         await Assert.ThrowsAsync<McpException>(async () =>
-            await RefactoringTools.ExtractMethod(
+            await ExtractMethodTool.ExtractMethod(
                 SolutionPath,
                 Path.Combine(Path.GetDirectoryName(SolutionPath)!, "RefactorMCP.Tests", "ExampleCode.cs"),
                 "invalid-range",

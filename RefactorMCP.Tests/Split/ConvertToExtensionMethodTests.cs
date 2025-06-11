@@ -10,11 +10,11 @@ public class ConvertToExtensionMethodTests : TestBase
     [Fact]
     public async Task ConvertToExtensionMethod_ReturnsSuccess()
     {
-        await RefactoringTools.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath);
         var testFile = Path.Combine(TestOutputPath, "ConvertToExtension.cs");
         await TestUtilities.CreateTestFile(testFile, TestUtilities.GetSampleCodeForConvertToExtension());
 
-        var result = await RefactoringTools.ConvertToExtensionMethod(
+        var result = await ConvertToExtensionMethodTool.ConvertToExtensionMethod(
             SolutionPath,
             testFile,
             "GetFormattedNumber",
