@@ -122,6 +122,37 @@ public static class StringProcessorExtensions
     }
 
     [Fact]
+    public void ConvertToExtensionMethodInSource_AppendsToExistingClass()
+    {
+        var input = @"class StringProcessor
+{
+    void FormatText()
+    {
+    }
+}
+
+public static class StringProcessorExtensions
+{
+}";
+        var expected = @"class StringProcessor
+{
+    void FormatText()
+    {
+        StringProcessorExtensions.FormatText(this);
+    }
+}
+
+public static class StringProcessorExtensions
+{
+    static void FormatText(this StringProcessor stringProcessor)
+    {
+    }
+}";
+        var output = RefactoringTools.ConvertToExtensionMethodInSource(input, "FormatText", "StringProcessorExtensions");
+        Assert.Equal(expected, output.Trim());
+    }
+
+    [Fact]
     public void ConvertToStaticWithInstanceInSource_TransformsMethod()
     {
         var input = @"class DataProcessor
@@ -342,6 +373,30 @@ class TaskRunner
     }
 
     [Fact]
+    public void MoveInstanceMethodInSource_CreatesTargetClass()
+    {
+        var input = @"class Calculator
+{
+    void Compute()
+    {
+    }
+}";
+        var expected = @"class Calculator
+{
+    private Logger logger = new Logger();
+}
+
+public class Logger
+{
+    public void Compute()
+    {
+    }
+}";
+        var output = RefactoringTools.MoveInstanceMethodInSource(input, "Calculator", "Compute", "Logger", "logger", "field");
+        Assert.Equal(expected, output.Trim());
+    }
+
+    [Fact]
     public void MoveStaticMethodInSource_MovesMethod()
     {
         var input = @"class UtilityHelper
@@ -355,6 +410,33 @@ class TaskRunner
 }
 
 public class StringUtilities
+{
+    static void FormatString()
+    {
+    }
+}";
+        var output = RefactoringTools.MoveStaticMethodInSource(input, "FormatString", "StringUtilities");
+        Assert.Equal(expected, output.Trim());
+    }
+
+    [Fact]
+    public void MoveStaticMethodInSource_TargetClassExists()
+    {
+        var input = @"class UtilityHelper
+{
+    static void FormatString()
+    {
+    }
+}
+
+class StringUtilities
+{
+}";
+        var expected = @"class UtilityHelper
+{
+}
+
+class StringUtilities
 {
     static void FormatString()
     {
