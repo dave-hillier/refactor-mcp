@@ -18,12 +18,16 @@ public static partial class RefactoringTools
 
     private static async Task<Solution> GetOrLoadSolution(string solutionPath)
     {
-        if (_solutionCache.TryGetValue(solutionPath, out Solution? cachedSolution))
-            return cachedSolution!;
 
+        if (_solutionCache.TryGetValue(solutionPath, out Solution? cachedSolution))
+        {
+            Directory.SetCurrentDirectory(Path.GetDirectoryName(solutionPath)!);
+            return cachedSolution!;
+        }
         using var workspace = MSBuildWorkspace.Create();
         var solution = await workspace.OpenSolutionAsync(solutionPath);
         _solutionCache.Set(solutionPath, solution);
+        Directory.SetCurrentDirectory(Path.GetDirectoryName(solutionPath)!);
         return solution;
     }
 
