@@ -193,6 +193,10 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli convert-to-extension-method
   GetFormattedNumber
 ```
 
+The original instance method remains in the class as a thin wrapper that
+invokes the generated extension method, ensuring existing call sites keep
+working.
+
 ## Range Format
 
 Code selections use the format: `"startLine:startColumn-endLine:endColumn"`
