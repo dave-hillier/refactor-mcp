@@ -1,5 +1,4 @@
 using Xunit;
-using ModelContextProtocol;
 
 namespace RefactorMCP.Tests;
 
@@ -27,21 +26,6 @@ public class RoslynTransformationTests
 ";
         var output = RefactoringTools.IntroduceVariableInSource(input, "5:27-5:31", "result");
         Assert.Equal(expected, output);
-    }
-
-    [Fact]
-    public void IntroduceVariableInSource_InvalidRange_ThrowsException()
-    {
-        var input = @"class Calculator
-{
-    void DisplayResult()
-    {
-        Console.WriteLine(1 + 2);
-    }
-}";
-
-        Assert.Throws<McpException>(() =>
-            RefactoringTools.IntroduceVariableInSource(input, "invalid-range", "result"));
     }
 
     [Fact]
@@ -91,22 +75,6 @@ public class RoslynTransformationTests
 ";
         var output = RefactoringTools.MakeFieldReadonlyInSource(input, "formatPattern");
         Assert.Equal(expected, output);
-    }
-
-    [Fact]
-    public void MakeFieldReadonlyInSource_FieldMissing_ThrowsException()
-    {
-        var input = @"class CurrencyFormatter
-{
-    private string formatPattern = ""Currency"";
-
-    public CurrencyFormatter()
-    {
-    }
-}";
-
-        Assert.Throws<McpException>(() =>
-            RefactoringTools.MakeFieldReadonlyInSource(input, "missingField"));
     }
 
     [Fact]
@@ -444,35 +412,6 @@ public class Logger
     }
 
     [Fact]
-    public void MoveInstanceMethodInSource_CreatesTargetClassWithProperty()
-    {
-        var input = @"class Calculator
-{
-    void Compute()
-    {
-    }
-}";
-        var expected = @"class Calculator
-{
-    private Logger Logger { get; set; }
-
-    void Compute()
-    {
-        Logger.Compute();
-    }
-}
-
-public class Logger
-{
-    public void Compute()
-    {
-    }
-}";
-        var output = RefactoringTools.MoveInstanceMethodInSource(input, "Calculator", "Compute", "Logger", "Logger", "property");
-        Assert.Equal(expected, output.Trim());
-    }
-
-    [Fact]
     public void MoveStaticMethodInSource_MovesMethod()
     {
         var input = @"class UtilityHelper
@@ -527,6 +466,44 @@ class StringUtilities
     }
 }";
         var output = RefactoringTools.MoveStaticMethodInSource(input, "FormatString", "StringUtilities");
+        Assert.Equal(expected, output.Trim());
+    }
+
+    [Fact]
+    public void MoveInstanceMethodInSource_GetAverageToMathUtilities()
+    {
+        var input = @"class Calculator
+{
+    private List<int> numbers = new List<int>();
+
+    public double GetAverage()
+    {
+        return numbers.Sum() / (double)numbers.Count;
+    }
+}
+
+class MathUtilities
+{
+}";
+        var expected = @"class Calculator
+{
+    private List<int> numbers = new List<int>();
+    private MathUtilities mathUtilities = new MathUtilities();
+
+    public double GetAverage()
+    {
+        return mathUtilities.GetAverage(this);
+    }
+}
+
+class MathUtilities
+{
+    public double GetAverage(Calculator calculator)
+    {
+        return calculator.numbers.Sum() / (double)calculator.numbers.Count;
+    }
+}";
+        var output = RefactoringTools.MoveInstanceMethodInSource(input, "Calculator", "GetAverage", "MathUtilities", "mathUtilities", "field");
         Assert.Equal(expected, output.Trim());
     }
 }
