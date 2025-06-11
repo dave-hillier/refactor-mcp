@@ -8,8 +8,14 @@ namespace RefactorMCP.Tests;
 public class RefactoringToolsTests : IDisposable
 {
     private static readonly string SolutionPath = GetSolutionPath();
-    private static readonly string ExampleFilePath = Path.Combine(Path.GetDirectoryName(SolutionPath)!, "RefactorMCP.Tests", "ExampleCode.cs");
-    private const string TestOutputPath = "./RefactorMCP.Tests/TestOutput";
+    private static readonly string ExampleFilePath = Path.Combine(
+        Path.GetDirectoryName(SolutionPath)!,
+        "RefactorMCP.Tests",
+        "ExampleCode.cs");
+    private static readonly string TestOutputPath = Path.Combine(
+        Path.GetDirectoryName(SolutionPath)!,
+        "RefactorMCP.Tests",
+        "TestOutput");
 
     public RefactoringToolsTests()
     {
