@@ -335,6 +335,11 @@ class ValidationService
         var expected = @"class DocumentProcessor
 {
     private ValidationService validationService = new ValidationService();
+
+    void ValidateDocument()
+    {
+        validationService.ValidateDocument();
+    }
 }
 class ValidationService
 {
@@ -361,6 +366,11 @@ class TaskRunner
         var expected = @"class TaskProcessor
 {
     private TaskRunner Runner { get; set; }
+
+    void RunTask()
+    {
+        Runner.RunTask();
+    }
 }
 class TaskRunner
 {
@@ -384,6 +394,11 @@ class TaskRunner
         var expected = @"class Calculator
 {
     private Logger logger = new Logger();
+
+    void Compute()
+    {
+        logger.Compute();
+    }
 }
 
 public class Logger
@@ -407,6 +422,10 @@ public class Logger
 }";
         var expected = @"class UtilityHelper
 {
+    static void FormatString()
+    {
+        StringUtilities.FormatString();
+    }
 }
 
 public class StringUtilities
@@ -434,6 +453,10 @@ class StringUtilities
 }";
         var expected = @"class UtilityHelper
 {
+    static void FormatString()
+    {
+        StringUtilities.FormatString();
+    }
 }
 
 class StringUtilities
