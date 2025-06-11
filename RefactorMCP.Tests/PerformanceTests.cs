@@ -63,7 +63,7 @@ public class PerformanceTests
     public async Task ExtractMethod_LargeFile_CompletesInReasonableTime()
     {
         // Arrange
-        var testFile = Path.Combine(TestOutputPath, "LargeFileTest.cs");
+        var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "LargeFileTest.cs"));
         await CreateLargeTestFile(testFile);
         await RefactoringTools.LoadSolution(SolutionPath);
 
@@ -89,7 +89,7 @@ public class PerformanceTests
     public async Task MultipleRefactorings_Sequential_AllComplete()
     {
         // Arrange
-        var testFile = Path.Combine(TestOutputPath, "MultipleRefactoringsTest.cs");
+        var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "MultipleRefactoringsTest.cs"));
         await CreateTestFileForMultipleRefactorings(testFile);
         await RefactoringTools.LoadSolution(SolutionPath);
 
@@ -157,7 +157,7 @@ public class PerformanceTests
     public async Task MemoryUsage_MultipleOperations_DoesNotLeak()
     {
         // Arrange
-        var testFile = Path.Combine(TestOutputPath, "MemoryTest.cs");
+        var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "MemoryTest.cs"));
         await CreateTestFileForMultipleRefactorings(testFile);
         await RefactoringTools.LoadSolution(SolutionPath);
 
