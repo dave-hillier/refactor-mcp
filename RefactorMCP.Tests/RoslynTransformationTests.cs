@@ -316,6 +316,32 @@ class ValidationService
     }
 
     [Fact]
+    public void MoveInstanceMethodInSource_PropertyTargetExists()
+    {
+        var input = @"class TaskProcessor
+{
+    void RunTask()
+    {
+    }
+}
+class TaskRunner
+{
+}";
+        var expected = @"class TaskProcessor
+{
+    private TaskRunner Runner { get; set; }
+}
+class TaskRunner
+{
+    public void RunTask()
+    {
+    }
+}";
+        var output = RefactoringTools.MoveInstanceMethodInSource(input, "TaskProcessor", "RunTask", "TaskRunner", "Runner", "property");
+        Assert.Equal(expected, output.Trim());
+    }
+
+    [Fact]
     public void MoveStaticMethodInSource_MovesMethod()
     {
         var input = @"class UtilityHelper
