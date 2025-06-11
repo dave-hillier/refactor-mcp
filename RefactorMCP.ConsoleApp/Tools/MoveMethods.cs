@@ -161,6 +161,10 @@ public static partial class RefactoringTools
             var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
             var syntaxRoot = await syntaxTree.GetRootAsync();
 
+            var sourceUsings = syntaxRoot.DescendantNodes()
+                .OfType<UsingDirectiveSyntax>()
+                .ToList();
+
             var method = syntaxRoot.DescendantNodes()
                 .OfType<MethodDeclarationSyntax>()
                 .FirstOrDefault(m => m.Identifier.ValueText == methodName &&
@@ -187,6 +191,19 @@ public static partial class RefactoringTools
             else
             {
                 targetRoot = SyntaxFactory.CompilationUnit();
+            }
+
+            var targetCompilationUnit = (CompilationUnitSyntax)targetRoot;
+            var targetUsingNames = targetCompilationUnit.Usings
+                .Select(u => u.Name.ToString())
+                .ToHashSet();
+            var missingUsings = sourceUsings
+                .Where(u => !targetUsingNames.Contains(u.Name.ToString()))
+                .ToArray();
+            if (missingUsings.Length > 0)
+            {
+                targetCompilationUnit = targetCompilationUnit.AddUsings(missingUsings);
+                targetRoot = targetCompilationUnit;
             }
 
             var targetClassDecl = targetRoot.DescendantNodes()
