@@ -28,7 +28,8 @@ builder.Logging.AddConsole(consoleLogOptions =>
 builder.Services
     .AddMcpServer()
     .WithStdioServerTransport()
-    .WithToolsFromAssembly();
+    .WithToolsFromAssembly()
+    .WithPromptsFromAssembly();
 
 await builder.Build().RunAsync();
 
@@ -62,6 +63,7 @@ static async Task RunCliMode(string[] args)
         ["safe-delete-method"] = TestSafeDeleteMethod,
         ["safe-delete-parameter"] = TestSafeDeleteParameter,
         ["safe-delete-variable"] = TestSafeDeleteVariable,
+        ["analyze-refactoring-opportunities"] = TestAnalyzeRefactoringOpportunities,
         ["list-tools"] = _ => Task.FromResult(ListAvailableTools()),
         ["version"] = _ => Task.FromResult(ShowVersionInfo())
     };
@@ -97,6 +99,7 @@ static void ShowCliHelp()
     foreach (var tool in toolsList)
         Console.WriteLine($"  {tool}");
     Console.WriteLine("  list-tools - List all available refactoring tools");
+    Console.WriteLine("  analyze-refactoring-opportunities <filePath> [solutionPath] - Analyze code for potential refactorings");
 
     Console.WriteLine();
     Console.WriteLine("Examples:");
@@ -105,6 +108,7 @@ static void ShowCliHelp()
     Console.WriteLine("  --cli extract-method ./MyFile.cs \"10:5-15:20\" \"ExtractedMethod\" ./MySolution.sln");
     Console.WriteLine("  --cli introduce-field ./MyFile.cs \"12:10-12:25\" \"_myField\" \"private\"");
     Console.WriteLine("  --cli make-field-readonly ./MyFile.cs 15");
+    Console.WriteLine("  --cli analyze-refactoring-opportunities ./MyFile.cs ./MySolution.sln");
     Console.WriteLine("  --cli version");
     Console.WriteLine();
     Console.WriteLine("Range format: \"startLine:startColumn-endLine:endColumn\" (1-based)");
@@ -278,6 +282,17 @@ static async Task<string> TestSafeDeleteVariable(string[] args)
     return await RefactoringTools.SafeDeleteVariable(filePath, range, solutionPath);
 }
 
+static async Task<string> TestAnalyzeRefactoringOpportunities(string[] args)
+{
+    if (args.Length < 3)
+        return "Error: Missing arguments. Usage: --cli analyze-refactoring-opportunities <filePath> [solutionPath]";
+
+    var filePath = args[2];
+    var solutionPath = args.Length > 3 ? args[3] : null;
+
+    return await RefactoringTools.AnalyzeRefactoringOpportunities(filePath, solutionPath);
+}
+
 static async Task<string> TestConvertToStaticWithParameters(string[] args)
 {
     if (args.Length < 4)
@@ -361,6 +376,7 @@ static async Task<string> TestTransformSetterToInit(string[] args)
 }
 
 [McpServerToolType]
+[McpServerPromptType]
 public static partial class RefactoringTools
 {
 }
