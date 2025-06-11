@@ -7,7 +7,8 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Text;
 
-public static partial class RefactoringTools
+[McpServerToolType]
+public static class IntroduceVariableTool
 {
     public static async Task<string> IntroduceVariable(
         [Description("Absolute path to the solution file (.sln)")] string solutionPath,
@@ -17,8 +18,8 @@ public static partial class RefactoringTools
     {
         try
         {
-            var solution = await GetOrLoadSolution(solutionPath);
-            var document = GetDocumentByPath(solution, filePath);
+            var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
+            var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
             if (document != null)
                 return await IntroduceVariableWithSolution(document, selectionRange, variableName);
 
@@ -35,8 +36,8 @@ public static partial class RefactoringTools
         var sourceText = await document.GetTextAsync();
         var syntaxRoot = await document.GetSyntaxRootAsync();
 
-        if (!TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
-            return ThrowMcpException("Error: Invalid selection range format");
+        if (!RefactoringHelpers.TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
+            return RefactoringHelpers.ThrowMcpException("Error: Invalid selection range format");
 
         var startPosition = sourceText.Lines[startLine - 1].Start + startColumn - 1;
         var endPosition = sourceText.Lines[endLine - 1].Start + endColumn - 1;
@@ -47,7 +48,7 @@ public static partial class RefactoringTools
             .FirstOrDefault(e => span.Contains(e.Span) || e.Span.Contains(span));
 
         if (selectedExpression == null)
-            return ThrowMcpException("Error: Selected code is not a valid expression");
+            return RefactoringHelpers.ThrowMcpException("Error: Selected code is not a valid expression");
 
         // Get the semantic model to determine the type
         var semanticModel = await document.GetSemanticModelAsync();
@@ -90,7 +91,7 @@ public static partial class RefactoringTools
     private static async Task<string> IntroduceVariableSingleFile(string filePath, string selectionRange, string variableName)
     {
         if (!File.Exists(filePath))
-            return ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
+            return RefactoringHelpers.ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
 
         var sourceText = await File.ReadAllTextAsync(filePath);
         var newText = IntroduceVariableInSource(sourceText, selectionRange, variableName);
@@ -105,8 +106,8 @@ public static partial class RefactoringTools
         var syntaxRoot = syntaxTree.GetRoot();
         var textLines = SourceText.From(sourceText).Lines;
 
-        if (!TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
-            return ThrowMcpException("Error: Invalid selection range format");
+        if (!RefactoringHelpers.TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
+            return RefactoringHelpers.ThrowMcpException("Error: Invalid selection range format");
 
         var startPosition = textLines[startLine - 1].Start + startColumn - 1;
         var endPosition = textLines[endLine - 1].Start + endColumn - 1;
@@ -117,7 +118,7 @@ public static partial class RefactoringTools
             .FirstOrDefault(e => span.Contains(e.Span) || e.Span.Contains(span));
 
         if (selectedExpression == null)
-            return ThrowMcpException("Error: Selected code is not a valid expression");
+            return RefactoringHelpers.ThrowMcpException("Error: Selected code is not a valid expression");
 
         var typeName = "var";
 
@@ -139,12 +140,12 @@ public static partial class RefactoringTools
             var newStatements = currentBlock.Statements.Insert(statementIndex, variableDeclaration);
             var newBlock = currentBlock.WithStatements(newStatements);
             replacedRoot = replacedRoot.ReplaceNode(currentBlock, newBlock);
-            var formattedRoot = Formatter.Format(replacedRoot, SharedWorkspace);
+            var formattedRoot = Formatter.Format(replacedRoot, RefactoringHelpers.SharedWorkspace);
             return formattedRoot.ToFullString();
         }
 
         var replaced = syntaxRoot.ReplaceNode(selectedExpression, variableReference);
-        var formatted = Formatter.Format(replaced, SharedWorkspace);
+        var formatted = Formatter.Format(replaced, RefactoringHelpers.SharedWorkspace);
         return formatted.ToFullString();
     }
 

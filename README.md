@@ -437,10 +437,11 @@ The examples use the sample code in [RefactorMCP.Tests/ExampleCode.cs](./Refacto
 
 ### Adding New Refactorings
 
-1. Add method to `RefactoringTools` class with `[McpServerTool]` attribute
-2. Implement using Roslyn SyntaxFactory and SyntaxNode manipulation
-3. Add test command handler in `RunTestMode` switch statement
-4. Update documentation and examples
+1. Create a new static class in `RefactorMCP.ConsoleApp/Tools/` and decorate it with `[McpServerToolType]`
+2. Add your refactoring method to that class with the `[McpServerTool]` attribute
+3. Implement using Roslyn SyntaxFactory and SyntaxNode manipulation
+4. Add a test command handler in `RunTestMode` switch statement
+5. Update documentation and examples
 
 ### Testing
 

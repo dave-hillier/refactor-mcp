@@ -10,11 +10,11 @@ public class MakeFieldReadonlyTests : TestBase
     [Fact]
     public async Task MakeFieldReadonly_FieldWithInitializer_ReturnsSuccess()
     {
-        await RefactoringTools.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath);
         var testFile = Path.Combine(TestOutputPath, "MakeFieldReadonlyTest.cs");
         await TestUtilities.CreateTestFile(testFile, TestUtilities.GetSampleCodeForMakeFieldReadonly());
 
-        var result = await RefactoringTools.MakeFieldReadonly(
+        var result = await MakeFieldReadonlyTool.MakeFieldReadonly(
             SolutionPath,
             testFile,
             "format");
@@ -27,11 +27,11 @@ public class MakeFieldReadonlyTests : TestBase
     [Fact]
     public async Task MakeFieldReadonly_FieldWithoutInitializer_ReturnsSuccess()
     {
-        await RefactoringTools.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath);
         var testFile = Path.Combine(TestOutputPath, "MakeFieldReadonlyNoInitTest.cs");
         await TestUtilities.CreateTestFile(testFile, TestUtilities.GetSampleCodeForMakeFieldReadonlyNoInit());
 
-        var result = await RefactoringTools.MakeFieldReadonly(
+        var result = await MakeFieldReadonlyTool.MakeFieldReadonly(
             SolutionPath,
             testFile,
             "description");
@@ -44,9 +44,9 @@ public class MakeFieldReadonlyTests : TestBase
     [Fact]
     public async Task MakeFieldReadonly_InvalidLine_ReturnsError()
     {
-        await RefactoringTools.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath);
         await Assert.ThrowsAsync<McpException>(async () =>
-            await RefactoringTools.MakeFieldReadonly(
+            await MakeFieldReadonlyTool.MakeFieldReadonly(
                 SolutionPath,
                 ExampleFilePath,
                 "nonexistent"));
