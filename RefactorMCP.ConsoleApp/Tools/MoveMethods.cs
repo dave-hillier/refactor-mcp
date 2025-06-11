@@ -164,6 +164,8 @@ public static partial class RefactoringTools
             updatedMethod = method.WithModifiers(SyntaxFactory.TokenList(mods).Add(SyntaxFactory.Token(SyntaxKind.PublicKeyword)));
         }
 
+        workingRoot = workingRoot.ReplaceNode(originClass, newOriginClass);
+
         var targetPath = targetFilePath ?? filePath;
         var sameFile = targetPath == filePath;
 
@@ -214,14 +216,21 @@ public static partial class RefactoringTools
             targetRoot = targetRoot.ReplaceNode(newTargetClass, replaced);
         }
 
-        var newSourceRoot = workingRoot.ReplaceNode(originClass, newOriginClass);
+        if (sameFile)
+        {
+            var formatted = Formatter.Format(targetRoot, SharedWorkspace);
+            Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
+            await File.WriteAllTextAsync(targetPath, formatted.ToFullString());
+        }
+        else
+        {
+            var formattedSource = Formatter.Format(workingRoot, SharedWorkspace);
+            await File.WriteAllTextAsync(filePath, formattedSource.ToFullString());
 
-        var formattedSource = Formatter.Format(newSourceRoot, SharedWorkspace);
-        await File.WriteAllTextAsync(filePath, formattedSource.ToFullString());
-
-        var formattedTarget = Formatter.Format(targetRoot, SharedWorkspace);
-        Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
-        await File.WriteAllTextAsync(targetPath, formattedTarget.ToFullString());
+            var formattedTarget = Formatter.Format(targetRoot, SharedWorkspace);
+            Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
+            await File.WriteAllTextAsync(targetPath, formattedTarget.ToFullString());
+        }
 
         return $"Successfully moved instance method to {targetClass} in {targetPath}";
     }
