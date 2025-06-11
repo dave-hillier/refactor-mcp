@@ -49,18 +49,16 @@ public static partial class RefactoringTools
         if (!selectedNodes.Any())
             return ThrowMcpException("Error: No valid code selected");
 
-        var statementsToExtract = selectedNodes
-            .OfType<StatementSyntax>()
-            .Where(s => span.IntersectsWith(s.Span))
+        var containingMethod = selectedNodes.First().Ancestors().OfType<MethodDeclarationSyntax>().FirstOrDefault();
+        if (containingMethod == null)
+            return ThrowMcpException("Error: Selected code is not within a method");
+
+        var statementsToExtract = containingMethod.Body!.Statements
+            .Where(s => span.IntersectsWith(s.FullSpan))
             .ToList();
 
         if (!statementsToExtract.Any())
             return ThrowMcpException("Error: Selected code does not contain extractable statements");
-
-        // Find the containing method
-        var containingMethod = selectedNodes.First().Ancestors().OfType<MethodDeclarationSyntax>().FirstOrDefault();
-        if (containingMethod == null)
-            return ThrowMcpException("Error: Selected code is not within a method");
 
         // Create the new method
         var newMethod = SyntaxFactory.MethodDeclaration(
@@ -74,22 +72,19 @@ public static partial class RefactoringTools
             SyntaxFactory.InvocationExpression(
                 SyntaxFactory.IdentifierName(methodName)));
 
-        var newRoot = syntaxRoot;
+        var methodBody = containingMethod.Body!;
+        var updatedBody = methodBody.ReplaceNode(statementsToExtract.First(), methodCall);
         foreach (var statement in statementsToExtract.Skip(1))
-        {
-            newRoot = newRoot?.RemoveNode(statement, SyntaxRemoveOptions.KeepNoTrivia);
-        }
-        if (statementsToExtract.Any() && newRoot != null)
-        {
-            newRoot = newRoot.ReplaceNode(statementsToExtract.First(), methodCall);
-        }
+            updatedBody = updatedBody.RemoveNode(statement, SyntaxRemoveOptions.KeepNoTrivia);
+        var updatedMethod = containingMethod.WithBody(updatedBody);
 
-        // Add the new method to the class
         var containingClass = containingMethod.Ancestors().OfType<ClassDeclarationSyntax>().FirstOrDefault();
+        SyntaxNode newRoot = syntaxRoot;
         if (containingClass != null)
         {
-            var updatedClass = containingClass.AddMembers(newMethod);
-            newRoot = newRoot!.ReplaceNode(containingClass, updatedClass);
+            var classWithUpdatedMethod = containingClass.ReplaceNode(containingMethod, updatedMethod);
+            var updatedClass = classWithUpdatedMethod.AddMembers(newMethod);
+            newRoot = syntaxRoot.ReplaceNode(containingClass, updatedClass);
         }
 
         var formattedRoot = Formatter.Format(newRoot!, document.Project.Solution.Workspace);
@@ -134,18 +129,16 @@ public static partial class RefactoringTools
         if (!selectedNodes.Any())
             return ThrowMcpException("Error: No valid code selected");
 
-        var statementsToExtract = selectedNodes
-            .OfType<StatementSyntax>()
-            .Where(s => span.IntersectsWith(s.Span))
+        var containingMethod = selectedNodes.First().Ancestors().OfType<MethodDeclarationSyntax>().FirstOrDefault();
+        if (containingMethod == null)
+            return ThrowMcpException("Error: Selected code is not within a method");
+
+        var statementsToExtract = containingMethod.Body!.Statements
+            .Where(s => span.IntersectsWith(s.FullSpan))
             .ToList();
 
         if (!statementsToExtract.Any())
             return ThrowMcpException("Error: Selected code does not contain extractable statements");
-
-        // Find the containing method
-        var containingMethod = selectedNodes.First().Ancestors().OfType<MethodDeclarationSyntax>().FirstOrDefault();
-        if (containingMethod == null)
-            return ThrowMcpException("Error: Selected code is not within a method");
 
         // Create the new method
         var newMethod = SyntaxFactory.MethodDeclaration(
@@ -159,29 +152,19 @@ public static partial class RefactoringTools
             SyntaxFactory.InvocationExpression(
                 SyntaxFactory.IdentifierName(methodName)));
 
-        var newRoot = syntaxRoot;
+        var methodBody = containingMethod.Body!;
+        var updatedBody = methodBody.ReplaceNode(statementsToExtract.First(), methodCall);
         foreach (var statement in statementsToExtract.Skip(1))
-        {
-            newRoot = newRoot.RemoveNode(statement, SyntaxRemoveOptions.KeepNoTrivia);
-        }
-        if (statementsToExtract.Any())
-        {
-            newRoot = newRoot.ReplaceNode(statementsToExtract.First(), methodCall);
-        }
+            updatedBody = updatedBody.RemoveNode(statement, SyntaxRemoveOptions.KeepNoTrivia);
+        var updatedMethod = containingMethod.WithBody(updatedBody);
 
-        // Add the new method to the class
         var containingClass = containingMethod.Ancestors().OfType<ClassDeclarationSyntax>().FirstOrDefault();
+        SyntaxNode newRoot = syntaxRoot;
         if (containingClass != null)
         {
-            var currentClass = newRoot.DescendantNodes()
-                .OfType<ClassDeclarationSyntax>()
-                .FirstOrDefault(c => c.Identifier.Text == containingClass.Identifier.Text);
-
-            if (currentClass != null)
-            {
-                var updatedClass = currentClass.AddMembers(newMethod);
-                newRoot = newRoot.ReplaceNode(currentClass, updatedClass);
-            }
+            var classWithUpdatedMethod = containingClass.ReplaceNode(containingMethod, updatedMethod);
+            var updatedClass = classWithUpdatedMethod.AddMembers(newMethod);
+            newRoot = syntaxRoot.ReplaceNode(containingClass, updatedClass);
         }
 
         var formattedRoot = Formatter.Format(newRoot, SharedWorkspace);
