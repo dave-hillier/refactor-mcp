@@ -1,4 +1,5 @@
 using Xunit;
+using ModelContextProtocol;
 
 namespace RefactorMCP.Tests;
 
@@ -26,6 +27,21 @@ public class RoslynTransformationTests
 ";
         var output = RefactoringTools.IntroduceVariableInSource(input, "5:27-5:31", "result");
         Assert.Equal(expected, output);
+    }
+
+    [Fact]
+    public void IntroduceVariableInSource_InvalidRange_ThrowsException()
+    {
+        var input = @"class Calculator
+{
+    void DisplayResult()
+    {
+        Console.WriteLine(1 + 2);
+    }
+}";
+
+        Assert.Throws<McpException>(() =>
+            RefactoringTools.IntroduceVariableInSource(input, "invalid-range", "result"));
     }
 
     [Fact]
@@ -75,6 +91,22 @@ public class RoslynTransformationTests
 ";
         var output = RefactoringTools.MakeFieldReadonlyInSource(input, "formatPattern");
         Assert.Equal(expected, output);
+    }
+
+    [Fact]
+    public void MakeFieldReadonlyInSource_FieldMissing_ThrowsException()
+    {
+        var input = @"class CurrencyFormatter
+{
+    private string formatPattern = ""Currency"";
+
+    public CurrencyFormatter()
+    {
+    }
+}";
+
+        Assert.Throws<McpException>(() =>
+            RefactoringTools.MakeFieldReadonlyInSource(input, "missingField"));
     }
 
     [Fact]
