@@ -444,6 +444,35 @@ public class Logger
     }
 
     [Fact]
+    public void MoveInstanceMethodInSource_CreatesTargetClassWithProperty()
+    {
+        var input = @"class Calculator
+{
+    void Compute()
+    {
+    }
+}";
+        var expected = @"class Calculator
+{
+    private Logger Logger { get; set; }
+
+    void Compute()
+    {
+        Logger.Compute();
+    }
+}
+
+public class Logger
+{
+    public void Compute()
+    {
+    }
+}";
+        var output = RefactoringTools.MoveInstanceMethodInSource(input, "Calculator", "Compute", "Logger", "Logger", "property");
+        Assert.Equal(expected, output.Trim());
+    }
+
+    [Fact]
     public void MoveStaticMethodInSource_MovesMethod()
     {
         var input = @"class UtilityHelper
