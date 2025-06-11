@@ -29,8 +29,22 @@ public static partial class RefactoringTools
         var targetClassDecl = syntaxRoot.DescendantNodes()
             .OfType<ClassDeclarationSyntax>()
             .FirstOrDefault(c => c.Identifier.ValueText == targetClass);
+        SyntaxNode workingRoot = syntaxRoot;
         if (targetClassDecl == null)
-            return $"Error: Target class '{targetClass}' not found";
+        {
+            targetClassDecl = SyntaxFactory.ClassDeclaration(targetClass)
+                .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword));
+
+            if (originClass.Parent is NamespaceDeclarationSyntax ns)
+            {
+                var updatedNs = ns.AddMembers(targetClassDecl);
+                workingRoot = workingRoot.ReplaceNode(ns, updatedNs);
+            }
+            else
+            {
+                workingRoot = ((CompilationUnitSyntax)workingRoot).AddMembers(targetClassDecl);
+            }
+        }
 
         ClassDeclarationSyntax newOriginClass = originClass.RemoveNode(method, SyntaxRemoveOptions.KeepNoTrivia);
 
@@ -66,7 +80,7 @@ public static partial class RefactoringTools
 
         var newTargetClass = targetClassDecl.AddMembers(updatedMethod.WithLeadingTrivia());
 
-        var newRoot = syntaxRoot.ReplaceNode(originClass, newOriginClass).ReplaceNode(targetClassDecl, newTargetClass);
+        var newRoot = workingRoot.ReplaceNode(originClass, newOriginClass).ReplaceNode(targetClassDecl, newTargetClass);
         var formatted = Formatter.Format(newRoot, document.Project.Solution.Workspace);
         var newDocument = document.WithSyntaxRoot(formatted);
         var newText = await newDocument.GetTextAsync();
@@ -100,8 +114,22 @@ public static partial class RefactoringTools
         var targetClassDecl = syntaxRoot.DescendantNodes()
             .OfType<ClassDeclarationSyntax>()
             .FirstOrDefault(c => c.Identifier.ValueText == targetClass);
+        SyntaxNode workingRoot = syntaxRoot;
         if (targetClassDecl == null)
-            return $"Error: Target class '{targetClass}' not found";
+        {
+            targetClassDecl = SyntaxFactory.ClassDeclaration(targetClass)
+                .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword));
+
+            if (originClass.Parent is NamespaceDeclarationSyntax ns)
+            {
+                var updatedNs = ns.AddMembers(targetClassDecl);
+                workingRoot = workingRoot.ReplaceNode(ns, updatedNs);
+            }
+            else
+            {
+                workingRoot = ((CompilationUnitSyntax)workingRoot).AddMembers(targetClassDecl);
+            }
+        }
 
         ClassDeclarationSyntax newOriginClass = originClass.RemoveNode(method, SyntaxRemoveOptions.KeepNoTrivia);
 
@@ -137,7 +165,7 @@ public static partial class RefactoringTools
 
         var newTargetClass = targetClassDecl.AddMembers(updatedMethod.WithLeadingTrivia());
 
-        var newRoot = syntaxRoot.ReplaceNode(originClass, newOriginClass).ReplaceNode(targetClassDecl, newTargetClass);
+        var newRoot = workingRoot.ReplaceNode(originClass, newOriginClass).ReplaceNode(targetClassDecl, newTargetClass);
         var formatted = Formatter.Format(newRoot, SharedWorkspace);
         await File.WriteAllTextAsync(filePath, formatted.ToFullString());
 
