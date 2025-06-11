@@ -154,8 +154,16 @@ public static partial class RefactoringTools
             return ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
 
         var sourceText = await File.ReadAllTextAsync(filePath);
+        var newText = SafeDeleteFieldInSource(sourceText, fieldName);
+        await File.WriteAllTextAsync(filePath, newText);
+
+        return $"Successfully deleted field '{fieldName}' in {filePath} (single file mode)";
+    }
+
+    public static string SafeDeleteFieldInSource(string sourceText, string fieldName)
+    {
         var tree = CSharpSyntaxTree.ParseText(sourceText);
-        var root = await tree.GetRootAsync();
+        var root = tree.GetRoot();
         var field = root.DescendantNodes()
             .OfType<FieldDeclarationSyntax>()
             .FirstOrDefault(f => f.Declaration.Variables.Any(v => v.Identifier.ValueText == fieldName));
@@ -176,8 +184,7 @@ public static partial class RefactoringTools
         }
 
         var formatted = Formatter.Format(newRoot, SharedWorkspace);
-        await File.WriteAllTextAsync(filePath, formatted.ToFullString());
-        return $"Successfully deleted field '{fieldName}' in {filePath} (single file mode)";
+        return formatted.ToFullString();
     }
 
     private static async Task<string> SafeDeleteMethodWithSolution(Document document, string methodName)
@@ -208,8 +215,16 @@ public static partial class RefactoringTools
             return ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
 
         var sourceText = await File.ReadAllTextAsync(filePath);
+        var newText = SafeDeleteMethodInSource(sourceText, methodName);
+        await File.WriteAllTextAsync(filePath, newText);
+
+        return $"Successfully deleted method '{methodName}' in {filePath} (single file mode)";
+    }
+
+    public static string SafeDeleteMethodInSource(string sourceText, string methodName)
+    {
         var tree = CSharpSyntaxTree.ParseText(sourceText);
-        var root = await tree.GetRootAsync();
+        var root = tree.GetRoot();
         var method = root.DescendantNodes().OfType<MethodDeclarationSyntax>().FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
             return ThrowMcpException($"Error: Method '{methodName}' not found");
@@ -221,8 +236,7 @@ public static partial class RefactoringTools
 
         var newRoot = root.RemoveNode(method, SyntaxRemoveOptions.KeepNoTrivia);
         var formatted = Formatter.Format(newRoot, SharedWorkspace);
-        await File.WriteAllTextAsync(filePath, formatted.ToFullString());
-        return $"Successfully deleted method '{methodName}' in {filePath} (single file mode)";
+        return formatted.ToFullString();
     }
 
     private static async Task<string> SafeDeleteParameterWithSolution(Document document, string methodName, string parameterName)
@@ -277,8 +291,16 @@ public static partial class RefactoringTools
             return ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
 
         var sourceText = await File.ReadAllTextAsync(filePath);
+        var newText = SafeDeleteParameterInSource(sourceText, methodName, parameterName);
+        await File.WriteAllTextAsync(filePath, newText);
+
+        return $"Successfully deleted parameter '{parameterName}' from method '{methodName}' in {filePath} (single file mode)";
+    }
+
+    public static string SafeDeleteParameterInSource(string sourceText, string methodName, string parameterName)
+    {
         var tree = CSharpSyntaxTree.ParseText(sourceText);
-        var root = await tree.GetRootAsync();
+        var root = tree.GetRoot();
         var method = root.DescendantNodes().OfType<MethodDeclarationSyntax>().FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
             return ThrowMcpException($"Error: Method '{methodName}' not found");
@@ -304,8 +326,7 @@ public static partial class RefactoringTools
         var newMethod = method.WithParameterList(method.ParameterList.WithParameters(method.ParameterList.Parameters.Remove(parameter)));
         root = root.ReplaceNode(method, newMethod);
         var formatted = Formatter.Format(root, SharedWorkspace);
-        await File.WriteAllTextAsync(filePath, formatted.ToFullString());
-        return $"Successfully deleted parameter '{parameterName}' from method '{methodName}' in {filePath} (single file mode)";
+        return formatted.ToFullString();
     }
 
     private static async Task<string> SafeDeleteVariableWithSolution(Document document, string selectionRange)
@@ -352,8 +373,16 @@ public static partial class RefactoringTools
             return ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
 
         var sourceText = await File.ReadAllTextAsync(filePath);
+        var newText = SafeDeleteVariableInSource(sourceText, selectionRange);
+        await File.WriteAllTextAsync(filePath, newText);
+
+        return $"Successfully deleted variable in {filePath} (single file mode)";
+    }
+
+    public static string SafeDeleteVariableInSource(string sourceText, string selectionRange)
+    {
         var tree = CSharpSyntaxTree.ParseText(sourceText);
-        var root = await tree.GetRootAsync();
+        var root = tree.GetRoot();
         var lines = SourceText.From(sourceText).Lines;
         if (!TryParseRange(selectionRange, out var sl, out var sc, out var el, out var ec))
             return ThrowMcpException("Error: Invalid selection range format");
@@ -381,7 +410,6 @@ public static partial class RefactoringTools
         }
 
         var formatted = Formatter.Format(newRoot, SharedWorkspace);
-        await File.WriteAllTextAsync(filePath, formatted.ToFullString());
-        return $"Successfully deleted variable '{name}' in {filePath} (single file mode)";
+        return formatted.ToFullString();
     }
 }

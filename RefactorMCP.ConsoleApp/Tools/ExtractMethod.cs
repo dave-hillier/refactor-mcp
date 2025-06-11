@@ -116,8 +116,16 @@ public static partial class RefactoringTools
             return ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
 
         var sourceText = await File.ReadAllTextAsync(filePath);
+        var newText = ExtractMethodInSource(sourceText, selectionRange, methodName);
+        await File.WriteAllTextAsync(filePath, newText);
+
+        return $"Successfully extracted method '{methodName}' from {selectionRange} in {filePath} (single file mode)";
+    }
+
+    public static string ExtractMethodInSource(string sourceText, string selectionRange, string methodName)
+    {
         var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
-        var syntaxRoot = await syntaxTree.GetRootAsync();
+        var syntaxRoot = syntaxTree.GetRoot();
         var textLines = SourceText.From(sourceText).Lines;
 
         if (!TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
@@ -184,11 +192,8 @@ public static partial class RefactoringTools
             }
         }
 
-        // Format and write back to file
         var formattedRoot = Formatter.Format(newRoot, SharedWorkspace);
-        await File.WriteAllTextAsync(filePath, formattedRoot.ToFullString());
-
-        return $"Successfully extracted method '{methodName}' from {selectionRange} in {filePath} (single file mode)";
+        return formattedRoot.ToFullString();
     }
 
 }
