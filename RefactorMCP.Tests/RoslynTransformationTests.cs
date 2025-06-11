@@ -105,6 +105,10 @@ public class RoslynTransformationTests
 }";
         var expected = @"class StringProcessor
 {
+    void FormatText()
+    {
+        StringProcessorExtensions.FormatText(this);
+    }
 }
 
 public static class StringProcessorExtensions
