@@ -101,8 +101,16 @@ public static partial class RefactoringTools
             return ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
 
         var sourceText = await File.ReadAllTextAsync(filePath);
+        var newText = IntroduceVariableInSource(sourceText, selectionRange, variableName);
+        await File.WriteAllTextAsync(filePath, newText);
+
+        return $"Successfully introduced variable '{variableName}' from {selectionRange} in {filePath} (single file mode)";
+    }
+
+    public static string IntroduceVariableInSource(string sourceText, string selectionRange, string variableName)
+    {
         var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
-        var syntaxRoot = await syntaxTree.GetRootAsync();
+        var syntaxRoot = syntaxTree.GetRoot();
         var textLines = SourceText.From(sourceText).Lines;
 
         if (!TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
@@ -119,39 +127,33 @@ public static partial class RefactoringTools
         if (selectedExpression == null)
             return ThrowMcpException("Error: Selected code is not a valid expression");
 
-        // In single file mode, use 'var' for type since we don't have semantic analysis
         var typeName = "var";
 
-        // Create the variable declaration
         var variableDeclaration = SyntaxFactory.LocalDeclarationStatement(
             SyntaxFactory.VariableDeclaration(SyntaxFactory.IdentifierName(typeName))
-            .WithVariables(SyntaxFactory.SingletonSeparatedList(
-                SyntaxFactory.VariableDeclarator(variableName)
-                .WithInitializer(SyntaxFactory.EqualsValueClause(selectedExpression)))));
+                .WithVariables(SyntaxFactory.SingletonSeparatedList(
+                    SyntaxFactory.VariableDeclarator(variableName)
+                        .WithInitializer(SyntaxFactory.EqualsValueClause(selectedExpression)))));
 
-        // Replace the selected expression with the variable reference
         var variableReference = SyntaxFactory.IdentifierName(variableName);
-        var newRoot = syntaxRoot.ReplaceNode(selectedExpression, variableReference);
-
-        // Find the containing statement to insert the variable declaration before it
         var containingStatement = selectedExpression.Ancestors().OfType<StatementSyntax>().FirstOrDefault();
-        if (containingStatement != null)
+        if (containingStatement != null && containingStatement.Parent is BlockSyntax containingBlock)
         {
-            var containingBlock = containingStatement.Parent as BlockSyntax;
-            if (containingBlock != null)
-            {
-                var statementIndex = containingBlock.Statements.IndexOf(containingStatement);
-                var newStatements = containingBlock.Statements.Insert(statementIndex, variableDeclaration);
-                var newBlock = containingBlock.WithStatements(newStatements);
-                newRoot = newRoot.ReplaceNode(containingBlock, newBlock);
-            }
+            var trackedRoot = syntaxRoot.TrackNodes(selectedExpression, containingBlock, containingStatement);
+            var replacedRoot = trackedRoot.ReplaceNode(trackedRoot.GetCurrentNode(selectedExpression)!, variableReference);
+            var currentBlock = replacedRoot.GetCurrentNode(containingBlock)!;
+            var currentStatement = replacedRoot.GetCurrentNode(containingStatement)!;
+            var statementIndex = currentBlock.Statements.IndexOf(currentStatement);
+            var newStatements = currentBlock.Statements.Insert(statementIndex, variableDeclaration);
+            var newBlock = currentBlock.WithStatements(newStatements);
+            replacedRoot = replacedRoot.ReplaceNode(currentBlock, newBlock);
+            var formattedRoot = Formatter.Format(replacedRoot, SharedWorkspace);
+            return formattedRoot.ToFullString();
         }
 
-        // Format and write back to file
-        var formattedRoot = Formatter.Format(newRoot, SharedWorkspace);
-        await File.WriteAllTextAsync(filePath, formattedRoot.ToFullString());
-
-        return $"Successfully introduced variable '{variableName}' from {selectionRange} in {filePath} (single file mode)";
+        var replaced = syntaxRoot.ReplaceNode(selectedExpression, variableReference);
+        var formatted = Formatter.Format(replaced, SharedWorkspace);
+        return formatted.ToFullString();
     }
 
 }

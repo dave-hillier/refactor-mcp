@@ -124,8 +124,16 @@ public static partial class RefactoringTools
             return ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
 
         var sourceText = await File.ReadAllTextAsync(filePath);
+        var newText = ConvertToExtensionMethodInSource(sourceText, methodName, extensionClass);
+        await File.WriteAllTextAsync(filePath, newText);
+
+        return $"Successfully converted method '{methodName}' to extension method in {filePath} (single file mode)";
+    }
+
+    public static string ConvertToExtensionMethodInSource(string sourceText, string methodName, string? extensionClass)
+    {
         var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
-        var syntaxRoot = await syntaxTree.GetRootAsync();
+        var syntaxRoot = syntaxTree.GetRoot();
 
         var method = syntaxRoot.DescendantNodes()
             .OfType<MethodDeclarationSyntax>()
@@ -203,8 +211,6 @@ public static partial class RefactoringTools
         }
 
         var formatted = Formatter.Format(newRoot, SharedWorkspace);
-        await File.WriteAllTextAsync(filePath, formatted.ToFullString());
-
-        return $"Successfully converted method '{methodName}' to extension method in {filePath} (single file mode)";
+        return formatted.ToFullString();
     }
 }

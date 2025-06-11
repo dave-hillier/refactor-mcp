@@ -10,6 +10,121 @@ using Microsoft.CodeAnalysis.Text;
 
 public static partial class RefactoringTools
 {
+    public static string MoveStaticMethodInSource(string sourceText, string methodName, string targetClass)
+    {
+        var tree = CSharpSyntaxTree.ParseText(sourceText);
+        var root = tree.GetRoot();
+
+        var method = root.DescendantNodes()
+            .OfType<MethodDeclarationSyntax>()
+            .FirstOrDefault(m => m.Identifier.ValueText == methodName &&
+                                 m.Modifiers.Any(SyntaxKind.StaticKeyword));
+        if (method == null)
+            return ThrowMcpException($"Error: Static method '{methodName}' not found");
+
+        var withoutMethod = root.RemoveNode(method, SyntaxRemoveOptions.KeepNoTrivia);
+        var targetClassDecl = withoutMethod.DescendantNodes()
+            .OfType<ClassDeclarationSyntax>()
+            .FirstOrDefault(c => c.Identifier.ValueText == targetClass);
+
+        SyntaxNode newRoot;
+        if (targetClassDecl == null)
+        {
+            var newClass = SyntaxFactory.ClassDeclaration(targetClass)
+                .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
+                .AddMembers(method.WithLeadingTrivia());
+            newRoot = ((CompilationUnitSyntax)withoutMethod).AddMembers(newClass);
+        }
+        else
+        {
+            var updatedClass = targetClassDecl.AddMembers(method.WithLeadingTrivia());
+            newRoot = withoutMethod.ReplaceNode(targetClassDecl, updatedClass);
+        }
+
+        var formatted = Formatter.Format(newRoot, SharedWorkspace);
+        return formatted.ToFullString();
+    }
+
+    public static string MoveInstanceMethodInSource(string sourceText, string sourceClass, string methodName, string targetClass, string accessMemberName, string accessMemberType)
+    {
+        var tree = CSharpSyntaxTree.ParseText(sourceText);
+        var root = tree.GetRoot();
+
+        var originClass = root.DescendantNodes()
+            .OfType<ClassDeclarationSyntax>()
+            .FirstOrDefault(c => c.Identifier.ValueText == sourceClass);
+        if (originClass == null)
+            return ThrowMcpException($"Error: Source class '{sourceClass}' not found");
+
+        var method = originClass.Members
+            .OfType<MethodDeclarationSyntax>()
+            .FirstOrDefault(m => m.Identifier.ValueText == methodName);
+        if (method == null)
+            return ThrowMcpException($"Error: No method named '{methodName}' found");
+
+        var withoutMethod = root.RemoveNode(method, SyntaxRemoveOptions.KeepNoTrivia);
+
+        var currentOriginClass = withoutMethod.DescendantNodes()
+            .OfType<ClassDeclarationSyntax>()
+            .First(c => c.Identifier.ValueText == sourceClass);
+
+        var newOriginClass = currentOriginClass;
+        if (accessMemberType == "field")
+        {
+            var field = SyntaxFactory.FieldDeclaration(
+                    SyntaxFactory.VariableDeclaration(
+                        SyntaxFactory.ParseTypeName(targetClass),
+                        SyntaxFactory.SeparatedList(new[]
+                        {
+                            SyntaxFactory.VariableDeclarator(accessMemberName)
+                                .WithInitializer(SyntaxFactory.EqualsValueClause(
+                                    SyntaxFactory.ObjectCreationExpression(SyntaxFactory.ParseTypeName(targetClass))
+                                        .WithArgumentList(SyntaxFactory.ArgumentList())))
+                        }))
+                )
+                .AddModifiers(SyntaxFactory.Token(SyntaxKind.PrivateKeyword));
+            newOriginClass = newOriginClass.AddMembers(field);
+        }
+        else if (accessMemberType == "property")
+        {
+            var prop = SyntaxFactory.PropertyDeclaration(SyntaxFactory.ParseTypeName(targetClass), accessMemberName)
+                .AddModifiers(SyntaxFactory.Token(SyntaxKind.PrivateKeyword))
+                .AddAccessorListAccessors(
+                    SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
+                    SyntaxFactory.AccessorDeclaration(SyntaxKind.SetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)));
+            newOriginClass = newOriginClass.AddMembers(prop);
+        }
+
+        var updatedMethod = method;
+        if (!method.Modifiers.Any(m => m.IsKind(SyntaxKind.PublicKeyword)))
+        {
+            var mods = method.Modifiers.Where(m => !m.IsKind(SyntaxKind.PrivateKeyword) && !m.IsKind(SyntaxKind.ProtectedKeyword) && !m.IsKind(SyntaxKind.InternalKeyword));
+            updatedMethod = method.WithModifiers(SyntaxFactory.TokenList(mods).Add(SyntaxFactory.Token(SyntaxKind.PublicKeyword)));
+        }
+
+        var withOriginReplaced = withoutMethod.ReplaceNode(currentOriginClass, newOriginClass);
+
+        var targetClassDecl = withOriginReplaced.DescendantNodes()
+            .OfType<ClassDeclarationSyntax>()
+            .FirstOrDefault(c => c.Identifier.ValueText == targetClass);
+
+        SyntaxNode newRoot;
+        if (targetClassDecl == null)
+        {
+            var newClass = SyntaxFactory.ClassDeclaration(targetClass)
+                .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
+                .AddMembers(updatedMethod.WithLeadingTrivia());
+            newRoot = ((CompilationUnitSyntax)withOriginReplaced).AddMembers(newClass);
+        }
+        else
+        {
+            var replaced = targetClassDecl.AddMembers(updatedMethod.WithLeadingTrivia());
+            newRoot = withOriginReplaced.ReplaceNode(targetClassDecl, replaced);
+        }
+
+        var formatted = Formatter.Format(newRoot, SharedWorkspace);
+        return formatted.ToFullString();
+    }
 
     private static async Task<string> MoveInstanceMethodWithSolution(Document document, string sourceClass, string methodName, string targetClass, string accessMemberName, string accessMemberType)
     {
@@ -96,7 +211,17 @@ public static partial class RefactoringTools
         if (!File.Exists(filePath))
             return ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
 
+        var targetPath = targetFilePath ?? filePath;
+        var sameFile = targetPath == filePath;
+
         var sourceText = await File.ReadAllTextAsync(filePath);
+        if (sameFile)
+        {
+            var updated = MoveInstanceMethodInSource(sourceText, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
+            await File.WriteAllTextAsync(targetPath, updated);
+            return $"Successfully moved instance method to {targetClass} in {targetPath}";
+        }
+
         var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
         var syntaxRoot = await syntaxTree.GetRootAsync();
 
@@ -180,9 +305,6 @@ public static partial class RefactoringTools
 
         workingRoot = workingRoot.ReplaceNode(currentOriginClass, newOriginClass);
 
-        var targetPath = targetFilePath ?? filePath;
-        var sameFile = targetPath == filePath;
-
         var sourceCompilationUnit = (CompilationUnitSyntax)syntaxRoot;
         var sourceUsings = sourceCompilationUnit.Usings.ToList();
 
@@ -263,6 +385,16 @@ public static partial class RefactoringTools
                 return ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
 
             var sourceText = await File.ReadAllTextAsync(filePath);
+            var targetPath = targetFilePath ?? Path.Combine(Path.GetDirectoryName(filePath)!, $"{targetClass}.cs");
+            var sameFile = targetPath == filePath;
+
+            if (sameFile)
+            {
+                var updated = MoveStaticMethodInSource(sourceText, methodName, targetClass);
+                await File.WriteAllTextAsync(targetPath, updated);
+                return $"Successfully moved static method '{methodName}' to {targetClass} in {targetPath}";
+            }
+
             var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
             var syntaxRoot = await syntaxTree.GetRootAsync();
 
@@ -276,9 +408,6 @@ public static partial class RefactoringTools
                                     m.Modifiers.Any(SyntaxKind.StaticKeyword));
             if (method == null)
                 return ThrowMcpException($"Error: Static method '{methodName}' not found");
-
-            var targetPath = targetFilePath ?? Path.Combine(Path.GetDirectoryName(filePath)!, $"{targetClass}.cs");
-            var sameFile = targetPath == filePath;
 
             // Remove the original method
             var newSourceRoot = syntaxRoot.RemoveNode(method, SyntaxRemoveOptions.KeepNoTrivia);

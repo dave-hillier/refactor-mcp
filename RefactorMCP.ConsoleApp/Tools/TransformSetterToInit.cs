@@ -71,8 +71,16 @@ public static partial class RefactoringTools
             return ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
 
         var sourceText = await File.ReadAllTextAsync(filePath);
+        var newText = TransformSetterToInitInSource(sourceText, propertyName);
+        await File.WriteAllTextAsync(filePath, newText);
+
+        return $"Successfully converted setter to init for '{propertyName}' in {filePath} (single file mode)";
+    }
+
+    public static string TransformSetterToInitInSource(string sourceText, string propertyName)
+    {
         var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
-        var syntaxRoot = await syntaxTree.GetRootAsync();
+        var syntaxRoot = syntaxTree.GetRoot();
 
         var property = syntaxRoot.DescendantNodes()
             .OfType<PropertyDeclarationSyntax>()
@@ -90,8 +98,6 @@ public static partial class RefactoringTools
 
         var newRoot = syntaxRoot.ReplaceNode(property, newProperty);
         var formatted = Formatter.Format(newRoot, SharedWorkspace);
-        await File.WriteAllTextAsync(filePath, formatted.ToFullString());
-
-        return $"Successfully converted setter to init for '{propertyName}' in {filePath} (single file mode)";
+        return formatted.ToFullString();
     }
 }

@@ -123,8 +123,16 @@ public static partial class RefactoringTools
             return ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
 
         var sourceText = await File.ReadAllTextAsync(filePath);
+        var newText = ConvertToStaticWithParametersInSource(sourceText, methodName);
+        await File.WriteAllTextAsync(filePath, newText);
+
+        return $"Successfully converted method '{methodName}' to static with parameters in {filePath} (single file mode)";
+    }
+
+    public static string ConvertToStaticWithParametersInSource(string sourceText, string methodName)
+    {
         var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
-        var syntaxRoot = await syntaxTree.GetRootAsync();
+        var syntaxRoot = syntaxTree.GetRoot();
 
         var method = syntaxRoot.DescendantNodes()
             .OfType<MethodDeclarationSyntax>()
@@ -187,8 +195,6 @@ public static partial class RefactoringTools
 
         var newRoot = syntaxRoot.ReplaceNode(method, updatedMethod);
         var formattedRoot = Formatter.Format(newRoot, SharedWorkspace);
-        await File.WriteAllTextAsync(filePath, formattedRoot.ToFullString());
-
-        return $"Successfully converted method '{methodName}' to static with parameters in {filePath} (single file mode)";
+        return formattedRoot.ToFullString();
     }
 }
