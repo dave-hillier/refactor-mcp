@@ -334,7 +334,7 @@ static async Task<string> TestMoveStaticMethod(string[] args)
 static async Task<string> TestMoveInstanceMethod(string[] args)
 {
     if (args.Length < 7)
-        return "Error: Missing arguments. Usage: --cli move-instance-method <filePath> <sourceClass> <methodName> <targetClass> <accessMember> [memberType] [solutionPath]";
+        return "Error: Missing arguments. Usage: --cli move-instance-method <filePath> <sourceClass> <methodName> <targetClass> <accessMember> [memberType] [targetFile] [solutionPath]";
 
     var filePath = args[2];
     var sourceClass = args[3];
@@ -342,9 +342,10 @@ static async Task<string> TestMoveInstanceMethod(string[] args)
     var targetClass = args[5];
     var accessMember = args[6];
     var memberType = args.Length > 7 ? args[7] : "field";
-    var solutionPath = args.Length > 8 ? args[8] : null;
+    var targetFile = args.Length > 8 ? args[8] : null;
+    var solutionPath = args.Length > 9 ? args[9] : null;
 
-    return await RefactoringTools.MoveInstanceMethod(filePath, sourceClass, methodName, targetClass, accessMember, memberType, solutionPath);
+    return await RefactoringTools.MoveInstanceMethod(filePath, sourceClass, methodName, targetClass, accessMember, memberType, targetFile, solutionPath);
 }
 
 static async Task<string> TestTransformSetterToInit(string[] args)

@@ -116,13 +116,14 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli move-static-method \
 ### Move Instance Method
 ```bash
 dotnet run --project RefactorMCP.ConsoleApp -- --cli move-instance-method \
-  "./RefactorMCP.sln" \
   "./path/to/file.cs" \
   "SourceClass" \
   "MethodName" \
   "TargetClass" \
   "memberName" \
-  "field"
+  "field" \
+  "./optional/target.cs" \
+  "./RefactorMCP.sln"
 ```
 
 ### Convert To Extension Method

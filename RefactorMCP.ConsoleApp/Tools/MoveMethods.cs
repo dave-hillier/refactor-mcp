@@ -10,73 +10,14 @@ using Microsoft.CodeAnalysis.Text;
 public static partial class RefactoringTools
 {
 
-    private static async Task<string> MoveInstanceMethodWithSolution(Document document, string sourceClass, string methodName, string targetClass, string accessMemberName, string accessMemberType)
+    private static async Task<string> MoveInstanceMethodWithSolution(Document document, string sourceClass, string methodName, string targetClass, string accessMemberName, string accessMemberType, string? targetFilePath)
     {
-        var sourceText = await document.GetTextAsync();
-        var syntaxRoot = await document.GetSyntaxRootAsync();
-        var originClass = syntaxRoot!.DescendantNodes()
-            .OfType<ClassDeclarationSyntax>()
-            .FirstOrDefault(c => c.Identifier.ValueText == sourceClass);
-        if (originClass == null)
-            return $"Error: Source class '{sourceClass}' not found";
-
-        var method = originClass.Members
-            .OfType<MethodDeclarationSyntax>()
-            .FirstOrDefault(m => m.Identifier.ValueText == methodName);
-        if (method == null)
-            return $"Error: No method named '{methodName}' found";
-
-        var targetClassDecl = syntaxRoot.DescendantNodes()
-            .OfType<ClassDeclarationSyntax>()
-            .FirstOrDefault(c => c.Identifier.ValueText == targetClass);
-        if (targetClassDecl == null)
-            return $"Error: Target class '{targetClass}' not found";
-
-        ClassDeclarationSyntax newOriginClass = originClass.RemoveNode(method, SyntaxRemoveOptions.KeepNoTrivia);
-
-        if (accessMemberType == "field")
-        {
-            var field = SyntaxFactory.FieldDeclaration(
-                    SyntaxFactory.VariableDeclaration(
-                        SyntaxFactory.ParseTypeName(targetClass),
-                        SyntaxFactory.SeparatedList(new[] { SyntaxFactory.VariableDeclarator(accessMemberName)
-                            .WithInitializer(SyntaxFactory.EqualsValueClause(
-                                SyntaxFactory.ObjectCreationExpression(SyntaxFactory.ParseTypeName(targetClass))
-                                    .WithArgumentList(SyntaxFactory.ArgumentList()))) }))
-                ).AddModifiers(SyntaxFactory.Token(SyntaxKind.PrivateKeyword));
-
-            newOriginClass = newOriginClass.AddMembers(field);
-        }
-        else if (accessMemberType == "property")
-        {
-            var prop = SyntaxFactory.PropertyDeclaration(SyntaxFactory.ParseTypeName(targetClass), accessMemberName)
-                .AddModifiers(SyntaxFactory.Token(SyntaxKind.PrivateKeyword))
-                .AddAccessorListAccessors(
-                    SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
-                    SyntaxFactory.AccessorDeclaration(SyntaxKind.SetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)));
-            newOriginClass = newOriginClass.AddMembers(prop);
-        }
-
-        var updatedMethod = method;
-        if (!method.Modifiers.Any(m => m.IsKind(SyntaxKind.PublicKeyword)))
-        {
-            var mods = method.Modifiers.Where(m => !m.IsKind(SyntaxKind.PrivateKeyword) && !m.IsKind(SyntaxKind.ProtectedKeyword) && !m.IsKind(SyntaxKind.InternalKeyword));
-            updatedMethod = method.WithModifiers(SyntaxFactory.TokenList(mods).Add(SyntaxFactory.Token(SyntaxKind.PublicKeyword)));
-        }
-
-        var newTargetClass = targetClassDecl.AddMembers(updatedMethod.WithLeadingTrivia());
-
-        var newRoot = syntaxRoot.ReplaceNode(originClass, newOriginClass).ReplaceNode(targetClassDecl, newTargetClass);
-        var formatted = Formatter.Format(newRoot, document.Project.Solution.Workspace);
-        var newDocument = document.WithSyntaxRoot(formatted);
-        var newText = await newDocument.GetTextAsync();
-        await File.WriteAllTextAsync(document.FilePath!, newText.ToString());
-
-        return $"Successfully moved instance method to {targetClass} in {document.FilePath}";
+        // Delegate to the single file implementation using the document path.
+        return await MoveInstanceMethodSingleFile(document.FilePath!, sourceClass, methodName, targetClass, accessMemberName, accessMemberType, targetFilePath);
     }
 
 
-    private static async Task<string> MoveInstanceMethodSingleFile(string filePath, string sourceClass, string methodName, string targetClass, string accessMemberName, string accessMemberType)
+    private static async Task<string> MoveInstanceMethodSingleFile(string filePath, string sourceClass, string methodName, string targetClass, string accessMemberName, string accessMemberType, string? targetFilePath)
     {
         if (!File.Exists(filePath))
             return $"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})";
@@ -97,11 +38,31 @@ public static partial class RefactoringTools
         if (method == null)
             return $"Error: No method named '{methodName}' found";
 
-        var targetClassDecl = syntaxRoot.DescendantNodes()
-            .OfType<ClassDeclarationSyntax>()
-            .FirstOrDefault(c => c.Identifier.ValueText == targetClass);
-        if (targetClassDecl == null)
-            return $"Error: Target class '{targetClass}' not found";
+        var targetPath = targetFilePath ?? Path.Combine(Path.GetDirectoryName(filePath)!, $"{targetClass}.cs");
+        var sameFile = Path.GetFullPath(targetPath) == Path.GetFullPath(filePath);
+
+        ClassDeclarationSyntax? targetClassDecl = null;
+        SyntaxNode targetRoot = syntaxRoot;
+        if (sameFile)
+        {
+            targetClassDecl = syntaxRoot.DescendantNodes()
+                .OfType<ClassDeclarationSyntax>()
+                .FirstOrDefault(c => c.Identifier.ValueText == targetClass);
+            if (targetClassDecl == null)
+                return $"Error: Target class '{targetClass}' not found";
+        }
+        else if (File.Exists(targetPath))
+        {
+            var targetText = await File.ReadAllTextAsync(targetPath);
+            targetRoot = await CSharpSyntaxTree.ParseText(targetText).GetRootAsync();
+            targetClassDecl = targetRoot.DescendantNodes()
+                .OfType<ClassDeclarationSyntax>()
+                .FirstOrDefault(c => c.Identifier.ValueText == targetClass);
+        }
+        else
+        {
+            targetRoot = SyntaxFactory.CompilationUnit();
+        }
 
         ClassDeclarationSyntax newOriginClass = originClass.RemoveNode(method, SyntaxRemoveOptions.KeepNoTrivia);
 
@@ -135,13 +96,46 @@ public static partial class RefactoringTools
             updatedMethod = method.WithModifiers(SyntaxFactory.TokenList(mods).Add(SyntaxFactory.Token(SyntaxKind.PublicKeyword)));
         }
 
-        var newTargetClass = targetClassDecl.AddMembers(updatedMethod.WithLeadingTrivia());
+        CompilationUnitSyntax targetCompilation = (CompilationUnitSyntax)targetRoot;
+        if (!sameFile)
+        {
+            var sourceCompilation = (CompilationUnitSyntax)syntaxRoot;
+            var usingsToAdd = sourceCompilation.Usings
+                .Where(u => !targetCompilation.Usings.Any(t => t.Name.ToString() == u.Name.ToString()));
+            targetCompilation = targetCompilation.AddUsings(usingsToAdd.ToArray());
+        }
 
-        var newRoot = syntaxRoot.ReplaceNode(originClass, newOriginClass).ReplaceNode(targetClassDecl, newTargetClass);
-        var formatted = Formatter.Format(newRoot, SharedWorkspace);
-        await File.WriteAllTextAsync(filePath, formatted.ToFullString());
+        if (targetClassDecl == null)
+        {
+            var newClass = SyntaxFactory.ClassDeclaration(targetClass)
+                .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
+                .AddMembers(updatedMethod.WithLeadingTrivia());
+            targetCompilation = targetCompilation.AddMembers(newClass);
+        }
+        else
+        {
+            var newTargetClass = targetClassDecl.AddMembers(updatedMethod.WithLeadingTrivia());
+            targetCompilation = targetCompilation.ReplaceNode(targetClassDecl, newTargetClass);
+        }
 
-        return $"Successfully moved instance method to {targetClass} in {filePath} (single file mode)";
+        var formattedTarget = Formatter.Format(targetCompilation, SharedWorkspace);
+
+        if (sameFile)
+        {
+            var newRoot = formattedTarget;
+            await File.WriteAllTextAsync(filePath, newRoot.ToFullString());
+        }
+        else
+        {
+            var newSourceRoot = syntaxRoot.ReplaceNode(originClass, newOriginClass);
+            var formattedSource = Formatter.Format(newSourceRoot, SharedWorkspace);
+            await File.WriteAllTextAsync(filePath, formattedSource.ToFullString());
+
+            Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
+            await File.WriteAllTextAsync(targetPath, formattedTarget.ToFullString());
+        }
+
+        return $"Successfully moved instance method to {targetClass} in {targetPath}";
     }
 
     [McpServerTool, Description("Move a static method to another class (preferred for large C# file refactoring)")]
@@ -233,6 +227,7 @@ public static partial class RefactoringTools
         [Description("Name of the target class")] string targetClass,
         [Description("Name for the access member")] string accessMemberName,
         [Description("Type of access member (field, property, variable)")] string accessMemberType = "field",
+        [Description("Path to the target file (optional, will create if doesn't exist)")] string? targetFilePath = null,
         [Description("Path to the solution file (.sln)")] string? solutionPath = null)
     {
         try
@@ -242,13 +237,13 @@ public static partial class RefactoringTools
                 var solution = await GetOrLoadSolution(solutionPath);
                 var document = GetDocumentByPath(solution, filePath);
                 if (document != null)
-                    return await MoveInstanceMethodWithSolution(document, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
+                    return await MoveInstanceMethodWithSolution(document, sourceClass, methodName, targetClass, accessMemberName, accessMemberType, targetFilePath);
 
                 // Fallback to single file mode when file isn't part of the solution
-                return await MoveInstanceMethodSingleFile(filePath, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
+                return await MoveInstanceMethodSingleFile(filePath, sourceClass, methodName, targetClass, accessMemberName, accessMemberType, targetFilePath);
             }
 
-            return await MoveInstanceMethodSingleFile(filePath, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
+            return await MoveInstanceMethodSingleFile(filePath, sourceClass, methodName, targetClass, accessMemberName, accessMemberType, targetFilePath);
         }
         catch (Exception ex)
         {

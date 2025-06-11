@@ -394,12 +394,39 @@ public class RefactoringToolsTests : IDisposable
             "Logger",
             "_logger",
             "field",
+            null,
             SolutionPath
         );
 
         Assert.Contains("Successfully moved instance method", result);
 
         // File modification verification skipped
+    }
+
+    [Fact]
+    public async Task MoveInstanceMethod_NewFile_CreatesFile()
+    {
+        await RefactoringTools.LoadSolution(SolutionPath);
+        var sourceFile = Path.Combine(TestOutputPath, "MoveInstanceMethodNewFile.cs");
+        await CreateTestFile(sourceFile, GetSampleCodeForMoveInstanceMethod());
+        var targetFile = Path.Combine(TestOutputPath, "LoggerNew.cs");
+
+        var result = await RefactoringTools.MoveInstanceMethod(
+            sourceFile,
+            "Calculator",
+            "LogOperation",
+            "Logger",
+            "_logger",
+            "field",
+            targetFile,
+            SolutionPath
+        );
+
+        Assert.Contains("Successfully moved instance method", result);
+        Assert.True(File.Exists(targetFile));
+        var newContent = await File.ReadAllTextAsync(targetFile);
+        Assert.Contains("LogOperation", newContent);
+        Assert.Contains("using System;", newContent);
     }
 
     [Fact]

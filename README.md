@@ -186,7 +186,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli <command> [arguments]
 - `convert-to-static-with-parameters <solutionPath> <filePath> <methodLine>` - Convert instance method to static with parameters
 - `convert-to-static-with-instance <solutionPath> <filePath> <methodLine> [instanceName]` - Convert instance method to static with explicit instance
 - `move-static-method <solutionPath> <filePath> <methodName> <targetClass> [targetFile]` - Move a static method to another class
-- `move-instance-method <filePath> <sourceClass> <methodName> <targetClass> <accessMember> [memberType] [solutionPath]` - Move an instance method to another class
+- `move-instance-method <filePath> <sourceClass> <methodName> <targetClass> <accessMember> [memberType] [targetFile] [solutionPath]` - Move an instance method to another class
 - `version` - Show build version and timestamp
 
 #### Quick Start Example
