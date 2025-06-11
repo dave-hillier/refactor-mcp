@@ -45,7 +45,13 @@ public static class IntroduceVariableTool
 
         var selectedExpression = syntaxRoot!.DescendantNodes()
             .OfType<ExpressionSyntax>()
-            .FirstOrDefault(e => span.Contains(e.Span) || e.Span.Contains(span));
+            .Where(e => span.Contains(e.Span) || e.Span.Contains(span))
+            .OrderBy(e => Math.Abs(e.Span.Length - span.Length))
+            .ThenBy(e => e.Span.Length)
+            .FirstOrDefault();
+        var initializerExpression = selectedExpression;
+        if (selectedExpression?.Parent is ParenthesizedExpressionSyntax paren && paren.Span.Contains(span))
+            selectedExpression = paren;
 
         if (selectedExpression == null)
             return RefactoringHelpers.ThrowMcpException("Error: Selected code is not a valid expression");
@@ -60,24 +66,32 @@ public static class IntroduceVariableTool
             SyntaxFactory.VariableDeclaration(SyntaxFactory.IdentifierName(typeName))
             .WithVariables(SyntaxFactory.SingletonSeparatedList(
                 SyntaxFactory.VariableDeclarator(variableName)
-                .WithInitializer(SyntaxFactory.EqualsValueClause(selectedExpression)))));
+                .WithInitializer(SyntaxFactory.EqualsValueClause(initializerExpression)))));
 
-        // Replace the selected expression with the variable reference
         var variableReference = SyntaxFactory.IdentifierName(variableName);
-        var newRoot = syntaxRoot.ReplaceNode(selectedExpression, variableReference);
 
-        // Find the containing statement to insert the variable declaration before it
+        var nodesToReplace = syntaxRoot.DescendantNodes()
+            .OfType<ExpressionSyntax>()
+            .Where(e => SyntaxFactory.AreEquivalent(e, selectedExpression))
+            .ToList();
+
         var containingStatement = selectedExpression.Ancestors().OfType<StatementSyntax>().FirstOrDefault();
-        if (containingStatement != null)
+        SyntaxNode newRoot;
+        if (containingStatement != null && containingStatement.Parent is BlockSyntax containingBlock)
         {
-            var containingBlock = containingStatement.Parent as BlockSyntax;
-            if (containingBlock != null)
-            {
-                var statementIndex = containingBlock.Statements.IndexOf(containingStatement);
-                var newStatements = containingBlock.Statements.Insert(statementIndex, variableDeclaration);
-                var newBlock = containingBlock.WithStatements(newStatements);
-                newRoot = newRoot.ReplaceNode(containingBlock, newBlock);
-            }
+            var nodesToTrack = nodesToReplace.Cast<SyntaxNode>().Append(containingBlock).Append(containingStatement);
+            var trackedRoot = syntaxRoot.TrackNodes(nodesToTrack);
+            var replacedRoot = trackedRoot.ReplaceNodes(nodesToReplace.Select(n => trackedRoot.GetCurrentNode(n)!), (_1, _2) => variableReference);
+            var currentBlock = replacedRoot.GetCurrentNode(containingBlock)!;
+            var currentStatement = replacedRoot.GetCurrentNode(containingStatement)!;
+            var statementIndex = currentBlock.Statements.IndexOf(currentStatement);
+            var newStatements = currentBlock.Statements.Insert(statementIndex, variableDeclaration);
+            var newBlock = currentBlock.WithStatements(newStatements);
+            newRoot = replacedRoot.ReplaceNode(currentBlock, newBlock);
+        }
+        else
+        {
+            newRoot = syntaxRoot.ReplaceNodes(nodesToReplace, (_1, _2) => variableReference);
         }
 
         var formattedRoot = Formatter.Format(newRoot, document.Project.Solution.Workspace);
@@ -115,7 +129,13 @@ public static class IntroduceVariableTool
 
         var selectedExpression = syntaxRoot.DescendantNodes()
             .OfType<ExpressionSyntax>()
-            .FirstOrDefault(e => span.Contains(e.Span) || e.Span.Contains(span));
+            .Where(e => span.Contains(e.Span) || e.Span.Contains(span))
+            .OrderBy(e => Math.Abs(e.Span.Length - span.Length))
+            .ThenBy(e => e.Span.Length)
+            .FirstOrDefault();
+        var initializerExpression = selectedExpression;
+        if (selectedExpression?.Parent is ParenthesizedExpressionSyntax paren && paren.Span.Contains(span))
+            selectedExpression = paren;
 
         if (selectedExpression == null)
             return RefactoringHelpers.ThrowMcpException("Error: Selected code is not a valid expression");
@@ -126,27 +146,34 @@ public static class IntroduceVariableTool
             SyntaxFactory.VariableDeclaration(SyntaxFactory.IdentifierName(typeName))
                 .WithVariables(SyntaxFactory.SingletonSeparatedList(
                     SyntaxFactory.VariableDeclarator(variableName)
-                        .WithInitializer(SyntaxFactory.EqualsValueClause(selectedExpression)))));
+                        .WithInitializer(SyntaxFactory.EqualsValueClause(initializerExpression)))));
 
         var variableReference = SyntaxFactory.IdentifierName(variableName);
+        var nodesToReplace = syntaxRoot.DescendantNodes()
+            .OfType<ExpressionSyntax>()
+            .Where(e => SyntaxFactory.AreEquivalent(e, selectedExpression))
+            .ToList();
         var containingStatement = selectedExpression.Ancestors().OfType<StatementSyntax>().FirstOrDefault();
+        SyntaxNode newRoot;
         if (containingStatement != null && containingStatement.Parent is BlockSyntax containingBlock)
         {
-            var trackedRoot = syntaxRoot.TrackNodes(selectedExpression, containingBlock, containingStatement);
-            var replacedRoot = trackedRoot.ReplaceNode(trackedRoot.GetCurrentNode(selectedExpression)!, variableReference);
+            var nodesToTrack = nodesToReplace.Cast<SyntaxNode>().Append(containingBlock).Append(containingStatement);
+            var trackedRoot = syntaxRoot.TrackNodes(nodesToTrack);
+            var replacedRoot = trackedRoot.ReplaceNodes(nodesToReplace.Select(n => trackedRoot.GetCurrentNode(n)!), (_1, _2) => variableReference);
             var currentBlock = replacedRoot.GetCurrentNode(containingBlock)!;
             var currentStatement = replacedRoot.GetCurrentNode(containingStatement)!;
             var statementIndex = currentBlock.Statements.IndexOf(currentStatement);
             var newStatements = currentBlock.Statements.Insert(statementIndex, variableDeclaration);
             var newBlock = currentBlock.WithStatements(newStatements);
-            replacedRoot = replacedRoot.ReplaceNode(currentBlock, newBlock);
-            var formattedRoot = Formatter.Format(replacedRoot, RefactoringHelpers.SharedWorkspace);
-            return formattedRoot.ToFullString();
+            newRoot = replacedRoot.ReplaceNode(currentBlock, newBlock);
+        }
+        else
+        {
+            newRoot = syntaxRoot.ReplaceNodes(nodesToReplace, (_1, _2) => variableReference);
         }
 
-        var replaced = syntaxRoot.ReplaceNode(selectedExpression, variableReference);
-        var formatted = Formatter.Format(replaced, RefactoringHelpers.SharedWorkspace);
-        return formatted.ToFullString();
+        var formattedRoot = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
+        return formattedRoot.ToFullString();
     }
 
 }
