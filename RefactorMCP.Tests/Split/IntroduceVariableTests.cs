@@ -10,11 +10,11 @@ public class IntroduceVariableTests : TestBase
     [Fact]
     public async Task IntroduceVariable_ValidExpression_ReturnsSuccess()
     {
-        await RefactoringTools.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath);
         var testFile = Path.Combine(TestOutputPath, "IntroduceVariableTest.cs");
         await TestUtilities.CreateTestFile(testFile, TestUtilities.GetSampleCodeForIntroduceVariable());
 
-        var result = await RefactoringTools.IntroduceVariable(
+        var result = await IntroduceVariableTool.IntroduceVariable(
             SolutionPath,
             testFile,
             "42:50-42:63",

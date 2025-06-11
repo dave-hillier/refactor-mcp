@@ -3,15 +3,16 @@ using Microsoft.Extensions.Caching.Memory;
 using System.ComponentModel;
 using System.IO;
 
-public static partial class RefactoringTools
+[McpServerToolType]
+public static class UnloadSolutionTool
 {
     [McpServerTool, Description("Unload a solution and remove it from the cache")]
     public static string UnloadSolution(
         [Description("Path to the solution file (.sln)")] string solutionPath)
     {
-        if (_solutionCache.TryGetValue(solutionPath, out _))
+        if (RefactoringHelpers.SolutionCache.TryGetValue(solutionPath, out _))
         {
-            _solutionCache.Remove(solutionPath);
+            RefactoringHelpers.SolutionCache.Remove(solutionPath);
             return $"Unloaded solution '{Path.GetFileName(solutionPath)}' from cache";
         }
 
@@ -21,8 +22,8 @@ public static partial class RefactoringTools
     [McpServerTool, Description("Clear all cached solutions")]
     public static string ClearSolutionCache()
     {
-        _solutionCache.Dispose();
-        _solutionCache = new MemoryCache(new MemoryCacheOptions());
+        RefactoringHelpers.SolutionCache.Dispose();
+        RefactoringHelpers.SolutionCache = new MemoryCache(new MemoryCacheOptions());
         return "Cleared all cached solutions";
     }
 }

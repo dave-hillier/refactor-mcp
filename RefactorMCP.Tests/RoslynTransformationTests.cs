@@ -24,7 +24,7 @@ public class RoslynTransformationTests
     }
 }
 ";
-        var output = RefactoringTools.IntroduceVariableInSource(input, "5:27-5:31", "result");
+        var output = IntroduceVariableTool.IntroduceVariableInSource(input, "5:27-5:31", "result");
         Assert.Equal(expected, output);
     }
 
@@ -47,7 +47,7 @@ public class RoslynTransformationTests
     }
 }
 ";
-        var output = RefactoringTools.IntroduceParameterInSource(input, "AddNumbers", "5:16-5:42", "calculationMode");
+        var output = IntroduceParameterTool.IntroduceParameterInSource(input, "AddNumbers", "5:16-5:42", "calculationMode");
         Assert.Equal(expected, output);
     }
 
@@ -73,7 +73,7 @@ public class RoslynTransformationTests
     }
 }
 ";
-        var output = RefactoringTools.MakeFieldReadonlyInSource(input, "formatPattern");
+        var output = MakeFieldReadonlyTool.MakeFieldReadonlyInSource(input, "formatPattern");
         Assert.Equal(expected, output);
     }
 
@@ -90,7 +90,7 @@ public class RoslynTransformationTests
     public string UserName { get; init; } = ""DefaultUser"";
 }
 ";
-        var output = RefactoringTools.TransformSetterToInitInSource(input, "UserName");
+        var output = TransformSetterToInitTool.TransformSetterToInitInSource(input, "UserName");
         Assert.Equal(expected, output);
     }
 
@@ -117,7 +117,7 @@ public static class StringProcessorExtensions
     {
     }
 }";
-        var output = RefactoringTools.ConvertToExtensionMethodInSource(input, "FormatText", null);
+        var output = ConvertToExtensionMethodTool.ConvertToExtensionMethodInSource(input, "FormatText", null);
         Assert.Equal(expected, output.Trim());
     }
 
@@ -148,7 +148,7 @@ public static class StringProcessorExtensions
     {
     }
 }";
-        var output = RefactoringTools.ConvertToExtensionMethodInSource(input, "FormatText", "StringProcessorExtensions");
+        var output = ConvertToExtensionMethodTool.ConvertToExtensionMethodInSource(input, "FormatText", "StringProcessorExtensions");
         Assert.Equal(expected, output.Trim());
     }
 
@@ -172,7 +172,7 @@ public static class StringProcessorExtensions
         return instance.dataCount;
     }
 }";
-        var output = RefactoringTools.ConvertToStaticWithInstanceInSource(input, "GetDataCount", "instance");
+        var output = ConvertToStaticWithInstanceTool.ConvertToStaticWithInstanceInSource(input, "GetDataCount", "instance");
         Assert.Equal(expected, output.Trim());
     }
 
@@ -196,7 +196,7 @@ public static class StringProcessorExtensions
         return multiplier;
     }
 }";
-        var output = RefactoringTools.ConvertToStaticWithParametersInSource(input, "MultiplyValue");
+        var output = ConvertToStaticWithParametersTool.ConvertToStaticWithParametersInSource(input, "MultiplyValue");
         Assert.Equal(expected, output.Trim());
     }
 
@@ -224,7 +224,7 @@ public static class StringProcessorExtensions
     }
 }
 ";
-        var output = RefactoringTools.ExtractMethodInSource(input, "5:9-5:49", "DisplayProcessingMessage");
+        var output = ExtractMethodTool.ExtractMethodInSource(input, "5:9-5:49", "DisplayProcessingMessage");
         Assert.Equal(expected, output);
     }
 
@@ -247,7 +247,7 @@ public static class StringProcessorExtensions
     }
 }
 ";
-        var output = RefactoringTools.IntroduceFieldInSource(input, "5:16-5:23", "calculationResult", "private");
+        var output = IntroduceFieldTool.IntroduceFieldInSource(input, "5:16-5:23", "calculationResult", "private");
         Assert.Equal(expected, output);
     }
 
@@ -261,7 +261,7 @@ public static class StringProcessorExtensions
         var expected = @"class ConfigurationManager
 {
 }";
-        var output = RefactoringTools.SafeDeleteFieldInSource(input, "configurationFlag");
+        var output = SafeDeleteTool.SafeDeleteFieldInSource(input, "configurationFlag");
         Assert.Equal(expected, output.Trim());
     }
 
@@ -277,7 +277,7 @@ public static class StringProcessorExtensions
         var expected = @"class ServiceManager
 {
 }";
-        var output = RefactoringTools.SafeDeleteMethodInSource(input, "UnusedMethod");
+        var output = SafeDeleteTool.SafeDeleteMethodInSource(input, "UnusedMethod");
         Assert.Equal(expected, output.Trim());
     }
 
@@ -296,7 +296,7 @@ public static class StringProcessorExtensions
     {
     }
 }";
-        var output = RefactoringTools.SafeDeleteParameterInSource(input, "ProcessData", "unusedValue");
+        var output = SafeDeleteTool.SafeDeleteParameterInSource(input, "ProcessData", "unusedValue");
         Assert.Equal(expected, output.Trim());
     }
 
@@ -316,7 +316,7 @@ public static class StringProcessorExtensions
     {
     }
 }";
-        var output = RefactoringTools.SafeDeleteVariableInSource(input, "5:9-5:30");
+        var output = SafeDeleteTool.SafeDeleteVariableInSource(input, "5:9-5:30");
         Assert.Equal(expected, output.Trim());
     }
 
@@ -347,7 +347,7 @@ class ValidationService
     {
     }
 }";
-        var output = RefactoringTools.MoveInstanceMethodInSource(input, "DocumentProcessor", "ValidateDocument", "ValidationService", "validationService", "field");
+        var output = MoveMethodsTool.MoveInstanceMethodInSource(input, "DocumentProcessor", "ValidateDocument", "ValidationService", "validationService", "field");
         Assert.Equal(expected, output.Trim());
     }
 
@@ -378,7 +378,7 @@ class TaskRunner
     {
     }
 }";
-        var output = RefactoringTools.MoveInstanceMethodInSource(input, "TaskProcessor", "RunTask", "TaskRunner", "Runner", "property");
+        var output = MoveMethodsTool.MoveInstanceMethodInSource(input, "TaskProcessor", "RunTask", "TaskRunner", "Runner", "property");
         Assert.Equal(expected, output.Trim());
     }
 
@@ -407,7 +407,7 @@ public class Logger
     {
     }
 }";
-        var output = RefactoringTools.MoveInstanceMethodInSource(input, "Calculator", "Compute", "Logger", "logger", "field");
+        var output = MoveMethodsTool.MoveInstanceMethodInSource(input, "Calculator", "Compute", "Logger", "logger", "field");
         Assert.Equal(expected, output.Trim());
     }
 
@@ -434,7 +434,7 @@ public class StringUtilities
     {
     }
 }";
-        var output = RefactoringTools.MoveStaticMethodInSource(input, "FormatString", "StringUtilities");
+        var output = MoveMethodsTool.MoveStaticMethodInSource(input, "FormatString", "StringUtilities");
         Assert.Equal(expected, output.Trim());
     }
 
@@ -465,7 +465,7 @@ class StringUtilities
     {
     }
 }";
-        var output = RefactoringTools.MoveStaticMethodInSource(input, "FormatString", "StringUtilities");
+        var output = MoveMethodsTool.MoveStaticMethodInSource(input, "FormatString", "StringUtilities");
         Assert.Equal(expected, output.Trim());
     }
 
@@ -503,7 +503,7 @@ class MathUtilities
         return calculator.numbers.Sum() / (double)calculator.numbers.Count;
     }
 }";
-        var output = RefactoringTools.MoveInstanceMethodInSource(input, "Calculator", "GetAverage", "MathUtilities", "mathUtilities", "field");
+        var output = MoveMethodsTool.MoveInstanceMethodInSource(input, "Calculator", "GetAverage", "MathUtilities", "mathUtilities", "field");
         Assert.Equal(expected, output.Trim());
     }
 }

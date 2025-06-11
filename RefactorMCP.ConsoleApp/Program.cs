@@ -117,8 +117,10 @@ static void ShowCliHelp()
 
 static string ListAvailableTools()
 {
-    var toolNames = typeof(RefactoringTools)
-        .GetMethods(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)
+    var toolNames = System.Reflection.Assembly.GetExecutingAssembly()
+        .GetTypes()
+        .Where(t => t.GetCustomAttributes(typeof(McpServerToolTypeAttribute), false).Length > 0)
+        .SelectMany(t => t.GetMethods(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static))
         .Where(m => m.GetCustomAttributes(typeof(McpServerToolAttribute), false).Length > 0)
         .Select(m => ToKebabCase(m.Name))
         .OrderBy(n => n)
@@ -147,7 +149,7 @@ static async Task<string> TestLoadSolution(string[] args)
         return "Error: Missing solution path. Usage: --cli load-solution <solutionPath>";
 
     var solutionPath = args[2];
-    return await RefactoringTools.LoadSolution(solutionPath);
+    return await LoadSolutionTool.LoadSolution(solutionPath);
 }
 
 static async Task<string> TestExtractMethod(string[] args)
@@ -160,7 +162,7 @@ static async Task<string> TestExtractMethod(string[] args)
     var methodName = args[4];
     var solutionPath = args.Length > 5 ? args[5] : null;
 
-    return await RefactoringTools.ExtractMethod(filePath, range, methodName, solutionPath);
+    return await ExtractMethodTool.ExtractMethod(filePath, range, methodName, solutionPath);
 }
 
 static async Task<string> TestIntroduceField(string[] args)
@@ -174,7 +176,7 @@ static async Task<string> TestIntroduceField(string[] args)
     var accessModifier = args.Length > 5 ? args[5] : "private";
     var solutionPath = args.Length > 6 ? args[6] : null;
 
-    return await RefactoringTools.IntroduceField(filePath, range, fieldName, accessModifier, solutionPath);
+    return await IntroduceFieldTool.IntroduceField(filePath, range, fieldName, accessModifier, solutionPath);
 }
 
 static async Task<string> TestIntroduceVariable(string[] args)
@@ -187,7 +189,7 @@ static async Task<string> TestIntroduceVariable(string[] args)
     var variableName = args[4];
     var solutionPath = args.Length > 5 ? args[5] : null;
 
-    return await RefactoringTools.IntroduceVariable(filePath, range, variableName, solutionPath);
+    return await IntroduceVariableTool.IntroduceVariable(filePath, range, variableName, solutionPath);
 }
 
 static async Task<string> TestMakeFieldReadonly(string[] args)
@@ -199,7 +201,7 @@ static async Task<string> TestMakeFieldReadonly(string[] args)
     var fieldName = args[3];
     var solutionPath = args.Length > 4 ? args[4] : null;
 
-    return await RefactoringTools.MakeFieldReadonly(filePath, fieldName, solutionPath);
+    return await MakeFieldReadonlyTool.MakeFieldReadonly(filePath, fieldName, solutionPath);
 }
 
 static string TestUnloadSolution(string[] args)
@@ -208,17 +210,17 @@ static string TestUnloadSolution(string[] args)
         return "Error: Missing solution path. Usage: --cli unload-solution <solutionPath>";
 
     var solutionPath = args[2];
-    return RefactoringTools.UnloadSolution(solutionPath);
+    return UnloadSolutionTool.UnloadSolution(solutionPath);
 }
 
 static string ClearCacheCommand()
 {
-    return RefactoringTools.ClearSolutionCache();
+    return UnloadSolutionTool.ClearSolutionCache();
 }
 
 static string ShowVersionInfo()
 {
-    return RefactoringTools.Version();
+    return VersionTool.Version();
 }
 
 static async Task<string> TestConvertToExtensionMethod(string[] args)
@@ -230,7 +232,7 @@ static async Task<string> TestConvertToExtensionMethod(string[] args)
     var methodName = args[3];
     var solutionPath = args.Length > 4 ? args[4] : null;
 
-    return await RefactoringTools.ConvertToExtensionMethod(filePath, methodName, null, solutionPath);
+    return await ConvertToExtensionMethodTool.ConvertToExtensionMethod(filePath, methodName, null, solutionPath);
 }
 
 static async Task<string> TestSafeDeleteField(string[] args)
@@ -242,7 +244,7 @@ static async Task<string> TestSafeDeleteField(string[] args)
     var fieldName = args[3];
     var solutionPath = args.Length > 4 ? args[4] : null;
 
-    return await RefactoringTools.SafeDeleteField(filePath, fieldName, solutionPath);
+    return await SafeDeleteTool.SafeDeleteField(filePath, fieldName, solutionPath);
 }
 
 static async Task<string> TestSafeDeleteMethod(string[] args)
@@ -254,7 +256,7 @@ static async Task<string> TestSafeDeleteMethod(string[] args)
     var methodName = args[3];
     var solutionPath = args.Length > 4 ? args[4] : null;
 
-    return await RefactoringTools.SafeDeleteMethod(filePath, methodName, solutionPath);
+    return await SafeDeleteTool.SafeDeleteMethod(filePath, methodName, solutionPath);
 }
 
 static async Task<string> TestSafeDeleteParameter(string[] args)
@@ -267,7 +269,7 @@ static async Task<string> TestSafeDeleteParameter(string[] args)
     var parameterName = args[4];
     var solutionPath = args.Length > 5 ? args[5] : null;
 
-    return await RefactoringTools.SafeDeleteParameter(filePath, methodName, parameterName, solutionPath);
+    return await SafeDeleteTool.SafeDeleteParameter(filePath, methodName, parameterName, solutionPath);
 }
 
 static async Task<string> TestSafeDeleteVariable(string[] args)
@@ -279,7 +281,7 @@ static async Task<string> TestSafeDeleteVariable(string[] args)
     var range = args[3];
     var solutionPath = args.Length > 4 ? args[4] : null;
 
-    return await RefactoringTools.SafeDeleteVariable(filePath, range, solutionPath);
+    return await SafeDeleteTool.SafeDeleteVariable(filePath, range, solutionPath);
 }
 
 static async Task<string> TestAnalyzeRefactoringOpportunities(string[] args)
@@ -290,7 +292,7 @@ static async Task<string> TestAnalyzeRefactoringOpportunities(string[] args)
     var filePath = args[2];
     var solutionPath = args.Length > 3 ? args[3] : null;
 
-    return await RefactoringTools.AnalyzeRefactoringOpportunities(filePath, solutionPath);
+    return await AnalyzeRefactoringOpportunitiesTool.AnalyzeRefactoringOpportunities(filePath, solutionPath);
 }
 
 static async Task<string> TestConvertToStaticWithParameters(string[] args)
@@ -302,7 +304,7 @@ static async Task<string> TestConvertToStaticWithParameters(string[] args)
     var methodName = args[3];
     var solutionPath = args.Length > 4 ? args[4] : null;
 
-    return await RefactoringTools.ConvertToStaticWithParameters(filePath, methodName, solutionPath);
+    return await ConvertToStaticWithParametersTool.ConvertToStaticWithParameters(filePath, methodName, solutionPath);
 }
 
 static async Task<string> TestConvertToStaticWithInstance(string[] args)
@@ -315,7 +317,7 @@ static async Task<string> TestConvertToStaticWithInstance(string[] args)
     var instanceParam = args.Length > 4 ? args[4] : "instance";
     var solutionPath = args.Length > 5 ? args[5] : null;
 
-    return await RefactoringTools.ConvertToStaticWithInstance(filePath, methodName, instanceParam, solutionPath);
+    return await ConvertToStaticWithInstanceTool.ConvertToStaticWithInstance(filePath, methodName, instanceParam, solutionPath);
 }
 
 static async Task<string> TestIntroduceParameter(string[] args)
@@ -329,7 +331,7 @@ static async Task<string> TestIntroduceParameter(string[] args)
     var paramName = args[5];
     var solutionPath = args.Length > 6 ? args[6] : null;
 
-    return await RefactoringTools.IntroduceParameter(filePath, methodName, range, paramName, solutionPath);
+    return await IntroduceParameterTool.IntroduceParameter(filePath, methodName, range, paramName, solutionPath);
 }
 
 static async Task<string> TestMoveStaticMethod(string[] args)
@@ -343,7 +345,7 @@ static async Task<string> TestMoveStaticMethod(string[] args)
     var targetClass = args[5];
     var targetFilePath = args.Length > 6 ? args[6] : null;
 
-    return await RefactoringTools.MoveStaticMethod(solutionPath, filePath, methodName, targetClass, targetFilePath);
+    return await MoveMethodsTool.MoveStaticMethod(solutionPath, filePath, methodName, targetClass, targetFilePath);
 }
 
 static async Task<string> TestMoveInstanceMethod(string[] args)
@@ -360,7 +362,7 @@ static async Task<string> TestMoveInstanceMethod(string[] args)
     var solutionPath = args.Length > 8 ? args[8] : null;
     var targetFile = args.Length > 9 ? args[9] : null;
 
-    return await RefactoringTools.MoveInstanceMethod(filePath, sourceClass, methodName, targetClass, accessMember, memberType, solutionPath, targetFile);
+    return await MoveMethodsTool.MoveInstanceMethod(filePath, sourceClass, methodName, targetClass, accessMember, memberType, solutionPath, targetFile);
 }
 
 static async Task<string> TestTransformSetterToInit(string[] args)
@@ -372,11 +374,6 @@ static async Task<string> TestTransformSetterToInit(string[] args)
     var propertyName = args[3];
     var solutionPath = args.Length > 4 ? args[4] : null;
 
-    return await RefactoringTools.TransformSetterToInit(filePath, propertyName, solutionPath);
+    return await TransformSetterToInitTool.TransformSetterToInit(filePath, propertyName, solutionPath);
 }
 
-[McpServerToolType]
-[McpServerPromptType]
-public static partial class RefactoringTools
-{
-}

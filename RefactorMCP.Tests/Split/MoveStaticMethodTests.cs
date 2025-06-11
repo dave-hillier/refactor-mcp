@@ -13,11 +13,11 @@ public class MoveStaticMethodTests : TestBase
     [Fact]
     public async Task MoveStaticMethod_ReturnsSuccess()
     {
-        await RefactoringTools.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath);
         var testFile = Path.Combine(TestOutputPath, "MoveStaticMethod.cs");
         await TestUtilities.CreateTestFile(testFile, TestUtilities.GetSampleCodeForMoveStaticMethod());
 
-        var result = await RefactoringTools.MoveStaticMethod(
+        var result = await MoveMethodsTool.MoveStaticMethod(
             SolutionPath,
             testFile,
             "FormatCurrency",
@@ -32,11 +32,11 @@ public class MoveStaticMethodTests : TestBase
     [Fact]
     public async Task MoveStaticMethod_AddsUsingsAndCompiles()
     {
-        await RefactoringTools.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath);
         var testFile = Path.Combine(TestOutputPath, "MoveStaticWithUsings.cs");
         await TestUtilities.CreateTestFile(testFile, TestUtilities.GetSampleCodeForMoveStaticMethodWithUsings());
 
-        var result = await RefactoringTools.MoveStaticMethod(
+        var result = await MoveMethodsTool.MoveStaticMethod(
             SolutionPath,
             testFile,
             "PrintList",

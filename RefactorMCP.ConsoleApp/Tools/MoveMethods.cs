@@ -21,7 +21,7 @@ public class InstanceMemberUsageChecker : CSharpSyntaxRewriter
     public override SyntaxNode? VisitIdentifierName(IdentifierNameSyntax node)
     {
         var parent = node.Parent;
-        
+
         // Skip if this is part of a parameter or type declaration
         if (parent is ParameterSyntax || parent is TypeSyntax)
         {
@@ -62,7 +62,7 @@ public class InstanceMemberRewriter : CSharpSyntaxRewriter
     public override SyntaxNode? VisitIdentifierName(IdentifierNameSyntax node)
     {
         var parent = node.Parent;
-        
+
         // Skip if this is part of a parameter or type declaration
         if (parent is ParameterSyntax || parent is TypeSyntax)
         {
@@ -95,7 +95,8 @@ public class InstanceMemberRewriter : CSharpSyntaxRewriter
     }
 }
 
-public static partial class RefactoringTools
+[McpServerToolType]
+public static class MoveMethodsTool
 {
     private static bool HasInstanceMemberUsage(MethodDeclarationSyntax method, HashSet<string> knownMembers)
     {
@@ -114,7 +115,7 @@ public static partial class RefactoringTools
             .FirstOrDefault(m => m.Identifier.ValueText == methodName &&
                                  m.Modifiers.Any(SyntaxKind.StaticKeyword));
         if (method == null)
-            return ThrowMcpException($"Error: Static method '{methodName}' not found");
+            return RefactoringHelpers.ThrowMcpException($"Error: Static method '{methodName}' not found");
 
         // Prepare stub in the original class that delegates to the moved method
         var argumentList = SyntaxFactory.ArgumentList(
@@ -158,7 +159,7 @@ public static partial class RefactoringTools
             newRoot = rootWithStub.ReplaceNode(targetClassDecl, updatedClass);
         }
 
-        var formatted = Formatter.Format(newRoot, SharedWorkspace);
+        var formatted = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
         return formatted.ToFullString();
     }
 
@@ -171,13 +172,13 @@ public static partial class RefactoringTools
             .OfType<ClassDeclarationSyntax>()
             .FirstOrDefault(c => c.Identifier.ValueText == sourceClass);
         if (originClass == null)
-            return ThrowMcpException($"Error: Source class '{sourceClass}' not found");
+            return RefactoringHelpers.ThrowMcpException($"Error: Source class '{sourceClass}' not found");
 
         var method = originClass.Members
             .OfType<MethodDeclarationSyntax>()
             .FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            return ThrowMcpException($"Error: No method named '{methodName}' found");
+            return RefactoringHelpers.ThrowMcpException($"Error: No method named '{methodName}' found");
 
         // Check if method uses instance members
         var knownMembers = new HashSet<string>();
@@ -202,13 +203,13 @@ public static partial class RefactoringTools
         // Build call to the moved method for the stub
         var originalParameters = method.ParameterList.Parameters
             .Select(p => SyntaxFactory.Argument(SyntaxFactory.IdentifierName(p.Identifier))).ToList();
-        
+
         // Only add 'this' as the first argument if the method uses instance members
         if (usesInstanceMembers)
         {
             originalParameters.Insert(0, SyntaxFactory.Argument(SyntaxFactory.ThisExpression()));
         }
-        
+
         var argumentList = SyntaxFactory.ArgumentList(SyntaxFactory.SeparatedList(originalParameters));
 
         var accessExpression = SyntaxFactory.IdentifierName(accessMemberName);
@@ -257,37 +258,37 @@ public static partial class RefactoringTools
         var originMembers = originClass.Members.ToList();
         var fieldIndex = originMembers.FindLastIndex(m => m is FieldDeclarationSyntax || m is PropertyDeclarationSyntax);
         var insertIndex = fieldIndex >= 0 ? fieldIndex + 1 : 0;
-        
+
         // Insert the access member at the correct position
         originMembers.Insert(insertIndex, accessMember);
-        
+
         // Replace the original method with the stub
         var methodIndex = originMembers.FindIndex(m => m == method);
         if (methodIndex >= 0)
         {
             originMembers[methodIndex] = stubMethod;
         }
-        
+
         var newOriginClass = originClass.WithMembers(SyntaxFactory.List(originMembers));
 
         // Create the moved method
         var movedMethod = method;
-        
+
         // Only add source class parameter if method uses instance members
         if (usesInstanceMembers)
         {
             var sourceParameter = SyntaxFactory.Parameter(SyntaxFactory.Identifier(sourceClass.ToLower()))
                 .WithType(SyntaxFactory.IdentifierName(sourceClass));
-            
+
             var newParameters = new[] { sourceParameter }.Concat(method.ParameterList.Parameters);
             var newParameterList = SyntaxFactory.ParameterList(SyntaxFactory.SeparatedList(newParameters));
             movedMethod = movedMethod.WithParameterList(newParameterList);
-            
+
             // Replace references to instance members with parameter access
             var memberRewriter = new InstanceMemberRewriter(sourceClass.ToLower(), knownMembers);
             movedMethod = (MethodDeclarationSyntax)memberRewriter.Visit(movedMethod)!;
         }
-        
+
         // Ensure moved method is public in the target class
         if (!method.Modifiers.Any(m => m.IsKind(SyntaxKind.PublicKeyword)))
         {
@@ -315,7 +316,7 @@ public static partial class RefactoringTools
             newRoot = rootWithStub.ReplaceNode(targetClassDecl, replaced);
         }
 
-        var formatted = Formatter.Format(newRoot, SharedWorkspace);
+        var formatted = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
         return formatted.ToFullString();
     }
 
@@ -327,13 +328,13 @@ public static partial class RefactoringTools
             .OfType<ClassDeclarationSyntax>()
             .FirstOrDefault(c => c.Identifier.ValueText == sourceClass);
         if (originClass == null)
-            return ThrowMcpException($"Error: Source class '{sourceClass}' not found");
+            return RefactoringHelpers.ThrowMcpException($"Error: Source class '{sourceClass}' not found");
 
         var method = originClass.Members
             .OfType<MethodDeclarationSyntax>()
             .FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            return ThrowMcpException($"Error: No method named '{methodName}' found");
+            return RefactoringHelpers.ThrowMcpException($"Error: No method named '{methodName}' found");
 
         var targetClassDecl = syntaxRoot.DescendantNodes()
             .OfType<ClassDeclarationSyntax>()
@@ -402,7 +403,7 @@ public static partial class RefactoringTools
     private static async Task<string> MoveInstanceMethodSingleFile(string filePath, string sourceClass, string methodName, string targetClass, string accessMemberName, string accessMemberType, string? targetFilePath)
     {
         if (!File.Exists(filePath))
-            return ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
+            return RefactoringHelpers.ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
 
         var targetPath = targetFilePath ?? filePath;
         var sameFile = targetPath == filePath;
@@ -415,13 +416,13 @@ public static partial class RefactoringTools
             .OfType<ClassDeclarationSyntax>()
             .FirstOrDefault(c => c.Identifier.ValueText == sourceClass);
         if (originClass == null)
-            return ThrowMcpException($"Error: Source class '{sourceClass}' not found");
+            return RefactoringHelpers.ThrowMcpException($"Error: Source class '{sourceClass}' not found");
 
         var method = originClass.Members
             .OfType<MethodDeclarationSyntax>()
             .FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            return ThrowMcpException($"Error: No method named '{methodName}' found");
+            return RefactoringHelpers.ThrowMcpException($"Error: No method named '{methodName}' found");
 
         var targetClassDecl = syntaxRoot.DescendantNodes()
             .OfType<ClassDeclarationSyntax>()
@@ -448,14 +449,14 @@ public static partial class RefactoringTools
             .OfType<ClassDeclarationSyntax>()
             .FirstOrDefault(c => c.Identifier.ValueText == sourceClass);
         if (currentOriginClass == null)
-            return ThrowMcpException($"Error: Could not find updated reference to source class '{sourceClass}'");
+            return RefactoringHelpers.ThrowMcpException($"Error: Could not find updated reference to source class '{sourceClass}'");
 
         // Find the method in the current origin class reference
         var currentMethod = currentOriginClass.Members
             .OfType<MethodDeclarationSyntax>()
             .FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (currentMethod == null)
-            return ThrowMcpException($"Error: No method named '{methodName}' found in updated class reference");
+            return RefactoringHelpers.ThrowMcpException($"Error: No method named '{methodName}' found in updated class reference");
 
         ClassDeclarationSyntax newOriginClass = currentOriginClass.RemoveNode(currentMethod, SyntaxRemoveOptions.KeepNoTrivia);
 
@@ -540,16 +541,16 @@ public static partial class RefactoringTools
 
         if (sameFile)
         {
-            var formatted = Formatter.Format(targetRoot, SharedWorkspace);
+            var formatted = Formatter.Format(targetRoot, RefactoringHelpers.SharedWorkspace);
             Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
             await File.WriteAllTextAsync(targetPath, formatted.ToFullString());
         }
         else
         {
-            var formattedSource = Formatter.Format(workingRoot, SharedWorkspace);
+            var formattedSource = Formatter.Format(workingRoot, RefactoringHelpers.SharedWorkspace);
             await File.WriteAllTextAsync(filePath, formattedSource.ToFullString());
 
-            var formattedTarget = Formatter.Format(targetRoot, SharedWorkspace);
+            var formattedTarget = Formatter.Format(targetRoot, RefactoringHelpers.SharedWorkspace);
             Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
             await File.WriteAllTextAsync(targetPath, formattedTarget.ToFullString());
         }
@@ -568,7 +569,7 @@ public static partial class RefactoringTools
         try
         {
             if (!File.Exists(filePath))
-                return ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
+                return RefactoringHelpers.ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
 
             var sourceText = await File.ReadAllTextAsync(filePath);
             var targetPath = targetFilePath ?? Path.Combine(Path.GetDirectoryName(filePath)!, $"{targetClass}.cs");
@@ -586,7 +587,7 @@ public static partial class RefactoringTools
                 .FirstOrDefault(m => m.Identifier.ValueText == methodName &&
                                     m.Modifiers.Any(SyntaxKind.StaticKeyword));
             if (method == null)
-                return ThrowMcpException($"Error: Static method '{methodName}' not found");
+                return RefactoringHelpers.ThrowMcpException($"Error: Static method '{methodName}' not found");
 
             // Remove the original method
             var newSourceRoot = syntaxRoot.RemoveNode(method, SyntaxRemoveOptions.KeepNoTrivia);
@@ -637,11 +638,11 @@ public static partial class RefactoringTools
                 targetRoot = targetRoot.ReplaceNode(targetClassDecl, newTarget);
             }
 
-            var formattedTarget = Formatter.Format(targetRoot, SharedWorkspace);
+            var formattedTarget = Formatter.Format(targetRoot, RefactoringHelpers.SharedWorkspace);
 
             if (!sameFile)
             {
-                var formattedSource = Formatter.Format(newSourceRoot, SharedWorkspace);
+                var formattedSource = Formatter.Format(newSourceRoot, RefactoringHelpers.SharedWorkspace);
                 await File.WriteAllTextAsync(filePath, formattedSource.ToFullString());
             }
 
@@ -668,8 +669,8 @@ public static partial class RefactoringTools
     {
         try
         {
-            var solution = await GetOrLoadSolution(solutionPath);
-            var document = GetDocumentByPath(solution, filePath);
+            var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
+            var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
             if (document != null)
                 return await MoveInstanceMethodWithSolution(document, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
 

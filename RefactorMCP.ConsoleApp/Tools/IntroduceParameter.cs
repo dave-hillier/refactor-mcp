@@ -7,7 +7,8 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Text;
 
-public static partial class RefactoringTools
+[McpServerToolType]
+public static class IntroduceParameterTool
 {
     private static async Task<string> IntroduceParameterWithSolution(Document document, string methodName, string selectionRange, string parameterName)
     {
@@ -19,10 +20,10 @@ public static partial class RefactoringTools
             .OfType<MethodDeclarationSyntax>()
             .FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            return ThrowMcpException($"Error: No method named '{methodName}' found");
+            return RefactoringHelpers.ThrowMcpException($"Error: No method named '{methodName}' found");
 
-        if (!TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
-            return ThrowMcpException("Error: Invalid selection range format");
+        if (!RefactoringHelpers.TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
+            return RefactoringHelpers.ThrowMcpException("Error: Invalid selection range format");
 
         var startPosition = textLines[startLine - 1].Start + startColumn - 1;
         var endPosition = textLines[endLine - 1].Start + endColumn - 1;
@@ -30,7 +31,7 @@ public static partial class RefactoringTools
 
         var selectedExpression = syntaxRoot.DescendantNodes(span).OfType<ExpressionSyntax>().FirstOrDefault();
         if (selectedExpression == null)
-            return ThrowMcpException("Error: Selected code is not a valid expression");
+            return RefactoringHelpers.ThrowMcpException("Error: Selected code is not a valid expression");
 
         var semanticModel = await document.GetSemanticModelAsync();
         var typeInfo = semanticModel!.GetTypeInfo(selectedExpression);
@@ -54,7 +55,7 @@ public static partial class RefactoringTools
     private static async Task<string> IntroduceParameterSingleFile(string filePath, string methodName, string selectionRange, string parameterName)
     {
         if (!File.Exists(filePath))
-            return ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
+            return RefactoringHelpers.ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
 
         var sourceText = await File.ReadAllTextAsync(filePath);
         var newText = IntroduceParameterInSource(sourceText, methodName, selectionRange, parameterName);
@@ -73,10 +74,10 @@ public static partial class RefactoringTools
             .OfType<MethodDeclarationSyntax>()
             .FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            return ThrowMcpException($"Error: No method named '{methodName}' found");
+            return RefactoringHelpers.ThrowMcpException($"Error: No method named '{methodName}' found");
 
-        if (!TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
-            return ThrowMcpException("Error: Invalid selection range format");
+        if (!RefactoringHelpers.TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
+            return RefactoringHelpers.ThrowMcpException("Error: Invalid selection range format");
 
         var startPosition = textLines[startLine - 1].Start + startColumn - 1;
         var endPosition = textLines[endLine - 1].Start + endColumn - 1;
@@ -86,7 +87,7 @@ public static partial class RefactoringTools
             .OfType<ExpressionSyntax>()
             .FirstOrDefault(e => span.Contains(e.Span) || e.Span.Contains(span));
         if (selectedExpression == null)
-            return ThrowMcpException("Error: Selected code is not a valid expression");
+            return RefactoringHelpers.ThrowMcpException("Error: Selected code is not a valid expression");
 
         var parameter = SyntaxFactory.Parameter(SyntaxFactory.Identifier(parameterName))
             .WithType(SyntaxFactory.ParseTypeName("object"));
@@ -95,7 +96,7 @@ public static partial class RefactoringTools
         var newRoot = syntaxRoot.ReplaceNode(method, newMethod);
         newRoot = newRoot.ReplaceNode(selectedExpression, SyntaxFactory.IdentifierName(parameterName));
 
-        var formattedRoot = Formatter.Format(newRoot, SharedWorkspace);
+        var formattedRoot = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
         return formattedRoot.ToFullString();
     }
     [McpServerTool, Description("Create a new parameter from selected code (preferred for large C# file refactoring)")]
@@ -108,8 +109,8 @@ public static partial class RefactoringTools
     {
         try
         {
-            var solution = await GetOrLoadSolution(solutionPath);
-            var document = GetDocumentByPath(solution, filePath);
+            var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
+            var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
             if (document != null)
                 return await IntroduceParameterWithSolution(document, methodName, selectionRange, parameterName);
 

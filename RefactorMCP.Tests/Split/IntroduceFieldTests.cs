@@ -10,11 +10,11 @@ public class IntroduceFieldTests : TestBase
     [Fact]
     public async Task IntroduceField_ValidExpression_ReturnsSuccess()
     {
-        await RefactoringTools.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath);
         var testFile = Path.Combine(TestOutputPath, "IntroduceFieldTest.cs");
         await TestUtilities.CreateTestFile(testFile, TestUtilities.GetSampleCodeForIntroduceField());
 
-        var result = await RefactoringTools.IntroduceField(
+        var result = await IntroduceFieldTool.IntroduceField(
             SolutionPath,
             testFile,
             "4:16-4:58",
@@ -29,11 +29,11 @@ public class IntroduceFieldTests : TestBase
     [Fact]
     public async Task IntroduceField_WithPublicModifier_ReturnsSuccess()
     {
-        await RefactoringTools.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath);
         var testFile = Path.Combine(TestOutputPath, "IntroduceFieldPublicTest.cs");
         await TestUtilities.CreateTestFile(testFile, TestUtilities.GetSampleCodeForIntroduceField());
 
-        var result = await RefactoringTools.IntroduceField(
+        var result = await IntroduceFieldTool.IntroduceField(
             SolutionPath,
             testFile,
             "4:16-4:58",
@@ -48,7 +48,7 @@ public class IntroduceFieldTests : TestBase
     [Fact]
     public async Task IntroduceField_DifferentAccessModifiers_ReturnsCorrectModifier()
     {
-        await RefactoringTools.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath);
         var testFile = Path.Combine(TestOutputPath, "AccessModifierTest.cs");
 
         var accessModifiers = new[] { "private", "public", "protected", "internal" };
@@ -57,7 +57,7 @@ public class IntroduceFieldTests : TestBase
             var modifierTestFile = testFile.Replace(".cs", $"_{modifier}.cs");
             await TestUtilities.CreateTestFile(modifierTestFile, TestUtilities.GetSampleCodeForIntroduceField());
 
-            var result = await RefactoringTools.IntroduceField(
+            var result = await IntroduceFieldTool.IntroduceField(
                 SolutionPath,
                 modifierTestFile,
                 "4:16-4:58",

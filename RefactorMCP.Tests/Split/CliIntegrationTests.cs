@@ -3,6 +3,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using ModelContextProtocol.Server;
 using Xunit;
 
 namespace RefactorMCP.Tests;
@@ -14,7 +15,7 @@ public class CliIntegrationTests
     [Fact]
     public async Task CliTestMode_LoadSolution_WorksCorrectly()
     {
-        var result = await RefactoringTools.LoadSolution(GetSolutionPath());
+        var result = await LoadSolutionTool.LoadSolution(GetSolutionPath());
         Assert.Contains("Successfully loaded solution", result);
     }
 
@@ -45,14 +46,17 @@ public class CliIntegrationTests
             "version"
         };
 
-        var refactoringMethods = typeof(RefactoringTools)
-            .GetMethods(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+        var refactoringMethods = typeof(LoadSolutionTool).Assembly
+            .GetTypes()
+            .Where(t => t.GetCustomAttributes(typeof(McpServerToolTypeAttribute), false).Length > 0)
+            .SelectMany(t => t.GetMethods(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static))
+            .ToArray();
 
         foreach (var command in expectedCommands)
         {
             if (command == "list-tools")
             {
-                var progType = typeof(RefactoringTools).Assembly.GetType("Program");
+                var progType = typeof(LoadSolutionTool).Assembly.GetType("Program");
                 Assert.NotNull(progType);
                 var progMethod = progType!.GetMethods(System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
                     .FirstOrDefault(m => m.Name.Contains("ListAvailableTools"));
