@@ -14,7 +14,11 @@ public class PerformanceTests
 {
     private readonly ITestOutputHelper _output;
     private static readonly string SolutionPath = GetSolutionPath();
-    private const string TestOutputPath = "./RefactorMCP.Tests/TestOutput/Performance";
+    private static readonly string TestOutputPath =
+        Path.Combine(Path.GetDirectoryName(SolutionPath)!,
+            "RefactorMCP.Tests",
+            "TestOutput",
+            "Performance");
 
     public PerformanceTests(ITestOutputHelper output)
     {
