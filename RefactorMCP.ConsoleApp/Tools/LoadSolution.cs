@@ -1,4 +1,5 @@
 using ModelContextProtocol.Server;
+using ModelContextProtocol;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.MSBuild;
 using Microsoft.Extensions.Caching.Memory;
@@ -16,7 +17,7 @@ public static partial class RefactoringTools
         {
             if (!File.Exists(solutionPath))
             {
-                return $"Error: Solution file not found at {solutionPath}";
+                return ThrowMcpException($"Error: Solution file not found at {solutionPath}");
             }
             Directory.SetCurrentDirectory(Path.GetDirectoryName(solutionPath)!);
 
@@ -36,7 +37,7 @@ public static partial class RefactoringTools
         }
         catch (Exception ex)
         {
-            return $"Error loading solution: {ex.Message}";
+            throw new McpException($"Error loading solution: {ex.Message}", ex);
         }
     }
 }

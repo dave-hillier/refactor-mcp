@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using ModelContextProtocol;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Linq;
 using Xunit;
@@ -73,10 +74,8 @@ public class RefactoringToolsTests : IDisposable
     public async Task LoadSolution_InvalidPath_ReturnsError()
     {
         // Act
-        var result = await RefactoringTools.LoadSolution("./NonExistent.sln");
-
-        // Assert
-        Assert.Contains("Error: Solution file not found", result);
+        await Assert.ThrowsAsync<McpException>(async () =>
+            await RefactoringTools.LoadSolution("./NonExistent.sln"));
     }
 
     [Fact]
@@ -116,15 +115,12 @@ public class RefactoringToolsTests : IDisposable
         await RefactoringTools.LoadSolution(SolutionPath);
 
         // Act
-        var result = await RefactoringTools.ExtractMethod(
-            ExampleFilePath,
-            "invalid-range",
-            "TestMethod",
-            SolutionPath
-        );
-
-        // Assert
-        Assert.Contains("Error: Invalid selection range format", result);
+        await Assert.ThrowsAsync<McpException>(async () =>
+            await RefactoringTools.ExtractMethod(
+                ExampleFilePath,
+                "invalid-range",
+                "TestMethod",
+                SolutionPath));
     }
 
     [Fact]
@@ -244,14 +240,11 @@ public class RefactoringToolsTests : IDisposable
         await RefactoringTools.LoadSolution(SolutionPath);
 
         // Act
-        var result = await RefactoringTools.MakeFieldReadonly(
-            ExampleFilePath,
-            "nonexistent",
-            SolutionPath
-        );
-
-        // Assert
-        Assert.Contains("Error:", result);
+        await Assert.ThrowsAsync<McpException>(async () =>
+            await RefactoringTools.MakeFieldReadonly(
+                ExampleFilePath,
+                "nonexistent",
+                SolutionPath));
     }
 
     [Fact]
@@ -261,15 +254,12 @@ public class RefactoringToolsTests : IDisposable
         await RefactoringTools.LoadSolution(SolutionPath);
 
         // Act
-        var result = await RefactoringTools.ExtractMethod(
-            "./NonExistent.cs",
-            "1:1-2:2",
-            "TestMethod",
-            SolutionPath
-        );
-
-        // Assert
-        Assert.Contains("Error: File", result);
+        await Assert.ThrowsAsync<McpException>(async () =>
+            await RefactoringTools.ExtractMethod(
+                "./NonExistent.cs",
+                "1:1-2:2",
+                "TestMethod",
+                SolutionPath));
     }
 
     [Theory]
@@ -283,15 +273,12 @@ public class RefactoringToolsTests : IDisposable
         await RefactoringTools.LoadSolution(SolutionPath);
 
         // Act
-        var result = await RefactoringTools.ExtractMethod(
-            ExampleFilePath,
-            range,
-            methodName,
-            SolutionPath
-        );
-
-        // Assert
-        Assert.Contains("Error: Invalid selection range format", result);
+        await Assert.ThrowsAsync<McpException>(async () =>
+            await RefactoringTools.ExtractMethod(
+                ExampleFilePath,
+                range,
+                methodName,
+                SolutionPath));
     }
 
     [Fact]

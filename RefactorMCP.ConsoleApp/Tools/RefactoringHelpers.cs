@@ -1,4 +1,5 @@
 using ModelContextProtocol.Server;
+using ModelContextProtocol;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.MSBuild;
 using Microsoft.Extensions.Caching.Memory;
@@ -46,5 +47,10 @@ public static partial class RefactoringTools
                int.TryParse(startParts[1], out startColumn) &&
                int.TryParse(endParts[0], out endLine) &&
                int.TryParse(endParts[1], out endColumn);
+    }
+
+    private static string ThrowMcpException(string message)
+    {
+        throw new McpException(message);
     }
 }

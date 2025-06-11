@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using Xunit;
+using ModelContextProtocol;
 
 namespace RefactorMCP.Tests;
 
@@ -51,7 +52,7 @@ public class ExampleValidationTests : IDisposable
     public async Task Example_ExtractMethod_ValidationLogic_WorksAsDocumented()
     {
         // Arrange - Create the exact code from our documentation
-        var testFile = Path.Combine(TestOutputPath, "ExtractMethodExample.cs");
+        var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "ExtractMethodExample.cs"));
         await CreateTestFile(testFile, GetCalculatorCodeForExtractMethod());
         await RefactoringTools.LoadSolution(SolutionPath);
 
@@ -73,7 +74,7 @@ public class ExampleValidationTests : IDisposable
     public async Task Example_IntroduceField_AverageCalculation_WorksAsDocumented()
     {
         // Arrange - Create the exact code from our documentation
-        var testFile = Path.Combine(TestOutputPath, "IntroduceFieldExample.cs");
+        var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "IntroduceFieldExample.cs"));
         await CreateTestFile(testFile, GetCalculatorCodeForIntroduceField());
         await RefactoringTools.LoadSolution(SolutionPath);
 
@@ -96,7 +97,7 @@ public class ExampleValidationTests : IDisposable
     public async Task Example_IntroduceVariable_ComplexExpression_WorksAsDocumented()
     {
         // Arrange - Create the exact code from our documentation
-        var testFile = Path.Combine(TestOutputPath, "IntroduceVariableExample.cs");
+        var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "IntroduceVariableExample.cs"));
         await CreateTestFile(testFile, GetCalculatorCodeForIntroduceVariable());
         await RefactoringTools.LoadSolution(SolutionPath);
 
@@ -118,7 +119,7 @@ public class ExampleValidationTests : IDisposable
     public async Task Example_MakeFieldReadonly_FormatField_WorksAsDocumented()
     {
         // Arrange - Create the exact code from our documentation
-        var testFile = Path.Combine(TestOutputPath, "MakeFieldReadonlyExample.cs");
+        var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "MakeFieldReadonlyExample.cs"));
         await CreateTestFile(testFile, GetCalculatorCodeForMakeFieldReadonly());
         await RefactoringTools.LoadSolution(SolutionPath);
 
@@ -138,7 +139,7 @@ public class ExampleValidationTests : IDisposable
     [Fact]
     public async Task Example_SafeDeleteParameter_UnusedParam_WorksAsDocumented()
     {
-        var testFile = Path.Combine(TestOutputPath, "SafeDeleteParameter.cs");
+        var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "SafeDeleteParameter.cs"));
         await CreateTestFile(testFile, GetCalculatorCodeForSafeDelete());
         await RefactoringTools.LoadSolution(SolutionPath);
 
@@ -158,7 +159,7 @@ public class ExampleValidationTests : IDisposable
     public async Task QuickReference_ExtractMethod_WorksAsDocumented()
     {
         // Test the quick reference example
-        var testFile = Path.Combine(TestOutputPath, "QuickRefExtractMethod.cs");
+        var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "QuickRefExtractMethod.cs"));
         await CreateTestFile(testFile, GetCalculatorCodeForExtractMethod());
         await RefactoringTools.LoadSolution(SolutionPath);
 
@@ -178,7 +179,7 @@ public class ExampleValidationTests : IDisposable
     public async Task QuickReference_IntroduceField_WorksAsDocumented()
     {
         // Test the quick reference example
-        var testFile = Path.Combine(TestOutputPath, "QuickRefIntroduceField.cs");
+        var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "QuickRefIntroduceField.cs"));
         await CreateTestFile(testFile, GetCalculatorCodeForIntroduceField());
         await RefactoringTools.LoadSolution(SolutionPath);
 
@@ -204,7 +205,7 @@ public class ExampleValidationTests : IDisposable
     public async Task Example_IntroduceField_AllAccessModifiers_WorkCorrectly(string accessModifier)
     {
         // Test that all documented access modifiers work
-        var testFile = Path.Combine(TestOutputPath, $"AccessModifier_{accessModifier}.cs");
+        var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, $"AccessModifier_{accessModifier}.cs"));
         await CreateTestFile(testFile, GetCalculatorCodeForIntroduceField());
         await RefactoringTools.LoadSolution(SolutionPath);
 
@@ -225,7 +226,7 @@ public class ExampleValidationTests : IDisposable
     public async Task Documentation_RangeFormat_ExamplesAreAccurate()
     {
         // Test the range calculation example from EXAMPLES.md
-        var testFile = Path.Combine(TestOutputPath, "RangeFormatTest.cs");
+        var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "RangeFormatTest.cs"));
         var code = """
 public int Calculate(int a, int b)
 {
@@ -240,15 +241,12 @@ public int Calculate(int a, int b)
 
         // The documentation says to select "if (a < 0 || b < 0)" on line 3
         // with range "3:5-3:25"
-        var result = await RefactoringTools.ExtractMethod(
-            testFile,
-            "3:5-3:25", // From documentation example
-            "TestMethod",
-            SolutionPath
-        );
-
-        // This should work or give a meaningful error
-        Assert.DoesNotContain("Invalid selection range format", result);
+        await Assert.ThrowsAsync<McpException>(async () =>
+            await RefactoringTools.ExtractMethod(
+                testFile,
+                "3:5-3:25", // From documentation example
+                "TestMethod",
+                SolutionPath));
     }
 
     [Fact]
@@ -257,21 +255,19 @@ public int Calculate(int a, int b)
         await RefactoringTools.LoadSolution(SolutionPath);
 
         // Test documented error cases
-        var fileNotFoundResult = await RefactoringTools.ExtractMethod(
-            "./NonExistent.cs",
-            "1:1-2:2",
-            "TestMethod",
-            SolutionPath
-        );
-        Assert.Contains("Error: File", fileNotFoundResult);
+        await Assert.ThrowsAsync<McpException>(async () =>
+            await RefactoringTools.ExtractMethod(
+                "./NonExistent.cs",
+                "1:1-2:2",
+                "TestMethod",
+                SolutionPath));
 
-        var invalidRangeResult = await RefactoringTools.ExtractMethod(
-            Path.Combine(Path.GetDirectoryName(SolutionPath)!, "RefactorMCP.Tests", "ExampleCode.cs"),
-            "invalid-range",
-            "TestMethod",
-            SolutionPath
-        );
-        Assert.Contains("Error: Invalid selection range format", invalidRangeResult);
+        await Assert.ThrowsAsync<McpException>(async () =>
+            await RefactoringTools.ExtractMethod(
+                Path.Combine(Path.GetDirectoryName(SolutionPath)!, "RefactorMCP.Tests", "ExampleCode.cs"),
+                "invalid-range",
+                "TestMethod",
+                SolutionPath));
     }
 
     // Helper methods that create the exact code from our examples
