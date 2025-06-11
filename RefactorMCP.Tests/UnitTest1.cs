@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -537,6 +537,201 @@ public class RefactoringToolsTests : IDisposable
         Assert.DoesNotContain("unusedParam", fileContent);
     }
 
+    [Fact]
+    public async Task MoveInstanceMethod_WithDependencies_AddsAccessMemberAndUpdatesModifiers()
+    {
+        // Arrange
+        await RefactoringTools.LoadSolution(SolutionPath);
+        var testFile = Path.Combine(TestOutputPath, "MoveInstanceMethodWithDeps.cs");
+        await CreateTestFile(testFile, GetSampleCodeForMoveInstanceMethodWithDependencies());
+
+        // Act
+        var result = await RefactoringTools.MoveInstanceMethod(
+            testFile,
+            "OrderProcessor",
+            "ProcessPayment", 
+            "PaymentService",
+            "_paymentService",
+            "field",
+            SolutionPath
+        );
+
+        // Assert
+        Assert.Contains("Successfully moved instance method", result);
+        var fileContent = await File.ReadAllTextAsync(testFile);
+        
+        // Verify the method was removed from source class
+        var tree = CSharpSyntaxTree.ParseText(fileContent);
+        var root = tree.GetRoot();
+        var sourceClass = root.DescendantNodes()
+            .OfType<ClassDeclarationSyntax>()
+            .First(c => c.Identifier.ValueText == "OrderProcessor");
+        Assert.DoesNotContain(sourceClass.Members.OfType<MethodDeclarationSyntax>(), 
+            m => m.Identifier.ValueText == "ProcessPayment");
+        
+        // Verify the access member field was added to source class
+        var fields = sourceClass.Members.OfType<FieldDeclarationSyntax>();
+        Assert.Contains(fields, f => f.Declaration.Variables.Any(v => v.Identifier.ValueText == "_paymentService"));
+        
+        // Verify the method was added to target class with public modifier
+        var targetClass = root.DescendantNodes()
+            .OfType<ClassDeclarationSyntax>()
+            .First(c => c.Identifier.ValueText == "PaymentService");
+        var movedMethod = targetClass.Members.OfType<MethodDeclarationSyntax>()
+            .First(m => m.Identifier.ValueText == "ProcessPayment");
+        Assert.Contains(movedMethod.Modifiers, m => m.IsKind(SyntaxKind.PublicKeyword));
+    }
+
+    [Fact]
+    public async Task MoveInstanceMethod_NonExistentMethod_ThrowsException()
+    {
+        // Arrange
+        await RefactoringTools.LoadSolution(SolutionPath);
+        var testFile = Path.Combine(TestOutputPath, "MoveInstanceMethodError.cs");
+        await CreateTestFile(testFile, GetSampleCodeForMoveInstanceMethodWithDependencies());
+
+        // Act & Assert
+        await Assert.ThrowsAsync<McpException>(async () =>
+            await RefactoringTools.MoveInstanceMethod(
+                testFile,
+                "OrderProcessor",
+                "NonExistentMethod",  // This method doesn't exist
+                "PaymentService",
+                "_paymentService",
+                "field",
+                SolutionPath
+            ));
+    }
+
+    [Fact]
+    public async Task MoveInstanceMethod_NonExistentSourceClass_ThrowsException()
+    {
+        // Arrange
+        await RefactoringTools.LoadSolution(SolutionPath);
+        var testFile = Path.Combine(TestOutputPath, "MoveInstanceMethodErrorClass.cs");
+        await CreateTestFile(testFile, GetSampleCodeForMoveInstanceMethodWithDependencies());
+
+        // Act & Assert
+        await Assert.ThrowsAsync<McpException>(async () =>
+            await RefactoringTools.MoveInstanceMethod(
+                testFile,
+                "NonExistentClass",  // This class doesn't exist
+                "ProcessPayment",
+                "PaymentService",
+                "_paymentService",
+                "field",
+                SolutionPath
+            ));
+    }
+
+    [Fact]
+    public async Task MoveInstanceMethod_ToNewFileWithProperty_CreatesFileAndMovesMethod()
+    {
+        // Arrange
+        await RefactoringTools.LoadSolution(SolutionPath);
+        var testFile = Path.Combine(TestOutputPath, "MoveInstanceMethodPropertyAccess.cs");
+        await CreateTestFile(testFile, GetSampleCodeForMoveInstanceMethodWithDependencies());
+        var targetFile = Path.Combine(Path.GetDirectoryName(testFile)!, "NewPaymentService.cs");
+
+        // Act
+        var result = await RefactoringTools.MoveInstanceMethod(
+            testFile,
+            "OrderProcessor",
+            "ProcessPayment",
+            "NewPaymentService",
+            "PaymentHandler",
+            "property",  // Using property instead of field
+            SolutionPath,
+            targetFile
+        );
+
+        // Assert
+        Assert.Contains("Successfully moved instance method", result);
+        Assert.True(File.Exists(targetFile), "Target file should be created");
+        
+        var sourceContent = await File.ReadAllTextAsync(testFile);
+        var targetContent = await File.ReadAllTextAsync(targetFile);
+        
+        // Verify method was REMOVED from source class (this is the key assertion)
+        var sourceTree = CSharpSyntaxTree.ParseText(sourceContent);
+        var sourceRoot = sourceTree.GetRoot();
+        var sourceClass = sourceRoot.DescendantNodes()
+            .OfType<ClassDeclarationSyntax>()
+            .First(c => c.Identifier.ValueText == "OrderProcessor");
+        Assert.DoesNotContain(sourceClass.Members.OfType<MethodDeclarationSyntax>(), 
+            m => m.Identifier.ValueText == "ProcessPayment");
+        
+        // Verify property was added to source class
+        var properties = sourceClass.Members.OfType<PropertyDeclarationSyntax>();
+        Assert.Contains(properties, p => p.Identifier.ValueText == "PaymentHandler");
+        
+        // Verify method was added to target file with correct class and public modifier
+        Assert.Contains("class NewPaymentService", targetContent);
+        Assert.Contains("public bool ProcessPayment", targetContent);
+        Assert.Contains("decimal amount, string cardNumber", targetContent);
+        
+        // Verify usings were copied to target file
+        Assert.Contains("using System;", targetContent);
+        Assert.Contains("using System.Collections.Generic;", targetContent);
+        
+        // Verify the target class has the method
+        var targetTree = CSharpSyntaxTree.ParseText(targetContent);
+        var targetRoot = targetTree.GetRoot();
+        var targetClass = targetRoot.DescendantNodes()
+            .OfType<ClassDeclarationSyntax>()
+            .First(c => c.Identifier.ValueText == "NewPaymentService");
+        Assert.Contains(targetClass.Members.OfType<MethodDeclarationSyntax>(), 
+            m => m.Identifier.ValueText == "ProcessPayment");
+    }
+
+    [Fact]
+    public async Task MoveInstanceMethod_WithinSameFile_ShouldRemoveFromSource()
+    {
+        // Test moving a method within the same file - this should work correctly
+        
+        // Arrange
+        await RefactoringTools.LoadSolution(SolutionPath);
+        var testFile = Path.Combine(TestOutputPath, "MoveInstanceSameFile.cs");
+        await CreateTestFile(testFile, GetSampleCodeForMoveInstanceMethodWithDependencies());
+
+        // Act - move to existing PaymentService class in same file
+        var result = await RefactoringTools.MoveInstanceMethod(
+            testFile,
+            "OrderProcessor",
+            "ProcessPayment",
+            "PaymentService",
+            "_paymentService",
+            "field",
+            SolutionPath
+            // No targetFilePath - should move within same file
+        );
+
+        // Assert
+        Assert.Contains("Successfully moved instance method", result);
+        
+        var sourceContent = await File.ReadAllTextAsync(testFile);
+        var sourceTree = CSharpSyntaxTree.ParseText(sourceContent);
+        var sourceRoot = sourceTree.GetRoot();
+        
+        // Verify method was removed from OrderProcessor
+        var orderProcessorClass = sourceRoot.DescendantNodes()
+            .OfType<ClassDeclarationSyntax>()
+            .First(c => c.Identifier.ValueText == "OrderProcessor");
+        Assert.DoesNotContain(orderProcessorClass.Members.OfType<MethodDeclarationSyntax>(), 
+            m => m.Identifier.ValueText == "ProcessPayment");
+            
+        // Verify field was added to OrderProcessor
+        var fields = orderProcessorClass.Members.OfType<FieldDeclarationSyntax>();
+        Assert.Contains(fields, f => f.Declaration.Variables.Any(v => v.Identifier.ValueText == "_paymentService"));
+        
+        // Verify method was added to PaymentService
+        var paymentServiceClass = sourceRoot.DescendantNodes()
+            .OfType<ClassDeclarationSyntax>()
+            .First(c => c.Identifier.ValueText == "PaymentService");
+        Assert.Contains(paymentServiceClass.Members.OfType<MethodDeclarationSyntax>(), 
+            m => m.Identifier.ValueText == "ProcessPayment");
+    }
+
     // Helper methods to create test files
     private static async Task CreateTestFile(string filePath, string content)
     {
@@ -631,6 +826,58 @@ public class UtilClass { }
     private static string GetSampleCodeForSafeDelete()
     {
         return File.ReadAllText(Path.Combine(Path.GetDirectoryName(SolutionPath)!, "RefactorMCP.Tests", "ExampleCode.cs"));
+    }
+
+    private static string GetSampleCodeForMoveInstanceMethodWithDependencies()
+    {
+        return """
+using System;
+using System.Collections.Generic;
+
+namespace Test.Domain
+{
+    public class OrderProcessor
+    {
+        private readonly string processorId;
+        private List<string> log = new();
+        
+        public OrderProcessor(string id)
+        {
+            processorId = id;
+        }
+        
+        public bool ValidateOrder(decimal amount)
+        {
+            return amount > 0;
+        }
+        
+        // This method should be moved to PaymentService
+        private bool ProcessPayment(decimal amount, string cardNumber)
+        {
+            if (string.IsNullOrEmpty(cardNumber))
+                return false;
+                
+            log.Add($"Processing payment of {amount} for processor {processorId}");
+            
+            // Simulate payment processing
+            return amount <= 1000;
+        }
+        
+        public void CompleteOrder(decimal amount, string cardNumber)
+        {
+            if (ValidateOrder(amount) && ProcessPayment(amount, cardNumber))
+            {
+                log.Add("Order completed successfully");
+            }
+        }
+    }
+    
+    public class PaymentService
+    {
+        // Target class for the moved method
+    }
+}
+""";
     }
 }
 
