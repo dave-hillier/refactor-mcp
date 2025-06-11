@@ -10,26 +10,18 @@ using Microsoft.CodeAnalysis.Text;
 public static partial class RefactoringTools
 {
     public static async Task<string> IntroduceVariable(
+        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Range in format 'startLine:startColumn-endLine:endColumn'")] string selectionRange,
-        [Description("Name for the new variable")] string variableName,
-        [Description("Path to the solution file (.sln) - optional for single file mode")] string? solutionPath = null)
+        [Description("Name for the new variable")] string variableName)
     {
         try
         {
-            if (solutionPath != null)
-            {
-                // Solution mode - full semantic analysis
-                var solution = await GetOrLoadSolution(solutionPath);
-                var document = GetDocumentByPath(solution, filePath);
-                if (document != null)
-                    return await IntroduceVariableWithSolution(document, selectionRange, variableName);
+            var solution = await GetOrLoadSolution(solutionPath);
+            var document = GetDocumentByPath(solution, filePath);
+            if (document != null)
+                return await IntroduceVariableWithSolution(document, selectionRange, variableName);
 
-                // Fallback to single file mode when file isn't part of the solution
-                return await IntroduceVariableSingleFile(filePath, selectionRange, variableName);
-            }
-
-            // Single file mode - direct syntax tree manipulation
             return await IntroduceVariableSingleFile(filePath, selectionRange, variableName);
         }
         catch (Exception ex)

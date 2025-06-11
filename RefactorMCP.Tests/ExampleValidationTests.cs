@@ -62,10 +62,10 @@ public class ExampleValidationTests : IDisposable
 
         // Act - Use the exact command from EXAMPLES.md
         var result = await RefactoringTools.ExtractMethod(
+            SolutionPath,
             testFile,
             "22:9-25:10", // From documentation: validation block
-            "ValidateInputs",
-            SolutionPath
+            "ValidateInputs"
         );
 
         // Assert result text and file contents
@@ -84,11 +84,11 @@ public class ExampleValidationTests : IDisposable
 
         // Act - Use the exact command from EXAMPLES.md
         var result = await RefactoringTools.IntroduceField(
+            SolutionPath,
             testFile,
             "36:20-36:56", // From documentation: Sum() / Count expression
             "_averageValue",
-            "private",
-            SolutionPath
+            "private"
         );
 
         // Assert result text and file contents
@@ -107,10 +107,10 @@ public class ExampleValidationTests : IDisposable
 
         // Act - Use the exact command from EXAMPLES.md
         var result = await RefactoringTools.IntroduceVariable(
+            SolutionPath,
             testFile,
             "42:50-42:63", // From documentation: value * 2 + 10 expression
-            "processedValue",
-            SolutionPath
+            "processedValue"
         );
 
         // Assert result text and file contents
@@ -129,9 +129,9 @@ public class ExampleValidationTests : IDisposable
 
         // Act - Use the exact command from EXAMPLES.md
         var result = await RefactoringTools.MakeFieldReadonly(
+            SolutionPath,
             testFile,
-            "format", // From documentation: line with format field
-            SolutionPath
+            "format" // From documentation: line with format field
         );
 
         // Assert result text and file contents
@@ -148,10 +148,10 @@ public class ExampleValidationTests : IDisposable
         await RefactoringTools.LoadSolution(SolutionPath);
 
         var result = await RefactoringTools.SafeDeleteParameter(
+            SolutionPath,
             testFile,
             "Multiply",
-            "unusedParam",
-            SolutionPath
+            "unusedParam"
         );
 
         Assert.Contains("Successfully deleted parameter", result);
@@ -169,10 +169,10 @@ public class ExampleValidationTests : IDisposable
 
         // Use the exact command from QUICK_REFERENCE.md
         var result = await RefactoringTools.ExtractMethod(
+            SolutionPath,
             testFile,
             "22:9-25:10",
-            "ValidateInputs",
-            SolutionPath
+            "ValidateInputs"
         );
 
         Assert.Contains("Successfully extracted method", result);
@@ -189,11 +189,11 @@ public class ExampleValidationTests : IDisposable
 
         // Use the exact command from QUICK_REFERENCE.md
         var result = await RefactoringTools.IntroduceField(
+            SolutionPath,
             testFile,
             "36:20-36:56",
             "_averageValue",
-            "private",
-            SolutionPath
+            "private"
         );
 
         Assert.Contains("Successfully introduced private field", result);
@@ -214,11 +214,11 @@ public class ExampleValidationTests : IDisposable
         await RefactoringTools.LoadSolution(SolutionPath);
 
         var result = await RefactoringTools.IntroduceField(
+            SolutionPath,
             testFile,
             "36:20-36:56",
             $"_{accessModifier}Field",
-            accessModifier,
-            SolutionPath
+            accessModifier
         );
 
         Assert.Contains($"Successfully introduced {accessModifier} field", result);
@@ -247,10 +247,10 @@ public int Calculate(int a, int b)
         // with range "3:5-3:25"
         await Assert.ThrowsAsync<McpException>(async () =>
             await RefactoringTools.ExtractMethod(
+                SolutionPath,
                 testFile,
                 "3:5-3:25", // From documentation example
-                "TestMethod",
-                SolutionPath));
+                "TestMethod"));
     }
 
     [Fact]
@@ -261,17 +261,17 @@ public int Calculate(int a, int b)
         // Test documented error cases
         await Assert.ThrowsAsync<McpException>(async () =>
             await RefactoringTools.ExtractMethod(
+                SolutionPath,
                 "./NonExistent.cs",
                 "1:1-2:2",
-                "TestMethod",
-                SolutionPath));
+                "TestMethod"));
 
         await Assert.ThrowsAsync<McpException>(async () =>
             await RefactoringTools.ExtractMethod(
+                SolutionPath,
                 Path.Combine(Path.GetDirectoryName(SolutionPath)!, "RefactorMCP.Tests", "ExampleCode.cs"),
                 "invalid-range",
-                "TestMethod",
-                SolutionPath));
+                "TestMethod"));
     }
 
     // Helper methods that create the exact code from our examples
