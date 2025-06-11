@@ -7,7 +7,8 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Text;
 
-public static partial class RefactoringTools
+[McpServerToolType]
+public static class ConvertToStaticWithInstanceTool
 {
     [McpServerTool, Description("Transform instance method to static by adding instance parameter (preferred for large C# file refactoring)")]
     public static async Task<string> ConvertToStaticWithInstance(
@@ -18,8 +19,8 @@ public static partial class RefactoringTools
     {
         try
         {
-            var solution = await GetOrLoadSolution(solutionPath);
-            var document = GetDocumentByPath(solution, filePath);
+            var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
+            var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
             if (document != null)
                 return await ConvertToStaticWithInstanceWithSolution(document, methodName, instanceParameterName);
 
@@ -41,16 +42,16 @@ public static partial class RefactoringTools
             .OfType<MethodDeclarationSyntax>()
             .FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            return ThrowMcpException($"Error: No method named '{methodName}' found");
+            return RefactoringHelpers.ThrowMcpException($"Error: No method named '{methodName}' found");
 
         var semanticModel = await document.GetSemanticModelAsync();
         var typeDecl = method.Ancestors().OfType<TypeDeclarationSyntax>().FirstOrDefault();
         if (typeDecl == null)
-            return ThrowMcpException($"Error: Method '{methodName}' is not inside a type");
+            return RefactoringHelpers.ThrowMcpException($"Error: Method '{methodName}' is not inside a type");
 
         var typeSymbol = semanticModel!.GetDeclaredSymbol(typeDecl) as INamedTypeSymbol;
         if (typeSymbol == null)
-            return ThrowMcpException($"Error: Unable to determine containing type");
+            return RefactoringHelpers.ThrowMcpException($"Error: Unable to determine containing type");
 
         var parameter = SyntaxFactory.Parameter(SyntaxFactory.Identifier(instanceParameterName))
             .WithType(SyntaxFactory.ParseTypeName(typeSymbol.ToDisplayString()));
@@ -92,7 +93,7 @@ public static partial class RefactoringTools
     private static async Task<string> ConvertToStaticWithInstanceSingleFile(string filePath, string methodName, string instanceParameterName)
     {
         if (!File.Exists(filePath))
-            return ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
+            return RefactoringHelpers.ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
 
         var sourceText = await File.ReadAllTextAsync(filePath);
         var newText = ConvertToStaticWithInstanceInSource(sourceText, methodName, instanceParameterName);
@@ -110,11 +111,11 @@ public static partial class RefactoringTools
             .OfType<MethodDeclarationSyntax>()
             .FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            return ThrowMcpException($"Error: No method named '{methodName}' found");
+            return RefactoringHelpers.ThrowMcpException($"Error: No method named '{methodName}' found");
 
         var classDecl = method.Ancestors().OfType<ClassDeclarationSyntax>().FirstOrDefault();
         if (classDecl == null)
-            return ThrowMcpException($"Error: Method '{methodName}' is not inside a class");
+            return RefactoringHelpers.ThrowMcpException($"Error: Method '{methodName}' is not inside a class");
 
         var parameter = SyntaxFactory.Parameter(SyntaxFactory.Identifier(instanceParameterName))
             .WithType(SyntaxFactory.ParseTypeName(classDecl.Identifier.ValueText));
@@ -152,7 +153,7 @@ public static partial class RefactoringTools
         updatedMethod = updatedMethod.WithModifiers(modifiers);
 
         var newRoot = syntaxRoot.ReplaceNode(method, updatedMethod);
-        var formatted = Formatter.Format(newRoot, SharedWorkspace);
+        var formatted = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
         return formatted.ToFullString();
     }
 }

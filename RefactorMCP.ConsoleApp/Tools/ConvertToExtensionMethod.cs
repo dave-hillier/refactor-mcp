@@ -8,7 +8,8 @@ using Microsoft.CodeAnalysis.Formatting;
 using System.Linq;
 using System.Collections.Generic;
 
-public static partial class RefactoringTools
+[McpServerToolType]
+public static class ConvertToExtensionMethodTool
 {
     [McpServerTool, Description("Convert an instance method to an extension method in a static class")]
     public static async Task<string> ConvertToExtensionMethod(
@@ -19,8 +20,8 @@ public static partial class RefactoringTools
     {
         try
         {
-            var solution = await GetOrLoadSolution(solutionPath);
-            var document = GetDocumentByPath(solution, filePath);
+            var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
+            var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
             if (document != null)
                 return await ConvertToExtensionMethodWithSolution(document, methodName, extensionClass);
 
@@ -41,12 +42,12 @@ public static partial class RefactoringTools
             .OfType<MethodDeclarationSyntax>()
             .FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            return ThrowMcpException($"Error: No method named '{methodName}' found");
+            return RefactoringHelpers.ThrowMcpException($"Error: No method named '{methodName}' found");
 
         var semanticModel = await document.GetSemanticModelAsync();
         var classDecl = method.Ancestors().OfType<ClassDeclarationSyntax>().FirstOrDefault();
         if (classDecl == null)
-            return ThrowMcpException($"Error: Method '{methodName}' is not inside a class");
+            return RefactoringHelpers.ThrowMcpException($"Error: Method '{methodName}' is not inside a class");
 
         var className = classDecl.Identifier.ValueText;
         var extClassName = extensionClass ?? className + "Extensions";
@@ -139,7 +140,7 @@ public static partial class RefactoringTools
     private static async Task<string> ConvertToExtensionMethodSingleFile(string filePath, string methodName, string? extensionClass)
     {
         if (!File.Exists(filePath))
-            return ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
+            return RefactoringHelpers.ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
 
         var sourceText = await File.ReadAllTextAsync(filePath);
         var newText = ConvertToExtensionMethodInSource(sourceText, methodName, extensionClass);
@@ -157,11 +158,11 @@ public static partial class RefactoringTools
             .OfType<MethodDeclarationSyntax>()
             .FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            return ThrowMcpException($"Error: No method named '{methodName}' found");
+            return RefactoringHelpers.ThrowMcpException($"Error: No method named '{methodName}' found");
 
         var classDecl = method.Ancestors().OfType<ClassDeclarationSyntax>().FirstOrDefault();
         if (classDecl == null)
-            return ThrowMcpException($"Error: Method '{methodName}' is not inside a class");
+            return RefactoringHelpers.ThrowMcpException($"Error: Method '{methodName}' is not inside a class");
 
         var className = classDecl.Identifier.ValueText;
         var extClassName = extensionClass ?? className + "Extensions";
@@ -249,7 +250,7 @@ public static partial class RefactoringTools
             }
         }
 
-        var formatted = Formatter.Format(newRoot, SharedWorkspace);
+        var formatted = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
         return formatted.ToFullString();
     }
 }

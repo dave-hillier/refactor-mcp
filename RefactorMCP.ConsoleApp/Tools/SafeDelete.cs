@@ -8,7 +8,8 @@ using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Formatting;
 
-public static partial class RefactoringTools
+[McpServerToolType]
+public static class SafeDeleteTool
 {
     [McpServerTool, Description("Safely delete an unused field (preferred for large C# file refactoring)")]
     public static async Task<string> SafeDeleteField(
@@ -18,8 +19,8 @@ public static partial class RefactoringTools
     {
         try
         {
-            var solution = await GetOrLoadSolution(solutionPath);
-            var document = GetDocumentByPath(solution, filePath);
+            var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
+            var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
             if (document != null)
                 return await SafeDeleteFieldWithSolution(document, fieldName);
 
@@ -39,8 +40,8 @@ public static partial class RefactoringTools
     {
         try
         {
-            var solution = await GetOrLoadSolution(solutionPath);
-            var document = GetDocumentByPath(solution, filePath);
+            var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
+            var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
             if (document != null)
                 return await SafeDeleteMethodWithSolution(document, methodName);
 
@@ -61,8 +62,8 @@ public static partial class RefactoringTools
     {
         try
         {
-            var solution = await GetOrLoadSolution(solutionPath);
-            var document = GetDocumentByPath(solution, filePath);
+            var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
+            var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
             if (document != null)
                 return await SafeDeleteParameterWithSolution(document, methodName, parameterName);
 
@@ -82,8 +83,8 @@ public static partial class RefactoringTools
     {
         try
         {
-            var solution = await GetOrLoadSolution(solutionPath);
-            var document = GetDocumentByPath(solution, filePath);
+            var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
+            var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
             if (document != null)
                 return await SafeDeleteVariableWithSolution(document, selectionRange);
 
@@ -102,7 +103,7 @@ public static partial class RefactoringTools
             .OfType<FieldDeclarationSyntax>()
             .FirstOrDefault(f => f.Declaration.Variables.Any(v => v.Identifier.ValueText == fieldName));
         if (field == null)
-            return ThrowMcpException($"Error: Field '{fieldName}' not found");
+            return RefactoringHelpers.ThrowMcpException($"Error: Field '{fieldName}' not found");
 
         var variable = field.Declaration.Variables.First(v => v.Identifier.ValueText == fieldName);
         var semanticModel = await document.GetSemanticModelAsync();
@@ -110,7 +111,7 @@ public static partial class RefactoringTools
         var refs = await SymbolFinder.FindReferencesAsync(symbol!, document.Project.Solution);
         var count = refs.SelectMany(r => r.Locations).Count() - 1;
         if (count > 0)
-            return ThrowMcpException($"Error: Field '{fieldName}' is referenced {count} time(s)");
+            return RefactoringHelpers.ThrowMcpException($"Error: Field '{fieldName}' is referenced {count} time(s)");
 
         SyntaxNode newRoot;
         if (field.Declaration.Variables.Count == 1)
@@ -131,7 +132,7 @@ public static partial class RefactoringTools
     private static async Task<string> SafeDeleteFieldSingleFile(string filePath, string fieldName)
     {
         if (!File.Exists(filePath))
-            return ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
+            return RefactoringHelpers.ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
 
         var sourceText = await File.ReadAllTextAsync(filePath);
         var newText = SafeDeleteFieldInSource(sourceText, fieldName);
@@ -148,11 +149,11 @@ public static partial class RefactoringTools
             .OfType<FieldDeclarationSyntax>()
             .FirstOrDefault(f => f.Declaration.Variables.Any(v => v.Identifier.ValueText == fieldName));
         if (field == null)
-            return ThrowMcpException($"Error: Field '{fieldName}' not found");
+            return RefactoringHelpers.ThrowMcpException($"Error: Field '{fieldName}' not found");
 
         var references = root.DescendantNodes().OfType<IdentifierNameSyntax>().Count(id => id.Identifier.ValueText == fieldName);
         if (references > 1)
-            return ThrowMcpException($"Error: Field '{fieldName}' is referenced");
+            return RefactoringHelpers.ThrowMcpException($"Error: Field '{fieldName}' is referenced");
 
         SyntaxNode newRoot;
         if (field.Declaration.Variables.Count == 1)
@@ -163,7 +164,7 @@ public static partial class RefactoringTools
             newRoot = root.ReplaceNode(field, field.WithDeclaration(newDecl));
         }
 
-        var formatted = Formatter.Format(newRoot, SharedWorkspace);
+        var formatted = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
         return formatted.ToFullString();
     }
 
@@ -172,14 +173,14 @@ public static partial class RefactoringTools
         var root = await document.GetSyntaxRootAsync();
         var method = root!.DescendantNodes().OfType<MethodDeclarationSyntax>().FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            return ThrowMcpException($"Error: Method '{methodName}' not found");
+            return RefactoringHelpers.ThrowMcpException($"Error: Method '{methodName}' not found");
 
         var semanticModel = await document.GetSemanticModelAsync();
         var symbol = semanticModel!.GetDeclaredSymbol(method)!;
         var refs = await SymbolFinder.FindReferencesAsync(symbol, document.Project.Solution);
         var count = refs.SelectMany(r => r.Locations).Count() - 1;
         if (count > 0)
-            return ThrowMcpException($"Error: Method '{methodName}' is referenced {count} time(s)");
+            return RefactoringHelpers.ThrowMcpException($"Error: Method '{methodName}' is referenced {count} time(s)");
 
         var newRoot = root.RemoveNode(method, SyntaxRemoveOptions.KeepNoTrivia);
         var formatted = Formatter.Format(newRoot, document.Project.Solution.Workspace);
@@ -192,7 +193,7 @@ public static partial class RefactoringTools
     private static async Task<string> SafeDeleteMethodSingleFile(string filePath, string methodName)
     {
         if (!File.Exists(filePath))
-            return ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
+            return RefactoringHelpers.ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
 
         var sourceText = await File.ReadAllTextAsync(filePath);
         var newText = SafeDeleteMethodInSource(sourceText, methodName);
@@ -207,15 +208,15 @@ public static partial class RefactoringTools
         var root = tree.GetRoot();
         var method = root.DescendantNodes().OfType<MethodDeclarationSyntax>().FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            return ThrowMcpException($"Error: Method '{methodName}' not found");
+            return RefactoringHelpers.ThrowMcpException($"Error: Method '{methodName}' not found");
 
         var references = root.DescendantNodes().OfType<InvocationExpressionSyntax>()
             .Count(inv => inv.Expression is IdentifierNameSyntax id && id.Identifier.ValueText == methodName);
         if (references > 0)
-            return ThrowMcpException($"Error: Method '{methodName}' is referenced");
+            return RefactoringHelpers.ThrowMcpException($"Error: Method '{methodName}' is referenced");
 
         var newRoot = root.RemoveNode(method, SyntaxRemoveOptions.KeepNoTrivia);
-        var formatted = Formatter.Format(newRoot, SharedWorkspace);
+        var formatted = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
         return formatted.ToFullString();
     }
 
@@ -224,11 +225,11 @@ public static partial class RefactoringTools
         var root = await document.GetSyntaxRootAsync();
         var method = root!.DescendantNodes().OfType<MethodDeclarationSyntax>().FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            return ThrowMcpException($"Error: Method '{methodName}' not found");
+            return RefactoringHelpers.ThrowMcpException($"Error: Method '{methodName}' not found");
 
         var parameter = method.ParameterList.Parameters.FirstOrDefault(p => p.Identifier.ValueText == parameterName);
         if (parameter == null)
-            return ThrowMcpException($"Error: Parameter '{parameterName}' not found");
+            return RefactoringHelpers.ThrowMcpException($"Error: Parameter '{parameterName}' not found");
 
         var semanticModel = await document.GetSemanticModelAsync();
         var methodSymbol = semanticModel!.GetDeclaredSymbol(method)!;
@@ -268,7 +269,7 @@ public static partial class RefactoringTools
     private static async Task<string> SafeDeleteParameterSingleFile(string filePath, string methodName, string parameterName)
     {
         if (!File.Exists(filePath))
-            return ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
+            return RefactoringHelpers.ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
 
         var sourceText = await File.ReadAllTextAsync(filePath);
         var newText = SafeDeleteParameterInSource(sourceText, methodName, parameterName);
@@ -283,11 +284,11 @@ public static partial class RefactoringTools
         var root = tree.GetRoot();
         var method = root.DescendantNodes().OfType<MethodDeclarationSyntax>().FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            return ThrowMcpException($"Error: Method '{methodName}' not found");
+            return RefactoringHelpers.ThrowMcpException($"Error: Method '{methodName}' not found");
 
         var parameter = method.ParameterList.Parameters.FirstOrDefault(p => p.Identifier.ValueText == parameterName);
         if (parameter == null)
-            return ThrowMcpException($"Error: Parameter '{parameterName}' not found");
+            return RefactoringHelpers.ThrowMcpException($"Error: Parameter '{parameterName}' not found");
 
         var paramIndex = method.ParameterList.Parameters.IndexOf(parameter);
         var invocations = root.DescendantNodes().OfType<InvocationExpressionSyntax>()
@@ -305,7 +306,7 @@ public static partial class RefactoringTools
 
         var newMethod = method.WithParameterList(method.ParameterList.WithParameters(method.ParameterList.Parameters.Remove(parameter)));
         root = root.ReplaceNode(method, newMethod);
-        var formatted = Formatter.Format(root, SharedWorkspace);
+        var formatted = Formatter.Format(root, RefactoringHelpers.SharedWorkspace);
         return formatted.ToFullString();
     }
 
@@ -313,22 +314,22 @@ public static partial class RefactoringTools
     {
         var text = await document.GetTextAsync();
         var root = await document.GetSyntaxRootAsync();
-        if (!TryParseRange(selectionRange, out var sl, out var sc, out var el, out var ec))
-            return ThrowMcpException("Error: Invalid selection range format");
+        if (!RefactoringHelpers.TryParseRange(selectionRange, out var sl, out var sc, out var el, out var ec))
+            return RefactoringHelpers.ThrowMcpException("Error: Invalid selection range format");
 
         var start = text.Lines[sl - 1].Start + sc - 1;
         var end = text.Lines[el - 1].Start + ec - 1;
         var span = TextSpan.FromBounds(start, end);
         var variable = root!.DescendantNodes(span).OfType<VariableDeclaratorSyntax>().FirstOrDefault();
         if (variable == null)
-            return ThrowMcpException("Error: No variable declaration found in range");
+            return RefactoringHelpers.ThrowMcpException("Error: No variable declaration found in range");
 
         var semanticModel = await document.GetSemanticModelAsync();
         var symbol = semanticModel!.GetDeclaredSymbol(variable)!;
         var refs = await SymbolFinder.FindReferencesAsync(symbol, document.Project.Solution);
         var count = refs.SelectMany(r => r.Locations).Count() - 1;
         if (count > 0)
-            return ThrowMcpException($"Error: Variable '{variable.Identifier.ValueText}' is referenced {count} time(s)");
+            return RefactoringHelpers.ThrowMcpException($"Error: Variable '{variable.Identifier.ValueText}' is referenced {count} time(s)");
 
         var statement = variable.FirstAncestorOrSelf<LocalDeclarationStatementSyntax>();
         SyntaxNode newRoot;
@@ -350,7 +351,7 @@ public static partial class RefactoringTools
     private static async Task<string> SafeDeleteVariableSingleFile(string filePath, string selectionRange)
     {
         if (!File.Exists(filePath))
-            return ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
+            return RefactoringHelpers.ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
 
         var sourceText = await File.ReadAllTextAsync(filePath);
         var newText = SafeDeleteVariableInSource(sourceText, selectionRange);
@@ -364,20 +365,20 @@ public static partial class RefactoringTools
         var tree = CSharpSyntaxTree.ParseText(sourceText);
         var root = tree.GetRoot();
         var lines = SourceText.From(sourceText).Lines;
-        if (!TryParseRange(selectionRange, out var sl, out var sc, out var el, out var ec))
-            return ThrowMcpException("Error: Invalid selection range format");
+        if (!RefactoringHelpers.TryParseRange(selectionRange, out var sl, out var sc, out var el, out var ec))
+            return RefactoringHelpers.ThrowMcpException("Error: Invalid selection range format");
 
         var start = lines[sl - 1].Start + sc - 1;
         var end = lines[el - 1].Start + ec - 1;
         var span = TextSpan.FromBounds(start, end);
         var variable = root.DescendantNodes(span).OfType<VariableDeclaratorSyntax>().FirstOrDefault();
         if (variable == null)
-            return ThrowMcpException("Error: No variable declaration found in range");
+            return RefactoringHelpers.ThrowMcpException("Error: No variable declaration found in range");
 
         var name = variable.Identifier.ValueText;
         var references = root.DescendantNodes().OfType<IdentifierNameSyntax>().Count(id => id.Identifier.ValueText == name);
         if (references > 1)
-            return ThrowMcpException($"Error: Variable '{name}' is referenced");
+            return RefactoringHelpers.ThrowMcpException($"Error: Variable '{name}' is referenced");
 
         var statement = variable.FirstAncestorOrSelf<LocalDeclarationStatementSyntax>();
         SyntaxNode newRoot;
@@ -389,7 +390,7 @@ public static partial class RefactoringTools
             newRoot = root.ReplaceNode(statement, statement.WithDeclaration(newDecl));
         }
 
-        var formatted = Formatter.Format(newRoot, SharedWorkspace);
+        var formatted = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
         return formatted.ToFullString();
     }
 }

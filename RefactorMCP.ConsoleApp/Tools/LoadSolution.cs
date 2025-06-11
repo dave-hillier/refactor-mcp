@@ -7,7 +7,8 @@ using System.ComponentModel;
 using System.IO;
 
 
-public static partial class RefactoringTools
+[McpServerToolType]
+public static class LoadSolutionTool
 {
     [McpServerTool, Description("Load a solution file for refactoring operations and set the current directory to the solution directory")]
     public static async Task<string> LoadSolution(
@@ -17,11 +18,11 @@ public static partial class RefactoringTools
         {
             if (!File.Exists(solutionPath))
             {
-                return ThrowMcpException($"Error: Solution file not found at {solutionPath}");
+                return RefactoringHelpers.ThrowMcpException($"Error: Solution file not found at {solutionPath}");
             }
             Directory.SetCurrentDirectory(Path.GetDirectoryName(solutionPath)!);
 
-            if (_solutionCache.TryGetValue(solutionPath, out Solution? cached))
+            if (RefactoringHelpers.SolutionCache.TryGetValue(solutionPath, out Solution? cached))
             {
                 var cachedProjects = cached.Projects.Select(p => p.Name).ToList();
                 return $"Successfully loaded solution '{Path.GetFileName(solutionPath)}' with {cachedProjects.Count} projects: {string.Join(", ", cachedProjects)}";
@@ -30,7 +31,7 @@ public static partial class RefactoringTools
             using var workspace = MSBuildWorkspace.Create();
             var solution = await workspace.OpenSolutionAsync(solutionPath);
 
-            _solutionCache.Set(solutionPath, solution);
+            RefactoringHelpers.SolutionCache.Set(solutionPath, solution);
 
             var projects = solution.Projects.Select(p => p.Name).ToList();
             return $"Successfully loaded solution '{Path.GetFileName(solutionPath)}' with {projects.Count} projects: {string.Join(", ", projects)}";

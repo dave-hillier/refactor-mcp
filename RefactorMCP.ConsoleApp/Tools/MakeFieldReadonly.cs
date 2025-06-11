@@ -8,7 +8,8 @@ using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Text;
 using System.Linq;
 
-public static partial class RefactoringTools
+[McpServerToolType]
+public static class MakeFieldReadonlyTool
 {
     public static async Task<string> MakeFieldReadonly(
         [Description("Absolute path to the solution file (.sln)")] string solutionPath,
@@ -17,8 +18,8 @@ public static partial class RefactoringTools
     {
         try
         {
-            var solution = await GetOrLoadSolution(solutionPath);
-            var document = GetDocumentByPath(solution, filePath);
+            var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
+            var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
             if (document != null)
                 return await MakeFieldReadonlyWithSolution(document, fieldName);
 
@@ -40,7 +41,7 @@ public static partial class RefactoringTools
             .FirstOrDefault(f => f.Declaration.Variables.Any(v => v.Identifier.ValueText == fieldName));
 
         if (fieldDeclaration == null)
-            return ThrowMcpException($"Error: No field named '{fieldName}' found");
+            return RefactoringHelpers.ThrowMcpException($"Error: No field named '{fieldName}' found");
 
         // Add readonly modifier
         var readonlyModifier = SyntaxFactory.Token(SyntaxKind.ReadOnlyKeyword);
@@ -120,7 +121,7 @@ public static partial class RefactoringTools
     private static async Task<string> MakeFieldReadonlySingleFile(string filePath, string fieldName)
     {
         if (!File.Exists(filePath))
-            return ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
+            return RefactoringHelpers.ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
 
         var sourceText = await File.ReadAllTextAsync(filePath);
         var newText = MakeFieldReadonlyInSource(sourceText, fieldName);
@@ -138,7 +139,7 @@ public static partial class RefactoringTools
             .FirstOrDefault(f => f.Declaration.Variables.Any(v => v.Identifier.ValueText == fieldName));
 
         if (fieldDeclaration == null)
-            return ThrowMcpException($"Error: No field named '{fieldName}' found");
+            return RefactoringHelpers.ThrowMcpException($"Error: No field named '{fieldName}' found");
 
         var readonlyModifier = SyntaxFactory.Token(SyntaxKind.ReadOnlyKeyword);
         var newModifiers = fieldDeclaration.Modifiers.Add(readonlyModifier);
@@ -188,7 +189,7 @@ public static partial class RefactoringTools
 
                     var updatedClass = containingClass.WithMembers(SyntaxFactory.List(newMembers));
                     var newRoot = syntaxRoot.ReplaceNode(containingClass, updatedClass);
-                    var formattedRoot = Formatter.Format(newRoot, SharedWorkspace);
+                    var formattedRoot = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
                     return formattedRoot.ToFullString();
                 }
             }
@@ -196,11 +197,11 @@ public static partial class RefactoringTools
         else
         {
             var newRoot = syntaxRoot.ReplaceNode(fieldDeclaration, newFieldDeclaration);
-            var formattedRoot = Formatter.Format(newRoot, SharedWorkspace);
+            var formattedRoot = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
             return formattedRoot.ToFullString();
         }
 
-        return Formatter.Format(syntaxRoot, SharedWorkspace).ToFullString();
+        return Formatter.Format(syntaxRoot, RefactoringHelpers.SharedWorkspace).ToFullString();
     }
 
 }

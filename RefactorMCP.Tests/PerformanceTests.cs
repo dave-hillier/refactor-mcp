@@ -53,7 +53,7 @@ public class PerformanceTests
         var stopwatch = Stopwatch.StartNew();
 
         // Act
-        var result = await RefactoringTools.LoadSolution(SolutionPath);
+        var result = await LoadSolutionTool.LoadSolution(SolutionPath);
 
         // Assert
         stopwatch.Stop();
@@ -69,12 +69,12 @@ public class PerformanceTests
         // Arrange
         var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "LargeFileTest.cs"));
         await CreateLargeTestFile(testFile);
-        await RefactoringTools.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath);
 
         var stopwatch = Stopwatch.StartNew();
 
         // Act
-        var result = await RefactoringTools.ExtractMethod(
+        var result = await ExtractMethodTool.ExtractMethod(
             SolutionPath,
             testFile,
             "10:9-13:10", // Extract a validation block
@@ -95,19 +95,19 @@ public class PerformanceTests
         // Arrange
         var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "MultipleRefactoringsTest.cs"));
         await CreateTestFileForMultipleRefactorings(testFile);
-        await RefactoringTools.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath);
 
         var totalStopwatch = Stopwatch.StartNew();
 
         // Act - Perform multiple refactorings in sequence
-        var extractResult = await RefactoringTools.ExtractMethod(
+        var extractResult = await ExtractMethodTool.ExtractMethod(
             SolutionPath,
             testFile,
             "8:9-11:10",
             "ValidateInputs"
         );
 
-        var fieldResult = await RefactoringTools.IntroduceField(
+        var fieldResult = await IntroduceFieldTool.IntroduceField(
             SolutionPath,
             testFile,
             "15:16-15:40",
@@ -115,7 +115,7 @@ public class PerformanceTests
             "private"
         );
 
-        var variableResult = await RefactoringTools.IntroduceVariable(
+        var variableResult = await IntroduceVariableTool.IntroduceVariable(
             SolutionPath,
             testFile,
             "19:20-19:35",
@@ -137,12 +137,12 @@ public class PerformanceTests
     {
         // Arrange & Act - First load
         var firstStopwatch = Stopwatch.StartNew();
-        var firstResult = await RefactoringTools.LoadSolution(SolutionPath);
+        var firstResult = await LoadSolutionTool.LoadSolution(SolutionPath);
         firstStopwatch.Stop();
 
         // Act - Second load (should use cache)
         var secondStopwatch = Stopwatch.StartNew();
-        var secondResult = await RefactoringTools.LoadSolution(SolutionPath);
+        var secondResult = await LoadSolutionTool.LoadSolution(SolutionPath);
         secondStopwatch.Stop();
 
         // Assert
@@ -163,7 +163,7 @@ public class PerformanceTests
         // Arrange
         var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "MemoryTest.cs"));
         await CreateTestFileForMultipleRefactorings(testFile);
-        await RefactoringTools.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath);
 
         var initialMemory = GC.GetTotalMemory(true);
 
@@ -173,7 +173,7 @@ public class PerformanceTests
             var testFileCopy = testFile.Replace(".cs", $"_{i}.cs");
             await File.WriteAllTextAsync(testFileCopy, await File.ReadAllTextAsync(testFile));
 
-            await RefactoringTools.ExtractMethod(
+            await ExtractMethodTool.ExtractMethod(
                 SolutionPath,
                 testFileCopy,
                 "8:9-11:10",

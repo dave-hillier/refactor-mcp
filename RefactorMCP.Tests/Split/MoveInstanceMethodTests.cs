@@ -13,11 +13,11 @@ public class MoveInstanceMethodTests : TestBase
     [Fact]
     public async Task MoveInstanceMethod_ReturnsSuccess()
     {
-        await RefactoringTools.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath);
         var testFile = Path.Combine(TestOutputPath, "MoveInstanceMethod.cs");
         await TestUtilities.CreateTestFile(testFile, TestUtilities.GetSampleCodeForMoveInstanceMethod());
 
-        var result = await RefactoringTools.MoveInstanceMethod(
+        var result = await MoveMethodsTool.MoveInstanceMethod(
             SolutionPath,
             testFile,
             "Calculator",

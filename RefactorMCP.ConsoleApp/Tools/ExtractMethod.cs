@@ -7,7 +7,8 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Text;
 
-public static partial class RefactoringTools
+[McpServerToolType]
+public static class ExtractMethodTool
 {
     public static async Task<string> ExtractMethod(
         [Description("Absolute path to the solution file (.sln)")] string solutionPath,
@@ -17,8 +18,8 @@ public static partial class RefactoringTools
     {
         try
         {
-            var solution = await GetOrLoadSolution(solutionPath);
-            var document = GetDocumentByPath(solution, filePath);
+            var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
+            var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
             if (document != null)
                 return await ExtractMethodWithSolution(document, selectionRange, methodName);
 
@@ -35,8 +36,8 @@ public static partial class RefactoringTools
         var sourceText = await document.GetTextAsync();
         var syntaxRoot = await document.GetSyntaxRootAsync();
 
-        if (!TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
-            return ThrowMcpException("Error: Invalid selection range format. Use 'startLine:startColumn-endLine:endColumn'");
+        if (!RefactoringHelpers.TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
+            return RefactoringHelpers.ThrowMcpException("Error: Invalid selection range format. Use 'startLine:startColumn-endLine:endColumn'");
 
         var startPosition = sourceText.Lines[startLine - 1].Start + startColumn - 1;
         var endPosition = sourceText.Lines[endLine - 1].Start + endColumn - 1;
@@ -47,18 +48,18 @@ public static partial class RefactoringTools
             .ToList();
 
         if (!selectedNodes.Any())
-            return ThrowMcpException("Error: No valid code selected");
+            return RefactoringHelpers.ThrowMcpException("Error: No valid code selected");
 
         var containingMethod = selectedNodes.First().Ancestors().OfType<MethodDeclarationSyntax>().FirstOrDefault();
         if (containingMethod == null)
-            return ThrowMcpException("Error: Selected code is not within a method");
+            return RefactoringHelpers.ThrowMcpException("Error: Selected code is not within a method");
 
         var statementsToExtract = containingMethod.Body!.Statements
             .Where(s => span.IntersectsWith(s.FullSpan))
             .ToList();
 
         if (!statementsToExtract.Any())
-            return ThrowMcpException("Error: Selected code does not contain extractable statements");
+            return RefactoringHelpers.ThrowMcpException("Error: Selected code does not contain extractable statements");
 
         // Create the new method
         var newMethod = SyntaxFactory.MethodDeclaration(
@@ -100,7 +101,7 @@ public static partial class RefactoringTools
     private static async Task<string> ExtractMethodSingleFile(string filePath, string selectionRange, string methodName)
     {
         if (!File.Exists(filePath))
-            return ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
+            return RefactoringHelpers.ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
 
         var sourceText = await File.ReadAllTextAsync(filePath);
         var newText = ExtractMethodInSource(sourceText, selectionRange, methodName);
@@ -115,8 +116,8 @@ public static partial class RefactoringTools
         var syntaxRoot = syntaxTree.GetRoot();
         var textLines = SourceText.From(sourceText).Lines;
 
-        if (!TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
-            return ThrowMcpException("Error: Invalid selection range format. Use 'startLine:startColumn-endLine:endColumn'");
+        if (!RefactoringHelpers.TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
+            return RefactoringHelpers.ThrowMcpException("Error: Invalid selection range format. Use 'startLine:startColumn-endLine:endColumn'");
 
         var startPosition = textLines[startLine - 1].Start + startColumn - 1;
         var endPosition = textLines[endLine - 1].Start + endColumn - 1;
@@ -127,18 +128,18 @@ public static partial class RefactoringTools
             .ToList();
 
         if (!selectedNodes.Any())
-            return ThrowMcpException("Error: No valid code selected");
+            return RefactoringHelpers.ThrowMcpException("Error: No valid code selected");
 
         var containingMethod = selectedNodes.First().Ancestors().OfType<MethodDeclarationSyntax>().FirstOrDefault();
         if (containingMethod == null)
-            return ThrowMcpException("Error: Selected code is not within a method");
+            return RefactoringHelpers.ThrowMcpException("Error: Selected code is not within a method");
 
         var statementsToExtract = containingMethod.Body!.Statements
             .Where(s => span.IntersectsWith(s.FullSpan))
             .ToList();
 
         if (!statementsToExtract.Any())
-            return ThrowMcpException("Error: Selected code does not contain extractable statements");
+            return RefactoringHelpers.ThrowMcpException("Error: Selected code does not contain extractable statements");
 
         // Create the new method
         var newMethod = SyntaxFactory.MethodDeclaration(
@@ -167,7 +168,7 @@ public static partial class RefactoringTools
             newRoot = syntaxRoot.ReplaceNode(containingClass, updatedClass);
         }
 
-        var formattedRoot = Formatter.Format(newRoot, SharedWorkspace);
+        var formattedRoot = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
         return formattedRoot.ToFullString();
     }
 
