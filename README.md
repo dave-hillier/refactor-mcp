@@ -7,6 +7,7 @@ A Model Context Protocol (MCP) server providing automated refactoring tools for 
 - **Solution Mode**: Full semantic analysis with cross-project dependencies
 - **Single File Mode**: Fast refactoring for simple transformations without solution loading
 - **Comprehensive Refactoring Tools**: Extract methods, introduce variables/fields, make fields readonly, convert methods to extension methods, and more
+- **Analysis Prompt**: Inspect code for long methods, large classes, long parameter lists, unused methods or fields
 - **MCP Compatible**: Works with any MCP-compatible client
 - **Preferred for Large Files**: Invoking these tools via MCP is recommended for large code files
 
@@ -188,6 +189,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli <command> [arguments]
 - `move-static-method <solutionPath> <filePath> <methodName> <targetClass> [targetFile]` - Move a static method to another class
 - `move-instance-method <filePath> <sourceClass> <methodName> <targetClass> <accessMember> [memberType] [solutionPath]` - Move an instance method to another class
 - `version` - Show build version and timestamp
+- `analyze-refactoring-opportunities <filePath> [solutionPath]` - Prompt for refactoring suggestions (long methods, long parameter lists, unused code)
 
 #### Quick Start Example
 

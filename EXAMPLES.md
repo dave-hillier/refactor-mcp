@@ -451,6 +451,23 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli version
 Version: 1.0.0.0 (Build 2024-01-01 00:00:00Z)
 ```
 
+## 13. Analyze Refactoring Opportunities
+
+**Purpose**: Prompt the server to inspect a file for smells such as long methods, long parameter lists, large classes, or unused members.
+
+### Example
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli analyze-refactoring-opportunities "./RefactorMCP.Tests/ExampleCode.cs" "./RefactorMCP.sln"
+```
+
+**Expected Output**:
+```
+Suggestions:
+- Method 'UnusedHelper' appears unused -> safe-delete-method
+- Field 'deprecatedCounter' appears unused -> safe-delete-field
+```
+
 ## Range Format
 
 All refactoring commands that require selecting code use the range format:

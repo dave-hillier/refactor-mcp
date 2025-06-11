@@ -67,6 +67,14 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli convert-to-extension-method
   methodName
 ```
 
+### Analyze Refactoring Opportunities
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli analyze-refactoring-opportunities \
+  "./RefactorMCP.Tests/ExampleCode.cs" \
+  "./RefactorMCP.sln"
+```
+Prompt the server to analyze the file and suggest possible refactorings such as extract-method or safe-delete-method.
+
 ### Safe Delete Parameter
 ```bash
 dotnet run --project RefactorMCP.ConsoleApp -- --cli safe-delete-parameter \
