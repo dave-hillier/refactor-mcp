@@ -461,6 +461,44 @@ public class RefactoringToolsTests : IDisposable
     }
 
     [Fact]
+    public async Task MoveInstanceMethod_NewFile_AddsUsingsAndCompiles()
+    {
+        await RefactoringTools.LoadSolution(SolutionPath);
+        var testFile = Path.Combine(TestOutputPath, "MoveInstanceToNewFile.cs");
+        await CreateTestFile(testFile, GetSampleCodeForMoveInstanceMethod());
+
+        var targetFile = Path.Combine(Path.GetDirectoryName(testFile)!, "Logger.cs");
+
+        var result = await RefactoringTools.MoveInstanceMethod(
+            testFile,
+            "Calculator",
+            "LogOperation",
+            "Logger",
+            "_logger",
+            "field",
+            SolutionPath,
+            targetFile
+        );
+
+        Assert.Contains("Successfully moved instance method", result);
+        var fileContent = await File.ReadAllTextAsync(targetFile);
+        Assert.Contains("using System", fileContent);
+
+        var syntaxTree = CSharpSyntaxTree.ParseText(fileContent);
+        var refs = ((string?)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES"))!
+            .Split(Path.PathSeparator)
+            .Select(p => MetadataReference.CreateFromFile(p));
+        var compilation = CSharpCompilation.Create(
+            "test",
+            new[] { syntaxTree },
+            refs,
+            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+
+        var diagnostics = compilation.GetDiagnostics();
+        Assert.DoesNotContain(diagnostics, d => d.Severity == DiagnosticSeverity.Error);
+    }
+
+    [Fact]
     public async Task SafeDeleteParameter_RemovesParameter()
     {
         await RefactoringTools.LoadSolution(SolutionPath);
