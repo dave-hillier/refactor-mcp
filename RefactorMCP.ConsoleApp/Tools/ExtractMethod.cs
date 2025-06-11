@@ -1,4 +1,5 @@
 using ModelContextProtocol.Server;
+using ModelContextProtocol;
 using System.ComponentModel;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -33,7 +34,7 @@ public static partial class RefactoringTools
         }
         catch (Exception ex)
         {
-            return $"Error extracting method: {ex.Message}";
+            throw new McpException($"Error extracting method: {ex.Message}", ex);
         }
     }
 
@@ -43,7 +44,7 @@ public static partial class RefactoringTools
         var syntaxRoot = await document.GetSyntaxRootAsync();
 
         if (!TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
-            return "Error: Invalid selection range format. Use 'startLine:startColumn-endLine:endColumn'";
+            return ThrowMcpException("Error: Invalid selection range format. Use 'startLine:startColumn-endLine:endColumn'");
 
         var startPosition = sourceText.Lines[startLine - 1].Start + startColumn - 1;
         var endPosition = sourceText.Lines[endLine - 1].Start + endColumn - 1;
@@ -54,7 +55,7 @@ public static partial class RefactoringTools
             .ToList();
 
         if (!selectedNodes.Any())
-            return "Error: No valid code selected";
+            return ThrowMcpException("Error: No valid code selected");
 
         var statementsToExtract = selectedNodes
             .OfType<StatementSyntax>()
@@ -62,12 +63,12 @@ public static partial class RefactoringTools
             .ToList();
 
         if (!statementsToExtract.Any())
-            return "Error: Selected code does not contain extractable statements";
+            return ThrowMcpException("Error: Selected code does not contain extractable statements");
 
         // Find the containing method
         var containingMethod = selectedNodes.First().Ancestors().OfType<MethodDeclarationSyntax>().FirstOrDefault();
         if (containingMethod == null)
-            return "Error: Selected code is not within a method";
+            return ThrowMcpException("Error: Selected code is not within a method");
 
         // Create the new method
         var newMethod = SyntaxFactory.MethodDeclaration(
@@ -112,7 +113,7 @@ public static partial class RefactoringTools
     private static async Task<string> ExtractMethodSingleFile(string filePath, string selectionRange, string methodName)
     {
         if (!File.Exists(filePath))
-            return $"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})";
+            return ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
 
         var sourceText = await File.ReadAllTextAsync(filePath);
         var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
@@ -120,7 +121,7 @@ public static partial class RefactoringTools
         var textLines = SourceText.From(sourceText).Lines;
 
         if (!TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
-            return "Error: Invalid selection range format. Use 'startLine:startColumn-endLine:endColumn'";
+            return ThrowMcpException("Error: Invalid selection range format. Use 'startLine:startColumn-endLine:endColumn'");
 
         var startPosition = textLines[startLine - 1].Start + startColumn - 1;
         var endPosition = textLines[endLine - 1].Start + endColumn - 1;
@@ -131,7 +132,7 @@ public static partial class RefactoringTools
             .ToList();
 
         if (!selectedNodes.Any())
-            return "Error: No valid code selected";
+            return ThrowMcpException("Error: No valid code selected");
 
         var statementsToExtract = selectedNodes
             .OfType<StatementSyntax>()
@@ -139,12 +140,12 @@ public static partial class RefactoringTools
             .ToList();
 
         if (!statementsToExtract.Any())
-            return "Error: Selected code does not contain extractable statements";
+            return ThrowMcpException("Error: Selected code does not contain extractable statements");
 
         // Find the containing method
         var containingMethod = selectedNodes.First().Ancestors().OfType<MethodDeclarationSyntax>().FirstOrDefault();
         if (containingMethod == null)
-            return "Error: Selected code is not within a method";
+            return ThrowMcpException("Error: Selected code is not within a method");
 
         // Create the new method
         var newMethod = SyntaxFactory.MethodDeclaration(
