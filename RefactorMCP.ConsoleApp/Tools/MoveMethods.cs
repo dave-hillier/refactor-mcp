@@ -132,7 +132,21 @@ public static partial class RefactoringTools
             }
         }
 
-        ClassDeclarationSyntax newOriginClass = originClass.RemoveNode(method, SyntaxRemoveOptions.KeepNoTrivia);
+        // Get the updated reference to the origin class after any modifications to workingRoot
+        var currentOriginClass = workingRoot.DescendantNodes()
+            .OfType<ClassDeclarationSyntax>()
+            .FirstOrDefault(c => c.Identifier.ValueText == sourceClass);
+        if (currentOriginClass == null)
+            return ThrowMcpException($"Error: Could not find updated reference to source class '{sourceClass}'");
+
+        // Find the method in the current origin class reference
+        var currentMethod = currentOriginClass.Members
+            .OfType<MethodDeclarationSyntax>()
+            .FirstOrDefault(m => m.Identifier.ValueText == methodName);
+        if (currentMethod == null)
+            return ThrowMcpException($"Error: No method named '{methodName}' found in updated class reference");
+
+        ClassDeclarationSyntax newOriginClass = currentOriginClass.RemoveNode(currentMethod, SyntaxRemoveOptions.KeepNoTrivia);
 
         if (accessMemberType == "field")
         {
@@ -157,14 +171,14 @@ public static partial class RefactoringTools
             newOriginClass = newOriginClass.AddMembers(prop);
         }
 
-        var updatedMethod = method;
-        if (!method.Modifiers.Any(m => m.IsKind(SyntaxKind.PublicKeyword)))
+        var updatedMethod = currentMethod;
+        if (!currentMethod.Modifiers.Any(m => m.IsKind(SyntaxKind.PublicKeyword)))
         {
-            var mods = method.Modifiers.Where(m => !m.IsKind(SyntaxKind.PrivateKeyword) && !m.IsKind(SyntaxKind.ProtectedKeyword) && !m.IsKind(SyntaxKind.InternalKeyword));
-            updatedMethod = method.WithModifiers(SyntaxFactory.TokenList(mods).Add(SyntaxFactory.Token(SyntaxKind.PublicKeyword)));
+            var mods = currentMethod.Modifiers.Where(m => !m.IsKind(SyntaxKind.PrivateKeyword) && !m.IsKind(SyntaxKind.ProtectedKeyword) && !m.IsKind(SyntaxKind.InternalKeyword));
+            updatedMethod = currentMethod.WithModifiers(SyntaxFactory.TokenList(mods).Add(SyntaxFactory.Token(SyntaxKind.PublicKeyword)));
         }
 
-        workingRoot = workingRoot.ReplaceNode(originClass, newOriginClass);
+        workingRoot = workingRoot.ReplaceNode(currentOriginClass, newOriginClass);
 
         var targetPath = targetFilePath ?? filePath;
         var sameFile = targetPath == filePath;
