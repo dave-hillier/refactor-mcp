@@ -1,4 +1,5 @@
 using ModelContextProtocol.Server;
+using ModelContextProtocol;
 using System.ComponentModel;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -18,10 +19,10 @@ public static partial class RefactoringTools
             .OfType<MethodDeclarationSyntax>()
             .FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            return $"Error: No method named '{methodName}' found";
+            return ThrowMcpException($"Error: No method named '{methodName}' found");
 
         if (!TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
-            return "Error: Invalid selection range format";
+            return ThrowMcpException("Error: Invalid selection range format");
 
         var startPosition = textLines[startLine - 1].Start + startColumn - 1;
         var endPosition = textLines[endLine - 1].Start + endColumn - 1;
@@ -29,7 +30,7 @@ public static partial class RefactoringTools
 
         var selectedExpression = syntaxRoot.DescendantNodes(span).OfType<ExpressionSyntax>().FirstOrDefault();
         if (selectedExpression == null)
-            return "Error: Selected code is not a valid expression";
+            return ThrowMcpException("Error: Selected code is not a valid expression");
 
         var semanticModel = await document.GetSemanticModelAsync();
         var typeInfo = semanticModel!.GetTypeInfo(selectedExpression);
@@ -53,7 +54,7 @@ public static partial class RefactoringTools
     private static async Task<string> IntroduceParameterSingleFile(string filePath, string methodName, string selectionRange, string parameterName)
     {
         if (!File.Exists(filePath))
-            return $"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})";
+            return ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
 
         var sourceText = await File.ReadAllTextAsync(filePath);
         var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
@@ -64,10 +65,10 @@ public static partial class RefactoringTools
             .OfType<MethodDeclarationSyntax>()
             .FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            return $"Error: No method named '{methodName}' found";
+            return ThrowMcpException($"Error: No method named '{methodName}' found");
 
         if (!TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
-            return "Error: Invalid selection range format";
+            return ThrowMcpException("Error: Invalid selection range format");
 
         var startPosition = textLines[startLine - 1].Start + startColumn - 1;
         var endPosition = textLines[endLine - 1].Start + endColumn - 1;
@@ -77,7 +78,7 @@ public static partial class RefactoringTools
             .OfType<ExpressionSyntax>()
             .FirstOrDefault(e => span.Contains(e.Span) || e.Span.Contains(span));
         if (selectedExpression == null)
-            return "Error: Selected code is not a valid expression";
+            return ThrowMcpException("Error: Selected code is not a valid expression");
 
         var parameter = SyntaxFactory.Parameter(SyntaxFactory.Identifier(parameterName))
             .WithType(SyntaxFactory.ParseTypeName("object"));
@@ -106,7 +107,7 @@ public static partial class RefactoringTools
                 var solution = await GetOrLoadSolution(solutionPath);
                 var document = GetDocumentByPath(solution, filePath);
                 if (document == null)
-                    return $"Error: File {filePath} not found in solution (current dir: {Directory.GetCurrentDirectory()})";
+                    return ThrowMcpException($"Error: File {filePath} not found in solution (current dir: {Directory.GetCurrentDirectory()})");
 
                 return await IntroduceParameterWithSolution(document, methodName, selectionRange, parameterName);
             }
@@ -117,7 +118,7 @@ public static partial class RefactoringTools
         }
         catch (Exception ex)
         {
-            return $"Error introducing parameter: {ex.Message}";
+            throw new McpException($"Error introducing parameter: {ex.Message}", ex);
         }
     }
 }

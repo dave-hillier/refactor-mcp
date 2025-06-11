@@ -1,4 +1,5 @@
 using ModelContextProtocol.Server;
+using ModelContextProtocol;
 using System.ComponentModel;
 using System.Linq;
 using Microsoft.CodeAnalysis;
@@ -18,13 +19,13 @@ public static partial class RefactoringTools
             .OfType<ClassDeclarationSyntax>()
             .FirstOrDefault(c => c.Identifier.ValueText == sourceClass);
         if (originClass == null)
-            return $"Error: Source class '{sourceClass}' not found";
+            return ThrowMcpException($"Error: Source class '{sourceClass}' not found");
 
         var method = originClass.Members
             .OfType<MethodDeclarationSyntax>()
             .FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            return $"Error: No method named '{methodName}' found";
+            return ThrowMcpException($"Error: No method named '{methodName}' found");
 
         var targetClassDecl = syntaxRoot.DescendantNodes()
             .OfType<ClassDeclarationSyntax>()
@@ -93,7 +94,7 @@ public static partial class RefactoringTools
     private static async Task<string> MoveInstanceMethodSingleFile(string filePath, string sourceClass, string methodName, string targetClass, string accessMemberName, string accessMemberType, string? targetFilePath)
     {
         if (!File.Exists(filePath))
-            return $"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})";
+            return ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
 
         var sourceText = await File.ReadAllTextAsync(filePath);
         var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
@@ -103,13 +104,13 @@ public static partial class RefactoringTools
             .OfType<ClassDeclarationSyntax>()
             .FirstOrDefault(c => c.Identifier.ValueText == sourceClass);
         if (originClass == null)
-            return $"Error: Source class '{sourceClass}' not found";
+            return ThrowMcpException($"Error: Source class '{sourceClass}' not found");
 
         var method = originClass.Members
             .OfType<MethodDeclarationSyntax>()
             .FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            return $"Error: No method named '{methodName}' found";
+            return ThrowMcpException($"Error: No method named '{methodName}' found");
 
         var targetClassDecl = syntaxRoot.DescendantNodes()
             .OfType<ClassDeclarationSyntax>()
@@ -245,7 +246,7 @@ public static partial class RefactoringTools
         try
         {
             if (!File.Exists(filePath))
-                return $"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})";
+                return ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
 
             var sourceText = await File.ReadAllTextAsync(filePath);
             var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
@@ -260,7 +261,7 @@ public static partial class RefactoringTools
                 .FirstOrDefault(m => m.Identifier.ValueText == methodName &&
                                     m.Modifiers.Any(SyntaxKind.StaticKeyword));
             if (method == null)
-                return $"Error: Static method '{methodName}' not found";
+                return ThrowMcpException($"Error: Static method '{methodName}' not found");
 
             var targetPath = targetFilePath ?? Path.Combine(Path.GetDirectoryName(filePath)!, $"{targetClass}.cs");
             var sameFile = targetPath == filePath;
@@ -329,7 +330,7 @@ public static partial class RefactoringTools
         }
         catch (Exception ex)
         {
-            return $"Error moving static method: {ex.Message}";
+            throw new McpException($"Error moving static method: {ex.Message}", ex);
         }
     }
     [McpServerTool, Description("Move an instance method to another class (preferred for large C# file refactoring)")]
@@ -360,7 +361,7 @@ public static partial class RefactoringTools
         }
         catch (Exception ex)
         {
-            return $"Error moving instance method: {ex.Message}";
+            throw new McpException($"Error moving instance method: {ex.Message}", ex);
         }
     }
 }

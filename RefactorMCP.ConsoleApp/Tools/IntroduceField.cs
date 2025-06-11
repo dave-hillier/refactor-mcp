@@ -1,4 +1,5 @@
 using ModelContextProtocol.Server;
+using ModelContextProtocol;
 using System.ComponentModel;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -34,7 +35,7 @@ public static partial class RefactoringTools
         }
         catch (Exception ex)
         {
-            return $"Error introducing field: {ex.Message}";
+            throw new McpException($"Error introducing field: {ex.Message}", ex);
         }
     }
 
@@ -44,7 +45,7 @@ public static partial class RefactoringTools
         var syntaxRoot = await document.GetSyntaxRootAsync();
 
         if (!TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
-            return "Error: Invalid selection range format";
+            return ThrowMcpException("Error: Invalid selection range format");
 
         var startPosition = sourceText.Lines[startLine - 1].Start + startColumn - 1;
         var endPosition = sourceText.Lines[endLine - 1].Start + endColumn - 1;
@@ -55,7 +56,7 @@ public static partial class RefactoringTools
             .FirstOrDefault(e => span.Contains(e.Span) || e.Span.Contains(span));
 
         if (selectedExpression == null)
-            return "Error: Selected code is not a valid expression";
+            return ThrowMcpException("Error: Selected code is not a valid expression");
 
         // Get the semantic model to determine the type
         var semanticModel = await document.GetSemanticModelAsync();
@@ -109,7 +110,7 @@ public static partial class RefactoringTools
     private static async Task<string> IntroduceFieldSingleFile(string filePath, string selectionRange, string fieldName, string accessModifier)
     {
         if (!File.Exists(filePath))
-            return $"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})";
+            return ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
 
         var sourceText = await File.ReadAllTextAsync(filePath);
         var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
@@ -117,7 +118,7 @@ public static partial class RefactoringTools
         var textLines = SourceText.From(sourceText).Lines;
 
         if (!TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
-            return "Error: Invalid selection range format";
+            return ThrowMcpException("Error: Invalid selection range format");
 
         var startPosition = textLines[startLine - 1].Start + startColumn - 1;
         var endPosition = textLines[endLine - 1].Start + endColumn - 1;
@@ -128,7 +129,7 @@ public static partial class RefactoringTools
             .FirstOrDefault(e => span.Contains(e.Span) || e.Span.Contains(span));
 
         if (selectedExpression == null)
-            return "Error: Selected code is not a valid expression";
+            return ThrowMcpException("Error: Selected code is not a valid expression");
 
         // In single file mode, use 'var' for type since we don't have semantic analysis
         var typeName = "var";

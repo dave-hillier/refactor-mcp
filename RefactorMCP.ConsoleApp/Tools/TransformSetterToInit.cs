@@ -1,4 +1,5 @@
 using ModelContextProtocol.Server;
+using ModelContextProtocol;
 using System.ComponentModel;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -21,7 +22,7 @@ public static partial class RefactoringTools
                 var solution = await GetOrLoadSolution(solutionPath);
                 var document = GetDocumentByPath(solution, filePath);
                 if (document == null)
-                    return $"Error: File {filePath} not found in solution (current dir: {Directory.GetCurrentDirectory()})";
+                    return ThrowMcpException($"Error: File {filePath} not found in solution (current dir: {Directory.GetCurrentDirectory()})");
 
                 return await TransformSetterToInitWithSolution(document, propertyName);
             }
@@ -32,7 +33,7 @@ public static partial class RefactoringTools
         }
         catch (Exception ex)
         {
-            return $"Error transforming setter: {ex.Message}";
+            throw new McpException($"Error transforming setter: {ex.Message}", ex);
         }
     }
 
@@ -45,11 +46,11 @@ public static partial class RefactoringTools
             .OfType<PropertyDeclarationSyntax>()
             .FirstOrDefault(p => p.Identifier.ValueText == propertyName);
         if (property == null)
-            return $"Error: No property named '{propertyName}' found";
+            return ThrowMcpException($"Error: No property named '{propertyName}' found");
 
         var setter = property.AccessorList?.Accessors.FirstOrDefault(a => a.IsKind(SyntaxKind.SetAccessorDeclaration));
         if (setter == null)
-            return $"Error: Property '{propertyName}' has no setter";
+            return ThrowMcpException($"Error: Property '{propertyName}' has no setter");
 
         var initAccessor = SyntaxFactory.AccessorDeclaration(SyntaxKind.InitAccessorDeclaration)
             .WithSemicolonToken(setter.SemicolonToken);
@@ -67,7 +68,7 @@ public static partial class RefactoringTools
     private static async Task<string> TransformSetterToInitSingleFile(string filePath, string propertyName)
     {
         if (!File.Exists(filePath))
-            return $"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})";
+            return ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
 
         var sourceText = await File.ReadAllTextAsync(filePath);
         var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
@@ -77,11 +78,11 @@ public static partial class RefactoringTools
             .OfType<PropertyDeclarationSyntax>()
             .FirstOrDefault(p => p.Identifier.ValueText == propertyName);
         if (property == null)
-            return $"Error: No property named '{propertyName}' found";
+            return ThrowMcpException($"Error: No property named '{propertyName}' found");
 
         var setter = property.AccessorList?.Accessors.FirstOrDefault(a => a.IsKind(SyntaxKind.SetAccessorDeclaration));
         if (setter == null)
-            return $"Error: Property '{propertyName}' has no setter";
+            return ThrowMcpException($"Error: Property '{propertyName}' has no setter");
 
         var initAccessor = SyntaxFactory.AccessorDeclaration(SyntaxKind.InitAccessorDeclaration)
             .WithSemicolonToken(setter.SemicolonToken);
