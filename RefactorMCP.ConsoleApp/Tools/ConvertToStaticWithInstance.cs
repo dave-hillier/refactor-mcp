@@ -90,16 +90,12 @@ public static class ConvertToStaticWithInstanceTool
         return $"Successfully converted method '{methodName}' to static with instance parameter in {document.FilePath} (solution mode)";
     }
 
-    private static async Task<string> ConvertToStaticWithInstanceSingleFile(string filePath, string methodName, string instanceParameterName)
+    private static Task<string> ConvertToStaticWithInstanceSingleFile(string filePath, string methodName, string instanceParameterName)
     {
-        if (!File.Exists(filePath))
-            return RefactoringHelpers.ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
-
-        var sourceText = await File.ReadAllTextAsync(filePath);
-        var newText = ConvertToStaticWithInstanceInSource(sourceText, methodName, instanceParameterName);
-        await File.WriteAllTextAsync(filePath, newText);
-
-        return $"Successfully converted method '{methodName}' to static with instance parameter in {filePath} (single file mode)";
+        return RefactoringHelpers.ApplySingleFileEdit(
+            filePath,
+            text => ConvertToStaticWithInstanceInSource(text, methodName, instanceParameterName),
+            $"Successfully converted method '{methodName}' to static with instance parameter in {filePath} (single file mode)");
     }
 
     public static string ConvertToStaticWithInstanceInSource(string sourceText, string methodName, string instanceParameterName)

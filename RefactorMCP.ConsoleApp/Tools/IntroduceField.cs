@@ -100,16 +100,12 @@ public static class IntroduceFieldTool
         return $"Successfully introduced {accessModifier} field '{fieldName}' from {selectionRange} in {document.FilePath} (solution mode)";
     }
 
-    private static async Task<string> IntroduceFieldSingleFile(string filePath, string selectionRange, string fieldName, string accessModifier)
+    private static Task<string> IntroduceFieldSingleFile(string filePath, string selectionRange, string fieldName, string accessModifier)
     {
-        if (!File.Exists(filePath))
-            return RefactoringHelpers.ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
-
-        var sourceText = await File.ReadAllTextAsync(filePath);
-        var newText = IntroduceFieldInSource(sourceText, selectionRange, fieldName, accessModifier);
-        await File.WriteAllTextAsync(filePath, newText);
-
-        return $"Successfully introduced {accessModifier} field '{fieldName}' from {selectionRange} in {filePath} (single file mode)";
+        return RefactoringHelpers.ApplySingleFileEdit(
+            filePath,
+            text => IntroduceFieldInSource(text, selectionRange, fieldName, accessModifier),
+            $"Successfully introduced {accessModifier} field '{fieldName}' from {selectionRange} in {filePath} (single file mode)");
     }
 
     public static string IntroduceFieldInSource(string sourceText, string selectionRange, string fieldName, string accessModifier)

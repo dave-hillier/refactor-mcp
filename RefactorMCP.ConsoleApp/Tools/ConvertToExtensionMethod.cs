@@ -137,16 +137,12 @@ public static class ConvertToExtensionMethodTool
         return $"Successfully converted method '{methodName}' to extension method in {document.FilePath} (solution mode)";
     }
 
-    private static async Task<string> ConvertToExtensionMethodSingleFile(string filePath, string methodName, string? extensionClass)
+    private static Task<string> ConvertToExtensionMethodSingleFile(string filePath, string methodName, string? extensionClass)
     {
-        if (!File.Exists(filePath))
-            return RefactoringHelpers.ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
-
-        var sourceText = await File.ReadAllTextAsync(filePath);
-        var newText = ConvertToExtensionMethodInSource(sourceText, methodName, extensionClass);
-        await File.WriteAllTextAsync(filePath, newText);
-
-        return $"Successfully converted method '{methodName}' to extension method in {filePath} (single file mode)";
+        return RefactoringHelpers.ApplySingleFileEdit(
+            filePath,
+            text => ConvertToExtensionMethodInSource(text, methodName, extensionClass),
+            $"Successfully converted method '{methodName}' to extension method in {filePath} (single file mode)");
     }
 
     public static string ConvertToExtensionMethodInSource(string sourceText, string methodName, string? extensionClass)

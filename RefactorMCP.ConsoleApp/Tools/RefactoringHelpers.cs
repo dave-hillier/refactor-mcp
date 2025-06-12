@@ -4,6 +4,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.MSBuild;
 using Microsoft.Extensions.Caching.Memory;
 using System;
+using System.IO;
 
 
 
@@ -56,5 +57,19 @@ internal static class RefactoringHelpers
     internal static string ThrowMcpException(string message)
     {
         throw new McpException(message);
+    }
+
+    internal static async Task<string> ApplySingleFileEdit(
+        string filePath,
+        Func<string, string> transform,
+        string successMessage)
+    {
+        if (!File.Exists(filePath))
+            return ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
+
+        var sourceText = await File.ReadAllTextAsync(filePath);
+        var newText = transform(sourceText);
+        await File.WriteAllTextAsync(filePath, newText);
+        return successMessage;
     }
 }
