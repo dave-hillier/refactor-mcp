@@ -846,12 +846,17 @@ public static class MoveMethodsTool
     {
         if (document != null)
         {
-            // For solution-based operations, still process one by one for now
-            // TODO: Implement bulk move for solution-based operations
+            // For solution-based operations, process one by one but update document reference after each move
             var results = new List<string>();
+            var currentDocument = document;
+            
             foreach (var name in methodList)
             {
-                results.Add(await MoveInstanceMethodWithSolution(document, sourceClass, name, targetClass, accessMemberName, accessMemberType));
+                results.Add(await MoveInstanceMethodWithSolution(currentDocument, sourceClass, name, targetClass, accessMemberName, accessMemberType));
+                
+                // Refresh the document reference to get the updated version after the move
+                var solution = await RefactoringHelpers.GetOrLoadSolution(currentDocument.Project.Solution.FilePath!);
+                currentDocument = RefactoringHelpers.GetDocumentByPath(solution, filePath);
             }
             return string.Join("\n", results);
         }
