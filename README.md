@@ -152,6 +152,14 @@ Use the `--cli` flag for direct command-line testing:
 dotnet run --project RefactorMCP.ConsoleApp -- --cli <command> [arguments]
 ```
 
+### JSON Mode
+
+Pass parameters as a JSON object using `--json`:
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json ToolName '{"param":"value"}'
+```
+
 #### Available Test Commands
 
 - `list-tools` - Show all available refactoring tools

@@ -19,6 +19,12 @@ All examples use the CLI syntax:
 dotnet run --project RefactorMCP.ConsoleApp -- --cli <command> [arguments]
 ```
 
+### JSON Mode Usage
+Parameters can also be passed as JSON:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json ToolName '{"param":"value"}'
+```
+
 ## 1. Extract Method
 
 **Purpose**: Extract selected code into a new private method and replace with a method call.
