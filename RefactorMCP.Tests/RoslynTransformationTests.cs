@@ -569,4 +569,136 @@ class MathUtilities
         var output = MoveMethodsTool.MoveInstanceMethodInSource(input, "Calculator", "GetAverage", "MathUtilities", "mathUtilities", "field");
         Assert.Equal(expected, output.Trim());
     }
+
+    [Fact]
+    public void MoveInstanceMethodInSource_FailureMode_CreatesEmptyTargetClass()
+    {
+        // This test replicates the failure mode where the tool creates the target class
+        // and access member but fails to actually move the method content
+        var input = @"class cResRoom
+{
+    void CheckIn_UseAdvanceDeposits()
+    {
+        Console.WriteLine(""Processing advance deposits"");
+        // Some complex logic here
+        var deposits = GetAdvanceDeposits();
+        ProcessDeposits(deposits);
+    }
+
+    private object GetAdvanceDeposits() => null;
+    private void ProcessDeposits(object deposits) { }
+}";
+
+        // In the failure mode, this is what we would expect (correct behavior)
+        var expected = @"class cResRoom
+{
+    private ResRoomDepositManager resRoom = new ResRoomDepositManager();
+
+    void CheckIn_UseAdvanceDeposits()
+    {
+        resRoom.CheckIn_UseAdvanceDeposits();
+    }
+
+    private object GetAdvanceDeposits() => null;
+    private void ProcessDeposits(object deposits) { }
+}
+
+public class ResRoomDepositManager
+{
+    public void CheckIn_UseAdvanceDeposits()
+    {
+        Console.WriteLine(""Processing advance deposits"");
+        // Some complex logic here
+        var deposits = GetAdvanceDeposits();
+        ProcessDeposits(deposits);
+    }
+}";
+
+
+        var output = MoveMethodsTool.MoveInstanceMethodInSource(input, "cResRoom", "CheckIn_UseAdvanceDeposits", "ResRoomDepositManager", "resRoom", "field");
+        
+        // This test should pass when the bug is fixed
+        Assert.Equal(expected, output.Trim());
+        
+    }
+
+    [Fact]
+    public void MoveMultipleInstanceMethodsInSource_MovesAllMethods()
+    {
+        var input = @"class OrderProcessor
+{
+    private List<string> orders = new List<string>();
+
+    void ValidateOrder()
+    {
+        Console.WriteLine(""Validating order"");
+    }
+
+    void ProcessPayment()
+    {
+        Console.WriteLine(""Processing payment"");
+    }
+
+    void SendConfirmation()
+    {
+        Console.WriteLine(""Sending confirmation"");
+    }
+
+    int GetOrderCount()
+    {
+        return orders.Count;
+    }
+}";
+
+        var expected = @"class OrderProcessor
+{
+    private List<string> orders = new List<string>();
+    private OrderService orderService = new OrderService();
+
+    void ValidateOrder()
+    {
+        orderService.ValidateOrder();
+    }
+
+    void ProcessPayment()
+    {
+        orderService.ProcessPayment();
+    }
+
+    void SendConfirmation()
+    {
+        orderService.SendConfirmation();
+    }
+
+    int GetOrderCount()
+    {
+        return orderService.GetOrderCount(this);
+    }
+}
+
+public class OrderService
+{
+    public void ValidateOrder()
+    {
+        Console.WriteLine(""Validating order"");
+    }
+    public void ProcessPayment()
+    {
+        Console.WriteLine(""Processing payment"");
+    }
+    public void SendConfirmation()
+    {
+        Console.WriteLine(""Sending confirmation"");
+    }
+    public int GetOrderCount(OrderProcessor orderprocessor)
+    {
+        return orderprocessor.orders.Count;
+    }
+}";
+
+        // Test moving multiple methods
+        var methodNames = new[] { "ValidateOrder", "ProcessPayment", "SendConfirmation", "GetOrderCount" };
+        var output = MoveMethodsTool.MoveMultipleInstanceMethodsInSource(input, "OrderProcessor", methodNames, "OrderService", "orderService", "field");
+        Assert.Equal(expected, output.Trim());
+    }
 }
