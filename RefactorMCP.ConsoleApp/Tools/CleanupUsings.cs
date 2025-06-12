@@ -58,7 +58,9 @@ public static class CleanupUsingsTool
     {
         var tree = CSharpSyntaxTree.ParseText(sourceText);
         var compilation = CSharpCompilation.Create("Cleanup")
-            .AddReferences(MetadataReference.CreateFromFile(typeof(object).Assembly.Location))
+            .AddReferences(
+                MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
+                MetadataReference.CreateFromFile(typeof(Console).Assembly.Location))
             .AddSyntaxTrees(tree);
         var diagnostics = compilation.GetDiagnostics();
         var root = tree.GetRoot();
