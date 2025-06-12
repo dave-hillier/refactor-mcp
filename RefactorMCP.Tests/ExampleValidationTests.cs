@@ -160,6 +160,20 @@ public class ExampleValidationTests : IDisposable
     }
 
     [Fact]
+    public async Task Example_CleanupUsings_WorksAsDocumented()
+    {
+        var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "CleanupSample.cs"));
+        await CreateTestFile(testFile, TestUtilities.GetSampleCodeForCleanupUsings());
+        await LoadSolutionTool.LoadSolution(SolutionPath);
+
+        var result = await CleanupUsingsTool.CleanupUsings(SolutionPath, testFile);
+
+        Assert.Contains("Removed unused usings", result);
+        var fileContent = await File.ReadAllTextAsync(testFile);
+        Assert.DoesNotContain("System.Text", fileContent);
+    }
+
+    [Fact]
     public async Task QuickReference_ExtractMethod_WorksAsDocumented()
     {
         // Test the quick reference example
