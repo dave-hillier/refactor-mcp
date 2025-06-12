@@ -125,6 +125,14 @@ public static class MoveMethodsTool
         return knownMembers;
     }
 
+    private static bool MemberExists(ClassDeclarationSyntax classDecl, string memberName)
+    {
+        return classDecl.Members.OfType<FieldDeclarationSyntax>()
+                   .Any(f => f.Declaration.Variables.Any(v => v.Identifier.ValueText == memberName))
+               || classDecl.Members.OfType<PropertyDeclarationSyntax>()
+                   .Any(p => p.Identifier.ValueText == memberName);
+    }
+
     private static MemberDeclarationSyntax CreateAccessMember(string accessMemberType, string accessMemberName, string targetClass)
     {
         if (accessMemberType == "property")
@@ -146,7 +154,7 @@ public static class MoveMethodsTool
                                     SyntaxFactory.ObjectCreationExpression(SyntaxFactory.ParseTypeName(targetClass))
                                         .WithArgumentList(SyntaxFactory.ArgumentList())))
                         })))
-                .AddModifiers(SyntaxFactory.Token(SyntaxKind.PrivateKeyword));
+                .AddModifiers(SyntaxFactory.Token(SyntaxKind.PrivateKeyword), SyntaxFactory.Token(SyntaxKind.ReadOnlyKeyword));
     }
 
     public static string MoveStaticMethodInSource(string sourceText, string methodName, string targetClass)
@@ -259,16 +267,24 @@ public static class MoveMethodsTool
             .WithExpressionBody(null)
             .WithSemicolonToken(default);
 
-        // Create the access member
-        var accessMember = CreateAccessMember(accessMemberType, accessMemberName, targetClass);
+        // Create the access member if it doesn't already exist
+        MemberDeclarationSyntax? accessMember = null;
+        bool accessMemberExists = MemberExists(originClass, accessMemberName);
+        if (!accessMemberExists)
+        {
+            accessMember = CreateAccessMember(accessMemberType, accessMemberName, targetClass);
+        }
 
         // Find the insertion position for the access member (after existing fields/properties)
         var originMembers = originClass.Members.ToList();
         var fieldIndex = originMembers.FindLastIndex(m => m is FieldDeclarationSyntax || m is PropertyDeclarationSyntax);
         var insertIndex = fieldIndex >= 0 ? fieldIndex + 1 : 0;
 
-        // Insert the access member at the correct position
-        originMembers.Insert(insertIndex, accessMember);
+        // Insert the access member at the correct position if needed
+        if (accessMember != null)
+        {
+            originMembers.Insert(insertIndex, accessMember);
+        }
 
         // Replace the original method with the stub
         var methodIndex = originMembers.FindIndex(m => m == method);
@@ -354,8 +370,13 @@ public static class MoveMethodsTool
         // Get instance members for rewriting
         var knownMembers = GetInstanceMemberNames(originClass);
 
-        // Create access member once
-        MemberDeclarationSyntax accessMember = CreateAccessMember(accessMemberType, accessMemberName, targetClass);
+        // Create access member once if it doesn't already exist
+        MemberDeclarationSyntax? accessMember = null;
+        bool accessMemberExists = MemberExists(originClass, accessMemberName);
+        if (!accessMemberExists)
+        {
+            accessMember = CreateAccessMember(accessMemberType, accessMemberName, targetClass);
+        }
 
         // Process all methods and create stubs
         var originMembers = originClass.Members.ToList();
@@ -430,10 +451,13 @@ public static class MoveMethodsTool
             movedMethods.Add(movedMethod);
         }
 
-        // Insert the access member at the correct position
+        // Insert the access member at the correct position if needed
         var fieldIndex = originMembers.FindLastIndex(m => m is FieldDeclarationSyntax || m is PropertyDeclarationSyntax);
         var insertIndex = fieldIndex >= 0 ? fieldIndex + 1 : 0;
-        originMembers.Insert(insertIndex, accessMember);
+        if (accessMember != null)
+        {
+            originMembers.Insert(insertIndex, accessMember);
+        }
 
         var newOriginClass = originClass.WithMembers(SyntaxFactory.List(originMembers));
         var rootWithStub = root.ReplaceNode(originClass, newOriginClass);
@@ -522,28 +546,31 @@ public static class MoveMethodsTool
         // Remove method from source class
         ClassDeclarationSyntax newOriginClass = currentOriginClass.RemoveNode(currentMethod, SyntaxRemoveOptions.KeepNoTrivia);
 
-        // Add access member to source class
-        if (accessMemberType == "field")
+        // Add access member to source class if it doesn't already exist
+        if (!MemberExists(newOriginClass, accessMemberName))
         {
-            var field = SyntaxFactory.FieldDeclaration(
-                    SyntaxFactory.VariableDeclaration(
-                        SyntaxFactory.ParseTypeName(targetClass),
-                        SyntaxFactory.SeparatedList(new[] { SyntaxFactory.VariableDeclarator(accessMemberName)
-                            .WithInitializer(SyntaxFactory.EqualsValueClause(
-                                SyntaxFactory.ObjectCreationExpression(SyntaxFactory.ParseTypeName(targetClass))
-                                    .WithArgumentList(SyntaxFactory.ArgumentList()))) }))
-                ).AddModifiers(SyntaxFactory.Token(SyntaxKind.PrivateKeyword));
+            if (accessMemberType == "field")
+            {
+                var field = SyntaxFactory.FieldDeclaration(
+                        SyntaxFactory.VariableDeclaration(
+                            SyntaxFactory.ParseTypeName(targetClass),
+                            SyntaxFactory.SeparatedList(new[] { SyntaxFactory.VariableDeclarator(accessMemberName)
+                                .WithInitializer(SyntaxFactory.EqualsValueClause(
+                                    SyntaxFactory.ObjectCreationExpression(SyntaxFactory.ParseTypeName(targetClass))
+                                        .WithArgumentList(SyntaxFactory.ArgumentList()))) }))
+                    ).AddModifiers(SyntaxFactory.Token(SyntaxKind.PrivateKeyword), SyntaxFactory.Token(SyntaxKind.ReadOnlyKeyword));
 
-            newOriginClass = newOriginClass.AddMembers(field);
-        }
-        else if (accessMemberType == "property")
-        {
-            var prop = SyntaxFactory.PropertyDeclaration(SyntaxFactory.ParseTypeName(targetClass), accessMemberName)
-                .AddModifiers(SyntaxFactory.Token(SyntaxKind.PrivateKeyword))
-                .AddAccessorListAccessors(
-                    SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
-                    SyntaxFactory.AccessorDeclaration(SyntaxKind.SetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)));
-            newOriginClass = newOriginClass.AddMembers(prop);
+                newOriginClass = newOriginClass.AddMembers(field);
+            }
+            else if (accessMemberType == "property")
+            {
+                var prop = SyntaxFactory.PropertyDeclaration(SyntaxFactory.ParseTypeName(targetClass), accessMemberName)
+                    .AddModifiers(SyntaxFactory.Token(SyntaxKind.PrivateKeyword))
+                    .AddAccessorListAccessors(
+                        SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
+                        SyntaxFactory.AccessorDeclaration(SyntaxKind.SetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)));
+                newOriginClass = newOriginClass.AddMembers(prop);
+            }
         }
 
         // Prepare the method for moving (make it public)
