@@ -121,6 +121,14 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli move-static-method \
   "./optional/target.cs"
 ```
 
+### Inline Method
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli inline-method \
+  "./RefactorMCP.sln" \
+  "./path/to/file.cs" \
+  methodName
+```
+
 ### Move Instance Method
 ```bash
 dotnet run --project RefactorMCP.ConsoleApp -- --cli move-instance-method \

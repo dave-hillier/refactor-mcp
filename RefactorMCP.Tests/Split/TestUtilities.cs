@@ -138,5 +138,22 @@ namespace Test.Domain
     }
 }
 """;
+    public static string GetSampleCodeForInlineMethod() => """
+using System;
+
+public class InlineSample
+{
+    private void Helper()
+    {
+        Console.WriteLine("Hi");
+    }
+
+    public void Call()
+    {
+        Helper();
+        Console.WriteLine("Done");
+    }
+}
+""";
 }
 

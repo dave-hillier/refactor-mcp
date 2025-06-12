@@ -57,6 +57,7 @@ static async Task RunCliMode(string[] args)
         ["convert-to-static-with-instance"] = TestConvertToStaticWithInstance,
         ["introduce-parameter"] = TestIntroduceParameter,
         ["move-static-method"] = TestMoveStaticMethod,
+        ["inline-method"] = TestInlineMethod,
         ["move-instance-method"] = TestMoveInstanceMethod,
         ["transform-setter-to-init"] = TestTransformSetterToInit,
         ["safe-delete-field"] = TestSafeDeleteField,
@@ -377,3 +378,15 @@ static async Task<string> TestTransformSetterToInit(string[] args)
     return await TransformSetterToInitTool.TransformSetterToInit(filePath, propertyName, solutionPath);
 }
 
+
+static async Task<string> TestInlineMethod(string[] args)
+{
+    if (args.Length < 5)
+        return "Error: Missing arguments. Usage: --cli inline-method <solutionPath> <filePath> <methodName>";
+
+    var solutionPath = args[2];
+    var filePath = args[3];
+    var methodName = args[4];
+
+    return await InlineMethodTool.InlineMethod(solutionPath, filePath, methodName);
+}

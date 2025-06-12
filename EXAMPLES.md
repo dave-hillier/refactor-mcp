@@ -331,7 +331,42 @@ public class MathUtilities
 }
 ```
 
-## 10. Safe Delete Parameter
+## 10. Inline Method
+
+**Purpose**: Replace method calls with the method body and remove the original method.
+
+### Example
+**Before** (in `InlineSample.cs`):
+```csharp
+private void Helper()
+{
+    Console.WriteLine("Hi");
+}
+
+public void Call()
+{
+    Helper();
+    Console.WriteLine("Done");
+}
+```
+
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli inline-method \
+  "./RefactorMCP.sln" \
+  "./InlineSample.cs" \
+  Helper
+```
+
+**After**:
+```csharp
+public void Call()
+{
+    Console.WriteLine("Hi");
+    Console.WriteLine("Done");
+}
+```
+## 11. Safe Delete Parameter
 
 **Purpose**: Remove an unused method parameter and update call sites.
 
