@@ -59,16 +59,12 @@ public static class TransformSetterToInitTool
         return $"Successfully converted setter to init for '{propertyName}' in {document.FilePath} (solution mode)";
     }
 
-    private static async Task<string> TransformSetterToInitSingleFile(string filePath, string propertyName)
+    private static Task<string> TransformSetterToInitSingleFile(string filePath, string propertyName)
     {
-        if (!File.Exists(filePath))
-            return RefactoringHelpers.ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
-
-        var sourceText = await File.ReadAllTextAsync(filePath);
-        var newText = TransformSetterToInitInSource(sourceText, propertyName);
-        await File.WriteAllTextAsync(filePath, newText);
-
-        return $"Successfully converted setter to init for '{propertyName}' in {filePath} (single file mode)";
+        return RefactoringHelpers.ApplySingleFileEdit(
+            filePath,
+            text => TransformSetterToInitInSource(text, propertyName),
+            $"Successfully converted setter to init for '{propertyName}' in {filePath} (single file mode)");
     }
 
     public static string TransformSetterToInitInSource(string sourceText, string propertyName)

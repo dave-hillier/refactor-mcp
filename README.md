@@ -519,6 +519,8 @@ The examples use the sample code in [RefactorMCP.Tests/ExampleCode.cs](./Refacto
 # Run existing tests
 dotnet test
 
+*Note: Avoid using `--no-build` on the first run unless the project has already been built, or tests may fail with an "invalid argument" error.*
+
 # Test specific refactoring tool
 dotnet run --project RefactorMCP.ConsoleApp -- --cli <tool-name> [args]
 

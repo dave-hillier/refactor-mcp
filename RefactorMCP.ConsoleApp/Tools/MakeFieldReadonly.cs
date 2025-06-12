@@ -118,16 +118,12 @@ public static class MakeFieldReadonlyTool
         return $"Field '{fieldName}' made readonly, but no constructors found for initialization";
     }
 
-    private static async Task<string> MakeFieldReadonlySingleFile(string filePath, string fieldName)
+    private static Task<string> MakeFieldReadonlySingleFile(string filePath, string fieldName)
     {
-        if (!File.Exists(filePath))
-            return RefactoringHelpers.ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
-
-        var sourceText = await File.ReadAllTextAsync(filePath);
-        var newText = MakeFieldReadonlyInSource(sourceText, fieldName);
-        await File.WriteAllTextAsync(filePath, newText);
-
-        return $"Successfully made field '{fieldName}' readonly in {filePath} (single file mode)";
+        return RefactoringHelpers.ApplySingleFileEdit(
+            filePath,
+            text => MakeFieldReadonlyInSource(text, fieldName),
+            $"Successfully made field '{fieldName}' readonly in {filePath} (single file mode)");
     }
 
     public static string MakeFieldReadonlyInSource(string sourceText, string fieldName)

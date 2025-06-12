@@ -94,15 +94,12 @@ public static class InlineMethodTool
         return $"Successfully inlined method '{methodName}' in {document.FilePath} (solution mode)";
     }
 
-    private static async Task<string> InlineMethodSingleFile(string filePath, string methodName)
+    private static Task<string> InlineMethodSingleFile(string filePath, string methodName)
     {
-        if (!File.Exists(filePath))
-            return RefactoringHelpers.ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
-
-        var sourceText = await File.ReadAllTextAsync(filePath);
-        var newText = InlineMethodInSource(sourceText, methodName);
-        await File.WriteAllTextAsync(filePath, newText);
-        return $"Successfully inlined method '{methodName}' in {filePath} (single file mode)";
+        return RefactoringHelpers.ApplySingleFileEdit(
+            filePath,
+            text => InlineMethodInSource(text, methodName),
+            $"Successfully inlined method '{methodName}' in {filePath} (single file mode)");
     }
 
     public static string InlineMethodInSource(string sourceText, string methodName)

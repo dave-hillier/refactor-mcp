@@ -42,16 +42,12 @@ public static class CleanupUsingsTool
         return $"Removed unused usings in {document.FilePath}";
     }
 
-    private static async Task<string> CleanupUsingsSingleFile(string filePath)
+    private static Task<string> CleanupUsingsSingleFile(string filePath)
     {
-        if (!File.Exists(filePath))
-            return RefactoringHelpers.ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
-
-        var sourceText = await File.ReadAllTextAsync(filePath);
-        var newText = CleanupUsingsInSource(sourceText);
-        await File.WriteAllTextAsync(filePath, newText);
-
-        return $"Removed unused usings in {filePath} (single file mode)";
+        return RefactoringHelpers.ApplySingleFileEdit(
+            filePath,
+            CleanupUsingsInSource,
+            $"Removed unused usings in {filePath} (single file mode)");
     }
 
     public static string CleanupUsingsInSource(string sourceText)

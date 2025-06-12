@@ -102,16 +102,12 @@ public static class IntroduceVariableTool
         return $"Successfully introduced variable '{variableName}' from {selectionRange} in {document.FilePath} (solution mode)";
     }
 
-    private static async Task<string> IntroduceVariableSingleFile(string filePath, string selectionRange, string variableName)
+    private static Task<string> IntroduceVariableSingleFile(string filePath, string selectionRange, string variableName)
     {
-        if (!File.Exists(filePath))
-            return RefactoringHelpers.ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
-
-        var sourceText = await File.ReadAllTextAsync(filePath);
-        var newText = IntroduceVariableInSource(sourceText, selectionRange, variableName);
-        await File.WriteAllTextAsync(filePath, newText);
-
-        return $"Successfully introduced variable '{variableName}' from {selectionRange} in {filePath} (single file mode)";
+        return RefactoringHelpers.ApplySingleFileEdit(
+            filePath,
+            text => IntroduceVariableInSource(text, selectionRange, variableName),
+            $"Successfully introduced variable '{variableName}' from {selectionRange} in {filePath} (single file mode)");
     }
 
     public static string IntroduceVariableInSource(string sourceText, string selectionRange, string variableName)
