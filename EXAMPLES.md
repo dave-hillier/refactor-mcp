@@ -365,7 +365,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli move-multiple-methods \
 ```csharp
 class Helper
 {
-    private Target t = new Target();
+    private readonly Target t = new Target();
 
     public void A()
     {
