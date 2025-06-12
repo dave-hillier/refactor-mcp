@@ -26,6 +26,8 @@ public class MoveInstanceMethodTests : TestBase
             "_logger",
             "field");
 
-        Assert.Contains("Successfully moved instance method", result);
+        Assert.Contains("Successfully moved", result);
+        Assert.Contains("Calculator.LogOperation", result);
+        Assert.Contains("Logger", result);
     }
 }
