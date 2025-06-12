@@ -656,12 +656,12 @@ public static class MoveMethodsTool
             throw new McpException($"Error moving static method: {ex.Message}", ex);
         }
     }
-    [McpServerTool, Description("Move an instance method to another class (preferred for large C# file refactoring)")]
+    [McpServerTool, Description("Move one or more instance methods to another class (preferred for large C# file refactoring)")]
     public static async Task<string> MoveInstanceMethod(
         [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file containing the method")] string filePath,
         [Description("Name of the source class containing the method")] string sourceClass,
-        [Description("Name of the method to move")] string methodName,
+        [Description("Comma separated names of the methods to move")] string methodNames,
         [Description("Name of the target class")] string targetClass,
         [Description("Name for the access member")] string accessMemberName,
         [Description("Type of access member (field, property, variable)")] string accessMemberType = "field",
@@ -669,12 +669,26 @@ public static class MoveMethodsTool
     {
         try
         {
+            var methodList = methodNames.Split(',').Select(m => m.Trim()).Where(m => m.Length > 0).ToArray();
+            if (methodList.Length == 0)
+                return RefactoringHelpers.ThrowMcpException("Error: No method names provided");
+
             var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
             var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
-            if (document != null)
-                return await MoveInstanceMethodWithSolution(document, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
 
-            return await MoveInstanceMethodSingleFile(filePath, sourceClass, methodName, targetClass, accessMemberName, accessMemberType, targetFilePath);
+            var results = new List<string>();
+            foreach (var name in methodList)
+            {
+                if (document != null)
+                {
+                    results.Add(await MoveInstanceMethodWithSolution(document, sourceClass, name, targetClass, accessMemberName, accessMemberType));
+                }
+                else
+                {
+                    results.Add(await MoveInstanceMethodSingleFile(filePath, sourceClass, name, targetClass, accessMemberName, accessMemberType, targetFilePath));
+                }
+            }
+            return string.Join("\n", results);
         }
         catch (Exception ex)
         {
