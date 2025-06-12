@@ -165,6 +165,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli <command> [arguments]
 - `convert-to-static-with-instance <solutionPath> <filePath> <methodLine> [instanceName]` - Convert instance method to static with explicit instance
 - `move-static-method <solutionPath> <filePath> <methodName> <targetClass> [targetFile]` - Move a static method to another class
 - `move-instance-method <solutionPath> <filePath> <sourceClass> <methodName> <targetClass> <accessMember> [memberType] [targetFile]` - Move an instance method to another class
+- `cleanup-usings <filePath> [solutionPath]` - Remove unused using directives
 - `version` - Show build version and timestamp
 - `analyze-refactoring-opportunities <solutionPath> <filePath>` - Prompt for refactoring suggestions (long methods, long parameter lists, unused code)
 
@@ -430,6 +431,35 @@ public void Call()
 {
     Console.WriteLine("Hi");
     Console.WriteLine("Done");
+}
+```
+
+### 9. Cleanup Usings
+
+**Before**:
+```csharp
+using System;
+using System.Text;
+
+public class Sample
+{
+    public void Say() => Console.WriteLine("Hi");
+}
+```
+
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli cleanup-usings \
+  "./RefactorMCP.Tests/ExampleCode.cs" "./RefactorMCP.sln"
+```
+
+**After**:
+```csharp
+using System;
+
+public class Sample
+{
+    public void Say() => Console.WriteLine("Hi");
 }
 ```
 

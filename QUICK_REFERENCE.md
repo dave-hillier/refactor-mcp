@@ -129,6 +129,13 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli inline-method \
   methodName
 ```
 
+### Cleanup Usings
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli cleanup-usings \
+  "./path/to/file.cs" \
+  "./RefactorMCP.sln"
+```
+
 ### Move Instance Method
 ```bash
 dotnet run --project RefactorMCP.ConsoleApp -- --cli move-instance-method \

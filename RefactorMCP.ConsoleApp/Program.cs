@@ -64,6 +64,7 @@ static async Task RunCliMode(string[] args)
         ["safe-delete-method"] = TestSafeDeleteMethod,
         ["safe-delete-parameter"] = TestSafeDeleteParameter,
         ["safe-delete-variable"] = TestSafeDeleteVariable,
+        ["cleanup-usings"] = TestCleanupUsings,
         ["analyze-refactoring-opportunities"] = TestAnalyzeRefactoringOpportunities,
         ["list-tools"] = _ => Task.FromResult(ListAvailableTools()),
         ["version"] = _ => Task.FromResult(ShowVersionInfo())
@@ -109,6 +110,7 @@ static void ShowCliHelp()
     Console.WriteLine("  --cli extract-method ./MyFile.cs \"10:5-15:20\" \"ExtractedMethod\" ./MySolution.sln");
     Console.WriteLine("  --cli introduce-field ./MyFile.cs \"12:10-12:25\" \"_myField\" \"private\"");
     Console.WriteLine("  --cli make-field-readonly ./MyFile.cs 15");
+    Console.WriteLine("  --cli cleanup-usings ./MyFile.cs ./MySolution.sln");
     Console.WriteLine("  --cli analyze-refactoring-opportunities ./MyFile.cs ./MySolution.sln");
     Console.WriteLine("  --cli version");
     Console.WriteLine();
@@ -283,6 +285,17 @@ static async Task<string> TestSafeDeleteVariable(string[] args)
     var solutionPath = args.Length > 4 ? args[4] : null;
 
     return await SafeDeleteTool.SafeDeleteVariable(filePath, range, solutionPath);
+}
+
+static async Task<string> TestCleanupUsings(string[] args)
+{
+    if (args.Length < 3)
+        return "Error: Missing arguments. Usage: --cli cleanup-usings <filePath> [solutionPath]";
+
+    var filePath = args[2];
+    var solutionPath = args.Length > 3 ? args[3] : null;
+
+    return await CleanupUsingsTool.CleanupUsings(solutionPath ?? string.Empty, filePath);
 }
 
 static async Task<string> TestAnalyzeRefactoringOpportunities(string[] args)
