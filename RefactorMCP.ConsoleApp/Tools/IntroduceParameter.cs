@@ -74,16 +74,12 @@ public static class IntroduceParameterTool
         return $"Successfully introduced parameter '{parameterName}' from {selectionRange} in method '{methodName}' in {document.FilePath} (solution mode)";
     }
 
-    private static async Task<string> IntroduceParameterSingleFile(string filePath, string methodName, string selectionRange, string parameterName)
+    private static Task<string> IntroduceParameterSingleFile(string filePath, string methodName, string selectionRange, string parameterName)
     {
-        if (!File.Exists(filePath))
-            return RefactoringHelpers.ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
-
-        var sourceText = await File.ReadAllTextAsync(filePath);
-        var newText = IntroduceParameterInSource(sourceText, methodName, selectionRange, parameterName);
-        await File.WriteAllTextAsync(filePath, newText);
-
-        return $"Successfully introduced parameter '{parameterName}' from {selectionRange} in method '{methodName}' in {filePath} (single file mode)";
+        return RefactoringHelpers.ApplySingleFileEdit(
+            filePath,
+            text => IntroduceParameterInSource(text, methodName, selectionRange, parameterName),
+            $"Successfully introduced parameter '{parameterName}' from {selectionRange} in method '{methodName}' in {filePath} (single file mode)");
     }
 
     public static string IntroduceParameterInSource(string sourceText, string methodName, string selectionRange, string parameterName)

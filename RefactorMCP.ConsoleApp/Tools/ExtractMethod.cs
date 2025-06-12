@@ -98,16 +98,12 @@ public static class ExtractMethodTool
         return $"Successfully extracted method '{methodName}' from {selectionRange} in {document.FilePath} (solution mode)";
     }
 
-    private static async Task<string> ExtractMethodSingleFile(string filePath, string selectionRange, string methodName)
+    private static Task<string> ExtractMethodSingleFile(string filePath, string selectionRange, string methodName)
     {
-        if (!File.Exists(filePath))
-            return RefactoringHelpers.ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
-
-        var sourceText = await File.ReadAllTextAsync(filePath);
-        var newText = ExtractMethodInSource(sourceText, selectionRange, methodName);
-        await File.WriteAllTextAsync(filePath, newText);
-
-        return $"Successfully extracted method '{methodName}' from {selectionRange} in {filePath} (single file mode)";
+        return RefactoringHelpers.ApplySingleFileEdit(
+            filePath,
+            text => ExtractMethodInSource(text, selectionRange, methodName),
+            $"Successfully extracted method '{methodName}' from {selectionRange} in {filePath} (single file mode)");
     }
 
     public static string ExtractMethodInSource(string sourceText, string selectionRange, string methodName)
