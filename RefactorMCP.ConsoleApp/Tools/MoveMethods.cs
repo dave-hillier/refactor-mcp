@@ -105,6 +105,50 @@ public static class MoveMethodsTool
         return usageChecker.HasInstanceMemberUsage;
     }
 
+    private static HashSet<string> GetInstanceMemberNames(ClassDeclarationSyntax originClass)
+    {
+        var knownMembers = new HashSet<string>();
+        foreach (var member in originClass.Members)
+        {
+            if (member is FieldDeclarationSyntax field)
+            {
+                foreach (var variable in field.Declaration.Variables)
+                {
+                    knownMembers.Add(variable.Identifier.ValueText);
+                }
+            }
+            else if (member is PropertyDeclarationSyntax property)
+            {
+                knownMembers.Add(property.Identifier.ValueText);
+            }
+        }
+        return knownMembers;
+    }
+
+    private static MemberDeclarationSyntax CreateAccessMember(string accessMemberType, string accessMemberName, string targetClass)
+    {
+        if (accessMemberType == "property")
+        {
+            return SyntaxFactory.PropertyDeclaration(SyntaxFactory.ParseTypeName(targetClass), accessMemberName)
+                .AddModifiers(SyntaxFactory.Token(SyntaxKind.PrivateKeyword))
+                .AddAccessorListAccessors(
+                    SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
+                    SyntaxFactory.AccessorDeclaration(SyntaxKind.SetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)));
+        }
+
+        return SyntaxFactory.FieldDeclaration(
+                    SyntaxFactory.VariableDeclaration(
+                        SyntaxFactory.ParseTypeName(targetClass),
+                        SyntaxFactory.SeparatedList(new[]
+                        {
+                            SyntaxFactory.VariableDeclarator(accessMemberName)
+                                .WithInitializer(SyntaxFactory.EqualsValueClause(
+                                    SyntaxFactory.ObjectCreationExpression(SyntaxFactory.ParseTypeName(targetClass))
+                                        .WithArgumentList(SyntaxFactory.ArgumentList())))
+                        })))
+                .AddModifiers(SyntaxFactory.Token(SyntaxKind.PrivateKeyword));
+    }
+
     public static string MoveStaticMethodInSource(string sourceText, string methodName, string targetClass)
     {
         var tree = CSharpSyntaxTree.ParseText(sourceText);
@@ -181,21 +225,7 @@ public static class MoveMethodsTool
             return RefactoringHelpers.ThrowMcpException($"Error: No method named '{methodName}' found");
 
         // Check if method uses instance members
-        var knownMembers = new HashSet<string>();
-        foreach (var member in originClass.Members)
-        {
-            if (member is FieldDeclarationSyntax field)
-            {
-                foreach (var variable in field.Declaration.Variables)
-                {
-                    knownMembers.Add(variable.Identifier.ValueText);
-                }
-            }
-            else if (member is PropertyDeclarationSyntax property)
-            {
-                knownMembers.Add(property.Identifier.ValueText);
-            }
-        }
+        var knownMembers = GetInstanceMemberNames(originClass);
 
         // Check if method uses any instance members
         bool usesInstanceMembers = HasInstanceMemberUsage(method, knownMembers);
@@ -230,29 +260,7 @@ public static class MoveMethodsTool
             .WithSemicolonToken(default);
 
         // Create the access member
-        MemberDeclarationSyntax accessMember = null!;
-        if (accessMemberType == "property")
-        {
-            accessMember = SyntaxFactory.PropertyDeclaration(SyntaxFactory.ParseTypeName(targetClass), accessMemberName)
-                .AddModifiers(SyntaxFactory.Token(SyntaxKind.PrivateKeyword))
-                .AddAccessorListAccessors(
-                    SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
-                    SyntaxFactory.AccessorDeclaration(SyntaxKind.SetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)));
-        }
-        else
-        {
-            accessMember = SyntaxFactory.FieldDeclaration(
-                    SyntaxFactory.VariableDeclaration(
-                        SyntaxFactory.ParseTypeName(targetClass),
-                        SyntaxFactory.SeparatedList(new[]
-                        {
-                            SyntaxFactory.VariableDeclarator(accessMemberName)
-                                .WithInitializer(SyntaxFactory.EqualsValueClause(
-                                    SyntaxFactory.ObjectCreationExpression(SyntaxFactory.ParseTypeName(targetClass))
-                                        .WithArgumentList(SyntaxFactory.ArgumentList())))
-                        })))
-                .AddModifiers(SyntaxFactory.Token(SyntaxKind.PrivateKeyword));
-        }
+        var accessMember = CreateAccessMember(accessMemberType, accessMemberName, targetClass);
 
         // Find the insertion position for the access member (after existing fields/properties)
         var originMembers = originClass.Members.ToList();
@@ -344,51 +352,15 @@ public static class MoveMethodsTool
         }
 
         // Get instance members for rewriting
-        var knownMembers = new HashSet<string>();
-        foreach (var member in originClass.Members)
-        {
-            if (member is FieldDeclarationSyntax field)
-            {
-                foreach (var variable in field.Declaration.Variables)
-                {
-                    knownMembers.Add(variable.Identifier.ValueText);
-                }
-            }
-            else if (member is PropertyDeclarationSyntax property)
-            {
-                knownMembers.Add(property.Identifier.ValueText);
-            }
-        }
+        var knownMembers = GetInstanceMemberNames(originClass);
 
         // Create access member once
-        MemberDeclarationSyntax accessMember;
-        if (accessMemberType == "property")
-        {
-            accessMember = SyntaxFactory.PropertyDeclaration(SyntaxFactory.ParseTypeName(targetClass), accessMemberName)
-                .AddModifiers(SyntaxFactory.Token(SyntaxKind.PrivateKeyword))
-                .AddAccessorListAccessors(
-                    SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
-                    SyntaxFactory.AccessorDeclaration(SyntaxKind.SetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)));
-        }
-        else
-        {
-            accessMember = SyntaxFactory.FieldDeclaration(
-                    SyntaxFactory.VariableDeclaration(
-                        SyntaxFactory.ParseTypeName(targetClass),
-                        SyntaxFactory.SeparatedList(new[]
-                        {
-                            SyntaxFactory.VariableDeclarator(accessMemberName)
-                                .WithInitializer(SyntaxFactory.EqualsValueClause(
-                                    SyntaxFactory.ObjectCreationExpression(SyntaxFactory.ParseTypeName(targetClass))
-                                        .WithArgumentList(SyntaxFactory.ArgumentList())))
-                        })))
-                .AddModifiers(SyntaxFactory.Token(SyntaxKind.PrivateKeyword));
-        }
+        MemberDeclarationSyntax accessMember = CreateAccessMember(accessMemberType, accessMemberName, targetClass);
 
         // Process all methods and create stubs
         var originMembers = originClass.Members.ToList();
         var movedMethods = new List<MethodDeclarationSyntax>();
-        
+
         foreach (var method in methodsToMove)
         {
             // Check if method uses instance members
@@ -490,11 +462,11 @@ public static class MoveMethodsTool
     }
 
     private static async Task<(SyntaxNode sourceRoot, SyntaxNode targetRoot, string successMessage)> MoveInstanceMethodCore(
-        SyntaxNode sourceSyntaxRoot, 
-        string sourceClass, 
-        string methodName, 
-        string targetClass, 
-        string accessMemberName, 
+        SyntaxNode sourceSyntaxRoot,
+        string sourceClass,
+        string methodName,
+        string targetClass,
+        string accessMemberName,
         string accessMemberType,
         SyntaxNode? targetSyntaxRoot = null,
         string? targetPath = null)
@@ -515,7 +487,7 @@ public static class MoveMethodsTool
             .OfType<ClassDeclarationSyntax>()
             .FirstOrDefault(c => c.Identifier.ValueText == targetClass);
         SyntaxNode workingSourceRoot = sourceSyntaxRoot;
-        
+
         // Create target class if it doesn't exist in source
         if (targetClassDecl == null)
         {
@@ -591,11 +563,11 @@ public static class MoveMethodsTool
         {
             // Cross-file scenario - work with separate target root
             finalTargetRoot = targetSyntaxRoot;
-            
+
             // Handle using statements propagation
             var sourceCompilationUnit = (CompilationUnitSyntax)sourceSyntaxRoot;
             var sourceUsings = sourceCompilationUnit.Usings.ToList();
-            
+
             var targetCompilationUnit = (CompilationUnitSyntax)finalTargetRoot;
             var targetUsingNames = targetCompilationUnit.Usings
                 .Select(u => u.Name.ToString())
@@ -632,7 +604,7 @@ public static class MoveMethodsTool
             finalTargetRoot = finalTargetRoot.ReplaceNode(newTargetClass, replaced);
         }
 
-        var successMessage = $"Successfully moved {sourceClass}.{methodName} instance method to {targetClass}" + 
+        var successMessage = $"Successfully moved {sourceClass}.{methodName} instance method to {targetClass}" +
             (targetPath != null ? $" in {targetPath}" : "");
 
         return (finalSourceRoot, finalTargetRoot, successMessage);
@@ -641,13 +613,13 @@ public static class MoveMethodsTool
     private static async Task<string> MoveInstanceMethodWithSolution(Document document, string sourceClass, string methodName, string targetClass, string accessMemberName, string accessMemberType)
     {
         var syntaxRoot = await document.GetSyntaxRootAsync();
-        
+
         var (finalSourceRoot, finalTargetRoot, successMessage) = await MoveInstanceMethodCore(
-            syntaxRoot!, 
-            sourceClass, 
-            methodName, 
-            targetClass, 
-            accessMemberName, 
+            syntaxRoot!,
+            sourceClass,
+            methodName,
+            targetClass,
+            accessMemberName,
             accessMemberType);
 
         // Format and write using Document API
@@ -686,11 +658,11 @@ public static class MoveMethodsTool
         }
 
         var (finalSourceRoot, finalTargetRoot, successMessage) = await MoveInstanceMethodCore(
-            sourceSyntaxRoot, 
-            sourceClass, 
-            methodName, 
-            targetClass, 
-            accessMemberName, 
+            sourceSyntaxRoot,
+            sourceClass,
+            methodName,
+            targetClass,
+            accessMemberName,
             accessMemberType,
             targetSyntaxRoot,
             targetPath);
@@ -849,11 +821,11 @@ public static class MoveMethodsTool
             // For solution-based operations, process one by one but update document reference after each move
             var results = new List<string>();
             var currentDocument = document;
-            
+
             foreach (var name in methodList)
             {
                 results.Add(await MoveInstanceMethodWithSolution(currentDocument, sourceClass, name, targetClass, accessMemberName, accessMemberType));
-                
+
                 // Refresh the document reference to get the updated version after the move
                 var solution = await RefactoringHelpers.GetOrLoadSolution(currentDocument.Project.Solution.FilePath!);
                 currentDocument = RefactoringHelpers.GetDocumentByPath(solution, filePath);
@@ -883,7 +855,7 @@ public static class MoveMethodsTool
         var sameFile = targetPath == filePath;
 
         var sourceText = await File.ReadAllTextAsync(filePath);
-        
+
         if (sameFile)
         {
             // Same file operation
