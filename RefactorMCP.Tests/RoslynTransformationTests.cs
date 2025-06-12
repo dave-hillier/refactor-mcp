@@ -701,4 +701,190 @@ public class OrderService
         var output = MoveMethodsTool.MoveMultipleInstanceMethodsInSource(input, "OrderProcessor", methodNames, "OrderService", "orderService", "field");
         Assert.Equal(expected, output.Trim());
     }
+
+    [Fact]
+    public void MoveMultipleMethodsInSource_WithJsonOperations_MovesMethodsInCorrectOrder()
+    {
+        var input = @"class DataProcessor
+{
+    private List<string> data = new List<string>();
+
+    public void ProcessData()
+    {
+        ValidateData();
+        TransformData();
+    }
+
+    private void ValidateData()
+    {
+        Console.WriteLine(""Validating data"");
+    }
+
+    private void TransformData()
+    {
+        Console.WriteLine(""Transforming data"");
+    }
+
+    static void LogOperation(string operation)
+    {
+        Console.WriteLine($""Operation: {operation}"");
+    }
+}
+
+class DataValidator
+{
+}
+
+class Logger
+{
+}";
+
+        var expected = @"class DataProcessor
+{
+    private List<string> data = new List<string>();
+    private DataValidator dataValidator = new DataValidator();
+
+    public void ProcessData()
+    {
+        dataValidator.ValidateData();
+        dataValidator.TransformData();
+    }
+
+    static void LogOperation(string operation)
+    {
+        Logger.LogOperation(operation);
+    }
+}
+
+class DataValidator
+{
+    public void ValidateData()
+    {
+        Console.WriteLine(""Validating data"");
+    }
+    public void TransformData()
+    {
+        Console.WriteLine(""Transforming data"");
+    }
+}
+
+class Logger
+{
+    static void LogOperation(string operation)
+    {
+        Console.WriteLine($""Operation: {operation}"");
+    }
+}";
+
+        // Create JSON operations for multiple method moves
+        var operationsJson = @"[
+            {
+                ""SourceClass"": ""DataProcessor"",
+                ""Method"": ""ValidateData"",
+                ""TargetClass"": ""DataValidator"",
+                ""AccessMember"": ""dataValidator"",
+                ""AccessMemberType"": ""field"",
+                ""IsStatic"": false
+            },
+            {
+                ""SourceClass"": ""DataProcessor"",
+                ""Method"": ""TransformData"",
+                ""TargetClass"": ""DataValidator"",
+                ""AccessMember"": ""dataValidator"",
+                ""AccessMemberType"": ""field"",
+                ""IsStatic"": false
+            },
+            {
+                ""Method"": ""LogOperation"",
+                ""TargetClass"": ""Logger"",
+                ""IsStatic"": true
+            }
+        ]";
+
+        var output = MoveMultipleMethodsTool.MoveMultipleMethodsInSource(input, operationsJson);
+        Assert.Equal(expected, output.Trim());
+    }
+
+    [Fact]
+    public void MoveMultipleMethodsInSource_WithDependencies_OrdersCorrectly()
+    {
+        var input = @"class Calculator
+{
+    public int Add(int a, int b)
+    {
+        return PerformCalculation(a, b, ""+"");
+    }
+
+    public int Subtract(int a, int b)
+    {
+        return PerformCalculation(a, b, ""-"");
+    }
+
+    private int PerformCalculation(int a, int b, string operation)
+    {
+        LogOperation(operation);
+        return operation == ""+"" ? a + b : a - b;
+    }
+
+    private void LogOperation(string operation)
+    {
+        Console.WriteLine($""Performing {operation}"");
+    }
+}
+
+class MathOperations
+{
+}";
+
+        var expected = @"class Calculator
+{
+    private MathOperations mathOperations = new MathOperations();
+
+    public int Add(int a, int b)
+    {
+        return mathOperations.PerformCalculation(a, b, ""+"", this);
+    }
+
+    public int Subtract(int a, int b)
+    {
+        return mathOperations.PerformCalculation(a, b, ""-"", this);
+    }
+}
+
+class MathOperations
+{
+    public void LogOperation(string operation)
+    {
+        Console.WriteLine($""Performing {operation}"");
+    }
+    public int PerformCalculation(int a, int b, string operation, Calculator calculator)
+    {
+        LogOperation(operation);
+        return operation == ""+"" ? a + b : a - b;
+    }
+}";
+
+        // Create JSON operations that have dependencies (PerformCalculation depends on LogOperation)
+        var operationsJson = @"[
+            {
+                ""SourceClass"": ""Calculator"",
+                ""Method"": ""PerformCalculation"",
+                ""TargetClass"": ""MathOperations"",
+                ""AccessMember"": ""mathOperations"",
+                ""AccessMemberType"": ""field"",
+                ""IsStatic"": false
+            },
+            {
+                ""SourceClass"": ""Calculator"",
+                ""Method"": ""LogOperation"",
+                ""TargetClass"": ""MathOperations"",
+                ""AccessMember"": ""mathOperations"",
+                ""AccessMemberType"": ""field"",
+                ""IsStatic"": false
+            }
+        ]";
+
+        var output = MoveMultipleMethodsTool.MoveMultipleMethodsInSource(input, operationsJson);
+        Assert.Equal(expected, output.Trim());
+    }
 }
