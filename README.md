@@ -402,6 +402,37 @@ public class MathUtilities
 }
 ```
 
+### 8. Inline Method
+
+**Before**:
+```csharp
+private void Helper()
+{
+    Console.WriteLine("Hi");
+}
+
+public void Call()
+{
+    Helper();
+    Console.WriteLine("Done");
+}
+```
+
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli inline-method \
+  "./RefactorMCP.sln" "./MyFile.cs" Helper
+```
+
+**After**:
+```csharp
+public void Call()
+{
+    Console.WriteLine("Hi");
+    Console.WriteLine("Done");
+}
+```
+
 ## Complete Examples
 
 See [EXAMPLES.md](./EXAMPLES.md) for comprehensive examples of all refactoring tools, including:
