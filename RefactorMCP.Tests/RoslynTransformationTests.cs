@@ -107,6 +107,26 @@ public class RoslynTransformationTests
     }
 
     [Fact]
+    public void CleanupUsingsInSource_RemovesUnusedUsings()
+    {
+        var input = @"using System;
+using System.Text;
+
+public class CleanupSample
+{
+    public void Say() => Console.WriteLine(""Hi"");
+}";
+        var expected = @"using System;
+
+public class CleanupSample
+{
+    public void Say() => Console.WriteLine(""Hi"");
+}";
+        var output = CleanupUsingsTool.CleanupUsingsInSource(input);
+        Assert.Equal(expected, output);
+    }
+
+    [Fact]
     public void TransformSetterToInitInSource_ReplacesSetter()
     {
         var input = @"class UserProfile
