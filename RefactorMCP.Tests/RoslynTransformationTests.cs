@@ -2,7 +2,7 @@ using Xunit;
 
 namespace RefactorMCP.Tests;
 
-    public class RoslynTransformationTests
+public class RoslynTransformationTests
 {
     [Fact]
     public void IntroduceVariableInSource_AddsVariable()
@@ -47,27 +47,34 @@ namespace RefactorMCP.Tests;
         var output = IntroduceVariableTool.IntroduceVariableInSource(input, "5:17-5:21", "sum");
         Assert.Equal(expected, output);
     }
-
     [Fact]
     public void IntroduceParameterInSource_AddsParameter()
     {
         var input = @"class MathHelper
 {
-    int AddNumbers(int firstNumber, int secondNumber)
+    int AddNumbers()
     {
-        return firstNumber + secondNumber;
+        return 1 + 2;
     }
-}
-";
+
+    int Calculate()
+    {
+        return AddNumbers();
+    }
+}";
         var expected = @"class MathHelper
 {
-    int AddNumbers(int firstNumber, int secondNumber, object calculationMode)
+    int AddNumbers(object result)
     {
-        return firstNumber + secondNumber;
+        return result;
     }
-}
-";
-        var output = IntroduceParameterTool.IntroduceParameterInSource(input, "AddNumbers", "5:16-5:42", "calculationMode");
+
+    int Calculate()
+    {
+        return AddNumbers(1 + 2);
+    }
+}";
+        var output = IntroduceParameterTool.IntroduceParameterInSource(input, "AddNumbers", "5:16-5:20", "result");
         Assert.Equal(expected, output);
     }
 
@@ -142,12 +149,12 @@ public static class StringProcessorExtensions
     }
 }";
         var output = ConvertToExtensionMethodTool.ConvertToExtensionMethodInSource(input, "FormatText", null);
-Assert.Equal(expected, output.Trim());
+        Assert.Equal(expected, output.Trim());
     }
     [Fact]
     public void ConvertToExtensionMethodInSource_AppendsToExistingClass()
-{
-    var input = @"class StringProcessor
+    {
+        var input = @"class StringProcessor
 {
     void FormatText()
     {
@@ -175,12 +182,12 @@ public static class StringProcessorExtensions
     }
 }";
         var output = ConvertToExtensionMethodTool.ConvertToExtensionMethodInSource(input, "FormatText", "StringProcessorExtensions");
-Assert.Equal(expected, output.Trim());
+        Assert.Equal(expected, output.Trim());
     }
     [Fact]
     public void ConvertToStaticWithInstanceInSource_TransformsMethod()
-{
-    var input = @"class DataProcessor
+    {
+        var input = @"class DataProcessor
 {
     int dataCount; 
     int GetDataCount()
@@ -188,7 +195,7 @@ Assert.Equal(expected, output.Trim());
         return dataCount;
     }
 }";
-    var expected = @"class DataProcessor
+        var expected = @"class DataProcessor
 {
     int dataCount;
 
@@ -197,14 +204,14 @@ Assert.Equal(expected, output.Trim());
         return instance.dataCount;
     }
 }";
-    var output = ConvertToStaticWithInstanceTool.ConvertToStaticWithInstanceInSource(input, "GetDataCount", "instance");
-    Assert.Equal(expected, output.Trim());
-}
+        var output = ConvertToStaticWithInstanceTool.ConvertToStaticWithInstanceInSource(input, "GetDataCount", "instance");
+        Assert.Equal(expected, output.Trim());
+    }
 
     [Fact]
     public void ConvertToStaticWithParametersInSource_TransformsMethod()
-{
-    var input = @"class Calculator
+    {
+        var input = @"class Calculator
 {
     int multiplier; 
     int MultiplyValue()
@@ -212,7 +219,7 @@ Assert.Equal(expected, output.Trim());
         return multiplier;
     }
 }";
-    var expected = @"class Calculator
+        var expected = @"class Calculator
 {
     int multiplier;
 
@@ -221,14 +228,14 @@ Assert.Equal(expected, output.Trim());
         return multiplier;
     }
 }";
-    var output = ConvertToStaticWithParametersTool.ConvertToStaticWithParametersInSource(input, "MultiplyValue");
-    Assert.Equal(expected, output.Trim());
-}
+        var output = ConvertToStaticWithParametersTool.ConvertToStaticWithParametersInSource(input, "MultiplyValue");
+        Assert.Equal(expected, output.Trim());
+    }
 
     [Fact]
     public void ExtractMethodInSource_CreatesMethod()
-{
-    var input = @"class MessageHandler
+    {
+        var input = @"class MessageHandler
 {
     void ProcessMessage()
     {
@@ -236,7 +243,7 @@ Assert.Equal(expected, output.Trim());
     }
 }
 ";
-    var expected = @"class MessageHandler
+        var expected = @"class MessageHandler
 {
     void ProcessMessage()
     {
@@ -249,14 +256,14 @@ Assert.Equal(expected, output.Trim());
     }
 }
 ";
-    var output = ExtractMethodTool.ExtractMethodInSource(input, "5:9-5:49", "DisplayProcessingMessage");
-    Assert.Equal(expected, output);
-}
+        var output = ExtractMethodTool.ExtractMethodInSource(input, "5:9-5:49", "DisplayProcessingMessage");
+        Assert.Equal(expected, output);
+    }
 
     [Fact]
     public void IntroduceFieldInSource_AddsField()
-{
-    var input = @"class Calculator
+    {
+        var input = @"class Calculator
 {
     int CalculateSum()
     {
@@ -264,7 +271,7 @@ Assert.Equal(expected, output.Trim());
     }
 }
 ";
-    var expected = @"class Calculator
+        var expected = @"class Calculator
 {
     int CalculateSum()
     {
@@ -272,28 +279,28 @@ Assert.Equal(expected, output.Trim());
     }
 }
 ";
-    var output = IntroduceFieldTool.IntroduceFieldInSource(input, "5:16-5:23", "calculationResult", "private");
-    Assert.Equal(expected, output);
-}
+        var output = IntroduceFieldTool.IntroduceFieldInSource(input, "5:16-5:23", "calculationResult", "private");
+        Assert.Equal(expected, output);
+    }
 
     [Fact]
     public void SafeDeleteFieldInSource_RemovesField()
-{
-    var input = @"class ConfigurationManager
+    {
+        var input = @"class ConfigurationManager
 {
     int configurationFlag;
 }";
-    var expected = @"class ConfigurationManager
+        var expected = @"class ConfigurationManager
 {
 }";
-    var output = SafeDeleteTool.SafeDeleteFieldInSource(input, "configurationFlag");
-    Assert.Equal(expected, output.Trim());
-}
+        var output = SafeDeleteTool.SafeDeleteFieldInSource(input, "configurationFlag");
+        Assert.Equal(expected, output.Trim());
+    }
 
     [Fact]
     public void SafeDeleteMethodInSource_RemovesMethod()
-{
-    var input = @"class ServiceManager
+    {
+        var input = @"class ServiceManager
 {
     void UnusedMethod()
     {
@@ -303,34 +310,34 @@ Assert.Equal(expected, output.Trim());
         var expected = @"class ServiceManager
 {
 }";
-var output = SafeDeleteTool.SafeDeleteMethodInSource(input, "UnusedMethod");
-Assert.Equal(expected, output.Trim());
+        var output = SafeDeleteTool.SafeDeleteMethodInSource(input, "UnusedMethod");
+        Assert.Equal(expected, output.Trim());
     }
     [Fact]
     public void SafeDeleteParameterInSource_RemovesParameter()
-{
-    var input = @"class DataProcessor
+    {
+        var input = @"class DataProcessor
 {
     void ProcessData(int primaryValue, int unusedValue)
     {
         Console.WriteLine(primaryValue);
     }
 }";
-    var expected = @"class DataProcessor
+        var expected = @"class DataProcessor
 {
     void ProcessData(int primaryValue)
     {
         Console.WriteLine(primaryValue);
     }
 }";
-    var output = SafeDeleteTool.SafeDeleteParameterInSource(input, "ProcessData", "unusedValue");
-    Assert.Equal(expected, output.Trim());
-}
+        var output = SafeDeleteTool.SafeDeleteParameterInSource(input, "ProcessData", "unusedValue");
+        Assert.Equal(expected, output.Trim());
+    }
 
     [Fact]
     public void SafeDeleteVariableInSource_RemovesVariable()
-{
-    var input = @"class WorkflowManager
+    {
+        var input = @"class WorkflowManager
 {
     void ExecuteWorkflow()
     {
@@ -346,12 +353,12 @@ Assert.Equal(expected, output.Trim());
     }
 }";
         var output = SafeDeleteTool.SafeDeleteVariableInSource(input, "5:9-5:30");
-Assert.Equal(expected, output.Trim());
+        Assert.Equal(expected, output.Trim());
     }
     [Fact]
     public void MoveInstanceMethodInSource_MovesMethod()
-{
-    var input = @"class DocumentProcessor 
+    {
+        var input = @"class DocumentProcessor 
 {
     void ValidateDocument()
     {
@@ -379,12 +386,12 @@ class ValidationService
     }
 }";
         var output = MoveMethodsTool.MoveInstanceMethodInSource(input, "DocumentProcessor", "ValidateDocument", "ValidationService", "validationService", "field");
-Assert.Equal(expected, output.Trim());
+        Assert.Equal(expected, output.Trim());
     }
     [Fact]
     public void MoveInstanceMethodInSource_PropertyTargetExists()
-{
-    var input = @"class TaskProcessor
+    {
+        var input = @"class TaskProcessor
 {
     void RunTask()
     {
@@ -412,12 +419,12 @@ class TaskRunner
     }
 }";
         var output = MoveMethodsTool.MoveInstanceMethodInSource(input, "TaskProcessor", "RunTask", "TaskRunner", "Runner", "property");
-Assert.Equal(expected, output.Trim());
+        Assert.Equal(expected, output.Trim());
     }
     [Fact]
     public void MoveInstanceMethodInSource_CreatesTargetClass()
-{
-    var input = @"class Calculator
+    {
+        var input = @"class Calculator
 {
     void Compute()
     {
@@ -442,12 +449,12 @@ public class Logger
     }
 }";
         var output = MoveMethodsTool.MoveInstanceMethodInSource(input, "Calculator", "Compute", "Logger", "logger", "field");
-Assert.Equal(expected, output.Trim());
+        Assert.Equal(expected, output.Trim());
     }
     [Fact]
     public void MoveStaticMethodInSource_MovesMethod()
-{
-    var input = @"class UtilityHelper
+    {
+        var input = @"class UtilityHelper
 {
     static void FormatString()
     {
@@ -470,12 +477,12 @@ public class StringUtilities
     }
 }";
         var output = MoveMethodsTool.MoveStaticMethodInSource(input, "FormatString", "StringUtilities");
-Assert.Equal(expected, output.Trim());
+        Assert.Equal(expected, output.Trim());
     }
     [Fact]
     public void MoveStaticMethodInSource_TargetClassExists()
-{
-    var input = @"class UtilityHelper
+    {
+        var input = @"class UtilityHelper
 {
     static void FormatString()
     {
@@ -503,12 +510,12 @@ class StringUtilities
     }
 }";
         var output = MoveMethodsTool.MoveStaticMethodInSource(input, "FormatString", "StringUtilities");
-Assert.Equal(expected, output.Trim());
+        Assert.Equal(expected, output.Trim());
     }
     [Fact]
     public void MoveInstanceMethodInSource_GetAverageToMathUtilities()
-{
-    var input = @"class Calculator
+    {
+        var input = @"class Calculator
 {
     private List<int> numbers = new List<int>();
 
@@ -521,7 +528,7 @@ Assert.Equal(expected, output.Trim());
 class MathUtilities
 {
 }";
-    var expected = @"class Calculator
+        var expected = @"class Calculator
 {
     private List<int> numbers = new List<int>();
     private MathUtilities mathUtilities = new MathUtilities();
@@ -539,7 +546,7 @@ class MathUtilities
         return calculator.numbers.Sum() / (double)calculator.numbers.Count;
     }
 }";
-    var output = MoveMethodsTool.MoveInstanceMethodInSource(input, "Calculator", "GetAverage", "MathUtilities", "mathUtilities", "field");
-    Assert.Equal(expected, output.Trim());
-}
+        var output = MoveMethodsTool.MoveInstanceMethodInSource(input, "Calculator", "GetAverage", "MathUtilities", "mathUtilities", "field");
+        Assert.Equal(expected, output.Trim());
+    }
 }
