@@ -331,7 +331,62 @@ public class MathUtilities
 }
 ```
 
-## 10. Inline Method
+## 10. Move Multiple Methods
+
+**Purpose**: Move several methods at once, ordered by dependencies.
+
+### Example
+**Before**:
+```csharp
+class Helper
+{
+    public void A() { B(); }
+    public void B() { Console.WriteLine("B"); }
+}
+
+class Target { }
+```
+
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli move-multiple-methods \
+  "./RefactorMCP.sln" \
+  "./RefactorMCP.Tests/ExampleCode.cs" \
+  "[{\"sourceClass\":\"Helper\",\"method\":\"A\",\"targetClass\":\"Target\",\"accessMember\":\"t\",\"accessMemberType\":\"field\"},{\"sourceClass\":\"Helper\",\"method\":\"B\",\"targetClass\":\"Target\",\"accessMember\":\"t\",\"accessMemberType\":\"field\"}]"
+```
+
+**After**:
+```csharp
+class Helper
+{
+    private Target t = new Target();
+
+    public void A()
+    {
+        t.A();
+    }
+
+    public void B()
+    {
+        t.B();
+    }
+}
+
+class Target
+{
+    public void B()
+    {
+        Console.WriteLine("B");
+    }
+
+    public void A()
+    {
+        B();
+    }
+}
+```
+
+## 11. Inline Method
 
 **Purpose**: Replace method calls with the method body and remove the original method.
 
