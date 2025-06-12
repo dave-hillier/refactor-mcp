@@ -10,7 +10,7 @@ The RefactorMCP test suite is organized into three main test classes:
 - ✅ `LoadSolution_InvalidPath_ReturnsError` - Tests error handling for missing files
 - 🚧 `ExtractMethod_ValidSelection_ReturnsSuccess` - Tests method extraction
 - 🚧 `IntroduceField_ValidExpression_ReturnsSuccess` - Tests field introduction
-- 🚧 `IntroduceVariable_ValidExpression_ReturnsSuccess` - Tests variable introduction  
+- 🚧 `IntroduceVariable_ValidExpression_ReturnsSuccess` - Tests variable introduction
 - 🚧 `MakeFieldReadonly_FieldWithInitializer_ReturnsSuccess` - Tests readonly conversion
 
 ### 2. ExampleValidationTests (`ExampleValidationTests.cs`)
