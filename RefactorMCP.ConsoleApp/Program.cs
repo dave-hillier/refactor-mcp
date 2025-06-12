@@ -107,17 +107,16 @@ static void ShowCliHelp()
     foreach (var tool in toolsList)
         Console.WriteLine($"  {tool}");
     Console.WriteLine("  list-tools - List all available refactoring tools");
-    Console.WriteLine("  analyze-refactoring-opportunities <filePath> [solutionPath] - Analyze code for potential refactorings");
+    Console.WriteLine("  analyze-refactoring-opportunities <solutionPath> <filePath> - Analyze code for potential refactorings");
 
     Console.WriteLine();
     Console.WriteLine("Examples:");
     Console.WriteLine("  --cli load-solution ./MySolution.sln");
-    Console.WriteLine("  --cli extract-method ./MyFile.cs \"10:5-15:20\" \"ExtractedMethod\"");
-    Console.WriteLine("  --cli extract-method ./MyFile.cs \"10:5-15:20\" \"ExtractedMethod\" ./MySolution.sln");
-    Console.WriteLine("  --cli introduce-field ./MyFile.cs \"12:10-12:25\" \"_myField\" \"private\"");
-    Console.WriteLine("  --cli make-field-readonly ./MyFile.cs 15");
-    Console.WriteLine("  --cli cleanup-usings ./MyFile.cs ./MySolution.sln");
-    Console.WriteLine("  --cli analyze-refactoring-opportunities ./MyFile.cs ./MySolution.sln");
+    Console.WriteLine("  --cli extract-method ./MySolution.sln ./MyFile.cs \"10:5-15:20\" \"ExtractedMethod\"");
+    Console.WriteLine("  --cli introduce-field ./MySolution.sln ./MyFile.cs \"12:10-12:25\" \"_myField\" \"private\"");
+    Console.WriteLine("  --cli make-field-readonly ./MySolution.sln ./MyFile.cs 15");
+    Console.WriteLine("  --cli cleanup-usings ./MySolution.sln ./MyFile.cs");
+    Console.WriteLine("  --cli analyze-refactoring-opportunities ./MySolution.sln ./MyFile.cs");
     Console.WriteLine("  --cli version");
     Console.WriteLine();
     Console.WriteLine("JSON mode: --json ToolName '{\"param\":\"value\"}'");
@@ -250,54 +249,54 @@ static async Task<string> TestLoadSolution(string[] args)
 
 static async Task<string> TestExtractMethod(string[] args)
 {
-    if (args.Length < 5)
-        return "Error: Missing arguments. Usage: --cli extract-method <filePath> <range> <methodName> [solutionPath]";
+    if (args.Length < 6)
+        return "Error: Missing arguments. Usage: --cli extract-method <solutionPath> <filePath> <range> <methodName>";
 
-    var filePath = args[2];
-    var range = args[3];
-    var methodName = args[4];
-    var solutionPath = args.Length > 5 ? args[5] : null;
+    var solutionPath = args[2];
+    var filePath = args[3];
+    var range = args[4];
+    var methodName = args[5];
 
-    return await ExtractMethodTool.ExtractMethod(filePath, range, methodName, solutionPath);
+    return await ExtractMethodTool.ExtractMethod(solutionPath, filePath, range, methodName);
 }
 
 static async Task<string> TestIntroduceField(string[] args)
 {
-    if (args.Length < 5)
-        return "Error: Missing arguments. Usage: --cli introduce-field <filePath> <range> <fieldName> [accessModifier] [solutionPath]";
+    if (args.Length < 6)
+        return "Error: Missing arguments. Usage: --cli introduce-field <solutionPath> <filePath> <range> <fieldName> [accessModifier]";
 
-    var filePath = args[2];
-    var range = args[3];
-    var fieldName = args[4];
-    var accessModifier = args.Length > 5 ? args[5] : "private";
-    var solutionPath = args.Length > 6 ? args[6] : null;
+    var solutionPath = args[2];
+    var filePath = args[3];
+    var range = args[4];
+    var fieldName = args[5];
+    var accessModifier = args.Length > 6 ? args[6] : "private";
 
-    return await IntroduceFieldTool.IntroduceField(filePath, range, fieldName, accessModifier, solutionPath);
+    return await IntroduceFieldTool.IntroduceField(solutionPath, filePath, range, fieldName, accessModifier);
 }
 
 static async Task<string> TestIntroduceVariable(string[] args)
 {
-    if (args.Length < 5)
-        return "Error: Missing arguments. Usage: --cli introduce-variable <filePath> <range> <variableName> [solutionPath]";
+    if (args.Length < 6)
+        return "Error: Missing arguments. Usage: --cli introduce-variable <solutionPath> <filePath> <range> <variableName>";
 
-    var filePath = args[2];
-    var range = args[3];
-    var variableName = args[4];
-    var solutionPath = args.Length > 5 ? args[5] : null;
+    var solutionPath = args[2];
+    var filePath = args[3];
+    var range = args[4];
+    var variableName = args[5];
 
-    return await IntroduceVariableTool.IntroduceVariable(filePath, range, variableName, solutionPath);
+    return await IntroduceVariableTool.IntroduceVariable(solutionPath, filePath, range, variableName);
 }
 
 static async Task<string> TestMakeFieldReadonly(string[] args)
 {
-    if (args.Length < 4)
-        return "Error: Missing arguments. Usage: --cli make-field-readonly <filePath> <fieldName> [solutionPath]";
+    if (args.Length < 5)
+        return "Error: Missing arguments. Usage: --cli make-field-readonly <solutionPath> <filePath> <fieldName>";
 
-    var filePath = args[2];
-    var fieldName = args[3];
-    var solutionPath = args.Length > 4 ? args[4] : null;
+    var solutionPath = args[2];
+    var filePath = args[3];
+    var fieldName = args[4];
 
-    return await MakeFieldReadonlyTool.MakeFieldReadonly(filePath, fieldName, solutionPath);
+    return await MakeFieldReadonlyTool.MakeFieldReadonly(solutionPath, filePath, fieldName);
 }
 
 static string TestUnloadSolution(string[] args)
@@ -321,124 +320,124 @@ static string ShowVersionInfo()
 
 static async Task<string> TestConvertToExtensionMethod(string[] args)
 {
-    if (args.Length < 4)
-        return "Error: Missing arguments. Usage: --cli convert-to-extension-method <filePath> <methodName> [solutionPath]";
+    if (args.Length < 5)
+        return "Error: Missing arguments. Usage: --cli convert-to-extension-method <solutionPath> <filePath> <methodName>";
 
-    var filePath = args[2];
-    var methodName = args[3];
-    var solutionPath = args.Length > 4 ? args[4] : null;
+    var solutionPath = args[2];
+    var filePath = args[3];
+    var methodName = args[4];
 
-    return await ConvertToExtensionMethodTool.ConvertToExtensionMethod(filePath, methodName, null, solutionPath);
+    return await ConvertToExtensionMethodTool.ConvertToExtensionMethod(solutionPath, filePath, methodName, null);
 }
 
 static async Task<string> TestSafeDeleteField(string[] args)
 {
-    if (args.Length < 4)
-        return "Error: Missing arguments. Usage: --cli safe-delete-field <filePath> <fieldName> [solutionPath]";
+    if (args.Length < 5)
+        return "Error: Missing arguments. Usage: --cli safe-delete-field <solutionPath> <filePath> <fieldName>";
 
-    var filePath = args[2];
-    var fieldName = args[3];
-    var solutionPath = args.Length > 4 ? args[4] : null;
+    var solutionPath = args[2];
+    var filePath = args[3];
+    var fieldName = args[4];
 
-    return await SafeDeleteTool.SafeDeleteField(filePath, fieldName, solutionPath);
+    return await SafeDeleteTool.SafeDeleteField(solutionPath, filePath, fieldName);
 }
 
 static async Task<string> TestSafeDeleteMethod(string[] args)
 {
-    if (args.Length < 4)
-        return "Error: Missing arguments. Usage: --cli safe-delete-method <filePath> <methodName> [solutionPath]";
+    if (args.Length < 5)
+        return "Error: Missing arguments. Usage: --cli safe-delete-method <solutionPath> <filePath> <methodName>";
 
-    var filePath = args[2];
-    var methodName = args[3];
-    var solutionPath = args.Length > 4 ? args[4] : null;
+    var solutionPath = args[2];
+    var filePath = args[3];
+    var methodName = args[4];
 
-    return await SafeDeleteTool.SafeDeleteMethod(filePath, methodName, solutionPath);
+    return await SafeDeleteTool.SafeDeleteMethod(solutionPath, filePath, methodName);
 }
 
 static async Task<string> TestSafeDeleteParameter(string[] args)
 {
-    if (args.Length < 5)
-        return "Error: Missing arguments. Usage: --cli safe-delete-parameter <filePath> <methodName> <parameterName> [solutionPath]";
+    if (args.Length < 6)
+        return "Error: Missing arguments. Usage: --cli safe-delete-parameter <solutionPath> <filePath> <methodName> <parameterName>";
 
-    var filePath = args[2];
-    var methodName = args[3];
-    var parameterName = args[4];
-    var solutionPath = args.Length > 5 ? args[5] : null;
+    var solutionPath = args[2];
+    var filePath = args[3];
+    var methodName = args[4];
+    var parameterName = args[5];
 
-    return await SafeDeleteTool.SafeDeleteParameter(filePath, methodName, parameterName, solutionPath);
+    return await SafeDeleteTool.SafeDeleteParameter(solutionPath, filePath, methodName, parameterName);
 }
 
 static async Task<string> TestSafeDeleteVariable(string[] args)
 {
-    if (args.Length < 4)
-        return "Error: Missing arguments. Usage: --cli safe-delete-variable <filePath> <range> [solutionPath]";
+    if (args.Length < 5)
+        return "Error: Missing arguments. Usage: --cli safe-delete-variable <solutionPath> <filePath> <range>";
 
-    var filePath = args[2];
-    var range = args[3];
-    var solutionPath = args.Length > 4 ? args[4] : null;
+    var solutionPath = args[2];
+    var filePath = args[3];
+    var range = args[4];
 
-    return await SafeDeleteTool.SafeDeleteVariable(filePath, range, solutionPath);
+    return await SafeDeleteTool.SafeDeleteVariable(solutionPath, filePath, range);
 }
 
 static async Task<string> TestCleanupUsings(string[] args)
 {
-    if (args.Length < 3)
-        return "Error: Missing arguments. Usage: --cli cleanup-usings <filePath> [solutionPath]";
+    if (args.Length < 4)
+        return "Error: Missing arguments. Usage: --cli cleanup-usings <solutionPath> <filePath>";
 
-    var filePath = args[2];
-    var solutionPath = args.Length > 3 ? args[3] : null;
+    var solutionPath = args[2];
+    var filePath = args[3];
 
-    return await CleanupUsingsTool.CleanupUsings(solutionPath ?? string.Empty, filePath);
+    return await CleanupUsingsTool.CleanupUsings(solutionPath, filePath);
 }
 
 static async Task<string> TestAnalyzeRefactoringOpportunities(string[] args)
 {
-    if (args.Length < 3)
-        return "Error: Missing arguments. Usage: --cli analyze-refactoring-opportunities <filePath> [solutionPath]";
+    if (args.Length < 4)
+        return "Error: Missing arguments. Usage: --cli analyze-refactoring-opportunities <solutionPath> <filePath>";
 
-    var filePath = args[2];
-    var solutionPath = args.Length > 3 ? args[3] : null;
+    var solutionPath = args[2];
+    var filePath = args[3];
 
-    return await AnalyzeRefactoringOpportunitiesTool.AnalyzeRefactoringOpportunities(filePath, solutionPath);
+    return await AnalyzeRefactoringOpportunitiesTool.AnalyzeRefactoringOpportunities(solutionPath, filePath);
 }
 
 static async Task<string> TestConvertToStaticWithParameters(string[] args)
 {
-    if (args.Length < 4)
-        return "Error: Missing arguments. Usage: --cli convert-to-static-with-parameters <filePath> <methodName> [solutionPath]";
+    if (args.Length < 5)
+        return "Error: Missing arguments. Usage: --cli convert-to-static-with-parameters <solutionPath> <filePath> <methodName>";
 
-    var filePath = args[2];
-    var methodName = args[3];
-    var solutionPath = args.Length > 4 ? args[4] : null;
+    var solutionPath = args[2];
+    var filePath = args[3];
+    var methodName = args[4];
 
-    return await ConvertToStaticWithParametersTool.ConvertToStaticWithParameters(filePath, methodName, solutionPath);
+    return await ConvertToStaticWithParametersTool.ConvertToStaticWithParameters(solutionPath, filePath, methodName);
 }
 
 static async Task<string> TestConvertToStaticWithInstance(string[] args)
 {
-    if (args.Length < 4)
-        return "Error: Missing arguments. Usage: --cli convert-to-static-with-instance <filePath> <methodName> [instanceParamName] [solutionPath]";
+    if (args.Length < 5)
+        return "Error: Missing arguments. Usage: --cli convert-to-static-with-instance <solutionPath> <filePath> <methodName> [instanceParamName]";
 
-    var filePath = args[2];
-    var methodName = args[3];
-    var instanceParam = args.Length > 4 ? args[4] : "instance";
-    var solutionPath = args.Length > 5 ? args[5] : null;
+    var solutionPath = args[2];
+    var filePath = args[3];
+    var methodName = args[4];
+    var instanceParam = args.Length > 5 ? args[5] : "instance";
 
-    return await ConvertToStaticWithInstanceTool.ConvertToStaticWithInstance(filePath, methodName, instanceParam, solutionPath);
+    return await ConvertToStaticWithInstanceTool.ConvertToStaticWithInstance(solutionPath, filePath, methodName, instanceParam);
 }
 
 static async Task<string> TestIntroduceParameter(string[] args)
 {
-    if (args.Length < 6)
-        return "Error: Missing arguments. Usage: --cli introduce-parameter <filePath> <methodName> <range> <parameterName> [solutionPath]";
+    if (args.Length < 7)
+        return "Error: Missing arguments. Usage: --cli introduce-parameter <solutionPath> <filePath> <methodName> <range> <parameterName>";
 
-    var filePath = args[2];
-    var methodName = args[3];
-    var range = args[4];
-    var paramName = args[5];
-    var solutionPath = args.Length > 6 ? args[6] : null;
+    var solutionPath = args[2];
+    var filePath = args[3];
+    var methodName = args[4];
+    var range = args[5];
+    var paramName = args[6];
 
-    return await IntroduceParameterTool.IntroduceParameter(filePath, methodName, range, paramName, solutionPath);
+    return await IntroduceParameterTool.IntroduceParameter(solutionPath, filePath, methodName, range, paramName);
 }
 
 static async Task<string> TestMoveStaticMethod(string[] args)
@@ -457,31 +456,31 @@ static async Task<string> TestMoveStaticMethod(string[] args)
 
 static async Task<string> TestMoveInstanceMethod(string[] args)
 {
-    if (args.Length < 7)
-        return "Error: Missing arguments. Usage: --cli move-instance-method <filePath> <sourceClass> <methodName> <targetClass> <accessMember> [memberType] [solutionPath] [targetFile]";
+    if (args.Length < 8)
+        return "Error: Missing arguments. Usage: --cli move-instance-method <solutionPath> <filePath> <sourceClass> <methodName> <targetClass> <accessMember> [memberType] [targetFile]";
 
-    var filePath = args[2];
-    var sourceClass = args[3];
-    var methodName = args[4];
-    var targetClass = args[5];
-    var accessMember = args[6];
-    var memberType = args.Length > 7 ? args[7] : "field";
-    var solutionPath = args.Length > 8 ? args[8] : null;
+    var solutionPath = args[2];
+    var filePath = args[3];
+    var sourceClass = args[4];
+    var methodName = args[5];
+    var targetClass = args[6];
+    var accessMember = args[7];
+    var memberType = args.Length > 8 ? args[8] : "field";
     var targetFile = args.Length > 9 ? args[9] : null;
 
-    return await MoveMethodsTool.MoveInstanceMethod(filePath, sourceClass, methodName, targetClass, accessMember, memberType, solutionPath, targetFile);
+    return await MoveMethodsTool.MoveInstanceMethod(solutionPath, filePath, sourceClass, methodName, targetClass, accessMember, memberType, targetFile);
 }
 
 static async Task<string> TestTransformSetterToInit(string[] args)
 {
-    if (args.Length < 4)
-        return "Error: Missing arguments. Usage: --cli transform-setter-to-init <filePath> <propertyName> [solutionPath]";
+    if (args.Length < 5)
+        return "Error: Missing arguments. Usage: --cli transform-setter-to-init <solutionPath> <filePath> <propertyName>";
 
-    var filePath = args[2];
-    var propertyName = args[3];
-    var solutionPath = args.Length > 4 ? args[4] : null;
+    var solutionPath = args[2];
+    var filePath = args[3];
+    var propertyName = args[4];
 
-    return await TransformSetterToInitTool.TransformSetterToInit(filePath, propertyName, solutionPath);
+    return await TransformSetterToInitTool.TransformSetterToInit(solutionPath, filePath, propertyName);
 }
 
 
