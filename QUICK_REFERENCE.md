@@ -153,6 +153,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli move-instance-method \
   "field" \
   "./optional/target.cs"
 ```
+Newly added access fields are readonly and existing members are reused if present.
 
 ### Move Multiple Methods
 ```bash
