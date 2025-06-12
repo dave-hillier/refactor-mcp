@@ -396,6 +396,38 @@ public int Multiply(int x, int y)
 }
 ```
 
+## 12. Cleanup Usings
+
+**Purpose**: Remove unused using directives from a file.
+
+### Example
+**Before** (in `CleanupSample.cs`):
+```csharp
+using System;
+using System.Text;
+
+public class CleanupSample
+{
+    public void Say() => Console.WriteLine("Hi");
+}
+```
+
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli cleanup-usings \
+  "./CleanupSample.cs" "./RefactorMCP.sln"
+```
+
+**After**:
+```csharp
+using System;
+
+public class CleanupSample
+{
+    public void Say() => Console.WriteLine("Hi");
+}
+```
+
 ## 6. Load Solution (Utility Command)
 
 **Purpose**: Load and validate a solution file before performing refactorings.
