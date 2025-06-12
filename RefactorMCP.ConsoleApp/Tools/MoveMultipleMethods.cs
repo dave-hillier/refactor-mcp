@@ -92,19 +92,51 @@ public static class MoveMultipleMethodsTool
         var sourceText = await File.ReadAllTextAsync(filePath);
         var ordered = OrderOperations(sourceText, ops);
         var results = new List<string>();
-        foreach (var op in ordered)
+        
+        // Check if we're using a solution or single-file mode
+        var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
+        var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
+        
+        if (document != null)
         {
-            if (op.IsStatic)
+            // Solution-based: need to manage document state between operations
+            var currentDocument = document;
+            foreach (var op in ordered)
             {
-                results.Add(await MoveMethodsTool.MoveStaticMethod(solutionPath, filePath, op.Method, op.TargetClass, op.TargetFile));
+                if (op.IsStatic)
+                {
+                    results.Add(await MoveMethodsTool.MoveStaticMethod(solutionPath, filePath, op.Method, op.TargetClass, op.TargetFile));
+                }
+                else
+                {
+                    // For instance methods, pass single method to avoid reloading solution
+                    results.Add(await MoveMethodsTool.MoveInstanceMethod(solutionPath, filePath, op.SourceClass, op.Method, op.TargetClass, op.AccessMember, op.AccessMemberType, op.TargetFile));
+                }
+                
+                // Clear solution cache to force reload of updated file state
+                RefactoringHelpers.SolutionCache.Remove(solutionPath);
             }
-            else
-            {
-                results.Add(await MoveMethodsTool.MoveInstanceMethod(solutionPath, filePath, op.SourceClass, op.Method, op.TargetClass, op.AccessMember, op.AccessMemberType, op.TargetFile));
-            }
-            // Refresh sourceText after each move
-            sourceText = await File.ReadAllTextAsync(filePath);
         }
+        else
+        {
+            // Single-file mode: use the more efficient string-based operations
+            var working = sourceText;
+            foreach (var op in ordered)
+            {
+                if (op.IsStatic)
+                {
+                    working = MoveMethodsTool.MoveStaticMethodInSource(working, op.Method, op.TargetClass);
+                    results.Add($"Successfully moved static method '{op.Method}' to {op.TargetClass}");
+                }
+                else
+                {
+                    working = MoveMethodsTool.MoveInstanceMethodInSource(working, op.SourceClass, op.Method, op.TargetClass, op.AccessMember, op.AccessMemberType);
+                    results.Add($"Successfully moved instance method '{op.Method}' from {op.SourceClass} to {op.TargetClass}");
+                }
+            }
+            await File.WriteAllTextAsync(filePath, working);
+        }
+        
         return string.Join("\n", results);
     }
 }
