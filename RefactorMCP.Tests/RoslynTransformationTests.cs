@@ -116,7 +116,8 @@ public class CleanupSample
 {
     public void Say() => Console.WriteLine(""Hi"");
 }";
-        var expected = @"
+        var expected = @"using System;
+
 public class CleanupSample
 {
     public void Say() => Console.WriteLine(""Hi"");
