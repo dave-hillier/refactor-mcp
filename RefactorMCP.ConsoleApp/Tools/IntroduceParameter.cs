@@ -1,6 +1,7 @@
 using ModelContextProtocol.Server;
 using ModelContextProtocol;
 using System.ComponentModel;
+using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -39,10 +40,31 @@ public static class IntroduceParameterTool
 
         var parameter = SyntaxFactory.Parameter(SyntaxFactory.Identifier(parameterName))
             .WithType(SyntaxFactory.ParseTypeName(typeName));
-        var newMethod = method.AddParameterListParameters(parameter);
 
-        var newRoot = syntaxRoot.ReplaceNode(method, newMethod);
-        newRoot = newRoot.ReplaceNode(selectedExpression, SyntaxFactory.IdentifierName(parameterName));
+        var invocations = syntaxRoot.DescendantNodes().OfType<InvocationExpressionSyntax>()
+            .Where(i =>
+                (i.Expression is IdentifierNameSyntax id && id.Identifier.ValueText == methodName) ||
+                (i.Expression is MemberAccessExpressionSyntax ma && ma.Name.Identifier.ValueText == methodName))
+            .ToList();
+
+        foreach (var invocation in invocations)
+        {
+            var newArgs = invocation.ArgumentList.AddArguments(SyntaxFactory.Argument(selectedExpression.WithoutTrivia()));
+            syntaxRoot = syntaxRoot.ReplaceNode(invocation, invocation.WithArgumentList(newArgs));
+        }
+
+        method = syntaxRoot.DescendantNodes().OfType<MethodDeclarationSyntax>()
+            .First(m => m.Identifier.ValueText == methodName);
+        selectedExpression = syntaxRoot.DescendantNodes()
+            .OfType<ExpressionSyntax>()
+            .Where(e => span.Contains(e.Span) || e.Span.Contains(span))
+            .OrderBy(e => Math.Abs(e.Span.Length - span.Length))
+            .ThenBy(e => e.Span.Length)
+            .First();
+
+        var newMethod = method.ReplaceNode(selectedExpression, SyntaxFactory.IdentifierName(parameterName))
+            .AddParameterListParameters(parameter);
+        SyntaxNode newRoot = syntaxRoot.ReplaceNode(method, newMethod);
 
         var formattedRoot = Formatter.Format(newRoot, document.Project.Solution.Workspace);
         var newDocument = document.WithSyntaxRoot(formattedRoot);
@@ -85,16 +107,40 @@ public static class IntroduceParameterTool
 
         var selectedExpression = syntaxRoot.DescendantNodes()
             .OfType<ExpressionSyntax>()
-            .FirstOrDefault(e => span.Contains(e.Span) || e.Span.Contains(span));
+            .Where(e => span.Contains(e.Span) || e.Span.Contains(span))
+            .OrderBy(e => Math.Abs(e.Span.Length - span.Length))
+            .ThenBy(e => e.Span.Length)
+            .FirstOrDefault();
         if (selectedExpression == null)
             return RefactoringHelpers.ThrowMcpException("Error: Selected code is not a valid expression");
 
         var parameter = SyntaxFactory.Parameter(SyntaxFactory.Identifier(parameterName))
             .WithType(SyntaxFactory.ParseTypeName("object"));
-        var newMethod = method.AddParameterListParameters(parameter);
 
-        var newRoot = syntaxRoot.ReplaceNode(method, newMethod);
-        newRoot = newRoot.ReplaceNode(selectedExpression, SyntaxFactory.IdentifierName(parameterName));
+        var invocations = syntaxRoot.DescendantNodes().OfType<InvocationExpressionSyntax>()
+            .Where(i =>
+                (i.Expression is IdentifierNameSyntax id && id.Identifier.ValueText == methodName) ||
+                (i.Expression is MemberAccessExpressionSyntax ma && ma.Name.Identifier.ValueText == methodName))
+            .ToList();
+
+        foreach (var invocation in invocations)
+        {
+            var newArgs = invocation.ArgumentList.AddArguments(SyntaxFactory.Argument(selectedExpression.WithoutTrivia()));
+            syntaxRoot = syntaxRoot.ReplaceNode(invocation, invocation.WithArgumentList(newArgs));
+        }
+
+        method = syntaxRoot.DescendantNodes().OfType<MethodDeclarationSyntax>()
+            .First(m => m.Identifier.ValueText == methodName);
+        selectedExpression = syntaxRoot.DescendantNodes()
+            .OfType<ExpressionSyntax>()
+            .Where(e => span.Contains(e.Span) || e.Span.Contains(span))
+            .OrderBy(e => Math.Abs(e.Span.Length - span.Length))
+            .ThenBy(e => e.Span.Length)
+            .First();
+
+        var newMethod = method.ReplaceNode(selectedExpression, SyntaxFactory.IdentifierName(parameterName))
+            .AddParameterListParameters(parameter);
+        SyntaxNode newRoot = syntaxRoot.ReplaceNode(method, newMethod);
 
         var formattedRoot = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
         return formattedRoot.ToFullString();
