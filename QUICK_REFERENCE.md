@@ -21,6 +21,11 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli clear-solution-cache
 dotnet run --project RefactorMCP.ConsoleApp -- --cli version
 ```
 
+```bash
+# JSON mode example
+dotnet run --project RefactorMCP.ConsoleApp -- --json ToolName '{"param":"value"}'
+```
+
 ## Refactoring Commands
 
 ### Extract Method

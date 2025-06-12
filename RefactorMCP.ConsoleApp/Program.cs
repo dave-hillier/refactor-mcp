@@ -10,11 +10,17 @@ using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Server;
 using System.ComponentModel;
 using System.Text;
+using System.Text.Json;
 
 // Parse command line arguments
 if (args.Length > 0 && args[0] == "--cli")
 {
     await RunCliMode(args);
+    return;
+}
+if (args.Length > 0 && args[0] == "--json")
+{
+    await RunJsonMode(args);
     return;
 }
 
@@ -114,8 +120,95 @@ static void ShowCliHelp()
     Console.WriteLine("  --cli analyze-refactoring-opportunities ./MyFile.cs ./MySolution.sln");
     Console.WriteLine("  --cli version");
     Console.WriteLine();
+    Console.WriteLine("JSON mode: --json ToolName '{\"param\":\"value\"}'");
+    Console.WriteLine();
     Console.WriteLine("Range format: \"startLine:startColumn-endLine:endColumn\" (1-based)");
     Console.WriteLine("Note: Solution path is optional. When omitted, single file mode is used with limited semantic analysis.");
+}
+
+static async Task RunJsonMode(string[] args)
+{
+    if (args.Length < 3)
+    {
+        Console.WriteLine("Usage: --json <ToolName> '{\"param\":\"value\"}'");
+        return;
+    }
+
+    var toolName = args[1];
+    var json = string.Join(" ", args.Skip(2));
+    Dictionary<string, string>? paramDict;
+    try
+    {
+        paramDict = JsonSerializer.Deserialize<Dictionary<string, string>>(json, new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        });
+        if (paramDict == null)
+        {
+            Console.WriteLine("Error: Failed to parse parameters");
+            return;
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error parsing JSON: {ex.Message}");
+        return;
+    }
+
+    var method = System.Reflection.Assembly.GetExecutingAssembly()
+        .GetTypes()
+        .Where(t => t.GetCustomAttributes(typeof(McpServerToolTypeAttribute), false).Length > 0)
+        .SelectMany(t => t.GetMethods(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static))
+        .FirstOrDefault(m => m.GetCustomAttributes(typeof(McpServerToolAttribute), false).Length > 0 &&
+                             m.Name.Equals(toolName, StringComparison.OrdinalIgnoreCase));
+
+    if (method == null)
+    {
+        Console.WriteLine($"Unknown tool: {toolName}. Use --cli list-tools to see available commands.");
+        return;
+    }
+
+    var parameters = method.GetParameters();
+    var invokeArgs = new object?[parameters.Length];
+    for (int i = 0; i < parameters.Length; i++)
+    {
+        var p = parameters[i];
+        if (paramDict.TryGetValue(p.Name!, out var value))
+        {
+            invokeArgs[i] = value;
+        }
+        else if (p.HasDefaultValue)
+        {
+            invokeArgs[i] = p.DefaultValue;
+        }
+        else
+        {
+            Console.WriteLine($"Error: Missing required parameter '{p.Name}'");
+            return;
+        }
+    }
+
+    try
+    {
+        var result = method.Invoke(null, invokeArgs);
+        if (result is Task<string> taskStr)
+        {
+            Console.WriteLine(await taskStr);
+        }
+        else if (result is Task task)
+        {
+            await task;
+            Console.WriteLine("Done");
+        }
+        else if (result != null)
+        {
+            Console.WriteLine(result.ToString());
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error executing tool: {ex.Message}");
+    }
 }
 
 static string ListAvailableTools()
