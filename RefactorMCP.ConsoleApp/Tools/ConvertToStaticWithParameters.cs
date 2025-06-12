@@ -111,16 +111,12 @@ public static class ConvertToStaticWithParametersTool
         return $"Successfully converted method '{methodName}' to static with parameters in {document.FilePath} (solution mode)";
     }
 
-    private static async Task<string> ConvertToStaticWithParametersSingleFile(string filePath, string methodName)
+    private static Task<string> ConvertToStaticWithParametersSingleFile(string filePath, string methodName)
     {
-        if (!File.Exists(filePath))
-            return RefactoringHelpers.ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
-
-        var sourceText = await File.ReadAllTextAsync(filePath);
-        var newText = ConvertToStaticWithParametersInSource(sourceText, methodName);
-        await File.WriteAllTextAsync(filePath, newText);
-
-        return $"Successfully converted method '{methodName}' to static with parameters in {filePath} (single file mode)";
+        return RefactoringHelpers.ApplySingleFileEdit(
+            filePath,
+            text => ConvertToStaticWithParametersInSource(text, methodName),
+            $"Successfully converted method '{methodName}' to static with parameters in {filePath} (single file mode)");
     }
 
     public static string ConvertToStaticWithParametersInSource(string sourceText, string methodName)

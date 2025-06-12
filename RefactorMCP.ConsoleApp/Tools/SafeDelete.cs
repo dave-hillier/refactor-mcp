@@ -129,16 +129,12 @@ public static class SafeDeleteTool
         return $"Successfully deleted field '{fieldName}' in {document.FilePath}";
     }
 
-    private static async Task<string> SafeDeleteFieldSingleFile(string filePath, string fieldName)
+    private static Task<string> SafeDeleteFieldSingleFile(string filePath, string fieldName)
     {
-        if (!File.Exists(filePath))
-            return RefactoringHelpers.ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
-
-        var sourceText = await File.ReadAllTextAsync(filePath);
-        var newText = SafeDeleteFieldInSource(sourceText, fieldName);
-        await File.WriteAllTextAsync(filePath, newText);
-
-        return $"Successfully deleted field '{fieldName}' in {filePath} (single file mode)";
+        return RefactoringHelpers.ApplySingleFileEdit(
+            filePath,
+            text => SafeDeleteFieldInSource(text, fieldName),
+            $"Successfully deleted field '{fieldName}' in {filePath} (single file mode)");
     }
 
     public static string SafeDeleteFieldInSource(string sourceText, string fieldName)
@@ -190,16 +186,12 @@ public static class SafeDeleteTool
         return $"Successfully deleted method '{methodName}' in {document.FilePath}";
     }
 
-    private static async Task<string> SafeDeleteMethodSingleFile(string filePath, string methodName)
+    private static Task<string> SafeDeleteMethodSingleFile(string filePath, string methodName)
     {
-        if (!File.Exists(filePath))
-            return RefactoringHelpers.ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
-
-        var sourceText = await File.ReadAllTextAsync(filePath);
-        var newText = SafeDeleteMethodInSource(sourceText, methodName);
-        await File.WriteAllTextAsync(filePath, newText);
-
-        return $"Successfully deleted method '{methodName}' in {filePath} (single file mode)";
+        return RefactoringHelpers.ApplySingleFileEdit(
+            filePath,
+            text => SafeDeleteMethodInSource(text, methodName),
+            $"Successfully deleted method '{methodName}' in {filePath} (single file mode)");
     }
 
     public static string SafeDeleteMethodInSource(string sourceText, string methodName)
@@ -266,16 +258,12 @@ public static class SafeDeleteTool
         return $"Successfully deleted parameter '{parameterName}' from method '{methodName}' in {document.FilePath}";
     }
 
-    private static async Task<string> SafeDeleteParameterSingleFile(string filePath, string methodName, string parameterName)
+    private static Task<string> SafeDeleteParameterSingleFile(string filePath, string methodName, string parameterName)
     {
-        if (!File.Exists(filePath))
-            return RefactoringHelpers.ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
-
-        var sourceText = await File.ReadAllTextAsync(filePath);
-        var newText = SafeDeleteParameterInSource(sourceText, methodName, parameterName);
-        await File.WriteAllTextAsync(filePath, newText);
-
-        return $"Successfully deleted parameter '{parameterName}' from method '{methodName}' in {filePath} (single file mode)";
+        return RefactoringHelpers.ApplySingleFileEdit(
+            filePath,
+            text => SafeDeleteParameterInSource(text, methodName, parameterName),
+            $"Successfully deleted parameter '{parameterName}' from method '{methodName}' in {filePath} (single file mode)");
     }
 
     public static string SafeDeleteParameterInSource(string sourceText, string methodName, string parameterName)
@@ -348,16 +336,12 @@ public static class SafeDeleteTool
         return $"Successfully deleted variable '{variable.Identifier.ValueText}' in {document.FilePath}";
     }
 
-    private static async Task<string> SafeDeleteVariableSingleFile(string filePath, string selectionRange)
+    private static Task<string> SafeDeleteVariableSingleFile(string filePath, string selectionRange)
     {
-        if (!File.Exists(filePath))
-            return RefactoringHelpers.ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
-
-        var sourceText = await File.ReadAllTextAsync(filePath);
-        var newText = SafeDeleteVariableInSource(sourceText, selectionRange);
-        await File.WriteAllTextAsync(filePath, newText);
-
-        return $"Successfully deleted variable in {filePath} (single file mode)";
+        return RefactoringHelpers.ApplySingleFileEdit(
+            filePath,
+            text => SafeDeleteVariableInSource(text, selectionRange),
+            $"Successfully deleted variable in {filePath} (single file mode)");
     }
 
     public static string SafeDeleteVariableInSource(string sourceText, string selectionRange)
