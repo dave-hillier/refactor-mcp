@@ -926,4 +926,678 @@ class Bar
         Assert.Contains("private readonly Bar bar", output);
         Assert.Contains("bar.Do()", output);
     }
+
+    [Fact]
+    public void MoveInstanceMethodInSource_WithProtectedMethods_ChangesToPublic()
+    {
+        var input = @"class Calculator
+{
+    protected int Multiply(int a, int b)
+    {
+        return a * b;
+    }
+}
+
+class MathOperations
+{
+}";
+
+        var expected = @"class Calculator
+{
+    private readonly MathOperations mathOperations = new MathOperations();
+
+    protected int Multiply(int a, int b)
+    {
+        return mathOperations.Multiply(a, b);
+    }
+}
+
+class MathOperations
+{
+    public int Multiply(int a, int b)
+    {
+        return a * b;
+    }
+}";
+
+        var output = MoveMethodsTool.MoveInstanceMethodInSource(input, "Calculator", "Multiply", "MathOperations", "mathOperations", "field");
+        Assert.Equal(expected, output.Trim());
+    }
+
+    [Fact]
+    public void MoveInstanceMethodInSource_WithInternalMethods_ChangesToPublic()
+    {
+        var input = @"class Calculator
+{
+    internal void LogCalculation(string operation)
+    {
+        Console.WriteLine($""Performed: {operation}"");
+    }
+}
+
+class Logger
+{
+}";
+
+        var expected = @"class Calculator
+{
+    private readonly Logger logger = new Logger();
+
+    internal void LogCalculation(string operation)
+    {
+        logger.LogCalculation(operation);
+    }
+}
+
+class Logger
+{
+    public void LogCalculation(string operation)
+    {
+        Console.WriteLine($""Performed: {operation}"");
+    }
+}";
+
+        var output = MoveMethodsTool.MoveInstanceMethodInSource(input, "Calculator", "LogCalculation", "Logger", "logger", "field");
+        Assert.Equal(expected, output.Trim());
+    }
+
+    [Fact]
+    public void MoveInstanceMethodInSource_WithPropertyAccess_RewritesCorrectly()
+    {
+        var input = @"class DataProcessor
+{
+    public string Name { get; set; } = ""DefaultProcessor"";
+
+    public string GetProcessorInfo()
+    {
+        return $""Processor: {Name}"";
+    }
+}
+
+class InfoProvider
+{
+}";
+
+        var expected = @"class DataProcessor
+{
+    public string Name { get; set; } = ""DefaultProcessor"";
+
+    private readonly InfoProvider infoProvider = new InfoProvider();
+
+    public string GetProcessorInfo()
+    {
+        return infoProvider.GetProcessorInfo(this);
+    }
+}
+
+class InfoProvider
+{
+    public string GetProcessorInfo(DataProcessor dataprocessor)
+    {
+        return $""Processor: {dataprocessor.Name}"";
+    }
+}";
+
+        var output = MoveMethodsTool.MoveInstanceMethodInSource(input, "DataProcessor", "GetProcessorInfo", "InfoProvider", "infoProvider", "field");
+        Assert.Equal(expected, output.Trim());
+    }
+
+    [Fact]
+    public void MoveInstanceMethodInSource_WithPropertyMember_UsesPropertyAccess()
+    {
+        var input = @"class Calculator
+{
+    public int Add(int a, int b)
+    {
+        return a + b;
+    }
+}
+
+class MathOperations
+{
+}";
+
+        var expected = @"class Calculator
+{
+    private MathOperations MathOps { get; set; }
+
+    public int Add(int a, int b)
+    {
+        return MathOps.Add(a, b);
+    }
+}
+
+class MathOperations
+{
+    public int Add(int a, int b)
+    {
+        return a + b;
+    }
+}";
+
+        var output = MoveMethodsTool.MoveInstanceMethodInSource(input, "Calculator", "Add", "MathOperations", "MathOps", "property");
+        Assert.Equal(expected, output.Trim());
+    }
+
+    [Fact]
+    public void MoveInstanceMethodInSource_MethodWithComplexReturnType_PreservesSignature()
+    {
+        var input = @"class DataProcessor
+{
+    public List<Dictionary<string, int>> ProcessData(IEnumerable<string> input)
+    {
+        return input.Select(s => new Dictionary<string, int> { [s] = s.Length }).ToList();
+    }
+}
+
+class DataTransformer
+{
+}";
+
+        var expected = @"class DataProcessor
+{
+    private readonly DataTransformer dataTransformer = new DataTransformer();
+
+    public List<Dictionary<string, int>> ProcessData(IEnumerable<string> input)
+    {
+        return dataTransformer.ProcessData(input);
+    }
+}
+
+class DataTransformer
+{
+    public List<Dictionary<string, int>> ProcessData(IEnumerable<string> input)
+    {
+        return input.Select(s => new Dictionary<string, int> { [s] = s.Length }).ToList();
+    }
+}";
+
+        var output = MoveMethodsTool.MoveInstanceMethodInSource(input, "DataProcessor", "ProcessData", "DataTransformer", "dataTransformer", "field");
+        Assert.Equal(expected, output.Trim());
+    }
+
+    [Fact]
+    public void MoveInstanceMethodInSource_WithGenericMethod_PreservesGenerics()
+    {
+        var input = @"class Container
+{
+    public T Process<T>(T value) where T : class
+    {
+        return value;
+    }
+}
+
+class Processor
+{
+}";
+
+        var expected = @"class Container
+{
+    private readonly Processor processor = new Processor();
+
+    public T Process<T>(T value) where T : class
+    {
+        return processor.Process(value);
+    }
+}
+
+class Processor
+{
+    public T Process<T>(T value) where T : class
+    {
+        return value;
+    }
+}";
+
+        var output = MoveMethodsTool.MoveInstanceMethodInSource(input, "Container", "Process", "Processor", "processor", "field");
+        Assert.Equal(expected, output.Trim());
+    }
+
+    [Fact]
+    public void MoveInstanceMethodInSource_WithMethodUsingOtherMethods_PassesThisReference()
+    {
+        var input = @"class Calculator
+{
+    public int Square(int number)
+    {
+        return Multiply(number, number);
+    }
+
+    public int Multiply(int a, int b)
+    {
+        return a * b;
+    }
+}
+
+class MathOperations
+{
+}";
+
+        var expected = @"class Calculator
+{
+    private readonly MathOperations mathOperations = new MathOperations();
+
+    public int Square(int number)
+    {
+        return mathOperations.Square(number, this);
+    }
+
+    public int Multiply(int a, int b)
+    {
+        return a * b;
+    }
+}
+
+class MathOperations
+{
+    public int Square(int number, Calculator calculator)
+    {
+        return calculator.Multiply(number, number);
+    }
+}";
+
+        var output = MoveMethodsTool.MoveInstanceMethodInSource(input, "Calculator", "Square", "MathOperations", "mathOperations", "field");
+        Assert.Equal(expected, output.Trim());
+    }
+
+    [Fact]
+    public void MoveStaticMethodInSource_WithMultipleClasses_AddsToCorrectClass()
+    {
+        var input = @"class Utilities
+{
+    public static string FormatName(string firstName, string lastName)
+    {
+        return $""{lastName}, {firstName}"";
+    }
+}
+
+class StringHelper
+{
+}
+
+class NumberHelper
+{
+}";
+
+        var expected = @"class Utilities
+{
+    public static string FormatName(string firstName, string lastName)
+    {
+        return StringHelper.FormatName(firstName, lastName);
+    }
+}
+
+class StringHelper
+{
+    public static string FormatName(string firstName, string lastName)
+    {
+        return $""{lastName}, {firstName}"";
+    }
+}
+
+class NumberHelper
+{
+}";
+
+        var output = MoveMethodsTool.MoveStaticMethodInSource(input, "FormatName", "StringHelper");
+        Assert.Equal(expected, output.Trim());
+    }
+
+    [Fact]
+    public void MoveStaticMethodInSource_WithStaticFields_PreservesReferences()
+    {
+        var input = @"class Configuration
+{
+    public static readonly string DefaultPath = ""/tmp"";
+
+    public static string GetFullPath(string filename)
+    {
+        return Path.Combine(DefaultPath, filename);
+    }
+}
+
+class PathHelper
+{
+}";
+
+        var expected = @"class Configuration
+{
+    public static readonly string DefaultPath = ""/tmp"";
+
+    public static string GetFullPath(string filename)
+    {
+        return PathHelper.GetFullPath(filename);
+    }
+}
+
+class PathHelper
+{
+    public static string GetFullPath(string filename)
+    {
+        return Path.Combine(Configuration.DefaultPath, filename);
+    }
+}";
+
+        var output = MoveMethodsTool.MoveStaticMethodInSource(input, "GetFullPath", "PathHelper");
+        Assert.Equal(expected, output.Trim());
+    }
+
+    [Fact]
+    public void MoveMultipleStaticMethods_WithDifferentTargets_DistributesCorrectly()
+    {
+        var input = @"class Utilities
+{
+    public static string FormatString(string input)
+    {
+        return input.Trim().ToUpper();
+    }
+
+    public static int AddNumbers(int a, int b)
+    {
+        return a + b;
+    }
+
+    public static bool IsValidEmail(string email)
+    {
+        return email.Contains(""@"");
+    }
+}
+
+class StringHelper
+{
+}
+
+class MathHelper
+{
+}
+
+class ValidationHelper
+{
+}";
+
+        var operationsJson = @"[
+            {
+                ""Method"": ""FormatString"",
+                ""TargetClass"": ""StringHelper"",
+                ""IsStatic"": true
+            },
+            {
+                ""Method"": ""AddNumbers"",
+                ""TargetClass"": ""MathHelper"",
+                ""IsStatic"": true
+            },
+            {
+                ""Method"": ""IsValidEmail"",
+                ""TargetClass"": ""ValidationHelper"",
+                ""IsStatic"": true
+            }
+        ]";
+
+        var output = MoveMultipleMethodsTool.MoveMultipleMethodsInSource(input, operationsJson);
+        
+        // Verify that methods are moved to correct classes
+        Assert.Contains("class StringHelper", output);
+        Assert.Contains("FormatString", output);
+        Assert.Contains("class MathHelper", output);
+        Assert.Contains("AddNumbers", output);
+        Assert.Contains("class ValidationHelper", output);
+        Assert.Contains("IsValidEmail", output);
+        // Verify that methods are moved to correct classes
+        Assert.Contains("class Utilities", output);
+        Assert.Contains("class StringHelper", output);
+        Assert.Contains("class MathHelper", output);
+        Assert.Contains("class ValidationHelper", output);
+    }
+
+    [Fact]
+    public void MoveInstanceMethodInSource_WithRecursiveMethod_PreservesRecursion()
+    {
+        var input = @"class Calculator
+{
+    public int Factorial(int n)
+    {
+        if (n <= 1) return 1;
+        return n * Factorial(n - 1);
+    }
+}
+
+class MathOperations
+{
+}";
+
+        var expected = @"class Calculator
+{
+    private readonly MathOperations mathOperations = new MathOperations();
+
+    public int Factorial(int n)
+    {
+        return mathOperations.Factorial(n, this);
+    }
+}
+
+class MathOperations
+{
+    public int Factorial(int n, Calculator calculator)
+    {
+        if (n <= 1) return 1;
+        return n * calculator.Factorial(n - 1);
+    }
+}";
+
+        var output = MoveMethodsTool.MoveInstanceMethodInSource(input, "Calculator", "Factorial", "MathOperations", "mathOperations", "field");
+        Assert.Equal(expected, output.Trim());
+    }
+
+    [Fact]
+    public void MoveInstanceMethodInSource_WithExpressionBodiedMethod_PreservesFormat()
+    {
+        var input = @"class Calculator
+{
+    public int Double(int x) => x * 2;
+}
+
+class MathOperations
+{
+}";
+
+        var expected = @"class Calculator
+{
+    private readonly MathOperations mathOperations = new MathOperations();
+
+    public int Double(int x)
+    {
+        return mathOperations.Double(x);
+    }
+}
+
+class MathOperations
+{
+    public int Double(int x) => x * 2;
+}";
+
+        var output = MoveMethodsTool.MoveInstanceMethodInSource(input, "Calculator", "Double", "MathOperations", "mathOperations", "field");
+        Assert.Equal(expected, output.Trim());
+    }
+
+    [Fact]
+    public void MoveInstanceMethodInSource_WithAsyncMethod_PreservesAsync()
+    {
+        var input = @"class DataProcessor
+{
+    public async Task<string> ProcessDataAsync(string input)
+    {
+        await Task.Delay(100);
+        return input.ToUpper();
+    }
+}
+
+class DataTransformer
+{
+}";
+
+        var expected = @"class DataProcessor
+{
+    private readonly DataTransformer dataTransformer = new DataTransformer();
+
+    public async Task<string> ProcessDataAsync(string input)
+    {
+        return await dataTransformer.ProcessDataAsync(input);
+    }
+}
+
+class DataTransformer
+{
+    public async Task<string> ProcessDataAsync(string input)
+    {
+        await Task.Delay(100);
+        return input.ToUpper();
+    }
+}";
+
+        var output = MoveMethodsTool.MoveInstanceMethodInSource(input, "DataProcessor", "ProcessDataAsync", "DataTransformer", "dataTransformer", "field");
+        Assert.Equal(expected, output.Trim());
+    }
+
+    [Fact]
+    public void MoveInstanceMethodInSource_WithMethodHavingAttributes_PreservesAttributes()
+    {
+        var input = @"class Service
+{
+    [Obsolete(""Use NewMethod instead"")]
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public void OldMethod()
+    {
+        Console.WriteLine(""Old method"");
+    }
+}
+
+class LegacyService
+{
+}";
+
+        var expected = @"class Service
+{
+    private readonly LegacyService legacyService = new LegacyService();
+
+    [Obsolete(""Use NewMethod instead"")]
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public void OldMethod()
+    {
+        legacyService.OldMethod();
+    }
+}
+
+class LegacyService
+{
+    [Obsolete(""Use NewMethod instead"")]
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public void OldMethod()
+    {
+        Console.WriteLine(""Old method"");
+    }
+}";
+
+        var output = MoveMethodsTool.MoveInstanceMethodInSource(input, "Service", "OldMethod", "LegacyService", "legacyService", "field");
+        Assert.Equal(expected, output.Trim());
+    }
+
+    [Fact]
+    public void MoveInstanceMethodInSource_EmptyTargetClass_CreatesClassWithMethod()
+    {
+        var input = @"class Source
+{
+    public void TestMethod()
+    {
+        Console.WriteLine(""Test"");
+    }
+}";
+
+        var output = MoveMethodsTool.MoveInstanceMethodInSource(input, "Source", "TestMethod", "NewTarget", "target", "field");
+        
+        Assert.Contains("class Source", output);
+        Assert.Contains("private readonly NewTarget target = new NewTarget();", output);
+        Assert.Contains("public class NewTarget", output);
+        Assert.Contains("public void TestMethod()", output);
+    }
+
+    [Fact]
+    public void MoveMethodsWithComplexDependencies_OrdersCorrectly()
+    {
+        var input = @"class ComplexCalculator
+{
+    public int MethodA()
+    {
+        return MethodB() + MethodC();
+    }
+
+    public int MethodB()
+    {
+        return MethodD() * 2;
+    }
+
+    public int MethodC()
+    {
+        return 5;
+    }
+
+    public int MethodD()
+    {
+        return 10;
+    }
+}
+
+class Operations
+{
+}";
+
+        var operationsJson = @"[
+            {
+                ""SourceClass"": ""ComplexCalculator"",
+                ""Method"": ""MethodA"",
+                ""TargetClass"": ""Operations"",
+                ""AccessMember"": ""operations"",
+                ""AccessMemberType"": ""field"",
+                ""IsStatic"": false
+            },
+            {
+                ""SourceClass"": ""ComplexCalculator"",
+                ""Method"": ""MethodB"",
+                ""TargetClass"": ""Operations"",
+                ""AccessMember"": ""operations"",
+                ""AccessMemberType"": ""field"",
+                ""IsStatic"": false
+            },
+            {
+                ""SourceClass"": ""ComplexCalculator"",
+                ""Method"": ""MethodC"",
+                ""TargetClass"": ""Operations"",
+                ""AccessMember"": ""operations"",
+                ""AccessMemberType"": ""field"",
+                ""IsStatic"": false
+            },
+            {
+                ""SourceClass"": ""ComplexCalculator"",
+                ""Method"": ""MethodD"",
+                ""TargetClass"": ""Operations"",
+                ""AccessMember"": ""operations"",
+                ""AccessMemberType"": ""field"",
+                ""IsStatic"": false
+            }
+        ]";
+
+        var output = MoveMultipleMethodsTool.MoveMultipleMethodsInSource(input, operationsJson);
+        
+        // Verify that all methods are moved
+        Assert.Contains("class Operations", output);
+        Assert.Contains("MethodA", output);
+        Assert.Contains("MethodB", output);
+        Assert.Contains("MethodC", output);
+        Assert.Contains("MethodD", output);
+        
+        // Verify dependencies are handled correctly
+        Assert.Contains("operations.MethodA", output);
+        Assert.Contains("operations.MethodB", output);
+        Assert.Contains("operations.MethodC", output);
+        Assert.Contains("operations.MethodD", output);
+    }
 }
