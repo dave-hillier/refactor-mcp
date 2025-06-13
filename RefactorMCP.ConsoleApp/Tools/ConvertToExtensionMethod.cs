@@ -11,7 +11,8 @@ using System.Collections.Generic;
 [McpServerToolType]
 public static class ConvertToExtensionMethodTool
 {
-    [McpServerTool, Description("Convert an instance method to an extension method in a static class")]
+    [McpServerTool, Description("Convert an instance method to an extension method in a static class. " +
+        "A wrapper method remains so existing call sites continue to work.")]
     public static async Task<string> ConvertToExtensionMethod(
         [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,

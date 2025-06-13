@@ -337,6 +337,7 @@ public class MathUtilities
     }
 }
 ```
+The original method remains in `ExampleCode.cs` as a wrapper that forwards to `MathUtilities.FormatCurrency`.
 
 ## 10. Move Multiple Methods
 
@@ -410,6 +411,7 @@ class Target
     }
 }
 ```
+Each moved method in `Helper` now delegates to the corresponding method on `Target`, preserving the original public interface.
 
 ## 11. Move Class to Separate File
 
