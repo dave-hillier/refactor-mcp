@@ -55,12 +55,16 @@ public static class MoveMultipleMethodsTool
             if (op.IsStatic)
             {
                 var moveResult = MoveMethodsTool.MoveStaticMethodAst(workingRoot, op.Method, op.TargetClass);
-                workingRoot = MoveMethodsTool.AddMethodToTargetClass(moveResult.NewSourceRoot, op.TargetClass, moveResult.MovedMethod);
+                // First update the source with the stub, then add the method to target
+                workingRoot = moveResult.NewSourceRoot;
+                workingRoot = MoveMethodsTool.AddMethodToTargetClass(workingRoot, op.TargetClass, moveResult.MovedMethod);
             }
             else
             {
                 var moveResult = MoveMethodsTool.MoveInstanceMethodAst(workingRoot, op.SourceClass, op.Method, op.TargetClass, op.AccessMember, op.AccessMemberType);
-                workingRoot = MoveMethodsTool.AddMethodToTargetClass(moveResult.NewSourceRoot, op.TargetClass, moveResult.MovedMethod);
+                // First update the source with the stub, then add the method to target
+                workingRoot = moveResult.NewSourceRoot;
+                workingRoot = MoveMethodsTool.AddMethodToTargetClass(workingRoot, op.TargetClass, moveResult.MovedMethod);
             }
         }
 
