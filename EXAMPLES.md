@@ -505,6 +505,52 @@ public int Multiply(int x, int y)
 }
 ```
 
+## 12. Transform Setter to Init
+
+**Purpose**: Convert a property setter to an init-only setter.
+
+### Example
+**Before** (in `ExampleCode.cs` line 60):
+```csharp
+public string Name { get; set; } = "Default Calculator";
+```
+
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli transform-setter-to-init \
+  "./RefactorMCP.sln" \
+  "./RefactorMCP.Tests/ExampleCode.cs" \
+  Name
+```
+
+**After**:
+```csharp
+public string Name { get; init; } = "Default Calculator";
+```
+
+## 13. Safe Delete Field
+
+**Purpose**: Remove an unused field from a class.
+
+### Example
+**Before** (in `ExampleCode.cs` line 88):
+```csharp
+private int deprecatedCounter = 0; // Not used anywhere
+```
+
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli safe-delete-field \
+  "./RefactorMCP.sln" \
+  "./RefactorMCP.Tests/ExampleCode.cs" \
+  deprecatedCounter
+```
+
+**After**:
+```csharp
+// Field 'deprecatedCounter' removed from Calculator class
+```
+
 ## 12. Cleanup Usings
 
 **Purpose**: Remove unused using directives from a file.
@@ -602,13 +648,13 @@ extract-method - Extract selected code into a new method
 introduce-field - Create a new field from selected code
 introduce-variable - Create a new variable from selected code
 make-field-readonly - Make a field readonly and move initialization to constructors
-introduce-parameter - Create a new parameter from selected code (TODO)
-convert-to-static-with-parameters - Transform instance method to static (TODO)
-convert-to-static-with-instance - Transform instance method to static with instance parameter (TODO)
+introduce-parameter - Create a new parameter from selected code
+convert-to-static-with-parameters - Transform instance method to static
+convert-to-static-with-instance - Transform instance method to static with instance parameter
 move-static-method - Move a static method to another class
 move-instance-method - Move an instance method to another class
-transform-setter-to-init - Convert property setter to init-only setter (TODO)
-safe-delete - Safely delete a field, parameter, or variable (TODO)
+transform-setter-to-init - Convert property setter to init-only setter
+safe-delete - Safely delete a field, parameter, or variable
 
 ```
 
