@@ -7,6 +7,7 @@ using System;
 using System.IO;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Linq;
+using Microsoft.CodeAnalysis.Text;
 
 
 
@@ -104,5 +105,21 @@ internal static class RefactoringHelpers
         }
 
         return null;
+    }
+
+    internal static void AddDocumentToProject(Project project, string filePath)
+    {
+        if (project.Documents.Any(d =>
+                Path.GetFullPath(d.FilePath ?? "") == Path.GetFullPath(filePath)))
+            return;
+
+        var text = SourceText.From(File.ReadAllText(filePath));
+        var newDoc = project.AddDocument(Path.GetFileName(filePath), text, filePath: filePath);
+
+        var solutionPath = project.Solution.FilePath;
+        if (!string.IsNullOrEmpty(solutionPath))
+        {
+            SolutionCache.Set(solutionPath!, newDoc.Project.Solution);
+        }
     }
 }
