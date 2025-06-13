@@ -75,7 +75,7 @@ Add the following configuration to your `mcp.json` file:
       "args": [
         "run"
       ],
-      "cwd": "/Users/davidhillier/repos/RefactorMCP/RefactorMCP.ConsoleApp"
+      "cwd": "/path/to/RefactorMCP/RefactorMCP.ConsoleApp"
     }
   }
 }
@@ -93,9 +93,9 @@ Replace the paths with your actual installation directory:
       "args": [
         "run",
         "--project",
-        "/Users/username/repos/RefactorMCP/RefactorMCP.ConsoleApp"
+        "/path/to/RefactorMCP/RefactorMCP.ConsoleApp"
       ],
-      "cwd": "/Users/username/repos/RefactorMCP"
+      "cwd": "/path/to/RefactorMCP"
     }
   }
 }
