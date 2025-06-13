@@ -5,6 +5,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
+using Microsoft.CodeAnalysis.Text;
 using System.IO;
 using System;
 
@@ -38,7 +39,9 @@ public static class CleanupUsingsTool
     {
         var sourceText = await document.GetTextAsync();
         var newText = CleanupUsingsInSource(sourceText.ToString());
+        var newDocument = document.WithText(SourceText.From(newText));
         await File.WriteAllTextAsync(document.FilePath!, newText);
+        RefactoringHelpers.UpdateSolutionCache(newDocument);
         return $"Removed unused usings in {document.FilePath}";
     }
 

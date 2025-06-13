@@ -49,6 +49,7 @@ public static class IntroduceParameterTool
         var newDocument = document.WithSyntaxRoot(formattedRoot);
         var newText = await newDocument.GetTextAsync();
         await File.WriteAllTextAsync(document.FilePath!, newText.ToString());
+        RefactoringHelpers.UpdateSolutionCache(newDocument);
 
         return $"Successfully introduced parameter '{parameterName}' from {selectionRange} in method '{methodName}' in {document.FilePath} (solution mode)";
     }
