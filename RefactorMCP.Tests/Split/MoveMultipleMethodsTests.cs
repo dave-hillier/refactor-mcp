@@ -68,6 +68,48 @@ public class MoveMultipleMethodsTests : TestBase
         Assert.Contains("static void C()", target2Content);
     }
 
+    [Fact]
+    public async Task MoveMultipleMethods_UsesDefaultTargetFileWhenMissing()
+    {
+        await LoadSolutionTool.LoadSolution(SolutionPath);
+        var testFile = Path.Combine(TestOutputPath, "DefaultTargetTest.cs");
+        await TestUtilities.CreateTestFile(testFile, GetSampleCode());
+
+        var ops = new[]
+        {
+            new MoveMultipleMethodsTool.MoveOperation
+            {
+                SourceClass = "SourceClass",
+                Method = "A",
+                TargetClass = "Target",
+                AccessMember = "t",
+                AccessMemberType = "field",
+                IsStatic = false
+            },
+            new MoveMultipleMethodsTool.MoveOperation
+            {
+                SourceClass = "SourceClass",
+                Method = "B",
+                TargetClass = "Target",
+                AccessMember = "t",
+                AccessMemberType = "field",
+                IsStatic = false
+            }
+        };
+
+        var json = JsonSerializer.Serialize(ops);
+        var targetFile = Path.Combine(TestOutputPath, "Target.cs");
+        var result = await MoveMultipleMethodsTool.MoveMultipleMethods(
+            SolutionPath, testFile, json, targetFile);
+
+        Assert.Contains("Successfully moved 2 methods", result);
+        Assert.True(File.Exists(targetFile));
+        var content = await File.ReadAllTextAsync(targetFile);
+        Assert.Contains("class Target", content);
+        Assert.Contains("void A(SourceClass", content);
+        Assert.Contains("void B()", content);
+    }
+
     private static string GetSampleCode() => """
 using System;
 

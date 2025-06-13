@@ -243,11 +243,21 @@ public static class MoveMultipleMethodsTool
     public static async Task<string> MoveMultipleMethods(
         [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file containing the methods")] string filePath,
-        [Description("JSON array describing the move operations")] string operationsJson)
+        [Description("JSON array describing the move operations")] string operationsJson,
+        [Description("Default target file used when operations omit targetFile (optional)")] string? defaultTargetFile = null)
     {
         var ops = JsonSerializer.Deserialize<List<MoveOperation>>(operationsJson);
         if (ops == null || ops.Count == 0)
             return RefactoringHelpers.ThrowMcpException("Error: No operations provided");
+
+        if (!string.IsNullOrEmpty(defaultTargetFile))
+        {
+            foreach (var op in ops)
+            {
+                if (string.IsNullOrEmpty(op.TargetFile))
+                    op.TargetFile = defaultTargetFile;
+            }
+        }
 
         var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
         var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
