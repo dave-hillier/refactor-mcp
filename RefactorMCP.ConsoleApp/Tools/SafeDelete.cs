@@ -113,14 +113,8 @@ public static class SafeDeleteTool
         if (count > 0)
             return RefactoringHelpers.ThrowMcpException($"Error: Field '{fieldName}' is referenced {count} time(s)");
 
-        SyntaxNode newRoot;
-        if (field.Declaration.Variables.Count == 1)
-            newRoot = root.RemoveNode(field, SyntaxRemoveOptions.KeepNoTrivia);
-        else
-        {
-            var newDecl = field.Declaration.WithVariables(SyntaxFactory.SeparatedList(field.Declaration.Variables.Where(v => v.Identifier.ValueText != fieldName)));
-            newRoot = root.ReplaceNode(field, field.WithDeclaration(newDecl));
-        }
+        var rewriter = new FieldRemovalRewriter(fieldName);
+        var newRoot = rewriter.Visit(root)!;
 
         var formatted = Formatter.Format(newRoot, document.Project.Solution.Workspace);
         var newDoc = document.WithSyntaxRoot(formatted);
@@ -178,7 +172,8 @@ public static class SafeDeleteTool
         if (count > 0)
             return RefactoringHelpers.ThrowMcpException($"Error: Method '{methodName}' is referenced {count} time(s)");
 
-        var newRoot = root.RemoveNode(method, SyntaxRemoveOptions.KeepNoTrivia);
+        var rewriter = new MethodRemovalRewriter(methodName);
+        var newRoot = rewriter.Visit(root)!;
         var formatted = Formatter.Format(newRoot, document.Project.Solution.Workspace);
         var newDoc = document.WithSyntaxRoot(formatted);
         var text = await newDoc.GetTextAsync();
@@ -207,7 +202,8 @@ public static class SafeDeleteTool
         if (references > 0)
             return RefactoringHelpers.ThrowMcpException($"Error: Method '{methodName}' is referenced");
 
-        var newRoot = root.RemoveNode(method, SyntaxRemoveOptions.KeepNoTrivia);
+        var rewriter = new MethodRemovalRewriter(methodName);
+        var newRoot = rewriter.Visit(root)!;
         var formatted = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
         return formatted.ToFullString();
     }
@@ -228,33 +224,27 @@ public static class SafeDeleteTool
         var paramIndex = method.ParameterList.Parameters.IndexOf(parameter);
 
         var refs = await SymbolFinder.FindReferencesAsync(methodSymbol, document.Project.Solution);
-        foreach (var location in refs.SelectMany(r => r.Locations))
+        var docs = refs.SelectMany(r => r.Locations)
+            .Where(l => l.Location.IsInSource)
+            .Select(l => document.Project.Solution.GetDocument(l.Location.SourceTree)!)
+            .Distinct()
+            .ToList();
+
+        if (!docs.Contains(document))
+            docs.Add(document);
+
+        var rewriter = new ParameterRemovalRewriter(methodName, paramIndex);
+
+        foreach (var doc in docs)
         {
-            if (!location.Location.IsInSource) continue;
-            var refDoc = document.Project.Solution.GetDocument(location.Location.SourceTree)!;
-            var refRoot = await refDoc.GetSyntaxRootAsync();
-            var node = refRoot!.FindNode(location.Location.SourceSpan);
-            if (node is IdentifierNameSyntax && node.Parent is InvocationExpressionSyntax invocation)
-            {
-                if (paramIndex < invocation.ArgumentList.Arguments.Count)
-                {
-                    var newArgs = invocation.ArgumentList.Arguments.RemoveAt(paramIndex);
-                    var newInv = invocation.WithArgumentList(invocation.ArgumentList.WithArguments(newArgs));
-                    refRoot = refRoot.ReplaceNode(invocation, newInv);
-                    var formattedRoot = Formatter.Format(refRoot, refDoc.Project.Solution.Workspace);
-                    var newRefDoc = refDoc.WithSyntaxRoot(formattedRoot);
-                    var newText = await newRefDoc.GetTextAsync();
-                    await File.WriteAllTextAsync(refDoc.FilePath!, newText.ToString());
-                }
-            }
+            var docRoot = await doc.GetSyntaxRootAsync();
+            var rewritten = rewriter.Visit(docRoot!);
+            var formattedRoot = Formatter.Format(rewritten!, doc.Project.Solution.Workspace);
+            var newDoc = doc.WithSyntaxRoot(formattedRoot);
+            var newText = await newDoc.GetTextAsync();
+            await File.WriteAllTextAsync(doc.FilePath!, newText.ToString());
         }
 
-        var newMethod = method.WithParameterList(method.ParameterList.WithParameters(method.ParameterList.Parameters.Remove(parameter)));
-        var newRoot = root.ReplaceNode(method, newMethod);
-        var formatted = Formatter.Format(newRoot, document.Project.Solution.Workspace);
-        var newDoc = document.WithSyntaxRoot(formatted);
-        var text = await newDoc.GetTextAsync();
-        await File.WriteAllTextAsync(document.FilePath!, text.ToString());
         return $"Successfully deleted parameter '{parameterName}' from method '{methodName}' in {document.FilePath}";
     }
 
@@ -279,22 +269,9 @@ public static class SafeDeleteTool
             return RefactoringHelpers.ThrowMcpException($"Error: Parameter '{parameterName}' not found");
 
         var paramIndex = method.ParameterList.Parameters.IndexOf(parameter);
-        var invocations = root.DescendantNodes().OfType<InvocationExpressionSyntax>()
-            .Where(i => i.Expression is IdentifierNameSyntax id && id.Identifier.ValueText == methodName);
-
-        foreach (var invocation in invocations)
-        {
-            if (paramIndex < invocation.ArgumentList.Arguments.Count)
-            {
-                var newArgs = invocation.ArgumentList.Arguments.RemoveAt(paramIndex);
-                var newInv = invocation.WithArgumentList(invocation.ArgumentList.WithArguments(newArgs));
-                root = root.ReplaceNode(invocation, newInv);
-            }
-        }
-
-        var newMethod = method.WithParameterList(method.ParameterList.WithParameters(method.ParameterList.Parameters.Remove(parameter)));
-        root = root.ReplaceNode(method, newMethod);
-        var formatted = Formatter.Format(root, RefactoringHelpers.SharedWorkspace);
+        var rewriter = new ParameterRemovalRewriter(methodName, paramIndex);
+        var newRoot = rewriter.Visit(root)!;
+        var formatted = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
         return formatted.ToFullString();
     }
 
@@ -319,15 +296,8 @@ public static class SafeDeleteTool
         if (count > 0)
             return RefactoringHelpers.ThrowMcpException($"Error: Variable '{variable.Identifier.ValueText}' is referenced {count} time(s)");
 
-        var statement = variable.FirstAncestorOrSelf<LocalDeclarationStatementSyntax>();
-        SyntaxNode newRoot;
-        if (statement!.Declaration.Variables.Count == 1)
-            newRoot = root.RemoveNode(statement, SyntaxRemoveOptions.KeepNoTrivia);
-        else
-        {
-            var newDecl = statement.Declaration.WithVariables(SyntaxFactory.SeparatedList(statement.Declaration.Variables.Where(v => v != variable)));
-            newRoot = root.ReplaceNode(statement, statement.WithDeclaration(newDecl));
-        }
+        var rewriter = new VariableRemovalRewriter(variable.Identifier.ValueText, variable.Span);
+        var newRoot = rewriter.Visit(root)!;
 
         var formatted = Formatter.Format(newRoot, document.Project.Solution.Workspace);
         var newDoc = document.WithSyntaxRoot(formatted);
@@ -364,16 +334,8 @@ public static class SafeDeleteTool
         if (references > 1)
             return RefactoringHelpers.ThrowMcpException($"Error: Variable '{name}' is referenced");
 
-        var statement = variable.FirstAncestorOrSelf<LocalDeclarationStatementSyntax>();
-        SyntaxNode newRoot;
-        if (statement!.Declaration.Variables.Count == 1)
-            newRoot = root.RemoveNode(statement, SyntaxRemoveOptions.KeepNoTrivia);
-        else
-        {
-            var newDecl = statement.Declaration.WithVariables(SyntaxFactory.SeparatedList(statement.Declaration.Variables.Where(v => v != variable)));
-            newRoot = root.ReplaceNode(statement, statement.WithDeclaration(newDecl));
-        }
-
+        var rewriter = new VariableRemovalRewriter(name, variable.Span);
+        var newRoot = rewriter.Visit(root)!;
         var formatted = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
         return formatted.ToFullString();
     }
