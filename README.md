@@ -130,9 +130,9 @@ After configuring, restart your MCP client. The RefactorMCP tools should be avai
 - `introduce_field` - Create fields from expressions
 - `introduce_variable` - Create variables from expressions
 - `make_field_readonly` - Convert fields to readonly
-- `convert_to_extension_method` - Transform instance methods into extension methods
+- `convert_to_extension_method` - Transform instance methods into extension methods while leaving a wrapper call in the original class
 - `convert_to_static` - Transform methods to static
-- `move_method` - Relocate methods between classes
+- `move_method` - Relocate methods between classes. A delegating wrapper remains so existing callers continue to compile
 - `safe_delete` - Remove unused code safely
 - `transform_property` - Convert setters to init-only
 
@@ -180,6 +180,10 @@ dotnet run --project RefactorMCP.ConsoleApp -- --json ToolName '{"param":"value"
   `SourceClass`, `Method`, `TargetClass`, `AccessMember`, `AccessMemberType`,
   `IsStatic`, and an optional `TargetFile`.
 - `cleanup-usings [solutionPath] <filePath>` - Remove unused using directives
+ - `move-static-method <solutionPath> <filePath> <methodName> <targetClass> [targetFilePath]` - Move a static method to another class. A placeholder wrapper is left behind to delegate to the new location
+ - `move-instance-method <solutionPath> <filePath> <sourceClass> <methodNames> <targetClass> <accessMember> [memberType] [targetFilePath]` - Move one or more instance methods to another class. Wrapper methods remain in the original class so existing callers continue to work
+ - `move-multiple-methods <solutionPath> <filePath> <sourceClass> <methodNames> <targetClass> <accessMember> [memberType] [targetFilePath]` - Move multiple methods from one class to another. Each method leaves a delegating wrapper behind. Accepts comma separated `methodNames`. The older JSON form is still supported for backward compatibility
+ - `cleanup-usings [solutionPath] <filePath>` - Remove unused using directives
 - `version` - Show build version and timestamp
 - `analyze-refactoring-opportunities <solutionPath> <filePath>` - Prompt for refactoring suggestions (long methods, long parameter lists, unused code)
 - `list-class-lengths <solutionPath>` - Prompt for class names and line counts
@@ -422,6 +426,7 @@ public class MathUtilities
     }
 }
 ```
+The original `FormatCurrency` method remains in the source file as a wrapper that calls `MathUtilities.FormatCurrency`.
 
 ### 8. Inline Method
 

@@ -24,10 +24,10 @@ Creates a new field, parameter, or variable from selected code. Use `line:column
 **With Instance Parameter**: Transforms instance methods to static by adding an instance parameter to replace `this` references.
 
 ### Move Static Method
-Relocates a static method to another class (new or existing).
+Relocates a static method to another class (new or existing). A wrapper method is left in the source class to delegate to the moved implementation.
 
 ### Move Instance Method
-Relocates an instance method to another class and introduces a variable, field, or property on the origin class to maintain access.
+Relocates an instance method to another class and introduces a variable, field, or property on the origin class to maintain access. The original method becomes a delegating wrapper so callers see no interface change.
 
 ### Make Field Readonly
 Moves field initialization to all constructors and marks the field as readonly.
