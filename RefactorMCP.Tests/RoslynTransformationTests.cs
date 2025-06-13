@@ -1598,4 +1598,242 @@ class Operations
         Assert.Contains("operations.MethodC", output);
         Assert.Contains("operations.MethodD", output);
     }
+
+    [Fact]
+    public void MoveInstanceMethodInSource_TwoConsecutiveMoves_BothMovesApplied()
+    {
+        var input = @"class DocumentProcessor
+{
+    private List<string> documents = new List<string>();
+
+    public void ValidateDocument()
+    {
+        Console.WriteLine(""Validating document"");
+    }
+
+    public void ProcessDocument()
+    {
+        Console.WriteLine(""Processing document"");
+    }
+
+    public void SaveDocument()
+    {
+        Console.WriteLine(""Saving document"");
+    }
+}
+
+class ValidationService
+{
+}
+
+class ProcessingService
+{
+}";
+
+        var expected = @"class DocumentProcessor
+{
+    private List<string> documents = new List<string>();
+    private readonly ValidationService validationService = new ValidationService();
+    private readonly ProcessingService processingService = new ProcessingService();
+
+    public void ValidateDocument()
+    {
+        validationService.ValidateDocument();
+    }
+
+    public void ProcessDocument()
+    {
+        processingService.ProcessDocument();
+    }
+
+    public void SaveDocument()
+    {
+        Console.WriteLine(""Saving document"");
+    }
+}
+
+class ValidationService
+{
+    public void ValidateDocument()
+    {
+        Console.WriteLine(""Validating document"");
+    }
+}
+
+class ProcessingService
+{
+    public void ProcessDocument()
+    {
+        Console.WriteLine(""Processing document"");
+    }
+}";
+
+        // First move: ValidateDocument to ValidationService
+        var firstMove = MoveMethodsTool.MoveInstanceMethodInSource(input, "DocumentProcessor", "ValidateDocument", "ValidationService", "validationService", "field");
+        
+        // Second move: ProcessDocument to ProcessingService (should build on first move result)
+        var secondMove = MoveMethodsTool.MoveInstanceMethodInSource(firstMove, "DocumentProcessor", "ProcessDocument", "ProcessingService", "processingService", "field");
+        
+        Assert.Equal(expected, secondMove.Trim());
+        
+        // Verify both access members are created
+        Assert.Contains("private readonly ValidationService validationService = new ValidationService();", secondMove);
+        Assert.Contains("private readonly ProcessingService processingService = new ProcessingService();", secondMove);
+        
+        // Verify both method calls are updated
+        Assert.Contains("validationService.ValidateDocument();", secondMove);
+        Assert.Contains("processingService.ProcessDocument();", secondMove);
+        
+        // Verify both target classes have the moved methods
+        Assert.Contains("public void ValidateDocument()", secondMove);
+        Assert.Contains("public void ProcessDocument()", secondMove);
+        
+        // Verify the third method remains in the original class
+        Assert.Contains("Console.WriteLine(\"Saving document\");", secondMove);
+    }
+
+    [Fact]
+    public void MoveMultipleInstanceMethodsInSource_MovesToDifferentTargets_AllMovesApplied()
+    {
+        var input = @"class DocumentProcessor
+{
+    private List<string> documents = new List<string>();
+
+    public void ValidateDocument()
+    {
+        Console.WriteLine(""Validating document"");
+    }
+
+    public void ProcessDocument()
+    {
+        Console.WriteLine(""Processing document"");
+    }
+
+    public void LogActivity(string activity)
+    {
+        Console.WriteLine($""Activity: {activity}"");
+    }
+
+    public void SaveDocument()
+    {
+        Console.WriteLine(""Saving document"");
+    }
+}
+
+class ValidationService
+{
+}
+
+class ProcessingService
+{
+}
+
+class LoggingService
+{
+}";
+        var expected = @"class DocumentProcessor
+{
+    private List<string> documents = new List<string>();
+    private readonly ValidationService validationService = new ValidationService();
+    private readonly ProcessingService processingService = new ProcessingService();
+    private readonly LoggingService loggingService = new LoggingService();
+
+    public void ValidateDocument()
+    {
+        validationService.ValidateDocument();
+    }
+
+    public void ProcessDocument()
+    {
+        processingService.ProcessDocument();
+    }
+
+    public void LogActivity(string activity)
+    {
+        loggingService.LogActivity(activity);
+    }
+
+    public void SaveDocument()
+    {
+        Console.WriteLine(""Saving document"");
+    }
+}
+
+class ValidationService
+{
+    public void ValidateDocument()
+    {
+        Console.WriteLine(""Validating document"");
+    }
+}
+
+class ProcessingService
+{
+    public void ProcessDocument()
+    {
+        Console.WriteLine(""Processing document"");
+    }
+}
+
+class LoggingService
+{
+    public void LogActivity(string activity)
+    {
+        Console.WriteLine($""Activity: {activity}"");
+    }
+}";
+
+        // Create JSON operations for multiple method moves to different targets
+        var operationsJson = @"[
+            {
+                ""SourceClass"": ""DocumentProcessor"",
+                ""Method"": ""ValidateDocument"",
+                ""TargetClass"": ""ValidationService"",
+                ""AccessMember"": ""validationService"",
+                ""AccessMemberType"": ""field"",
+                ""IsStatic"": false
+            },
+            {
+                ""SourceClass"": ""DocumentProcessor"",
+                ""Method"": ""ProcessDocument"",
+                ""TargetClass"": ""ProcessingService"",
+                ""AccessMember"": ""processingService"",
+                ""AccessMemberType"": ""field"",
+                ""IsStatic"": false
+            },
+            {
+                ""SourceClass"": ""DocumentProcessor"",
+                ""Method"": ""LogActivity"",
+                ""TargetClass"": ""LoggingService"",
+                ""AccessMember"": ""loggingService"",
+                ""AccessMemberType"": ""field"",
+                ""IsStatic"": false
+            }
+        ]";
+
+        var output = MoveMultipleMethodsTool.MoveMultipleMethodsInSource(input, operationsJson);
+        
+        Assert.Equal(expected, output.Trim());
+        
+        // Verify all access members are created
+        Assert.Contains("private readonly ValidationService validationService = new ValidationService();", output);
+        Assert.Contains("private readonly ProcessingService processingService = new ProcessingService();", output);
+        Assert.Contains("private readonly LoggingService loggingService = new LoggingService();", output);
+        
+        // Verify all method calls are updated
+        Assert.Contains("validationService.ValidateDocument();", output);
+        Assert.Contains("processingService.ProcessDocument();", output);
+        Assert.Contains("loggingService.LogActivity(activity);", output);
+        
+        // Verify all target classes have the moved methods
+        Assert.Contains("class ValidationService", output);
+        Assert.Contains("public void ValidateDocument()", output);
+        Assert.Contains("class ProcessingService", output);
+        Assert.Contains("public void ProcessDocument()", output);
+        Assert.Contains("class LoggingService", output);
+        Assert.Contains("public void LogActivity(string activity)", output);
+        
+        // Verify the unmoved method remains in the original class
+        Assert.Contains("Console.WriteLine(\"Saving document\");", output);
+    }
 }
