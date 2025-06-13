@@ -1,5 +1,6 @@
 using ModelContextProtocol.Server;
 using ModelContextProtocol;
+using System;
 using System.ComponentModel;
 using System.Linq;
 using Microsoft.CodeAnalysis;
@@ -971,6 +972,7 @@ public static class MoveMethodsTool
                         })))
                 .AddModifiers(SyntaxFactory.Token(SyntaxKind.PrivateKeyword), SyntaxFactory.Token(SyntaxKind.ReadOnlyKeyword));
     }
+
 
     [McpServerTool, Description("Move a static method to another class (preferred for large C# file refactoring). " +
         "Leaves a delegating method in the original class to preserve the interface.")]

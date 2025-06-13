@@ -180,6 +180,14 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli move-multiple-methods \
 ```
 Wrapper methods remain in the source class, delegating to their moved versions.
 
+### Batch Move Methods
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli batch-move-methods \
+  "./RefactorMCP.sln" \
+  "./path/to/file.cs" \
+  "[{\"SourceClass\":\"Foo\",\"Method\":\"Bar\",\"TargetClass\":\"Target\"}]"
+```
+
 ### Move To Separate File
 ```bash
 dotnet run --project RefactorMCP.ConsoleApp -- --cli move-to-separate-file \
