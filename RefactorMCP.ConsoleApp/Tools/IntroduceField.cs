@@ -73,24 +73,10 @@ public static class IntroduceFieldTool
                 .WithInitializer(SyntaxFactory.EqualsValueClause(selectedExpression)))))
             .WithModifiers(SyntaxFactory.TokenList(accessModifierToken));
 
-        // Replace the selected expression with the field reference
         var fieldReference = SyntaxFactory.IdentifierName(fieldName);
-        var newRoot = syntaxRoot.ReplaceNode(selectedExpression, fieldReference);
-
-        // Add the field to the class
         var containingClass = selectedExpression.Ancestors().OfType<ClassDeclarationSyntax>().FirstOrDefault();
-        if (containingClass != null)
-        {
-            var currentClass = newRoot.DescendantNodes()
-                .OfType<ClassDeclarationSyntax>()
-                .FirstOrDefault(c => c.Identifier.Text == containingClass.Identifier.Text);
-
-            if (currentClass != null)
-            {
-                var updatedClass = currentClass.WithMembers(currentClass.Members.Insert(0, fieldDeclaration));
-                newRoot = newRoot.ReplaceNode(currentClass, updatedClass);
-            }
-        }
+        var rewriter = new FieldIntroductionRewriter(selectedExpression, fieldReference, fieldDeclaration, containingClass);
+        var newRoot = rewriter.Visit(syntaxRoot);
 
         var formattedRoot = Formatter.Format(newRoot, document.Project.Solution.Workspace);
         var newDocument = document.WithSyntaxRoot(formattedRoot);
@@ -148,18 +134,10 @@ public static class IntroduceFieldTool
                 .WithInitializer(SyntaxFactory.EqualsValueClause(selectedExpression)))))
             .WithModifiers(SyntaxFactory.TokenList(accessModifierToken));
 
-        // Replace the selected expression with the field reference
         var fieldReference = SyntaxFactory.IdentifierName(fieldName);
-        var newRoot = syntaxRoot.ReplaceNode(selectedExpression, fieldReference);
-
-        // Add the field to the class
         var containingClass = selectedExpression.Ancestors().OfType<ClassDeclarationSyntax>().FirstOrDefault();
-        if (containingClass != null)
-        {
-            var updatedClass = containingClass.WithMembers(
-                containingClass.Members.Insert(0, fieldDeclaration));
-            newRoot = newRoot.ReplaceNode(containingClass, updatedClass);
-        }
+        var rewriter = new FieldIntroductionRewriter(selectedExpression, fieldReference, fieldDeclaration, containingClass);
+        var newRoot = rewriter.Visit(syntaxRoot);
 
         var formattedRoot = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
         return formattedRoot.ToFullString();
