@@ -5,6 +5,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
+using Microsoft.CodeAnalysis.RemoveUnnecessaryImports;
 using Microsoft.CodeAnalysis.Text;
 using System.IO;
 using System;
@@ -37,11 +38,12 @@ public static class CleanupUsingsTool
 
     private static async Task<string> CleanupUsingsWithSolution(Document document)
     {
-        var sourceText = await document.GetTextAsync();
-        var newText = CleanupUsingsInSource(sourceText.ToString());
-        var newDocument = document.WithText(SourceText.From(newText));
-        await File.WriteAllTextAsync(document.FilePath!, newText);
-        RefactoringHelpers.UpdateSolutionCache(newDocument);
+        var cleanedDoc = await RemoveUnnecessaryImports.RemoveUnnecessaryImportsAsync(document);
+        var formattedDoc = await Formatter.FormatAsync(cleanedDoc);
+        var root = await formattedDoc.GetSyntaxRootAsync();
+        if (root != null)
+            await File.WriteAllTextAsync(document.FilePath!, root.ToFullString());
+        RefactoringHelpers.UpdateSolutionCache(formattedDoc);
         return $"Removed unused usings in {document.FilePath}";
     }
 
