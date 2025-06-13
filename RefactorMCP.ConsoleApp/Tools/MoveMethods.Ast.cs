@@ -312,7 +312,7 @@ public static partial class MoveMethodsTool
 
     private static MethodDeclarationSyntax AddThisParameterToMethod(MethodDeclarationSyntax method, InstanceMoveContext context)
     {
-        var sourceParameter = SyntaxFactory.Parameter(SyntaxFactory.Identifier(context.SourceClassName.ToLower()))
+        var sourceParameter = SyntaxFactory.Parameter(SyntaxFactory.Identifier("@this"))
             .WithType(SyntaxFactory.IdentifierName(context.SourceClassName));
 
         var parameters = method.ParameterList.Parameters.Insert(0, sourceParameter);
@@ -323,7 +323,7 @@ public static partial class MoveMethodsTool
 
     private static MethodDeclarationSyntax RewriteMethodBody(MethodDeclarationSyntax method, InstanceMoveContext context)
     {
-        var parameterName = context.SourceClassName.ToLower();
+        var parameterName = "@this";
 
         if (context.UsesInstanceMembers)
         {
@@ -375,11 +375,25 @@ public static partial class MoveMethodsTool
 
         if (context.NeedsThisParameter)
         {
-            originalParameters.Add(SyntaxFactory.Argument(SyntaxFactory.ThisExpression()));
+            originalParameters.Insert(0, SyntaxFactory.Argument(SyntaxFactory.ThisExpression()));
         }
 
         var argumentList = SyntaxFactory.ArgumentList(SyntaxFactory.SeparatedList(originalParameters));
-        var accessExpression = SyntaxFactory.IdentifierName(context.AccessMemberName);
+
+        ExpressionSyntax accessExpression;
+        if (string.Equals(context.AccessMemberType, "field", StringComparison.OrdinalIgnoreCase) || 
+            string.Equals(context.AccessMemberType, "property", StringComparison.OrdinalIgnoreCase))
+        {
+            accessExpression = SyntaxFactory.MemberAccessExpression(
+                SyntaxKind.SimpleMemberAccessExpression,
+                SyntaxFactory.ThisExpression(),
+                SyntaxFactory.IdentifierName(context.AccessMemberName));
+        }
+        else
+        {
+            accessExpression = SyntaxFactory.IdentifierName(context.AccessMemberName);
+        }
+        
         var methodExpression = CreateMethodExpression(context);
 
         return SyntaxFactory.InvocationExpression(

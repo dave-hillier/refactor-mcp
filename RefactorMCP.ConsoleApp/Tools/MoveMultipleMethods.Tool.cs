@@ -13,16 +13,6 @@ using System.IO;
 [McpServerToolType]
 public static partial class MoveMultipleMethodsTool
 {
-    public class MoveOperation
-    {
-        public string SourceClass { get; set; } = string.Empty;
-        public string Method { get; set; } = string.Empty;
-        public string TargetClass { get; set; } = string.Empty;
-        public string AccessMember { get; set; } = string.Empty;
-        public string AccessMemberType { get; set; } = "field";
-        public bool IsStatic { get; set; }
-        public string? TargetFile { get; set; }
-    }
     // Solution/Document operations that use the AST layer
 
     [McpServerTool, Description("Move multiple methods to target classes, automatically ordering by dependencies. " +
@@ -30,46 +20,49 @@ public static partial class MoveMultipleMethodsTool
     public static async Task<string> MoveMultipleMethods(
         [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file containing the methods")] string filePath,
-        [Description("Move operations to perform")] IEnumerable<MoveOperation> operations,
+        [Description("Source class names")] string[] sourceClasses,
+        [Description("Method names to move")] string[] methodNames,
+        [Description("Target class names")] string[] targetClasses,
+        [Description("Access member names")] string[] accessMembers,
+        [Description("Access member types (field, property, variable)")] string[] accessMemberTypes,
+        [Description("Whether methods are static")] bool[] isStatic,
+        [Description("Target file paths (optional)")] string[]? targetFiles = null,
         [Description("Default target file path used when operations omit targetFile (optional)")] string? defaultTargetFilePath = null)
     {
-        var ops = operations.ToList();
-        if (ops.Count == 0)
+        if (sourceClasses.Length == 0 || methodNames.Length == 0 || targetClasses.Length == 0 || 
+            accessMembers.Length == 0 || accessMemberTypes.Length == 0 || isStatic.Length == 0)
             return RefactoringHelpers.ThrowMcpException("Error: No operations provided");
 
-        if (!string.IsNullOrEmpty(defaultTargetFilePath))
-        {
-            foreach (var op in ops)
-            {
-                if (string.IsNullOrEmpty(op.TargetFile))
-                    op.TargetFile = defaultTargetFilePath;
-            }
-        }
+        if (sourceClasses.Length != methodNames.Length || methodNames.Length != targetClasses.Length || 
+            targetClasses.Length != accessMembers.Length || accessMembers.Length != accessMemberTypes.Length || 
+            accessMemberTypes.Length != isStatic.Length)
+            return RefactoringHelpers.ThrowMcpException("Error: All arrays must have the same length");
 
         var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
         var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
 
-        var crossFile = ops.Any(o =>
-            !string.IsNullOrEmpty(o.TargetFile) &&
-            Path.GetFullPath(o.TargetFile!) != Path.GetFullPath(filePath));
+        var crossFile = targetFiles != null && targetFiles.Any(t => 
+            !string.IsNullOrEmpty(t) && Path.GetFullPath(t) != Path.GetFullPath(filePath));
 
         if (document != null && !crossFile)
         {
             // Solution-based: need to manage document state between operations
             var sourceText = await File.ReadAllTextAsync(filePath);
             var results = new List<string>();
-            var ordered = OrderOperations(CSharpSyntaxTree.ParseText(sourceText).GetRoot(), ops);
+            var orderedIndices = OrderOperations(CSharpSyntaxTree.ParseText(sourceText).GetRoot(), 
+                sourceClasses, methodNames, targetClasses, accessMembers, accessMemberTypes, isStatic);
 
             var currentDocument = document;
-            foreach (var op in ordered)
+            for (int i = 0; i < orderedIndices.Count; i++)
             {
-                if (op.IsStatic)
+                var idx = orderedIndices[i];
+                if (isStatic[idx])
                 {
                     var (msg, updatedDoc) = await MoveMethodsTool.MoveStaticMethodWithSolution(
                         currentDocument,
-                        new[] { op.Method },
-                        op.TargetClass,
-                        op.TargetFile);
+                        new[] { methodNames[idx] },
+                        targetClasses[idx],
+                        targetFiles?[idx]);
                     results.Add(msg);
                     currentDocument = updatedDoc;
                     RefactoringHelpers.UpdateSolutionCache(updatedDoc);
@@ -78,11 +71,11 @@ public static partial class MoveMultipleMethodsTool
                 {
                     var (msg, updatedDoc) = await MoveMethodsTool.MoveInstanceMethodWithSolution(
                         currentDocument,
-                        op.SourceClass,
-                        new[] { op.Method },
-                        op.TargetClass,
-                        op.AccessMember,
-                        op.AccessMemberType);
+                        sourceClasses[idx],
+                        new[] { methodNames[idx] },
+                        targetClasses[idx],
+                        accessMembers[idx],
+                        accessMemberTypes[idx]);
                     results.Add(msg);
                     currentDocument = updatedDoc;
                     RefactoringHelpers.UpdateSolutionCache(updatedDoc);
@@ -96,7 +89,8 @@ public static partial class MoveMultipleMethodsTool
         else
         {
             // Fallback to AST-based approach for single-file mode or cross-file operations
-            return await MoveMultipleMethodsInFile(filePath, ops);
+            return await MoveMultipleMethodsInFile(filePath, sourceClasses, methodNames, targetClasses, 
+                accessMembers, accessMemberTypes, isStatic, targetFiles);
         }
     }
 
@@ -119,26 +113,29 @@ public static partial class MoveMultipleMethodsTool
         if (classNode == null)
             return RefactoringHelpers.ThrowMcpException($"Error: Source class '{sourceClass}' not found");
 
-        var ops = new List<MoveOperation>();
-        foreach (var name in methodNames)
+        var sourceClasses = new string[methodNames.Length];
+        var targetClasses = new string[methodNames.Length];
+        var accessMembers = new string[methodNames.Length];
+        var accessMemberTypes = new string[methodNames.Length];
+        var isStatic = new bool[methodNames.Length];
+        var targetFiles = new string[methodNames.Length];
+
+        for (int i = 0; i < methodNames.Length; i++)
         {
             var method = classNode.Members.OfType<MethodDeclarationSyntax>()
-                .FirstOrDefault(m => m.Identifier.ValueText == name);
+                .FirstOrDefault(m => m.Identifier.ValueText == methodNames[i]);
             if (method == null)
-                return RefactoringHelpers.ThrowMcpException($"Error: No method named '{name}' found");
+                return RefactoringHelpers.ThrowMcpException($"Error: No method named '{methodNames[i]}' found");
 
-            ops.Add(new MoveOperation
-            {
-                SourceClass = sourceClass,
-                Method = name,
-                TargetClass = targetClass,
-                AccessMember = accessMember,
-                AccessMemberType = accessMemberType,
-                IsStatic = method.Modifiers.Any(SyntaxKind.StaticKeyword),
-                TargetFile = targetFilePath
-            });
+            sourceClasses[i] = sourceClass;
+            targetClasses[i] = targetClass;
+            accessMembers[i] = accessMember;
+            accessMemberTypes[i] = accessMemberType;
+            isStatic[i] = method.Modifiers.Any(SyntaxKind.StaticKeyword);
+            targetFiles[i] = targetFilePath;
         }
 
-        return await MoveMultipleMethods(solutionPath, filePath, ops, targetFilePath);
+        return await MoveMultipleMethods(solutionPath, filePath, sourceClasses, methodNames, targetClasses,
+            accessMembers, accessMemberTypes, isStatic, targetFiles, targetFilePath);
     }
 }

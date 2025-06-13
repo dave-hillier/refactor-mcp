@@ -14,16 +14,28 @@ public static partial class MoveMultipleMethodsTool
 {
     // ===== LEGACY STRING-BASED METHODS (for backward compatibility) =====
 
-    public static string MoveMultipleMethodsInSource(string sourceText, IEnumerable<MoveOperation> operations)
+    public static string MoveMultipleMethodsInSource(
+        string sourceText, 
+        string[] sourceClasses,
+        string[] methodNames,
+        string[] targetClasses,
+        string[] accessMembers,
+        string[] accessMemberTypes,
+        bool[] isStatic)
     {
-        var ops = operations.ToList();
-        if (ops.Count == 0)
+        if (sourceClasses.Length == 0 || methodNames.Length == 0 || targetClasses.Length == 0 || 
+            accessMembers.Length == 0 || accessMemberTypes.Length == 0 || isStatic.Length == 0)
             return RefactoringHelpers.ThrowMcpException("Error: No operations provided");
+
+        if (sourceClasses.Length != methodNames.Length || methodNames.Length != targetClasses.Length || 
+            targetClasses.Length != accessMembers.Length || accessMembers.Length != accessMemberTypes.Length || 
+            accessMemberTypes.Length != isStatic.Length)
+            return RefactoringHelpers.ThrowMcpException("Error: All arrays must have the same length");
 
         var tree = CSharpSyntaxTree.ParseText(sourceText);
         var root = tree.GetRoot();
 
-        var resultRoot = MoveMultipleMethodsAst(root, ops);
+        var resultRoot = MoveMultipleMethodsAst(root, sourceClasses, methodNames, targetClasses, accessMembers, accessMemberTypes, isStatic);
         var formatted = Formatter.Format(resultRoot, RefactoringHelpers.SharedWorkspace);
         return formatted.ToFullString();
     }

@@ -14,10 +14,13 @@ public static partial class MoveMultipleMethodsTool
 {
     // ===== HELPER METHODS =====
 
-    private static Dictionary<string, HashSet<string>> BuildDependencies(SyntaxNode sourceRoot, IEnumerable<MoveOperation> ops)
+    private static Dictionary<string, HashSet<string>> BuildDependencies(
+        SyntaxNode sourceRoot, 
+        string[] sourceClasses,
+        string[] methodNames)
     {
         // Build map keyed by "Class.Method" to support duplicate method names in different classes
-        var opSet = ops.Select(o => ($"{o.SourceClass}.{o.Method}")).ToHashSet();
+        var opSet = sourceClasses.Zip(methodNames, (c, m) => $"{c}.{m}").ToHashSet();
         var map = sourceRoot.DescendantNodes().OfType<ClassDeclarationSyntax>()
             .SelectMany(cls => cls.Members.OfType<MethodDeclarationSyntax>()
                 .Select(m => new { Key = $"{cls.Identifier.ValueText}.{m.Identifier.ValueText}", Method = m }))
@@ -25,9 +28,9 @@ public static partial class MoveMultipleMethodsTool
             .ToDictionary(x => x.Key, x => x.Method);
 
         var deps = new Dictionary<string, HashSet<string>>();
-        foreach (var op in ops)
+        for (int i = 0; i < sourceClasses.Length; i++)
         {
-            var key = $"{op.SourceClass}.{op.Method}";
+            var key = $"{sourceClasses[i]}.{methodNames[i]}";
             if (!map.TryGetValue(key, out var method))
             {
                 deps[key] = new HashSet<string>();
@@ -42,7 +45,7 @@ public static partial class MoveMultipleMethodsTool
                     _ => null
                 })
                 .Where(n => n != null)
-                .Select(name => $"{op.SourceClass}.{name}")
+                .Select(name => $"{sourceClasses[i]}.{name}")
                 .Where(n => map.ContainsKey(n))
                 .ToHashSet();
 
@@ -52,9 +55,17 @@ public static partial class MoveMultipleMethodsTool
         return deps;
     }
 
-    private static List<MoveOperation> OrderOperations(SyntaxNode sourceRoot, List<MoveOperation> ops)
+    private static List<int> OrderOperations(
+        SyntaxNode sourceRoot, 
+        string[] sourceClasses,
+        string[] methodNames,
+        string[] targetClasses,
+        string[] accessMembers,
+        string[] accessMemberTypes,
+        bool[] isStatic)
     {
-        var deps = BuildDependencies(sourceRoot, ops);
-        return ops.OrderBy(o => deps.TryGetValue($"{o.SourceClass}.{o.Method}", out var d) ? d.Count : 0).ToList();
+        var deps = BuildDependencies(sourceRoot, sourceClasses, methodNames);
+        var indices = Enumerable.Range(0, sourceClasses.Length).ToList();
+        return indices.OrderBy(i => deps.TryGetValue($"{sourceClasses[i]}.{methodNames[i]}", out var d) ? d.Count : 0).ToList();
     }
 }
