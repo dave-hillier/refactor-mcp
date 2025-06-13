@@ -153,6 +153,7 @@ public static class ConvertToStaticWithParametersTool
         var newDocument = document.WithSyntaxRoot(formattedRoot);
         var newText = await newDocument.GetTextAsync();
         await File.WriteAllTextAsync(document.FilePath!, newText.ToString());
+        RefactoringHelpers.UpdateSolutionCache(newDocument);
 
         return $"Successfully converted method '{methodName}' to static with parameters in {document.FilePath} (solution mode)";
     }

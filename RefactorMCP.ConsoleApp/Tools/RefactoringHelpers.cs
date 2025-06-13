@@ -32,6 +32,15 @@ internal static class RefactoringHelpers
         return solution;
     }
 
+    internal static void UpdateSolutionCache(Document updatedDocument)
+    {
+        var solutionPath = updatedDocument.Project.Solution.FilePath;
+        if (!string.IsNullOrEmpty(solutionPath))
+        {
+            SolutionCache.Set(solutionPath!, updatedDocument.Project.Solution);
+        }
+    }
+
     internal static Document? GetDocumentByPath(Solution solution, string filePath)
     {
         var normalizedPath = Path.GetFullPath(filePath);

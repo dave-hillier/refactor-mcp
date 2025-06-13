@@ -34,6 +34,7 @@ public static class InlineMethodTool
                 var newDoc = refDoc.WithSyntaxRoot(formatted);
                 var text = await newDoc.GetTextAsync();
                 await File.WriteAllTextAsync(refDoc.FilePath!, text.ToString());
+                RefactoringHelpers.UpdateSolutionCache(newDoc);
             }
         }
     }
@@ -60,6 +61,7 @@ public static class InlineMethodTool
         var newDocument = document.WithSyntaxRoot(formattedRoot);
         var newText = await newDocument.GetTextAsync();
         await File.WriteAllTextAsync(document.FilePath!, newText.ToString());
+        RefactoringHelpers.UpdateSolutionCache(newDocument);
 
         return $"Successfully inlined method '{methodName}' in {document.FilePath} (solution mode)";
     }
