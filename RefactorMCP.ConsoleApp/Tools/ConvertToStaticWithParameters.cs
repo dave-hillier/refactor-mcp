@@ -122,12 +122,11 @@ public static class ConvertToStaticWithParametersTool
     {
         try
         {
-            var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
-            var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
-            if (document != null)
-                return await ConvertToStaticWithParametersWithSolution(document, methodName);
-
-            return await ConvertToStaticWithParametersSingleFile(filePath, methodName);
+            return await RefactoringHelpers.RunWithSolutionOrFile(
+                solutionPath,
+                filePath,
+                doc => ConvertToStaticWithParametersWithSolution(doc, methodName),
+                path => ConvertToStaticWithParametersSingleFile(path, methodName));
         }
         catch (Exception ex)
         {

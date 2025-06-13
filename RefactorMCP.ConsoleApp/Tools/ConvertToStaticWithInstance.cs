@@ -64,12 +64,11 @@ public static class ConvertToStaticWithInstanceTool
     {
         try
         {
-            var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
-            var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
-            if (document != null)
-                return await ConvertToStaticWithInstanceWithSolution(document, methodName, instanceParameterName);
-
-            return await ConvertToStaticWithInstanceSingleFile(filePath, methodName, instanceParameterName);
+            return await RefactoringHelpers.RunWithSolutionOrFile(
+                solutionPath,
+                filePath,
+                doc => ConvertToStaticWithInstanceWithSolution(doc, methodName, instanceParameterName),
+                path => ConvertToStaticWithInstanceSingleFile(path, methodName, instanceParameterName));
         }
         catch (Exception ex)
         {

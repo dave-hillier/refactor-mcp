@@ -19,12 +19,11 @@ public static class ExtractMethodTool
     {
         try
         {
-            var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
-            var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
-            if (document != null)
-                return await ExtractMethodWithSolution(document, selectionRange, methodName);
-
-            return await ExtractMethodSingleFile(filePath, selectionRange, methodName);
+            return await RefactoringHelpers.RunWithSolutionOrFile(
+                solutionPath,
+                filePath,
+                doc => ExtractMethodWithSolution(doc, selectionRange, methodName),
+                path => ExtractMethodSingleFile(path, selectionRange, methodName));
         }
         catch (Exception ex)
         {

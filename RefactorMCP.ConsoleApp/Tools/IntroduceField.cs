@@ -21,12 +21,11 @@ public static class IntroduceFieldTool
     {
         try
         {
-            var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
-            var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
-            if (document != null)
-                return await IntroduceFieldWithSolution(document, selectionRange, fieldName, accessModifier);
-
-            return await IntroduceFieldSingleFile(filePath, selectionRange, fieldName, accessModifier);
+            return await RefactoringHelpers.RunWithSolutionOrFile(
+                solutionPath,
+                filePath,
+                doc => IntroduceFieldWithSolution(doc, selectionRange, fieldName, accessModifier),
+                path => IntroduceFieldSingleFile(path, selectionRange, fieldName, accessModifier));
         }
         catch (Exception ex)
         {

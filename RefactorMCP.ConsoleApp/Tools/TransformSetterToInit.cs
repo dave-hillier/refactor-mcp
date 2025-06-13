@@ -17,12 +17,11 @@ public static class TransformSetterToInitTool
     {
         try
         {
-            var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
-            var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
-            if (document != null)
-                return await TransformSetterToInitWithSolution(document, propertyName);
-
-            return await TransformSetterToInitSingleFile(filePath, propertyName);
+            return await RefactoringHelpers.RunWithSolutionOrFile(
+                solutionPath,
+                filePath,
+                doc => TransformSetterToInitWithSolution(doc, propertyName),
+                path => TransformSetterToInitSingleFile(path, propertyName));
         }
         catch (Exception ex)
         {
