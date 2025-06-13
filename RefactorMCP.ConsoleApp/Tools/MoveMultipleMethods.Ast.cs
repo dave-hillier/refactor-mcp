@@ -15,26 +15,39 @@ public static partial class MoveMultipleMethodsTool
     // ===== AST TRANSFORMATION LAYER =====
     // Pure syntax tree operations with no file I/O
 
-    public static SyntaxNode MoveMultipleMethodsAst(SyntaxNode sourceRoot, IEnumerable<MoveOperation> operations)
+    public static SyntaxNode MoveMultipleMethodsAst(
+        SyntaxNode sourceRoot, 
+        string[] sourceClasses,
+        string[] methodNames,
+        string[] targetClasses,
+        string[] accessMembers,
+        string[] accessMemberTypes,
+        bool[] isStatic)
     {
-        var orderedOps = OrderOperations(sourceRoot, operations.ToList());
+        var orderedIndices = OrderOperations(sourceRoot, sourceClasses, methodNames, targetClasses, accessMembers, accessMemberTypes, isStatic);
         var workingRoot = sourceRoot;
 
-        foreach (var op in orderedOps)
+        foreach (var idx in orderedIndices)
         {
-            if (op.IsStatic)
+            if (isStatic[idx])
             {
-                var moveResult = MoveMethodsTool.MoveStaticMethodAst(workingRoot, op.Method, op.TargetClass);
+                var moveResult = MoveMethodsTool.MoveStaticMethodAst(workingRoot, methodNames[idx], targetClasses[idx]);
                 // First update the source with the stub, then add the method to target
                 workingRoot = moveResult.NewSourceRoot;
-                workingRoot = MoveMethodsTool.AddMethodToTargetClass(workingRoot, op.TargetClass, moveResult.MovedMethod);
+                workingRoot = MoveMethodsTool.AddMethodToTargetClass(workingRoot, targetClasses[idx], moveResult.MovedMethod);
             }
             else
             {
-                var moveResult = MoveMethodsTool.MoveInstanceMethodAst(workingRoot, op.SourceClass, op.Method, op.TargetClass, op.AccessMember, op.AccessMemberType);
+                var moveResult = MoveMethodsTool.MoveInstanceMethodAst(
+                    workingRoot, 
+                    sourceClasses[idx], 
+                    methodNames[idx], 
+                    targetClasses[idx], 
+                    accessMembers[idx], 
+                    accessMemberTypes[idx]);
                 // First update the source with the stub, then add the method to target
                 workingRoot = moveResult.NewSourceRoot;
-                workingRoot = MoveMethodsTool.AddMethodToTargetClass(workingRoot, op.TargetClass, moveResult.MovedMethod);
+                workingRoot = MoveMethodsTool.AddMethodToTargetClass(workingRoot, targetClasses[idx], moveResult.MovedMethod);
             }
         }
 
@@ -44,11 +57,24 @@ public static partial class MoveMultipleMethodsTool
     // ===== FILE OPERATION LAYER =====
     // File I/O operations that use the AST layer
 
-    public static async Task<string> MoveMultipleMethodsInFile(string filePath, IEnumerable<MoveOperation> operations)
+    public static async Task<string> MoveMultipleMethodsInFile(
+        string filePath, 
+        string[] sourceClasses,
+        string[] methodNames,
+        string[] targetClasses,
+        string[] accessMembers,
+        string[] accessMemberTypes,
+        bool[] isStatic,
+        string[]? targetFiles = null)
     {
-        var ops = operations.ToList();
-        if (ops.Count == 0)
+        if (sourceClasses.Length == 0 || methodNames.Length == 0 || targetClasses.Length == 0 || 
+            accessMembers.Length == 0 || accessMemberTypes.Length == 0 || isStatic.Length == 0)
             throw new McpException("Error: No operations provided");
+
+        if (sourceClasses.Length != methodNames.Length || methodNames.Length != targetClasses.Length || 
+            targetClasses.Length != accessMembers.Length || accessMembers.Length != accessMemberTypes.Length || 
+            accessMemberTypes.Length != isStatic.Length)
+            throw new McpException("Error: All arrays must have the same length");
 
         if (!File.Exists(filePath))
             throw new McpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
@@ -57,23 +83,23 @@ public static partial class MoveMultipleMethodsTool
         var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
         var originalSourceRoot = await syntaxTree.GetRootAsync();
 
-        var ordered = OrderOperations(originalSourceRoot, ops);
+        var orderedIndices = OrderOperations(originalSourceRoot, sourceClasses, methodNames, targetClasses, accessMembers, accessMemberTypes, isStatic);
         var workingSourceRoot = originalSourceRoot;
         var targetRoots = new Dictionary<string, SyntaxNode>();
 
-        foreach (var op in ordered)
+        foreach (var idx in orderedIndices)
         {
-            var targetPath = op.TargetFile ?? Path.Combine(Path.GetDirectoryName(filePath)!, $"{op.TargetClass}.cs");
+            var targetPath = targetFiles?[idx] ?? Path.Combine(Path.GetDirectoryName(filePath)!, $"{targetClasses[idx]}.cs");
             var sameFile = targetPath == filePath;
 
-            if (op.IsStatic)
+            if (isStatic[idx])
             {
-                var moveResult = MoveMethodsTool.MoveStaticMethodAst(workingSourceRoot, op.Method, op.TargetClass);
+                var moveResult = MoveMethodsTool.MoveStaticMethodAst(workingSourceRoot, methodNames[idx], targetClasses[idx]);
                 workingSourceRoot = moveResult.NewSourceRoot;
 
                 if (sameFile)
                 {
-                    workingSourceRoot = MoveMethodsTool.AddMethodToTargetClass(workingSourceRoot, op.TargetClass, moveResult.MovedMethod);
+                    workingSourceRoot = MoveMethodsTool.AddMethodToTargetClass(workingSourceRoot, targetClasses[idx], moveResult.MovedMethod);
                 }
                 else
                 {
@@ -83,7 +109,7 @@ public static partial class MoveMultipleMethodsTool
                         targetRoot = MoveMethodsTool.PropagateUsings(originalSourceRoot, targetRoot);
                     }
 
-                    targetRoot = MoveMethodsTool.AddMethodToTargetClass(targetRoot, op.TargetClass, moveResult.MovedMethod);
+                    targetRoot = MoveMethodsTool.AddMethodToTargetClass(targetRoot, targetClasses[idx], moveResult.MovedMethod);
                     targetRoots[targetPath] = targetRoot;
                 }
             }
@@ -91,17 +117,17 @@ public static partial class MoveMultipleMethodsTool
             {
                 var moveResult = MoveMethodsTool.MoveInstanceMethodAst(
                     workingSourceRoot,
-                    op.SourceClass,
-                    op.Method,
-                    op.TargetClass,
-                    op.AccessMember,
-                    op.AccessMemberType);
+                    sourceClasses[idx],
+                    methodNames[idx],
+                    targetClasses[idx],
+                    accessMembers[idx],
+                    accessMemberTypes[idx]);
 
                 workingSourceRoot = moveResult.NewSourceRoot;
 
                 if (sameFile)
                 {
-                    workingSourceRoot = MoveMethodsTool.AddMethodToTargetClass(workingSourceRoot, op.TargetClass, moveResult.MovedMethod);
+                    workingSourceRoot = MoveMethodsTool.AddMethodToTargetClass(workingSourceRoot, targetClasses[idx], moveResult.MovedMethod);
                 }
                 else
                 {
@@ -111,7 +137,7 @@ public static partial class MoveMultipleMethodsTool
                         targetRoot = MoveMethodsTool.PropagateUsings(originalSourceRoot, targetRoot);
                     }
 
-                    targetRoot = MoveMethodsTool.AddMethodToTargetClass(targetRoot, op.TargetClass, moveResult.MovedMethod);
+                    targetRoot = MoveMethodsTool.AddMethodToTargetClass(targetRoot, targetClasses[idx], moveResult.MovedMethod);
                     targetRoots[targetPath] = targetRoot;
                 }
             }
@@ -127,7 +153,7 @@ public static partial class MoveMultipleMethodsTool
             await File.WriteAllTextAsync(kvp.Key, formatted.ToFullString());
         }
 
-        return $"Successfully moved {ops.Count} methods";
+        return $"Successfully moved {sourceClasses.Length} methods";
     }
 
     private static async Task<SyntaxNode> LoadOrCreateTargetRoot(string targetPath)
@@ -137,7 +163,9 @@ public static partial class MoveMultipleMethodsTool
             var targetText = await File.ReadAllTextAsync(targetPath);
             return await CSharpSyntaxTree.ParseText(targetText).GetRootAsync();
         }
-
-        return SyntaxFactory.CompilationUnit();
+        else
+        {
+            return SyntaxFactory.CompilationUnit();
+        }
     }
 }

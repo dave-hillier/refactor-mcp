@@ -35,5 +35,14 @@ internal class InstanceMemberUsageChecker : CSharpSyntaxRewriter
 
         return base.VisitIdentifierName(node);
     }
+
+    public override SyntaxNode? VisitMemberAccessExpression(MemberAccessExpressionSyntax node)
+    {
+        if (node.Expression is ThisExpressionSyntax && _knownInstanceMembers.Contains(node.Name.Identifier.ValueText))
+        {
+            HasInstanceMemberUsage = true;
+        }
+        return base.VisitMemberAccessExpression(node);
+    }
 }
 

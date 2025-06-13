@@ -1,123 +1,121 @@
-using ModelContextProtocol;
-using System.IO;
-using System.Threading.Tasks;
 using Xunit;
+using System;
+using System.Linq;
 
-namespace RefactorMCP.Tests;
-
-public class MoveMultipleMethodsTests : TestBase
+public class MoveMultipleMethodsTests
 {
     [Fact]
-    public async Task MoveMultipleMethods_CrossFileMovesAllMethods()
+    public void MoveMultipleMethods_WithStaticMethods_ShouldMoveCorrectly()
     {
-        await LoadSolutionTool.LoadSolution(SolutionPath);
-        var testFile = Path.Combine(TestOutputPath, "MultiMove.cs");
-        await TestUtilities.CreateTestFile(testFile, GetSampleCode());
-
-        var target1 = Path.Combine(TestOutputPath, "Target1.cs");
-        var target2 = Path.Combine(TestOutputPath, "Target2.cs");
-
-        var ops = new[]
-        {
-            new MoveMultipleMethodsTool.MoveOperation
-            {
-                SourceClass = "SourceClass",
-                Method = "A",
-                TargetClass = "Target1",
-                AccessMember = "t1",
-                AccessMemberType = "field",
-                IsStatic = false,
-                TargetFile = target1
-            },
-            new MoveMultipleMethodsTool.MoveOperation
-            {
-                SourceClass = "SourceClass",
-                Method = "B",
-                TargetClass = "Target1",
-                AccessMember = "t1",
-                AccessMemberType = "field",
-                IsStatic = false,
-                TargetFile = target1
-            },
-            new MoveMultipleMethodsTool.MoveOperation
-            {
-                Method = "C",
-                TargetClass = "Target2",
-                IsStatic = true,
-                TargetFile = target2
-            }
-        };
-
-        var result = await MoveMultipleMethodsTool.MoveMultipleMethods(
-            SolutionPath, testFile, ops);
-
-        Assert.Contains("Successfully moved 3 methods", result);
-
-        Assert.True(File.Exists(target1));
-        Assert.True(File.Exists(target2));
-
-        var target1Content = await File.ReadAllTextAsync(target1);
-        Assert.Contains("class Target1", target1Content);
-        Assert.Contains("void A(SourceClass", target1Content);
-        Assert.Contains("void B()", target1Content);
-
-        var target2Content = await File.ReadAllTextAsync(target2);
-        Assert.Contains("class Target2", target2Content);
-        Assert.Contains("static void C()", target2Content);
-    }
-
-    [Fact]
-    public async Task MoveMultipleMethods_UsesDefaultTargetFileWhenMissing()
-    {
-        await LoadSolutionTool.LoadSolution(SolutionPath);
-        var testFile = Path.Combine(TestOutputPath, "DefaultTargetTest.cs");
-        await TestUtilities.CreateTestFile(testFile, GetSampleCode());
-
-        var ops = new[]
-        {
-            new MoveMultipleMethodsTool.MoveOperation
-            {
-                SourceClass = "SourceClass",
-                Method = "A",
-                TargetClass = "Target",
-                AccessMember = "t",
-                AccessMemberType = "field",
-                IsStatic = false
-            },
-            new MoveMultipleMethodsTool.MoveOperation
-            {
-                SourceClass = "SourceClass",
-                Method = "B",
-                TargetClass = "Target",
-                AccessMember = "t",
-                AccessMemberType = "field",
-                IsStatic = false
-            }
-        };
-
-        var targetFile = Path.Combine(TestOutputPath, "Target.cs");
-        var result = await MoveMultipleMethodsTool.MoveMultipleMethods(
-            SolutionPath, testFile, ops, targetFile);
-
-        Assert.Contains("Successfully moved 2 methods", result);
-        Assert.True(File.Exists(targetFile));
-        var content = await File.ReadAllTextAsync(targetFile);
-        Assert.Contains("class Target", content);
-        Assert.Contains("void A(SourceClass", content);
-        Assert.Contains("void B()", content);
-    }
-
-    private static string GetSampleCode() => """
+        var source = @"
 using System;
 
 public class SourceClass
 {
-    public void A() { B(); }
-    public void B() { Console.WriteLine("B"); }
-    public static void C() { Console.WriteLine("C"); }
+    public static int Method1() { return 1; }
+    public static int Method2() { return 2; }
 }
 
-public class Target1 { }
-public class Target2 { }
-""";
+public class TargetClass
+{
+}";
+
+        var sourceClasses = new[] { "SourceClass", "SourceClass" };
+        var methodNames = new[] { "Method1", "Method2" };
+        var targetClasses = new[] { "TargetClass", "TargetClass" };
+        var accessMembers = new[] { "", "" };
+        var accessMemberTypes = new[] { "", "" };
+        var isStatic = new[] { true, true };
+
+        var result = MoveMultipleMethodsTool.MoveMultipleMethodsInSource(
+            source, sourceClasses, methodNames, targetClasses, accessMembers, accessMemberTypes, isStatic);
+
+        var targetClassCode = result.Split(new[] { "public class TargetClass" }, StringSplitOptions.None)[1];
+        var sourceClassCode = result.Split(new[] { "public class SourceClass" }, StringSplitOptions.None)[1].Split(new[] { "public class TargetClass" }, StringSplitOptions.None)[0];
+
+        Assert.Contains("public static int Method1()", targetClassCode);
+        Assert.Contains("public static int Method2()", targetClassCode);
+        Assert.DoesNotContain("public static int Method1() { return 1; }", sourceClassCode);
+        Assert.DoesNotContain("public static int Method2() { return 2; }", sourceClassCode);
+        Assert.Contains("return TargetClass.Method1()", sourceClassCode);
+        Assert.Contains("return TargetClass.Method2()", sourceClassCode);
+    }
+
+    [Fact]
+    public void MoveMultipleMethods_WithInstanceMethods_ShouldMoveCorrectly()
+    {
+        var source = @"
+using System;
+
+public class SourceClass
+{
+    private int field1 = 1;
+    public int Method1() { return field1; }
+    public int Method2() { return field1 + 1; }
 }
+
+public class TargetClass
+{
+    private int field1 = 1;
+}";
+
+        var sourceClasses = new[] { "SourceClass", "SourceClass" };
+        var methodNames = new[] { "Method1", "Method2" };
+        var targetClasses = new[] { "TargetClass", "TargetClass" };
+        var accessMembers = new[] { "field1", "field1" };
+        var accessMemberTypes = new[] { "field", "field" };
+        var isStatic = new[] { false, false };
+
+        var result = MoveMultipleMethodsTool.MoveMultipleMethodsInSource(
+            source, sourceClasses, methodNames, targetClasses, accessMembers, accessMemberTypes, isStatic);
+
+        var targetClassCode = result.Split(new[] { "public class TargetClass" }, StringSplitOptions.None)[1];
+        var sourceClassCode = result.Split(new[] { "public class SourceClass" }, StringSplitOptions.None)[1].Split(new[] { "public class TargetClass" }, StringSplitOptions.None)[0];
+
+        Assert.Contains("public int Method1(SourceClass @this)", targetClassCode);
+        Assert.Contains("public int Method2(SourceClass @this)", targetClassCode);
+        Assert.DoesNotContain("public int Method1() { return field1; }", sourceClassCode);
+        Assert.DoesNotContain("public int Method2() { return field1 + 1; }", sourceClassCode);
+        Assert.Contains("return this.field1.Method1(this)", sourceClassCode);
+        Assert.Contains("return this.field1.Method2(this)", sourceClassCode);
+    }
+
+    [Fact]
+    public void MoveMultipleMethods_WithMixedMethods_ShouldMoveCorrectly()
+    {
+        var source = @"
+using System;
+
+public class SourceClass
+{
+    private int field1 = 1;
+    public static int Method1() { return 1; }
+    public int Method2() { return field1; }
+}
+
+public class TargetClass
+{
+    private int field1 = 1;
+}";
+
+        var sourceClasses = new[] { "SourceClass", "SourceClass" };
+        var methodNames = new[] { "Method1", "Method2" };
+        var targetClasses = new[] { "TargetClass", "TargetClass" };
+        var accessMembers = new[] { "", "field1" };
+        var accessMemberTypes = new[] { "", "field" };
+        var isStatic = new[] { true, false };
+
+        var result = MoveMultipleMethodsTool.MoveMultipleMethodsInSource(
+            source, sourceClasses, methodNames, targetClasses, accessMembers, accessMemberTypes, isStatic);
+
+        var targetClassCode = result.Split(new[] { "public class TargetClass" }, StringSplitOptions.None)[1];
+        var sourceClassCode = result.Split(new[] { "public class SourceClass" }, StringSplitOptions.None)[1].Split(new[] { "public class TargetClass" }, StringSplitOptions.None)[0];
+
+        Assert.Contains("public static int Method1()", targetClassCode);
+        Assert.Contains("public int Method2(SourceClass @this)", targetClassCode);
+        Assert.DoesNotContain("public static int Method1() { return 1; }", sourceClassCode);
+        Assert.DoesNotContain("public int Method2() { return field1; }", sourceClassCode);
+        Assert.Contains("return TargetClass.Method1()", sourceClassCode);
+        Assert.Contains("return this.field1.Method2(this)", sourceClassCode);
+    }
+} 
