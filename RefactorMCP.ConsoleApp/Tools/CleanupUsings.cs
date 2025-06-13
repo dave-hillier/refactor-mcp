@@ -5,7 +5,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
-using Microsoft.CodeAnalysis.RemoveUnnecessaryImports;
 using Microsoft.CodeAnalysis.Text;
 using System.IO;
 using System;
@@ -38,12 +37,27 @@ public static class CleanupUsingsTool
 
     private static async Task<string> CleanupUsingsWithSolution(Document document)
     {
-        var cleanedDoc = await RemoveUnnecessaryImports.RemoveUnnecessaryImportsAsync(document);
-        var formattedDoc = await Formatter.FormatAsync(cleanedDoc);
-        var root = await formattedDoc.GetSyntaxRootAsync();
-        if (root != null)
-            await File.WriteAllTextAsync(document.FilePath!, root.ToFullString());
-        RefactoringHelpers.UpdateSolutionCache(formattedDoc);
+        var root = await document.GetSyntaxRootAsync();
+        if (root == null)
+            return $"No content in {document.FilePath}";
+
+        var compilation = await document.Project.GetCompilationAsync();
+        if (compilation == null)
+            return $"Could not compile project for {document.FilePath}";
+
+        var diagnostics = compilation.GetDiagnostics();
+        var unused = diagnostics
+            .Where(d => d.Id == "CS8019")
+            .Select(d => root.FindNode(d.Location.SourceSpan))
+            .OfType<UsingDirectiveSyntax>()
+            .ToList();
+
+        var newRoot = root.RemoveNodes(unused, SyntaxRemoveOptions.KeepNoTrivia);
+        var formatted = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
+        await File.WriteAllTextAsync(document.FilePath!, formatted.ToFullString());
+
+        var newDocument = document.WithSyntaxRoot(formatted);
+        RefactoringHelpers.UpdateSolutionCache(newDocument);
         return $"Removed unused usings in {document.FilePath}";
     }
 
