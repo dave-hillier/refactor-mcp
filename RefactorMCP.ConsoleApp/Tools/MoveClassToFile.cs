@@ -72,6 +72,15 @@ public static class MoveClassToFileTool
                 return RefactoringHelpers.ThrowMcpException($"Error: File {newFilePath} already exists");
             await File.WriteAllTextAsync(newFilePath, newRoot.ToFullString());
 
+            if (document != null)
+            {
+                RefactoringHelpers.AddDocumentToProject(document.Project, newFilePath);
+            }
+            else
+            {
+                UnloadSolutionTool.ClearSolutionCache();
+            }
+
             return $"Successfully moved class '{className}' to {newFilePath}";
         }
         catch (Exception ex)
