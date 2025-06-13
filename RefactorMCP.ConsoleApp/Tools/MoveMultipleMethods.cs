@@ -238,7 +238,8 @@ public static class MoveMultipleMethodsTool
     // ===== SOLUTION OPERATION LAYER =====
     // Solution/Document operations that use the AST layer
 
-    [McpServerTool, Description("Move multiple methods to target classes, automatically ordering by dependencies")]
+    [McpServerTool, Description("Move multiple methods to target classes, automatically ordering by dependencies. " +
+        "Wrapper methods remain at the original locations to delegate to the moved implementations.")]
     public static async Task<string> MoveMultipleMethods(
         [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file containing the methods")] string filePath,
@@ -312,7 +313,8 @@ public static class MoveMultipleMethodsTool
         }
     }
 
-    [McpServerTool, Description("Move multiple methods using explicit parameters")]
+    [McpServerTool, Description("Move multiple methods using explicit parameters. " +
+        "Each moved method leaves a delegating wrapper so existing calls continue to compile.")]
     public static async Task<string> MoveMultipleMethods(
         [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file containing the methods")] string filePath,
