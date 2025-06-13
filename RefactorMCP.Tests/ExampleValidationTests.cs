@@ -120,6 +120,28 @@ public class ExampleValidationTests : IDisposable
     }
 
     [Fact]
+    public async Task Example_IntroduceParameter_ComplexExpression_WorksAsDocumented()
+    {
+        // Arrange - Create the exact code from our documentation
+        var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "IntroduceParameterExample.cs"));
+        await CreateTestFile(testFile, GetCalculatorCodeForIntroduceParameter());
+        await LoadSolutionTool.LoadSolution(SolutionPath);
+
+        // Act - Use the exact command from EXAMPLES.md
+        var result = await IntroduceParameterTool.IntroduceParameter(
+            SolutionPath,
+            testFile,
+            "FormatResult",
+            "42:50-42:63",
+            "processedValue");
+
+        // Assert result text and file contents
+        Assert.Contains("Successfully introduced parameter", result);
+        var fileContent = await File.ReadAllTextAsync(testFile);
+        Assert.Contains("processedValue", fileContent);
+    }
+
+    [Fact]
     public async Task Example_MakeFieldReadonly_FormatField_WorksAsDocumented()
     {
         // Arrange - Create the exact code from our documentation
@@ -309,6 +331,11 @@ public int Calculate(int a, int b)
 
     // Exact code from our ExampleCode.cs for Introduce Variable
     private static string GetCalculatorCodeForIntroduceVariable()
+    {
+        return File.ReadAllText(Path.Combine(Path.GetDirectoryName(SolutionPath)!, "RefactorMCP.Tests", "ExampleCode.cs"));
+    }
+
+    private static string GetCalculatorCodeForIntroduceParameter()
     {
         return File.ReadAllText(Path.Combine(Path.GetDirectoryName(SolutionPath)!, "RefactorMCP.Tests", "ExampleCode.cs"));
     }
