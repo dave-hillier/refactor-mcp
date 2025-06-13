@@ -160,7 +160,7 @@ Newly added access fields are readonly and existing members are reused if presen
 dotnet run --project RefactorMCP.ConsoleApp -- --cli move-multiple-methods \
   "./RefactorMCP.sln" \
   "./path/to/file.cs" \
-  "[{'sourceClass':'A','method':'Foo','targetClass':'B','accessMember':'b','accessMemberType':'field','isStatic':false}]"
+  "[{'sourceClass':'A','method':'Foo','targetClass':'B','accessMember':'b','accessMemberType':'field','isStatic':false,'targetFile':'./B.cs'}]"
 ```
 
 ### Move To Separate File
