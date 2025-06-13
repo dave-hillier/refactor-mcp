@@ -13,20 +13,20 @@ public class MoveStaticMethodTests : TestBase
     [Fact]
     public async Task MoveStaticMethod_ReturnsSuccess()
     {
-        await LoadSolutionTool.LoadSolution(SolutionPath);
+        UnloadSolutionTool.ClearSolutionCache();
         var testFile = Path.Combine(TestOutputPath, "MoveStaticMethod.cs");
-        await TestUtilities.CreateTestFile(testFile, TestUtilities.GetSampleCodeForMoveStaticMethod());
+        await TestUtilities.CreateTestFile(testFile, "public class SourceClass { public static void Foo(){} } public class TargetClass { } ");
 
         var result = await MoveMethodsTool.MoveStaticMethod(
             SolutionPath,
             testFile,
-            "FormatCurrency",
-            "MathUtilities");
+            "Foo",
+            "TargetClass");
 
         Assert.Contains("Successfully moved static method", result);
         var fileContent = await File.ReadAllTextAsync(testFile);
-        Assert.DoesNotContain("static string FormatCurrency", fileContent);
-        Assert.Contains("class MathUtilities", fileContent);
+        Assert.DoesNotContain("static void Foo()", fileContent);
+        Assert.Contains("class TargetClass", fileContent);
     }
 
     [Fact]

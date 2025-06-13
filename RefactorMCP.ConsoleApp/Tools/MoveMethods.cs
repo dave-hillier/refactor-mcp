@@ -969,6 +969,14 @@ public static class MoveMethodsTool
             ValidateFileExists(filePath);
 
             var moveContext = await PrepareStaticMethodMove(filePath, targetFilePath, targetClass);
+            var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
+            var duplicateDoc = await RefactoringHelpers.FindClassInSolution(
+                solution,
+                targetClass,
+                filePath,
+                moveContext.TargetPath);
+            if (duplicateDoc != null)
+                return RefactoringHelpers.ThrowMcpException($"Error: Class {targetClass} already exists in {duplicateDoc.FilePath}");
             var method = ExtractStaticMethodFromSource(moveContext.SourceRoot, methodName);
             var updatedSources = UpdateSourceAndTargetForStaticMove(moveContext, method);
             await WriteStaticMethodMoveResults(moveContext, updatedSources);
@@ -1124,6 +1132,14 @@ public static class MoveMethodsTool
 
             var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
             var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
+
+            var duplicateDoc = await RefactoringHelpers.FindClassInSolution(
+                solution,
+                targetClass,
+                filePath,
+                targetFilePath ?? Path.Combine(Path.GetDirectoryName(filePath)!, $"{targetClass}.cs"));
+            if (duplicateDoc != null)
+                return RefactoringHelpers.ThrowMcpException($"Error: Class {targetClass} already exists in {duplicateDoc.FilePath}");
 
             return await MoveMethods(filePath, sourceClass, targetClass, accessMemberName, accessMemberType, targetFilePath, methodList, document);
         }
