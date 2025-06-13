@@ -6,10 +6,55 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Text;
+using System.Linq;
 
 [McpServerToolType]
 public static class ConvertToStaticWithInstanceTool
 {
+    private static SyntaxNode ConvertToStaticWithInstanceAst(
+        SyntaxNode root,
+        MethodDeclarationSyntax method,
+        string instanceParameterName,
+        SemanticModel? semanticModel = null)
+    {
+        var classDecl = method.Ancestors().OfType<ClassDeclarationSyntax>().First();
+
+        var typeName = semanticModel != null
+            ? ((INamedTypeSymbol)semanticModel.GetDeclaredSymbol(classDecl)!).ToDisplayString()
+            : classDecl.Identifier.ValueText;
+
+        var updatedMethod = AstTransformations.AddParameter(method, instanceParameterName, typeName);
+        updatedMethod = AstTransformations.ReplaceThisReferences(updatedMethod, instanceParameterName);
+
+        if (semanticModel != null)
+        {
+            var typeSymbol = (INamedTypeSymbol)semanticModel.GetDeclaredSymbol(classDecl)!;
+            updatedMethod = AstTransformations.QualifyInstanceMembers(
+                updatedMethod,
+                instanceParameterName,
+                semanticModel,
+                typeSymbol);
+        }
+        else
+        {
+            var members = classDecl.Members
+                .Where(m => m is FieldDeclarationSyntax or PropertyDeclarationSyntax or MethodDeclarationSyntax)
+                .Select(m => m switch
+                {
+                    FieldDeclarationSyntax f => f.Declaration.Variables.First().Identifier.ValueText,
+                    PropertyDeclarationSyntax p => p.Identifier.ValueText,
+                    MethodDeclarationSyntax md => md.Identifier.ValueText,
+                    _ => string.Empty
+                })
+                .Where(n => !string.IsNullOrEmpty(n))
+                .ToHashSet();
+
+            updatedMethod = AstTransformations.QualifyInstanceMembers(updatedMethod, instanceParameterName, members);
+        }
+
+        updatedMethod = AstTransformations.EnsureStaticModifier(updatedMethod);
+        return root.ReplaceNode(method, updatedMethod);
+    }
     [McpServerTool, Description("Transform instance method to static by adding instance parameter (preferred for large C# file refactoring)")]
     public static async Task<string> ConvertToStaticWithInstance(
         [Description("Absolute path to the solution file (.sln)")] string solutionPath,
@@ -45,43 +90,7 @@ public static class ConvertToStaticWithInstanceTool
             return RefactoringHelpers.ThrowMcpException($"Error: No method named '{methodName}' found");
 
         var semanticModel = await document.GetSemanticModelAsync();
-        var typeDecl = method.Ancestors().OfType<TypeDeclarationSyntax>().FirstOrDefault();
-        if (typeDecl == null)
-            return RefactoringHelpers.ThrowMcpException($"Error: Method '{methodName}' is not inside a type");
-
-        var typeSymbol = semanticModel!.GetDeclaredSymbol(typeDecl) as INamedTypeSymbol;
-        if (typeSymbol == null)
-            return RefactoringHelpers.ThrowMcpException($"Error: Unable to determine containing type");
-
-        var parameter = SyntaxFactory.Parameter(SyntaxFactory.Identifier(instanceParameterName))
-            .WithType(SyntaxFactory.ParseTypeName(typeSymbol.ToDisplayString()));
-
-        var updatedMethod = method.WithParameterList(method.ParameterList.AddParameters(parameter));
-
-        updatedMethod = updatedMethod.ReplaceNodes(
-            updatedMethod.DescendantNodes().OfType<ThisExpressionSyntax>(),
-            (_, _) => SyntaxFactory.IdentifierName(instanceParameterName));
-
-        updatedMethod = updatedMethod.ReplaceNodes(
-            updatedMethod.DescendantNodes().OfType<IdentifierNameSyntax>().Where(id =>
-            {
-                var sym = semanticModel.GetSymbolInfo(id).Symbol;
-                return sym is IFieldSymbol or IPropertySymbol or IMethodSymbol &&
-                       SymbolEqualityComparer.Default.Equals(sym.ContainingType, typeSymbol) &&
-                       !sym.IsStatic && id.Parent is not MemberAccessExpressionSyntax;
-            }),
-            (old, _) => SyntaxFactory.MemberAccessExpression(
-                SyntaxKind.SimpleMemberAccessExpression,
-                SyntaxFactory.IdentifierName(instanceParameterName),
-                SyntaxFactory.IdentifierName(old.Identifier)));
-
-        var modifiers = updatedMethod.Modifiers;
-        if (!modifiers.Any(m => m.IsKind(SyntaxKind.StaticKeyword)))
-            modifiers = modifiers.Add(SyntaxFactory.Token(SyntaxKind.StaticKeyword));
-
-        updatedMethod = updatedMethod.WithModifiers(modifiers);
-
-        var newRoot = syntaxRoot.ReplaceNode(method, updatedMethod);
+        var newRoot = ConvertToStaticWithInstanceAst(syntaxRoot!, method, instanceParameterName, semanticModel);
         var formatted = Formatter.Format(newRoot, document.Project.Solution.Workspace);
         var newDocument = document.WithSyntaxRoot(formatted);
         var newText = await newDocument.GetTextAsync();
@@ -113,42 +122,7 @@ public static class ConvertToStaticWithInstanceTool
         if (classDecl == null)
             return RefactoringHelpers.ThrowMcpException($"Error: Method '{methodName}' is not inside a class");
 
-        var parameter = SyntaxFactory.Parameter(SyntaxFactory.Identifier(instanceParameterName))
-            .WithType(SyntaxFactory.ParseTypeName(classDecl.Identifier.ValueText));
-
-        var updatedMethod = method.WithParameterList(method.ParameterList.AddParameters(parameter));
-
-        updatedMethod = updatedMethod.ReplaceNodes(
-            updatedMethod.DescendantNodes().OfType<ThisExpressionSyntax>(),
-            (_, _) => SyntaxFactory.IdentifierName(instanceParameterName));
-
-        var instanceMembers = classDecl.Members
-            .Where(m => m is FieldDeclarationSyntax or PropertyDeclarationSyntax or MethodDeclarationSyntax)
-            .Select(m => m switch
-            {
-                FieldDeclarationSyntax f => f.Declaration.Variables.First().Identifier.ValueText,
-                PropertyDeclarationSyntax p => p.Identifier.ValueText,
-                MethodDeclarationSyntax md => md.Identifier.ValueText,
-                _ => string.Empty
-            })
-            .Where(n => !string.IsNullOrEmpty(n))
-            .ToHashSet();
-
-        updatedMethod = updatedMethod.ReplaceNodes(
-            updatedMethod.DescendantNodes().OfType<IdentifierNameSyntax>().Where(id =>
-                instanceMembers.Contains(id.Identifier.ValueText) && id.Parent is not MemberAccessExpressionSyntax),
-            (old, _) => SyntaxFactory.MemberAccessExpression(
-                SyntaxKind.SimpleMemberAccessExpression,
-                SyntaxFactory.IdentifierName(instanceParameterName),
-                SyntaxFactory.IdentifierName(old.Identifier)));
-
-        var modifiers = updatedMethod.Modifiers;
-        if (!modifiers.Any(m => m.IsKind(SyntaxKind.StaticKeyword)))
-            modifiers = modifiers.Add(SyntaxFactory.Token(SyntaxKind.StaticKeyword));
-
-        updatedMethod = updatedMethod.WithModifiers(modifiers);
-
-        var newRoot = syntaxRoot.ReplaceNode(method, updatedMethod);
+        var newRoot = ConvertToStaticWithInstanceAst(syntaxRoot, method, instanceParameterName);
         var formatted = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
         return formatted.ToFullString();
     }

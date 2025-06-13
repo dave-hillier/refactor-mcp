@@ -177,7 +177,7 @@ public static class MoveMultipleMethodsTool
             var sourceText = await File.ReadAllTextAsync(filePath);
             var results = new List<string>();
             var ordered = OrderOperations(CSharpSyntaxTree.ParseText(sourceText).GetRoot(), ops);
-            
+
             var currentDocument = document;
             foreach (var op in ordered)
             {
@@ -194,7 +194,7 @@ public static class MoveMultipleMethodsTool
                 // Clear solution cache to force reload of updated file state
                 RefactoringHelpers.SolutionCache.Remove(solutionPath);
             }
-            
+
             return string.Join("\n", results);
         }
         else
