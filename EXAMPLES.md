@@ -524,7 +524,8 @@ public class CleanupSample
 **Command**:
 ```bash
 dotnet run --project RefactorMCP.ConsoleApp -- --cli cleanup-usings \
-  "./CleanupSample.cs" "./RefactorMCP.sln"
+  "./RefactorMCP.sln" \
+  "./CleanupSample.cs"
 ```
 
 **After**:

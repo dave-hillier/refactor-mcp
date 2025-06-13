@@ -10,6 +10,7 @@ using System.Linq;
 [McpServerToolType]
 public static class MakeFieldReadonlyTool
 {
+    [McpServerTool, Description("Make a field readonly if assigned only during initialization (preferred for large C# file refactoring)")]
     public static async Task<string> MakeFieldReadonly(
         [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,

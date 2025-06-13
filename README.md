@@ -172,10 +172,10 @@ dotnet run --project RefactorMCP.ConsoleApp -- --json ToolName '{"param":"value"
 - `introduce-parameter <solutionPath> <filePath> <methodLine> <range> <parameterName>` - Create parameter from expression
 - `convert-to-static-with-parameters <solutionPath> <filePath> <methodLine>` - Convert instance method to static with parameters
 - `convert-to-static-with-instance <solutionPath> <filePath> <methodLine> [instanceName]` - Convert instance method to static with explicit instance
- - `move-static-method <solutionPath> <filePath> <methodName> <targetClass> [targetFile]` - Move a static method to another class
- - `move-instance-method <solutionPath> <filePath> <sourceClass> <methodNames> <targetClass> <accessMember> [memberType] [targetFile]` - Move one or more instance methods (comma separated names) to another class. Newly created access fields are marked `readonly` and won't duplicate existing members
- - `move-multiple-methods <solutionPath> <filePath> <operationsJson> [defaultTargetFile]` - Move multiple static or instance methods described by a JSON array. Each operation can specify `targetFile` or you can provide a `defaultTargetFile` for all operations
-- `cleanup-usings <filePath> [solutionPath]` - Remove unused using directives
+ - `move-static-method <solutionPath> <filePath> <methodName> <targetClass> [targetFilePath]` - Move a static method to another class
+ - `move-instance-method <solutionPath> <filePath> <sourceClass> <methodNames> <targetClass> <accessMember> [memberType] [targetFilePath]` - Move one or more instance methods (comma separated names) to another class. Newly created access fields are marked `readonly` and won't duplicate existing members
+ - `move-multiple-methods <solutionPath> <filePath> <operationsJson> [defaultTargetFilePath]` - Move multiple static or instance methods described by a JSON array. Each operation can specify `targetFile` or you can provide a `defaultTargetFilePath` for all operations
+ - `cleanup-usings [solutionPath] <filePath>` - Remove unused using directives
 - `version` - Show build version and timestamp
 - `analyze-refactoring-opportunities <solutionPath> <filePath>` - Prompt for refactoring suggestions (long methods, long parameter lists, unused code)
 
@@ -374,7 +374,10 @@ public int Multiply(int x, int y, int unusedParam)
 **Command**:
 ```bash
 dotnet run --project RefactorMCP.ConsoleApp -- --cli safe-delete-parameter \
-  "./RefactorMCP.Tests/ExampleCode.cs" "Multiply" "unusedParam" "./RefactorMCP.sln"
+  "./RefactorMCP.sln" \
+  "./RefactorMCP.Tests/ExampleCode.cs" \
+  "Multiply" \
+  "unusedParam"
 ```
 
 **After**:
@@ -462,7 +465,8 @@ public class Sample
 **Command**:
 ```bash
 dotnet run --project RefactorMCP.ConsoleApp -- --cli cleanup-usings \
-  "./RefactorMCP.Tests/ExampleCode.cs" "./RefactorMCP.sln"
+  "./RefactorMCP.sln" \
+  "./RefactorMCP.Tests/ExampleCode.cs"
 ```
 
 **After**:

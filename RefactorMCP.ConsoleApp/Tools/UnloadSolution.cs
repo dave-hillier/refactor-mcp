@@ -8,7 +8,7 @@ public static class UnloadSolutionTool
 {
     [McpServerTool, Description("Unload a solution and remove it from the cache")]
     public static string UnloadSolution(
-        [Description("Path to the solution file (.sln)")] string solutionPath)
+        [Description("Absolute path to the solution file (.sln)")] string solutionPath)
     {
         if (RefactoringHelpers.SolutionCache.TryGetValue(solutionPath, out _))
         {
