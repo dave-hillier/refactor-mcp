@@ -51,6 +51,7 @@ public static class MakeFieldReadonlyTool
         var newDocument = document.WithSyntaxRoot(formattedRoot);
         var newText = await newDocument.GetTextAsync();
         await File.WriteAllTextAsync(document.FilePath!, newText.ToString());
+        RefactoringHelpers.UpdateSolutionCache(newDocument);
 
         if (initializer != null)
             return $"Successfully made field '{fieldName}' readonly and moved initialization to constructors in {document.FilePath}";

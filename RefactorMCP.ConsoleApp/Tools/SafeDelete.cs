@@ -120,6 +120,7 @@ public static class SafeDeleteTool
         var newDoc = document.WithSyntaxRoot(formatted);
         var text = await newDoc.GetTextAsync();
         await File.WriteAllTextAsync(document.FilePath!, text.ToString());
+        RefactoringHelpers.UpdateSolutionCache(newDoc);
         return $"Successfully deleted field '{fieldName}' in {document.FilePath}";
     }
 
@@ -178,6 +179,7 @@ public static class SafeDeleteTool
         var newDoc = document.WithSyntaxRoot(formatted);
         var text = await newDoc.GetTextAsync();
         await File.WriteAllTextAsync(document.FilePath!, text.ToString());
+        RefactoringHelpers.UpdateSolutionCache(newDoc);
         return $"Successfully deleted method '{methodName}' in {document.FilePath}";
     }
 
@@ -243,6 +245,7 @@ public static class SafeDeleteTool
             var newDoc = doc.WithSyntaxRoot(formattedRoot);
             var newText = await newDoc.GetTextAsync();
             await File.WriteAllTextAsync(doc.FilePath!, newText.ToString());
+            RefactoringHelpers.UpdateSolutionCache(newDoc);
         }
 
         return $"Successfully deleted parameter '{parameterName}' from method '{methodName}' in {document.FilePath}";
@@ -303,6 +306,7 @@ public static class SafeDeleteTool
         var newDoc = document.WithSyntaxRoot(formatted);
         var newText = await newDoc.GetTextAsync();
         await File.WriteAllTextAsync(document.FilePath!, newText.ToString());
+        RefactoringHelpers.UpdateSolutionCache(newDoc);
         return $"Successfully deleted variable '{variable.Identifier.ValueText}' in {document.FilePath}";
     }
 

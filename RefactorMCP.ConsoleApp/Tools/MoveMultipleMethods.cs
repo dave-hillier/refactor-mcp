@@ -285,6 +285,7 @@ public static class MoveMultipleMethodsTool
                         op.TargetFile);
                     results.Add(msg);
                     currentDocument = updatedDoc;
+                    RefactoringHelpers.UpdateSolutionCache(updatedDoc);
                 }
                 else
                 {
@@ -297,11 +298,11 @@ public static class MoveMultipleMethodsTool
                         op.AccessMemberType);
                     results.Add(msg);
                     currentDocument = updatedDoc;
+                    RefactoringHelpers.UpdateSolutionCache(updatedDoc);
                 }
             }
 
-            // Clear cache after batch completes
-            RefactoringHelpers.SolutionCache.Remove(solutionPath);
+            RefactoringHelpers.UpdateSolutionCache(currentDocument);
 
             return string.Join("\n", results);
         }
