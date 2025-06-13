@@ -24,33 +24,57 @@ public static partial class MoveMultipleMethodsTool
         [Description("Method names to move")] string[] methodNames,
         [Description("Target class names")] string[] targetClasses,
         [Description("Access member names")] string[] accessMembers,
-        [Description("Access member types (field, property, variable)")] string[] accessMemberTypes,
-        [Description("Whether methods are static")] bool[] isStatic,
         [Description("Target file paths (optional)")] string[]? targetFiles = null,
         [Description("Default target file path used when operations omit targetFile (optional)")] string? defaultTargetFilePath = null)
     {
-        if (sourceClasses.Length == 0 || methodNames.Length == 0 || targetClasses.Length == 0 || 
-            accessMembers.Length == 0 || accessMemberTypes.Length == 0 || isStatic.Length == 0)
+        if (sourceClasses.Length == 0 || methodNames.Length == 0 || targetClasses.Length == 0 || accessMembers.Length == 0)
             return RefactoringHelpers.ThrowMcpException("Error: No operations provided");
 
-        if (sourceClasses.Length != methodNames.Length || methodNames.Length != targetClasses.Length || 
-            targetClasses.Length != accessMembers.Length || accessMembers.Length != accessMemberTypes.Length || 
-            accessMemberTypes.Length != isStatic.Length)
+        if (sourceClasses.Length != methodNames.Length || methodNames.Length != targetClasses.Length || targetClasses.Length != accessMembers.Length)
             return RefactoringHelpers.ThrowMcpException("Error: All arrays must have the same length");
 
         var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
         var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
 
-        var crossFile = targetFiles != null && targetFiles.Any(t => 
-            !string.IsNullOrEmpty(t) && Path.GetFullPath(t) != Path.GetFullPath(filePath));
-
-        if (document != null && !crossFile)
+        if (document != null)
         {
+            var root = await document.GetSyntaxRootAsync();
+            if (root == null)
+                return RefactoringHelpers.ThrowMcpException("Error: Could not get syntax root");
+
+            var classNodes = root.DescendantNodes().OfType<ClassDeclarationSyntax>().ToDictionary(c => c.Identifier.ValueText);
+
+            var isStatic = new bool[methodNames.Length];
+            var accessMemberTypes = new string[methodNames.Length];
+
+            for (int i = 0; i < methodNames.Length; i++)
+            {
+                if (!classNodes.TryGetValue(sourceClasses[i], out var classNode))
+                    return RefactoringHelpers.ThrowMcpException($"Error: Source class '{sourceClasses[i]}' not found");
+
+                var method = classNode.Members.OfType<MethodDeclarationSyntax>()
+                    .FirstOrDefault(m => m.Identifier.ValueText == methodNames[i]);
+                if (method == null)
+                    return RefactoringHelpers.ThrowMcpException($"Error: No method named '{methodNames[i]}' in class '{sourceClasses[i]}'");
+
+                isStatic[i] = method.Modifiers.Any(SyntaxKind.StaticKeyword);
+                
+                var accessMemberName = accessMembers[i];
+                var accessMemberNode = classNode.Members.FirstOrDefault(m =>
+                    (m is FieldDeclarationSyntax fd && fd.Declaration.Variables.Any(v => v.Identifier.ValueText == accessMemberName)) ||
+                    (m is PropertyDeclarationSyntax pd && pd.Identifier.ValueText == accessMemberName));
+                
+                accessMemberTypes[i] = accessMemberNode switch
+                {
+                    PropertyDeclarationSyntax => "property",
+                    FieldDeclarationSyntax => "field",
+                    _ => "field" // Default to field if not found
+                };
+            }
+
             // Solution-based: need to manage document state between operations
-            var sourceText = await File.ReadAllTextAsync(filePath);
             var results = new List<string>();
-            var orderedIndices = OrderOperations(CSharpSyntaxTree.ParseText(sourceText).GetRoot(), 
-                sourceClasses, methodNames, targetClasses, accessMembers, accessMemberTypes, isStatic);
+            var orderedIndices = OrderOperations(root, sourceClasses, methodNames, targetClasses, accessMembers, accessMemberTypes, isStatic);
 
             var currentDocument = document;
             for (int i = 0; i < orderedIndices.Count; i++)
@@ -75,7 +99,8 @@ public static partial class MoveMultipleMethodsTool
                         new[] { methodNames[idx] },
                         targetClasses[idx],
                         accessMembers[idx],
-                        accessMemberTypes[idx]);
+                        accessMemberTypes[idx],
+                        targetFiles?[idx]);
                     results.Add(msg);
                     currentDocument = updatedDoc;
                     RefactoringHelpers.UpdateSolutionCache(updatedDoc);
@@ -86,12 +111,10 @@ public static partial class MoveMultipleMethodsTool
 
             return string.Join("\n", results);
         }
-        else
-        {
-            // Fallback to AST-based approach for single-file mode or cross-file operations
-            return await MoveMultipleMethodsInFile(filePath, sourceClasses, methodNames, targetClasses, 
-                accessMembers, accessMemberTypes, isStatic, targetFiles);
-        }
+        
+        // Fallback to AST-based approach for single-file mode or cross-file operations
+        // This path is no longer needed after unification
+        return RefactoringHelpers.ThrowMcpException("Error: Could not find document in solution and AST fallback is disabled.");
     }
 
     [McpServerTool, Description("Move multiple methods using explicit parameters. " +
@@ -103,7 +126,6 @@ public static partial class MoveMultipleMethodsTool
         [Description("Names of the methods to move")] string[] methodNames,
         [Description("Name of the target class")] string targetClass,
         [Description("Name for the access member")] string accessMember,
-        [Description("Type of access member (field, property, variable)")] string accessMemberType = "field",
         [Description("Path to the target file (optional)")] string? targetFilePath = null)
     {
         var sourceText = await File.ReadAllTextAsync(filePath);
@@ -116,8 +138,6 @@ public static partial class MoveMultipleMethodsTool
         var sourceClasses = new string[methodNames.Length];
         var targetClasses = new string[methodNames.Length];
         var accessMembers = new string[methodNames.Length];
-        var accessMemberTypes = new string[methodNames.Length];
-        var isStatic = new bool[methodNames.Length];
         var targetFiles = new string[methodNames.Length];
 
         for (int i = 0; i < methodNames.Length; i++)
@@ -130,12 +150,10 @@ public static partial class MoveMultipleMethodsTool
             sourceClasses[i] = sourceClass;
             targetClasses[i] = targetClass;
             accessMembers[i] = accessMember;
-            accessMemberTypes[i] = accessMemberType;
-            isStatic[i] = method.Modifiers.Any(SyntaxKind.StaticKeyword);
             targetFiles[i] = targetFilePath;
         }
 
         return await MoveMultipleMethods(solutionPath, filePath, sourceClasses, methodNames, targetClasses,
-            accessMembers, accessMemberTypes, isStatic, targetFiles, targetFilePath);
+            accessMembers, targetFiles, targetFilePath);
     }
 }

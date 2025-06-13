@@ -14,7 +14,7 @@ public static partial class MoveMultipleMethodsTool
 {
     // ===== HELPER METHODS =====
 
-    private static Dictionary<string, HashSet<string>> BuildDependencies(
+    internal static Dictionary<string, HashSet<string>> BuildDependencies(
         SyntaxNode sourceRoot, 
         string[] sourceClasses,
         string[] methodNames)
@@ -55,7 +55,7 @@ public static partial class MoveMultipleMethodsTool
         return deps;
     }
 
-    private static List<int> OrderOperations(
+    internal static List<int> OrderOperations(
         SyntaxNode sourceRoot, 
         string[] sourceClasses,
         string[] methodNames,

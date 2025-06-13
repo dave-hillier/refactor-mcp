@@ -1,9 +1,45 @@
 using Xunit;
 using System;
 using System.Linq;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Formatting;
 
 public class MoveMultipleMethodsTests
 {
+    private static string MoveMultipleMethodsInSource(
+        string source,
+        string[] sourceClasses,
+        string[] methodNames,
+        string[] targetClasses,
+        string[] accessMembers,
+        string[] accessMemberTypes,
+        bool[] isStatic)
+    {
+        var tree = CSharpSyntaxTree.ParseText(source);
+        var root = tree.GetRoot();
+
+        var orderedIndices = MoveMultipleMethodsTool.OrderOperations(root, sourceClasses, methodNames, targetClasses, accessMembers, accessMemberTypes, isStatic);
+
+        foreach(var i in orderedIndices)
+        {
+            if (isStatic[i])
+            {
+                var moveResult = MoveMethodsTool.MoveStaticMethodAst(root, methodNames[i], targetClasses[i]);
+                root = MoveMethodsTool.AddMethodToTargetClass(moveResult.NewSourceRoot, targetClasses[i], moveResult.MovedMethod);
+            }
+            else
+            {
+                var moveResult = MoveMethodsTool.MoveInstanceMethodAst(root, sourceClasses[i], methodNames[i], targetClasses[i], accessMembers[i], accessMemberTypes[i]);
+                root = MoveMethodsTool.AddMethodToTargetClass(moveResult.NewSourceRoot, targetClasses[i], moveResult.MovedMethod);
+            }
+        }
+        
+        var workspace = new AdhocWorkspace();
+        var formattedRoot = Formatter.Format(root, workspace);
+        return formattedRoot.ToFullString();
+    }
+
     [Fact]
     public void MoveMultipleMethods_WithStaticMethods_ShouldMoveCorrectly()
     {
@@ -27,7 +63,7 @@ public class TargetClass
         var accessMemberTypes = new[] { "", "" };
         var isStatic = new[] { true, true };
 
-        var result = MoveMultipleMethodsTool.MoveMultipleMethodsInSource(
+        var result = MoveMultipleMethodsInSource(
             source, sourceClasses, methodNames, targetClasses, accessMembers, accessMemberTypes, isStatic);
 
         var targetClassCode = result.Split(new[] { "public class TargetClass" }, StringSplitOptions.None)[1];
@@ -66,7 +102,7 @@ public class TargetClass
         var accessMemberTypes = new[] { "field", "field" };
         var isStatic = new[] { false, false };
 
-        var result = MoveMultipleMethodsTool.MoveMultipleMethodsInSource(
+        var result = MoveMultipleMethodsInSource(
             source, sourceClasses, methodNames, targetClasses, accessMembers, accessMemberTypes, isStatic);
 
         var targetClassCode = result.Split(new[] { "public class TargetClass" }, StringSplitOptions.None)[1];
@@ -105,7 +141,7 @@ public class TargetClass
         var accessMemberTypes = new[] { "", "field" };
         var isStatic = new[] { true, false };
 
-        var result = MoveMultipleMethodsTool.MoveMultipleMethodsInSource(
+        var result = MoveMultipleMethodsInSource(
             source, sourceClasses, methodNames, targetClasses, accessMembers, accessMemberTypes, isStatic);
 
         var targetClassCode = result.Split(new[] { "public class TargetClass" }, StringSplitOptions.None)[1];

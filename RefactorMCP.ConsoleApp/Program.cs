@@ -11,6 +11,9 @@ using ModelContextProtocol.Server;
 using System.ComponentModel;
 using System.Text;
 using System.Text.Json;
+using System.Runtime.CompilerServices;
+
+[assembly: InternalsVisibleTo("RefactorMCP.Tests")]
 
 // Parse command line arguments
 if (args.Length > 0 && args[0] == "--cli")
