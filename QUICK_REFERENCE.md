@@ -43,9 +43,10 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli introduce-field \
   "./RefactorMCP.sln" \
   "./path/to/file.cs" \
   "startLine:startCol-endLine:endCol" \
-  "fieldName" \
-  "private"
+"fieldName" \
+"private"
 ```
+The field name must not already exist on the target type.
 
 ### Introduce Variable
 ```bash
