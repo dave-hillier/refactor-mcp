@@ -19,7 +19,7 @@ public class MoveMultipleMethodsTests
         var tree = CSharpSyntaxTree.ParseText(source);
         var root = tree.GetRoot();
 
-        var orderedIndices = MoveMultipleMethodsTool.OrderOperations(root, sourceClasses, methodNames, targetClasses, accessMembers, accessMemberTypes, isStatic);
+        var orderedIndices = MoveMultipleMethodsTool.OrderOperations(root, sourceClasses, methodNames);
 
         foreach(var i in orderedIndices)
         {
