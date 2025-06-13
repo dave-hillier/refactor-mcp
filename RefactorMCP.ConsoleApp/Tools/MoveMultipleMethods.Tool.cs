@@ -15,23 +15,24 @@ public static partial class MoveMultipleMethodsTool
 {
     // Solution/Document operations that use the AST layer
 
-    [McpServerTool, Description("Move multiple methods to target classes, automatically ordering by dependencies. " +
+    [McpServerTool, Description("Move multiple methods from a source class to a target class, automatically ordering by dependencies. " +
         "Wrapper methods remain at the original locations to delegate to the moved implementations.")]
     public static async Task<string> MoveMultipleMethods(
         [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file containing the methods")] string filePath,
-        [Description("Source class names")] string[] sourceClasses,
-        [Description("Method names to move")] string[] methodNames,
-        [Description("Target class names")] string[] targetClasses,
-        [Description("Access member names")] string[] accessMembers,
-        [Description("Target file paths (optional)")] string[]? targetFiles = null,
-        [Description("Default target file path used when operations omit targetFile (optional)")] string? defaultTargetFilePath = null)
+        [Description("Name of the source class containing the methods")] string sourceClass,
+        [Description("Names of the methods to move")] string[] methodNames,
+        [Description("Name of the target class")] string targetClass,
+        [Description("Name for the access member")] string accessMember,
+        [Description("Path to the target file (optional)")] string? targetFilePath = null)
     {
-        if (sourceClasses.Length == 0 || methodNames.Length == 0 || targetClasses.Length == 0 || accessMembers.Length == 0)
-            return RefactoringHelpers.ThrowMcpException("Error: No operations provided");
+        if (methodNames.Length == 0)
+            return RefactoringHelpers.ThrowMcpException("Error: No method names provided");
 
-        if (sourceClasses.Length != methodNames.Length || methodNames.Length != targetClasses.Length || targetClasses.Length != accessMembers.Length)
-            return RefactoringHelpers.ThrowMcpException("Error: All arrays must have the same length");
+        var sourceClasses = Enumerable.Repeat(sourceClass, methodNames.Length).ToArray();
+        var targetClasses = Enumerable.Repeat(targetClass, methodNames.Length).ToArray();
+        var accessMembers = Enumerable.Repeat(accessMember, methodNames.Length).ToArray();
+        var targetFiles = targetFilePath != null ? Enumerable.Repeat(targetFilePath, methodNames.Length).ToArray() : null;
 
         var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
         var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
@@ -47,20 +48,20 @@ public static partial class MoveMultipleMethodsTool
             var isStatic = new bool[methodNames.Length];
             var accessMemberTypes = new string[methodNames.Length];
 
+            if (!classNodes.TryGetValue(sourceClass, out var sourceClassNode))
+                return RefactoringHelpers.ThrowMcpException($"Error: Source class '{sourceClass}' not found");
+
             for (int i = 0; i < methodNames.Length; i++)
             {
-                if (!classNodes.TryGetValue(sourceClasses[i], out var classNode))
-                    return RefactoringHelpers.ThrowMcpException($"Error: Source class '{sourceClasses[i]}' not found");
-
-                var method = classNode.Members.OfType<MethodDeclarationSyntax>()
+                var method = sourceClassNode.Members.OfType<MethodDeclarationSyntax>()
                     .FirstOrDefault(m => m.Identifier.ValueText == methodNames[i]);
                 if (method == null)
-                    return RefactoringHelpers.ThrowMcpException($"Error: No method named '{methodNames[i]}' in class '{sourceClasses[i]}'");
+                    return RefactoringHelpers.ThrowMcpException($"Error: No method named '{methodNames[i]}' in class '{sourceClass}'");
 
                 isStatic[i] = method.Modifiers.Any(SyntaxKind.StaticKeyword);
                 
                 var accessMemberName = accessMembers[i];
-                var accessMemberNode = classNode.Members.FirstOrDefault(m =>
+                var accessMemberNode = sourceClassNode.Members.FirstOrDefault(m =>
                     (m is FieldDeclarationSyntax fd && fd.Declaration.Variables.Any(v => v.Identifier.ValueText == accessMemberName)) ||
                     (m is PropertyDeclarationSyntax pd && pd.Identifier.ValueText == accessMemberName));
                 
@@ -115,45 +116,5 @@ public static partial class MoveMultipleMethodsTool
         // Fallback to AST-based approach for single-file mode or cross-file operations
         // This path is no longer needed after unification
         return RefactoringHelpers.ThrowMcpException("Error: Could not find document in solution and AST fallback is disabled.");
-    }
-
-    [McpServerTool, Description("Move multiple methods using explicit parameters. " +
-        "Each moved method leaves a delegating wrapper so existing calls continue to compile.")]
-    public static async Task<string> MoveMultipleMethods(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
-        [Description("Path to the C# file containing the methods")] string filePath,
-        [Description("Name of the source class containing the methods")] string sourceClass,
-        [Description("Names of the methods to move")] string[] methodNames,
-        [Description("Name of the target class")] string targetClass,
-        [Description("Name for the access member")] string accessMember,
-        [Description("Path to the target file (optional)")] string? targetFilePath = null)
-    {
-        var sourceText = await File.ReadAllTextAsync(filePath);
-        var root = await CSharpSyntaxTree.ParseText(sourceText).GetRootAsync();
-        var classNode = root.DescendantNodes().OfType<ClassDeclarationSyntax>()
-            .FirstOrDefault(c => c.Identifier.ValueText == sourceClass);
-        if (classNode == null)
-            return RefactoringHelpers.ThrowMcpException($"Error: Source class '{sourceClass}' not found");
-
-        var sourceClasses = new string[methodNames.Length];
-        var targetClasses = new string[methodNames.Length];
-        var accessMembers = new string[methodNames.Length];
-        var targetFiles = new string[methodNames.Length];
-
-        for (int i = 0; i < methodNames.Length; i++)
-        {
-            var method = classNode.Members.OfType<MethodDeclarationSyntax>()
-                .FirstOrDefault(m => m.Identifier.ValueText == methodNames[i]);
-            if (method == null)
-                return RefactoringHelpers.ThrowMcpException($"Error: No method named '{methodNames[i]}' found");
-
-            sourceClasses[i] = sourceClass;
-            targetClasses[i] = targetClass;
-            accessMembers[i] = accessMember;
-            targetFiles[i] = targetFilePath;
-        }
-
-        return await MoveMultipleMethods(solutionPath, filePath, sourceClasses, methodNames, targetClasses,
-            accessMembers, targetFiles, targetFilePath);
     }
 }
