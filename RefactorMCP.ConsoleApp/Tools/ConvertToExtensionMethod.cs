@@ -89,6 +89,9 @@ public static class ConvertToExtensionMethodTool
         }
         else
         {
+            var duplicateDoc = await RefactoringHelpers.FindClassInSolution(document.Project.Solution, extClassName, document.FilePath);
+            if (duplicateDoc != null)
+                return RefactoringHelpers.ThrowMcpException($"Error: Class {extClassName} already exists in {duplicateDoc.FilePath}");
             var extensionClassDecl = SyntaxFactory.ClassDeclaration(extClassName)
                 .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.StaticKeyword))
                 .AddMembers(updatedMethod);
