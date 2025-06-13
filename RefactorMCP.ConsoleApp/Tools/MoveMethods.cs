@@ -169,7 +169,7 @@ public class MethodCallRewriter : CSharpSyntaxRewriter
                     SyntaxKind.SimpleMemberAccessExpression,
                     SyntaxFactory.IdentifierName(_parameterName),
                     identifier);
-                
+
                 return node.WithExpression(memberAccess);
             }
         }
@@ -203,7 +203,7 @@ public class StaticFieldChecker : CSharpSyntaxRewriter
         if (_staticFieldNames.Contains(node.Identifier.ValueText))
         {
             // Make sure it's not already qualified
-            if (parent is not MemberAccessExpressionSyntax || 
+            if (parent is not MemberAccessExpressionSyntax ||
                 (parent is MemberAccessExpressionSyntax memberAccess && memberAccess.Name == node))
             {
                 HasStaticFieldReferences = true;
@@ -240,7 +240,7 @@ public class StaticFieldRewriter : CSharpSyntaxRewriter
         if (_staticFieldNames.Contains(node.Identifier.ValueText))
         {
             // Make sure it's not already qualified and it's not the name part of a member access
-            if (parent is not MemberAccessExpressionSyntax || 
+            if (parent is not MemberAccessExpressionSyntax ||
                 (parent is MemberAccessExpressionSyntax memberAccess && memberAccess.Name == node))
             {
                 // Replace with ClassName.field
@@ -296,7 +296,7 @@ public static class MoveMethodsTool
         // Enhanced: Check if method references static fields and qualify them
         var staticFieldNames = GetStaticFieldNames(sourceClass);
         var needsStaticFieldQualification = HasStaticFieldReferences(method, staticFieldNames);
-        
+
         var movedMethod = method;
         if (needsStaticFieldQualification)
         {
@@ -305,10 +305,10 @@ public static class MoveMethodsTool
         }
 
         // Enhanced: Preserve generic type arguments in delegation call
-        var typeArgumentList = method.TypeParameterList != null 
+        var typeArgumentList = method.TypeParameterList != null
             ? SyntaxFactory.TypeArgumentList(
                 SyntaxFactory.SeparatedList(
-                    method.TypeParameterList.Parameters.Select(p => 
+                    method.TypeParameterList.Parameters.Select(p =>
                         (TypeSyntax)SyntaxFactory.IdentifierName(p.Identifier))))
             : null;
 
@@ -371,7 +371,7 @@ public static class MoveMethodsTool
 
         // Check if method uses instance members
         var knownMembers = GetInstanceMemberNames(originClass);
-        
+
         // Enhanced: Get method names for rewriting (excluding methods being moved)
         var classMethodNames = GetMethodNames(originClass);
         var otherMethodNames = new HashSet<string>(classMethodNames);
@@ -381,15 +381,15 @@ public static class MoveMethodsTool
         bool usesInstanceMembers = HasInstanceMemberUsage(method, knownMembers);
         bool callsOtherMethods = HasMethodCalls(method, otherMethodNames);
         bool isRecursive = HasMethodCalls(method, new HashSet<string> { methodName });
-        
+
         // Need to pass 'this' if using instance members OR calling other methods OR is recursive
         bool needsThisParameter = usesInstanceMembers || callsOtherMethods || isRecursive;
 
         // Enhanced: Preserve generic type arguments and async patterns in delegation call
-        var typeArgumentList = method.TypeParameterList != null 
+        var typeArgumentList = method.TypeParameterList != null
             ? SyntaxFactory.TypeArgumentList(
                 SyntaxFactory.SeparatedList(
-                    method.TypeParameterList.Parameters.Select(p => 
+                    method.TypeParameterList.Parameters.Select(p =>
                         (TypeSyntax)SyntaxFactory.IdentifierName(p.Identifier))))
             : null;
 
@@ -422,7 +422,7 @@ public static class MoveMethodsTool
             argumentList);
 
         bool isVoid = method.ReturnType is PredefinedTypeSyntax pts && pts.Keyword.IsKind(SyntaxKind.VoidKeyword);
-        
+
         // Enhanced: Preserve async/await pattern in delegation
         ExpressionSyntax returnExpression = invocation;
         if (isAsync && !isVoid)
@@ -552,7 +552,7 @@ public static class MoveMethodsTool
         var missingUsings = sourceUsings
             .Where(u => !targetUsingNames.Contains(u.Name.ToString()))
             .ToArray();
-        
+
         if (missingUsings.Length > 0)
         {
             return targetCompilationUnit.AddUsings(missingUsings);
@@ -606,7 +606,7 @@ public static class MoveMethodsTool
 
         // Write files
         var formattedTarget = Formatter.Format(targetRoot, RefactoringHelpers.SharedWorkspace);
-        
+
         if (!sameFile)
         {
             var formattedSource = Formatter.Format(moveResult.NewSourceRoot, RefactoringHelpers.SharedWorkspace);
@@ -760,13 +760,13 @@ public static class MoveMethodsTool
     {
         var tree = CSharpSyntaxTree.ParseText(sourceText);
         var root = tree.GetRoot();
-        
+
         foreach (var methodName in methodNames)
         {
             var moveResult = MoveInstanceMethodAst(root, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
             root = AddMethodToTargetClass(moveResult.NewSourceRoot, targetClass, moveResult.MovedMethod);
         }
-        
+
         var formatted = Formatter.Format(root, RefactoringHelpers.SharedWorkspace);
         return formatted.ToFullString();
     }
@@ -1028,13 +1028,13 @@ public static class MoveMethodsTool
             // Same file operation - use multiple individual AST transformations
             var tree = CSharpSyntaxTree.ParseText(sourceText);
             var root = tree.GetRoot();
-            
+
             foreach (var methodName in methodNames)
             {
                 var moveResult = MoveInstanceMethodAst(root, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
                 root = AddMethodToTargetClass(moveResult.NewSourceRoot, targetClass, moveResult.MovedMethod);
             }
-            
+
             var formatted = Formatter.Format(root, RefactoringHelpers.SharedWorkspace);
             await File.WriteAllTextAsync(filePath, formatted.ToFullString());
             return $"Successfully moved {methodNames.Length} methods from {sourceClass} to {targetClass} in {filePath}";

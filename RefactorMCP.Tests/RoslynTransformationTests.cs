@@ -1332,7 +1332,7 @@ class ValidationHelper
         ]";
 
         var output = MoveMultipleMethodsTool.MoveMultipleMethodsInSource(input, operationsJson);
-        
+
         // Verify that methods are moved to correct classes
         Assert.Contains("class StringHelper", output);
         Assert.Contains("FormatString", output);
@@ -1511,7 +1511,7 @@ class LegacyService
 }";
 
         var output = MoveMethodsTool.MoveInstanceMethodInSource(input, "Source", "TestMethod", "NewTarget", "target", "field");
-        
+
         Assert.Contains("class Source", output);
         Assert.Contains("private readonly NewTarget target = new NewTarget();", output);
         Assert.Contains("public class NewTarget", output);
@@ -1584,14 +1584,14 @@ class Operations
         ]";
 
         var output = MoveMultipleMethodsTool.MoveMultipleMethodsInSource(input, operationsJson);
-        
+
         // Verify that all methods are moved
         Assert.Contains("class Operations", output);
         Assert.Contains("MethodA", output);
         Assert.Contains("MethodB", output);
         Assert.Contains("MethodC", output);
         Assert.Contains("MethodD", output);
-        
+
         // Verify dependencies are handled correctly
         Assert.Contains("operations.MethodA", output);
         Assert.Contains("operations.MethodB", output);
@@ -1670,24 +1670,24 @@ class ProcessingService
 
         // First move: ValidateDocument to ValidationService
         var firstMove = MoveMethodsTool.MoveInstanceMethodInSource(input, "DocumentProcessor", "ValidateDocument", "ValidationService", "validationService", "field");
-        
+
         // Second move: ProcessDocument to ProcessingService (should build on first move result)
         var secondMove = MoveMethodsTool.MoveInstanceMethodInSource(firstMove, "DocumentProcessor", "ProcessDocument", "ProcessingService", "processingService", "field");
-        
+
         Assert.Equal(expected, secondMove.Trim());
-        
+
         // Verify both access members are created
         Assert.Contains("private readonly ValidationService validationService = new ValidationService();", secondMove);
         Assert.Contains("private readonly ProcessingService processingService = new ProcessingService();", secondMove);
-        
+
         // Verify both method calls are updated
         Assert.Contains("validationService.ValidateDocument();", secondMove);
         Assert.Contains("processingService.ProcessDocument();", secondMove);
-        
+
         // Verify both target classes have the moved methods
         Assert.Contains("public void ValidateDocument()", secondMove);
         Assert.Contains("public void ProcessDocument()", secondMove);
-        
+
         // Verify the third method remains in the original class
         Assert.Contains("Console.WriteLine(\"Saving document\");", secondMove);
     }
@@ -1812,19 +1812,19 @@ class LoggingService
         ]";
 
         var output = MoveMultipleMethodsTool.MoveMultipleMethodsInSource(input, operationsJson);
-        
+
         Assert.Equal(expected, output.Trim());
-        
+
         // Verify all access members are created
         Assert.Contains("private readonly ValidationService validationService = new ValidationService();", output);
         Assert.Contains("private readonly ProcessingService processingService = new ProcessingService();", output);
         Assert.Contains("private readonly LoggingService loggingService = new LoggingService();", output);
-        
+
         // Verify all method calls are updated
         Assert.Contains("validationService.ValidateDocument();", output);
         Assert.Contains("processingService.ProcessDocument();", output);
         Assert.Contains("loggingService.LogActivity(activity);", output);
-        
+
         // Verify all target classes have the moved methods
         Assert.Contains("class ValidationService", output);
         Assert.Contains("public void ValidateDocument()", output);
@@ -1832,7 +1832,7 @@ class LoggingService
         Assert.Contains("public void ProcessDocument()", output);
         Assert.Contains("class LoggingService", output);
         Assert.Contains("public void LogActivity(string activity)", output);
-        
+
         // Verify the unmoved method remains in the original class
         Assert.Contains("Console.WriteLine(\"Saving document\");", output);
     }
