@@ -1,6 +1,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Text;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -585,5 +586,112 @@ internal class SetterToInitRewriter : CSharpSyntaxRewriter
             .WithSemicolonToken(setter.SemicolonToken);
         var newAccessorList = node.AccessorList.ReplaceNode(setter, initAccessor);
         return node.WithAccessorList(newAccessorList);
+    }
+}
+
+public class FieldRemovalRewriter : CSharpSyntaxRewriter
+{
+    private readonly string _fieldName;
+
+    public FieldRemovalRewriter(string fieldName)
+    {
+        _fieldName = fieldName;
+    }
+
+    public override SyntaxNode? VisitFieldDeclaration(FieldDeclarationSyntax node)
+    {
+        var variable = node.Declaration.Variables.FirstOrDefault(v => v.Identifier.ValueText == _fieldName);
+        if (variable == null)
+            return base.VisitFieldDeclaration(node);
+
+        if (node.Declaration.Variables.Count == 1)
+            return null;
+
+        var newDecl = node.Declaration.WithVariables(SyntaxFactory.SeparatedList(node.Declaration.Variables.Where(v => v != variable)));
+        return node.WithDeclaration(newDecl);
+    }
+}
+
+public class MethodRemovalRewriter : CSharpSyntaxRewriter
+{
+    private readonly string _methodName;
+
+    public MethodRemovalRewriter(string methodName)
+    {
+        _methodName = methodName;
+    }
+
+    public override SyntaxNode? VisitMethodDeclaration(MethodDeclarationSyntax node)
+    {
+        if (node.Identifier.ValueText == _methodName)
+            return null;
+
+        return base.VisitMethodDeclaration(node);
+    }
+}
+
+public class ParameterRemovalRewriter : CSharpSyntaxRewriter
+{
+    private readonly string _methodName;
+    private readonly int _parameterIndex;
+
+    public ParameterRemovalRewriter(string methodName, int parameterIndex)
+    {
+        _methodName = methodName;
+        _parameterIndex = parameterIndex;
+    }
+
+    public override SyntaxNode VisitMethodDeclaration(MethodDeclarationSyntax node)
+    {
+        var visited = (MethodDeclarationSyntax)base.VisitMethodDeclaration(node)!;
+        if (node.Identifier.ValueText == _methodName && _parameterIndex < node.ParameterList.Parameters.Count)
+        {
+            var newParams = visited.ParameterList.Parameters.RemoveAt(_parameterIndex);
+            visited = visited.WithParameterList(visited.ParameterList.WithParameters(newParams));
+        }
+        return visited;
+    }
+
+    public override SyntaxNode VisitInvocationExpression(InvocationExpressionSyntax node)
+    {
+        var visited = (InvocationExpressionSyntax)base.VisitInvocationExpression(node)!;
+        bool isTarget = false;
+        if (visited.Expression is IdentifierNameSyntax id && id.Identifier.ValueText == _methodName)
+            isTarget = true;
+        else if (visited.Expression is MemberAccessExpressionSyntax ma && ma.Name.Identifier.ValueText == _methodName)
+            isTarget = true;
+
+        if (isTarget && _parameterIndex < visited.ArgumentList.Arguments.Count)
+        {
+            var newArgs = visited.ArgumentList.Arguments.RemoveAt(_parameterIndex);
+            visited = visited.WithArgumentList(visited.ArgumentList.WithArguments(newArgs));
+        }
+
+        return visited;
+    }
+}
+
+public class VariableRemovalRewriter : CSharpSyntaxRewriter
+{
+    private readonly string _variableName;
+    private readonly TextSpan _span;
+
+    public VariableRemovalRewriter(string variableName, TextSpan span)
+    {
+        _variableName = variableName;
+        _span = span;
+    }
+
+    public override SyntaxNode? VisitLocalDeclarationStatement(LocalDeclarationStatementSyntax node)
+    {
+        var variable = node.Declaration.Variables.FirstOrDefault(v => v.Identifier.ValueText == _variableName && v.Span.Equals(_span));
+        if (variable == null)
+            return base.VisitLocalDeclarationStatement(node);
+
+        if (node.Declaration.Variables.Count == 1)
+            return null;
+
+        var newDecl = node.Declaration.WithVariables(SyntaxFactory.SeparatedList(node.Declaration.Variables.Where(v => v != variable)));
+        return node.WithDeclaration(newDecl);
     }
 }
