@@ -1,5 +1,6 @@
 using ModelContextProtocol.Server;
 using ModelContextProtocol;
+using System;
 using System.ComponentModel;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
