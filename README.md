@@ -174,7 +174,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --json ToolName '{"param":"value"
 - `convert-to-static-with-instance <solutionPath> <filePath> <methodLine> [instanceName]` - Convert instance method to static with explicit instance
  - `move-static-method <solutionPath> <filePath> <methodName> <targetClass> [targetFile]` - Move a static method to another class
  - `move-instance-method <solutionPath> <filePath> <sourceClass> <methodNames> <targetClass> <accessMember> [memberType] [targetFile]` - Move one or more instance methods (comma separated names) to another class. Newly created access fields are marked `readonly` and won't duplicate existing members
- - `move-multiple-methods <solutionPath> <filePath> <operationsJson>` - Move multiple static or instance methods described by a JSON array. Each operation can specify `targetFile` to move methods across files
+ - `move-multiple-methods <solutionPath> <filePath> <operationsJson> [defaultTargetFile]` - Move multiple static or instance methods described by a JSON array. Each operation can specify `targetFile` or you can provide a `defaultTargetFile` for all operations
 - `cleanup-usings <filePath> [solutionPath]` - Remove unused using directives
 - `version` - Show build version and timestamp
 - `analyze-refactoring-opportunities <solutionPath> <filePath>` - Prompt for refactoring suggestions (long methods, long parameter lists, unused code)
