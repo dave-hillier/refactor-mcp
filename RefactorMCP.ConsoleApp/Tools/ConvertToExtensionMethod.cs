@@ -53,34 +53,9 @@ public static class ConvertToExtensionMethodTool
         var extClassName = extensionClass ?? className + "Extensions";
         var paramName = char.ToLower(className[0]) + className.Substring(1);
 
-        var thisParam = SyntaxFactory.Parameter(SyntaxFactory.Identifier(paramName))
-            .WithType(SyntaxFactory.ParseTypeName(className))
-            .AddModifiers(SyntaxFactory.Token(SyntaxKind.ThisKeyword));
-
-        var updatedMethod = method.WithParameterList(method.ParameterList.AddParameters(thisParam));
-
-        updatedMethod = updatedMethod.ReplaceNodes(
-            updatedMethod.DescendantNodes().OfType<ThisExpressionSyntax>(),
-            (_, _) => SyntaxFactory.IdentifierName(paramName));
-
-        updatedMethod = updatedMethod.ReplaceNodes(
-            updatedMethod.DescendantNodes().OfType<IdentifierNameSyntax>().Where(id =>
-            {
-                var sym = semanticModel!.GetSymbolInfo(id).Symbol;
-                return sym is IFieldSymbol or IPropertySymbol or IMethodSymbol &&
-                       SymbolEqualityComparer.Default.Equals(sym.ContainingType, semanticModel.GetDeclaredSymbol(classDecl)) &&
-                       !sym.IsStatic && id.Parent is not MemberAccessExpressionSyntax;
-            }),
-            (old, _) => SyntaxFactory.MemberAccessExpression(
-                SyntaxKind.SimpleMemberAccessExpression,
-                SyntaxFactory.IdentifierName(paramName),
-                SyntaxFactory.IdentifierName(old.Identifier)));
-
-        var modifiers = updatedMethod.Modifiers;
-        if (!modifiers.Any(m => m.IsKind(SyntaxKind.StaticKeyword)))
-            modifiers = modifiers.Add(SyntaxFactory.Token(SyntaxKind.StaticKeyword));
-
-        updatedMethod = updatedMethod.WithModifiers(modifiers);
+        var typeSymbol = (INamedTypeSymbol)semanticModel!.GetDeclaredSymbol(classDecl)!;
+        var rewriter = new ExtensionMethodRewriter(paramName, className, semanticModel!, typeSymbol);
+        var updatedMethod = rewriter.Rewrite(method);
 
         // Replace the original method with a wrapper that calls the new extension
         var wrapperArgs = new List<ArgumentSyntax> { SyntaxFactory.Argument(SyntaxFactory.ThisExpression()) };
@@ -164,16 +139,6 @@ public static class ConvertToExtensionMethodTool
         var extClassName = extensionClass ?? className + "Extensions";
         var paramName = char.ToLower(className[0]) + className.Substring(1);
 
-        var thisParam = SyntaxFactory.Parameter(SyntaxFactory.Identifier(paramName))
-            .WithType(SyntaxFactory.ParseTypeName(className))
-            .AddModifiers(SyntaxFactory.Token(SyntaxKind.ThisKeyword));
-
-        var updatedMethod = method.WithParameterList(method.ParameterList.AddParameters(thisParam));
-
-        updatedMethod = updatedMethod.ReplaceNodes(
-            updatedMethod.DescendantNodes().OfType<ThisExpressionSyntax>(),
-            (_, _) => SyntaxFactory.IdentifierName(paramName));
-
         var instanceMembers = classDecl.Members
             .Where(m => m is FieldDeclarationSyntax or PropertyDeclarationSyntax)
             .Select(m => m switch
@@ -185,19 +150,8 @@ public static class ConvertToExtensionMethodTool
             .Where(n => !string.IsNullOrEmpty(n))
             .ToHashSet();
 
-        updatedMethod = updatedMethod.ReplaceNodes(
-            updatedMethod.DescendantNodes().OfType<IdentifierNameSyntax>().Where(id =>
-                instanceMembers.Contains(id.Identifier.ValueText) && id.Parent is not MemberAccessExpressionSyntax),
-            (old, _) => SyntaxFactory.MemberAccessExpression(
-                SyntaxKind.SimpleMemberAccessExpression,
-                SyntaxFactory.IdentifierName(paramName),
-                SyntaxFactory.IdentifierName(old.Identifier)));
-
-        var modifiers = updatedMethod.Modifiers;
-        if (!modifiers.Any(m => m.IsKind(SyntaxKind.StaticKeyword)))
-            modifiers = modifiers.Add(SyntaxFactory.Token(SyntaxKind.StaticKeyword));
-
-        updatedMethod = updatedMethod.WithModifiers(modifiers);
+        var rewriter = new ExtensionMethodRewriter(paramName, className, instanceMembers);
+        var updatedMethod = rewriter.Rewrite(method);
 
         // Replace the original method with a wrapper that calls the new extension
         var wrapperArgs = new List<ArgumentSyntax> { SyntaxFactory.Argument(SyntaxFactory.ThisExpression()) };

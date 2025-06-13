@@ -292,6 +292,83 @@ internal class VariableIntroductionRewriter : CSharpSyntaxRewriter
     }
 }
 
+internal class ExtensionMethodRewriter : CSharpSyntaxRewriter
+{
+    private readonly string _parameterName;
+    private readonly string _parameterType;
+    private readonly SemanticModel? _semanticModel;
+    private readonly INamedTypeSymbol? _typeSymbol;
+    private readonly HashSet<string>? _knownMembers;
+
+    public ExtensionMethodRewriter(string parameterName, string parameterType, SemanticModel semanticModel, INamedTypeSymbol typeSymbol)
+    {
+        _parameterName = parameterName;
+        _parameterType = parameterType;
+        _semanticModel = semanticModel;
+        _typeSymbol = typeSymbol;
+    }
+
+    public ExtensionMethodRewriter(string parameterName, string parameterType, HashSet<string> knownMembers)
+    {
+        _parameterName = parameterName;
+        _parameterType = parameterType;
+        _knownMembers = knownMembers;
+    }
+
+    public MethodDeclarationSyntax Rewrite(MethodDeclarationSyntax method)
+    {
+        return (MethodDeclarationSyntax)Visit(method)!;
+    }
+
+    public override SyntaxNode VisitMethodDeclaration(MethodDeclarationSyntax node)
+    {
+        var thisParam = SyntaxFactory.Parameter(SyntaxFactory.Identifier(_parameterName))
+            .WithType(SyntaxFactory.ParseTypeName(_parameterType))
+            .AddModifiers(SyntaxFactory.Token(SyntaxKind.ThisKeyword));
+
+        var updated = node.WithParameterList(node.ParameterList.AddParameters(thisParam));
+        updated = AstTransformations.EnsureStaticModifier(updated);
+        return base.VisitMethodDeclaration(updated);
+    }
+
+    public override SyntaxNode VisitThisExpression(ThisExpressionSyntax node)
+    {
+        return SyntaxFactory.IdentifierName(_parameterName).WithTriviaFrom(node);
+    }
+
+    public override SyntaxNode? VisitIdentifierName(IdentifierNameSyntax node)
+    {
+        bool qualify = false;
+
+        if (_semanticModel != null)
+        {
+            var sym = _semanticModel.GetSymbolInfo(node).Symbol;
+            if (sym is IFieldSymbol or IPropertySymbol or IMethodSymbol &&
+                SymbolEqualityComparer.Default.Equals(sym.ContainingType, _typeSymbol) &&
+                !sym.IsStatic && node.Parent is not MemberAccessExpressionSyntax)
+            {
+                qualify = true;
+            }
+        }
+        else if (_knownMembers != null &&
+                 _knownMembers.Contains(node.Identifier.ValueText) &&
+                 node.Parent is not MemberAccessExpressionSyntax)
+        {
+            qualify = true;
+        }
+
+        if (qualify)
+        {
+            return SyntaxFactory.MemberAccessExpression(
+                    SyntaxKind.SimpleMemberAccessExpression,
+                    SyntaxFactory.IdentifierName(_parameterName),
+                    node.WithoutTrivia())
+                .WithTriviaFrom(node);
+        }
+
+        return base.VisitIdentifierName(node);
+}
+
 internal class ParameterIntroductionRewriter : CSharpSyntaxRewriter
 {
     private readonly ExpressionSyntax _targetExpression;
@@ -342,5 +419,6 @@ internal class ParameterIntroductionRewriter : CSharpSyntaxRewriter
             visited = visited.AddParameterListParameters(_parameter);
 
         return visited;
+
     }
 }
