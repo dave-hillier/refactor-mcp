@@ -6,7 +6,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
-using System.Text.Json;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
@@ -78,10 +77,10 @@ public static class MoveMultipleMethodsTool
     // ===== FILE OPERATION LAYER =====
     // File I/O operations that use the AST layer
 
-    public static async Task<string> MoveMultipleMethodsInFile(string filePath, string operationsJson)
+    public static async Task<string> MoveMultipleMethodsInFile(string filePath, IEnumerable<MoveOperation> operations)
     {
-        var ops = JsonSerializer.Deserialize<List<MoveOperation>>(operationsJson);
-        if (ops == null || ops.Count == 0)
+        var ops = operations.ToList();
+        if (ops.Count == 0)
             throw new McpException("Error: No operations provided");
 
         if (!File.Exists(filePath))
@@ -223,10 +222,10 @@ public static class MoveMultipleMethodsTool
 
     // ===== LEGACY STRING-BASED METHODS (for backward compatibility) =====
 
-    public static string MoveMultipleMethodsInSource(string sourceText, string operationsJson)
+    public static string MoveMultipleMethodsInSource(string sourceText, IEnumerable<MoveOperation> operations)
     {
-        var ops = JsonSerializer.Deserialize<List<MoveOperation>>(operationsJson);
-        if (ops == null || ops.Count == 0)
+        var ops = operations.ToList();
+        if (ops.Count == 0)
             return RefactoringHelpers.ThrowMcpException("Error: No operations provided");
 
         var tree = CSharpSyntaxTree.ParseText(sourceText);
@@ -240,16 +239,16 @@ public static class MoveMultipleMethodsTool
     // ===== SOLUTION OPERATION LAYER =====
     // Solution/Document operations that use the AST layer
 
-    [Obsolete("Use BatchMoveMethodsTool.BatchMoveMethods instead")]
-    [McpServerTool, Description("Move multiple methods to target classes, automatically ordering by dependencies [DEPRECATED]")]
+    [McpServerTool, Description("Move multiple methods to target classes, automatically ordering by dependencies. " +
+        "Wrapper methods remain at the original locations to delegate to the moved implementations.")]
     public static async Task<string> MoveMultipleMethods(
         [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file containing the methods")] string filePath,
-        [Description("JSON array describing the move operations")] string operationsJson,
+        [Description("Move operations to perform")] IEnumerable<MoveOperation> operations,
         [Description("Default target file path used when operations omit targetFile (optional)")] string? defaultTargetFilePath = null)
     {
-        var ops = JsonSerializer.Deserialize<List<MoveOperation>>(operationsJson);
-        if (ops == null || ops.Count == 0)
+        var ops = operations.ToList();
+        if (ops.Count == 0)
             return RefactoringHelpers.ThrowMcpException("Error: No operations provided");
 
         if (!string.IsNullOrEmpty(defaultTargetFilePath))
@@ -311,12 +310,12 @@ public static class MoveMultipleMethodsTool
         else
         {
             // Fallback to AST-based approach for single-file mode or cross-file operations
-            return await MoveMultipleMethodsInFile(filePath, operationsJson);
+            return await MoveMultipleMethodsInFile(filePath, ops);
         }
     }
 
-    [Obsolete("Use BatchMoveMethodsTool.BatchMoveMethods instead")]
-    [McpServerTool, Description("Move multiple methods using explicit parameters [DEPRECATED]")]
+    [McpServerTool, Description("Move multiple methods using explicit parameters. " +
+        "Each moved method leaves a delegating wrapper so existing calls continue to compile.")]
     public static async Task<string> MoveMultipleMethods(
         [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file containing the methods")] string filePath,
@@ -354,7 +353,6 @@ public static class MoveMultipleMethodsTool
             });
         }
 
-        var json = JsonSerializer.Serialize(ops);
-        return await MoveMultipleMethods(solutionPath, filePath, json, targetFilePath);
+        return await MoveMultipleMethods(solutionPath, filePath, ops, targetFilePath);
     }
 }

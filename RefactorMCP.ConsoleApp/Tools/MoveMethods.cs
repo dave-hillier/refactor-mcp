@@ -973,8 +973,9 @@ public static class MoveMethodsTool
                 .AddModifiers(SyntaxFactory.Token(SyntaxKind.PrivateKeyword), SyntaxFactory.Token(SyntaxKind.ReadOnlyKeyword));
     }
 
-    [Obsolete("Use BatchMoveMethodsTool.BatchMoveMethods instead")]
-    [McpServerTool, Description("Move a static method to another class (preferred for large C# file refactoring) [DEPRECATED]")]
+
+    [McpServerTool, Description("Move a static method to another class (preferred for large C# file refactoring). " +
+        "Leaves a delegating method in the original class to preserve the interface.")]
     public static async Task<string> MoveStaticMethod(
         [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file containing the method")] string filePath,
@@ -1131,8 +1132,8 @@ public static class MoveMethodsTool
         await File.WriteAllTextAsync(context.TargetPath, formattedTarget.ToFullString());
     }
 
-    [Obsolete("Use BatchMoveMethodsTool.BatchMoveMethods instead")]
-    [McpServerTool, Description("Move one or more instance methods to another class (preferred for large C# file refactoring) [DEPRECATED]")]
+    [McpServerTool, Description("Move one or more instance methods to another class (preferred for large C# file refactoring). " +
+        "Each original method is replaced with a wrapper that calls the moved version to maintain the public API.")]
     public static async Task<string> MoveInstanceMethod(
         [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file containing the method")] string filePath,

@@ -1,6 +1,5 @@
 using ModelContextProtocol;
 using System.IO;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -49,9 +48,8 @@ public class MoveMultipleMethodsTests : TestBase
             }
         };
 
-        var json = JsonSerializer.Serialize(ops);
         var result = await MoveMultipleMethodsTool.MoveMultipleMethods(
-            SolutionPath, testFile, json);
+            SolutionPath, testFile, ops);
 
         Assert.Contains("Successfully moved 3 methods", result);
 
@@ -97,10 +95,9 @@ public class MoveMultipleMethodsTests : TestBase
             }
         };
 
-        var json = JsonSerializer.Serialize(ops);
         var targetFile = Path.Combine(TestOutputPath, "Target.cs");
         var result = await MoveMultipleMethodsTool.MoveMultipleMethods(
-            SolutionPath, testFile, json, targetFile);
+            SolutionPath, testFile, ops, targetFile);
 
         Assert.Contains("Successfully moved 2 methods", result);
         Assert.True(File.Exists(targetFile));

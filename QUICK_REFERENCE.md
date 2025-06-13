@@ -72,6 +72,8 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli convert-to-extension-method
   "./path/to/file.cs" \
   methodName
 ```
+The original method remains and calls the extension method so the interface stays the same.
+The original method remains and calls the extension method so the interface stays the same.
 
 ### Analyze Refactoring Opportunities
 ```bash
@@ -133,6 +135,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli move-static-method \
   TargetClass \
   "./optional/target.cs"
 ```
+Leaves a delegating method in the original class so existing calls still work.
 
 ### Inline Method
 ```bash
@@ -162,6 +165,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli move-instance-method \
   "./optional/target.cs"
 ```
 Newly added access fields are readonly and existing members are reused if present.
+Each moved method leaves a wrapper that calls the new implementation.
 
 ### Move Multiple Methods
 ```bash
@@ -174,6 +178,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli move-multiple-methods \
   memberName field \
   "./optional/Target.cs"
 ```
+Wrapper methods remain in the source class, delegating to their moved versions.
 
 ### Batch Move Methods
 ```bash
@@ -268,6 +273,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli convert-to-static-with-inst
 # Move static method to MathUtilities
 dotnet run --project RefactorMCP.ConsoleApp -- --cli move-static-method \
   "./RefactorMCP.sln" "./RefactorMCP.Tests/ExampleCode.cs" FormatCurrency MathUtilities
+# The original method stays as a wrapper
 # Convert method to extension
 dotnet run --project RefactorMCP.ConsoleApp -- --cli convert-to-extension-method \
   "./RefactorMCP.sln" "./RefactorMCP.Tests/ExampleCode.cs" GetFormattedNumber
