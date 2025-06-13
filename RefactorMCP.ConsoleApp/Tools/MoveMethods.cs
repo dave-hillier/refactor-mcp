@@ -357,8 +357,8 @@ public static class MoveMethodsTool
         var sourceParameter = SyntaxFactory.Parameter(SyntaxFactory.Identifier(context.SourceClassName.ToLower()))
             .WithType(SyntaxFactory.IdentifierName(context.SourceClassName));
 
-        var newParameters = method.ParameterList.Parameters.Concat(new[] { sourceParameter });
-        var newParameterList = SyntaxFactory.ParameterList(SyntaxFactory.SeparatedList(newParameters));
+        var parameters = method.ParameterList.Parameters.Insert(0, sourceParameter);
+        var newParameterList = method.ParameterList.WithParameters(parameters);
 
         return method.WithParameterList(newParameterList);
     }
