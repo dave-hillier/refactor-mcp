@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Text;
 using System.Linq;
+using System.Collections.Generic;
 
 [McpServerToolType]
 public static class ConvertToStaticWithInstanceTool
@@ -23,21 +24,15 @@ public static class ConvertToStaticWithInstanceTool
             ? ((INamedTypeSymbol)semanticModel.GetDeclaredSymbol(classDecl)!).ToDisplayString()
             : classDecl.Identifier.ValueText;
 
-        var updatedMethod = AstTransformations.AddParameter(method, instanceParameterName, typeName);
-        updatedMethod = AstTransformations.ReplaceThisReferences(updatedMethod, instanceParameterName);
-
+        HashSet<string>? members = null;
+        INamedTypeSymbol? typeSymbol = null;
         if (semanticModel != null)
         {
-            var typeSymbol = (INamedTypeSymbol)semanticModel.GetDeclaredSymbol(classDecl)!;
-            updatedMethod = AstTransformations.QualifyInstanceMembers(
-                updatedMethod,
-                instanceParameterName,
-                semanticModel,
-                typeSymbol);
+            typeSymbol = (INamedTypeSymbol)semanticModel.GetDeclaredSymbol(classDecl)!;
         }
         else
         {
-            var members = classDecl.Members
+            members = classDecl.Members
                 .Where(m => m is FieldDeclarationSyntax or PropertyDeclarationSyntax or MethodDeclarationSyntax)
                 .Select(m => m switch
                 {
@@ -48,11 +43,16 @@ public static class ConvertToStaticWithInstanceTool
                 })
                 .Where(n => !string.IsNullOrEmpty(n))
                 .ToHashSet();
-
-            updatedMethod = AstTransformations.QualifyInstanceMembers(updatedMethod, instanceParameterName, members);
         }
 
-        updatedMethod = AstTransformations.EnsureStaticModifier(updatedMethod);
+        var rewriter = new StaticConversionRewriter(
+            new[] { (instanceParameterName, typeName) },
+            instanceParameterName,
+            members,
+            semanticModel,
+            typeSymbol);
+
+        var updatedMethod = rewriter.Rewrite(method);
         return root.ReplaceNode(method, updatedMethod);
     }
     [McpServerTool, Description("Transform instance method to static by adding instance parameter (preferred for large C# file refactoring)")]
