@@ -359,7 +359,10 @@ class Target { }
 dotnet run --project RefactorMCP.ConsoleApp -- --cli move-multiple-methods \
   "./RefactorMCP.sln" \
   "./RefactorMCP.Tests/ExampleCode.cs" \
-  "[{\"sourceClass\":\"Helper\",\"method\":\"A\",\"targetClass\":\"Target\",\"accessMember\":\"t\",\"accessMemberType\":\"field\"},{\"sourceClass\":\"Helper\",\"method\":\"B\",\"targetClass\":\"Target\",\"accessMember\":\"t\",\"accessMemberType\":\"field\"}]" \
+  Helper \
+  "A,B" \
+  Target \
+  t field \
   "./Target.cs"
 ```
 
@@ -370,7 +373,11 @@ Move methods to a separate file using the `targetFile` property or by passing a 
 dotnet run --project RefactorMCP.ConsoleApp -- --cli move-multiple-methods \
   "./RefactorMCP.sln" \
   "./RefactorMCP.Tests/ExampleCode.cs" \
-  "[{\"sourceClass\":\"Helper\",\"method\":\"A\",\"targetClass\":\"Target\",\"accessMember\":\"t\",\"accessMemberType\":\"field\",\"isStatic\":false,\"targetFile\":\"./Target.cs\"}]"
+  Helper \
+  A \
+  Target \
+  t field \
+  "./Target.cs"
 ```
 
 **After**:

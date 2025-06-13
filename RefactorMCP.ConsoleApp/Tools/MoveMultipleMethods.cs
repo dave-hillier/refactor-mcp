@@ -312,4 +312,46 @@ public static class MoveMultipleMethodsTool
             return await MoveMultipleMethodsInFile(filePath, operationsJson);
         }
     }
+
+    [McpServerTool, Description("Move multiple methods using explicit parameters")]
+    public static async Task<string> MoveMultipleMethods(
+        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Path to the C# file containing the methods")] string filePath,
+        [Description("Name of the source class containing the methods")] string sourceClass,
+        [Description("Names of the methods to move")] string[] methodNames,
+        [Description("Name of the target class")] string targetClass,
+        [Description("Name for the access member")] string accessMember,
+        [Description("Type of access member (field, property, variable)")] string accessMemberType = "field",
+        [Description("Path to the target file (optional)")] string? targetFilePath = null)
+    {
+        var sourceText = await File.ReadAllTextAsync(filePath);
+        var root = await CSharpSyntaxTree.ParseText(sourceText).GetRootAsync();
+        var classNode = root.DescendantNodes().OfType<ClassDeclarationSyntax>()
+            .FirstOrDefault(c => c.Identifier.ValueText == sourceClass);
+        if (classNode == null)
+            return RefactoringHelpers.ThrowMcpException($"Error: Source class '{sourceClass}' not found");
+
+        var ops = new List<MoveOperation>();
+        foreach (var name in methodNames)
+        {
+            var method = classNode.Members.OfType<MethodDeclarationSyntax>()
+                .FirstOrDefault(m => m.Identifier.ValueText == name);
+            if (method == null)
+                return RefactoringHelpers.ThrowMcpException($"Error: No method named '{name}' found");
+
+            ops.Add(new MoveOperation
+            {
+                SourceClass = sourceClass,
+                Method = name,
+                TargetClass = targetClass,
+                AccessMember = accessMember,
+                AccessMemberType = accessMemberType,
+                IsStatic = method.Modifiers.Any(SyntaxKind.StaticKeyword),
+                TargetFile = targetFilePath
+            });
+        }
+
+        var json = JsonSerializer.Serialize(ops);
+        return await MoveMultipleMethods(solutionPath, filePath, json, targetFilePath);
+    }
 }
