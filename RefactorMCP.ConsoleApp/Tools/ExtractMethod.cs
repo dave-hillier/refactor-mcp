@@ -10,6 +10,7 @@ using Microsoft.CodeAnalysis.Text;
 [McpServerToolType]
 public static class ExtractMethodTool
 {
+    [McpServerTool, Description("Extract a code block into a new method (preferred for large C# file refactoring)")]
     public static async Task<string> ExtractMethod(
         [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,

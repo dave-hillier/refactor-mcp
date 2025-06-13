@@ -244,18 +244,18 @@ public static class MoveMultipleMethodsTool
         [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file containing the methods")] string filePath,
         [Description("JSON array describing the move operations")] string operationsJson,
-        [Description("Default target file used when operations omit targetFile (optional)")] string? defaultTargetFile = null)
+        [Description("Default target file path used when operations omit targetFile (optional)")] string? defaultTargetFilePath = null)
     {
         var ops = JsonSerializer.Deserialize<List<MoveOperation>>(operationsJson);
         if (ops == null || ops.Count == 0)
             return RefactoringHelpers.ThrowMcpException("Error: No operations provided");
 
-        if (!string.IsNullOrEmpty(defaultTargetFile))
+        if (!string.IsNullOrEmpty(defaultTargetFilePath))
         {
             foreach (var op in ops)
             {
                 if (string.IsNullOrEmpty(op.TargetFile))
-                    op.TargetFile = defaultTargetFile;
+                    op.TargetFile = defaultTargetFilePath;
             }
         }
 
