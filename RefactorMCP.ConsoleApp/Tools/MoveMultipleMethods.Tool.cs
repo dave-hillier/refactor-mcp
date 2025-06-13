@@ -10,6 +10,55 @@ using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 
+public class MethodAndMemberVisitor : CSharpSyntaxWalker
+{
+    public class MethodInfo
+    {
+        public bool IsStatic { get; set; }
+    }
+
+    public class MemberInfo
+    {
+        public string Type { get; set; } // "field" or "property"
+    }
+
+    public Dictionary<string, MethodInfo> Methods { get; } = new();
+    public Dictionary<string, MemberInfo> Members { get; } = new();
+
+    public override void VisitMethodDeclaration(MethodDeclarationSyntax node)
+    {
+        var methodName = node.Identifier.ValueText;
+        if (!Methods.ContainsKey(methodName))
+        {
+            Methods[methodName] = new MethodInfo
+            {
+                IsStatic = node.Modifiers.Any(SyntaxKind.StaticKeyword)
+            };
+        }
+    }
+
+    public override void VisitFieldDeclaration(FieldDeclarationSyntax node)
+    {
+        foreach (var variable in node.Declaration.Variables)
+        {
+            var fieldName = variable.Identifier.ValueText;
+            if (!Members.ContainsKey(fieldName))
+            {
+                Members[fieldName] = new MemberInfo { Type = "field" };
+            }
+        }
+    }
+
+    public override void VisitPropertyDeclaration(PropertyDeclarationSyntax node)
+    {
+        var propertyName = node.Identifier.ValueText;
+        if (!Members.ContainsKey(propertyName))
+        {
+            Members[propertyName] = new MemberInfo { Type = "property" };
+        }
+    }
+}
+
 [McpServerToolType]
 public static partial class MoveMultipleMethodsTool
 {
@@ -45,32 +94,39 @@ public static partial class MoveMultipleMethodsTool
 
             var classNodes = root.DescendantNodes().OfType<ClassDeclarationSyntax>().ToDictionary(c => c.Identifier.ValueText);
 
-            var isStatic = new bool[methodNames.Length];
-            var accessMemberTypes = new string[methodNames.Length];
-
             if (!classNodes.TryGetValue(sourceClass, out var sourceClassNode))
                 return RefactoringHelpers.ThrowMcpException($"Error: Source class '{sourceClass}' not found");
 
+            var visitor = new MethodAndMemberVisitor();
+            visitor.Visit(sourceClassNode);
+
+            var isStatic = new bool[methodNames.Length];
+            var accessMemberTypes = new string[methodNames.Length];
+
             for (int i = 0; i < methodNames.Length; i++)
             {
-                var method = sourceClassNode.Members.OfType<MethodDeclarationSyntax>()
-                    .FirstOrDefault(m => m.Identifier.ValueText == methodNames[i]);
-                if (method == null)
-                    return RefactoringHelpers.ThrowMcpException($"Error: No method named '{methodNames[i]}' in class '{sourceClass}'");
+                var methodName = methodNames[i];
+                if (!visitor.Methods.TryGetValue(methodName, out var methodInfo))
+                    return RefactoringHelpers.ThrowMcpException($"Error: No method named '{methodName}' in class '{sourceClass}'");
 
-                isStatic[i] = method.Modifiers.Any(SyntaxKind.StaticKeyword);
-                
-                var accessMemberName = accessMembers[i];
-                var accessMemberNode = sourceClassNode.Members.FirstOrDefault(m =>
-                    (m is FieldDeclarationSyntax fd && fd.Declaration.Variables.Any(v => v.Identifier.ValueText == accessMemberName)) ||
-                    (m is PropertyDeclarationSyntax pd && pd.Identifier.ValueText == accessMemberName));
-                
-                accessMemberTypes[i] = accessMemberNode switch
+                isStatic[i] = methodInfo.IsStatic;
+
+                if (!isStatic[i])
                 {
-                    PropertyDeclarationSyntax => "property",
-                    FieldDeclarationSyntax => "field",
-                    _ => "field" // Default to field if not found
-                };
+                    var accessMemberName = accessMembers[i];
+                    if (visitor.Members.TryGetValue(accessMemberName, out var memberInfo))
+                    {
+                        accessMemberTypes[i] = memberInfo.Type;
+                    }
+                    else
+                    {
+                        accessMemberTypes[i] = "field"; // Default to field if not found, consistent with original logic
+                    }
+                }
+                else
+                {
+                    accessMemberTypes[i] = string.Empty; // Not used for static methods
+                }
             }
 
             // Solution-based: need to manage document state between operations
@@ -90,7 +146,7 @@ public static partial class MoveMultipleMethodsTool
                         targetFiles?[idx]);
                     results.Add(msg);
                     currentDocument = updatedDoc;
-                    RefactoringHelpers.UpdateSolutionCache(updatedDoc);
+                    
                 }
                 else
                 {
@@ -104,7 +160,6 @@ public static partial class MoveMultipleMethodsTool
                         targetFiles?[idx]);
                     results.Add(msg);
                     currentDocument = updatedDoc;
-                    RefactoringHelpers.UpdateSolutionCache(updatedDoc);
                 }
             }
 
