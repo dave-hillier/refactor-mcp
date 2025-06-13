@@ -328,7 +328,8 @@ internal class ExtensionMethodRewriter : CSharpSyntaxRewriter
             .WithType(SyntaxFactory.ParseTypeName(_parameterType))
             .AddModifiers(SyntaxFactory.Token(SyntaxKind.ThisKeyword));
 
-        var updated = node.WithParameterList(node.ParameterList.AddParameters(thisParam));
+        var parameters = node.ParameterList.Parameters.Insert(0, thisParam);
+        var updated = node.WithParameterList(node.ParameterList.WithParameters(parameters));
         updated = AstTransformations.EnsureStaticModifier(updated);
         return base.VisitMethodDeclaration(updated);
     }
@@ -407,7 +408,10 @@ internal class StaticConversionRewriter : CSharpSyntaxRewriter
     {
         var visited = (MethodDeclarationSyntax)Visit(method)!;
         if (_parameters.Count > 0)
-            visited = visited.WithParameterList(method.ParameterList.AddParameters(_parameters.ToArray()));
+        {
+            var newParameters = method.ParameterList.Parameters.InsertRange(0, _parameters);
+            visited = visited.WithParameterList(method.ParameterList.WithParameters(newParameters));
+        }
         visited = AstTransformations.EnsureStaticModifier(visited);
         return visited;
     }
