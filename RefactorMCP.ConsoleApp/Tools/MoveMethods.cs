@@ -808,6 +808,11 @@ public static class MoveMethodsTool
             var updatedTargetRoot = await PrepareTargetRoot(context, moveResult.MovedMethod);
             await WriteTransformedFiles(context, moveResult.NewSourceRoot, updatedTargetRoot);
 
+            if (!sameFile)
+            {
+                RefactoringHelpers.AddDocumentToProject(currentDocument.Project, context.TargetPath);
+            }
+
             SyntaxNode newRoot = sameFile
                 ? Formatter.Format(updatedTargetRoot, currentDocument.Project.Solution.Workspace)
                 : Formatter.Format(moveResult.NewSourceRoot, currentDocument.Project.Solution.Workspace);
