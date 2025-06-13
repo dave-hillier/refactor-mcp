@@ -122,4 +122,18 @@ internal static class RefactoringHelpers
             SolutionCache.Set(solutionPath!, newDoc.Project.Solution);
         }
     }
+
+    internal static async Task<string> RunWithSolutionOrFile(
+        string solutionPath,
+        string filePath,
+        Func<Document, Task<string>> withSolution,
+        Func<string, Task<string>> singleFile)
+    {
+        var solution = await GetOrLoadSolution(solutionPath);
+        var document = GetDocumentByPath(solution, filePath);
+        if (document != null)
+            return await withSolution(document);
+
+        return await singleFile(filePath);
+    }
 }
