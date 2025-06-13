@@ -484,7 +484,7 @@ class MathOperations
     {
         Console.WriteLine($""Performing {operation}"");
     }
-    public int PerformCalculation(int a, int b, string operation, Calculator calculator)
+    public int PerformCalculation(Calculator calculator, int a, int b, string operation)
     {
         LogOperation(operation);
         return operation == ""+"" ? a + b : a - b;
@@ -817,7 +817,7 @@ class MathOperations
 
 class MathOperations
 {
-    public int Square(int number, Calculator calculator)
+    public int Square(Calculator calculator, int number)
     {
         return calculator.Multiply(number, number);
     }
@@ -1004,7 +1004,7 @@ class MathOperations
 
 class MathOperations
 {
-    public int Factorial(int n, Calculator calculator)
+    public int Factorial(Calculator calculator, int n)
     {
         if (n <= 1) return 1;
         return n * calculator.Factorial(n - 1);
