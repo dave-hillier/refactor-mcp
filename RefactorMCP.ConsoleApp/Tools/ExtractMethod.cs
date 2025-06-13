@@ -61,32 +61,9 @@ public static class ExtractMethodTool
         if (!statementsToExtract.Any())
             return RefactoringHelpers.ThrowMcpException("Error: Selected code does not contain extractable statements");
 
-        // Create the new method
-        var newMethod = SyntaxFactory.MethodDeclaration(
-            SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.VoidKeyword)),
-            methodName)
-            .WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PrivateKeyword)))
-            .WithBody(SyntaxFactory.Block(statementsToExtract));
-
-        // Replace selected statements with method call
-        var methodCall = SyntaxFactory.ExpressionStatement(
-            SyntaxFactory.InvocationExpression(
-                SyntaxFactory.IdentifierName(methodName)));
-
-        var methodBody = containingMethod.Body!;
-        var updatedBody = methodBody.ReplaceNode(statementsToExtract.First(), methodCall);
-        foreach (var statement in statementsToExtract.Skip(1))
-            updatedBody = updatedBody.RemoveNode(statement, SyntaxRemoveOptions.KeepNoTrivia);
-        var updatedMethod = containingMethod.WithBody(updatedBody);
-
         var containingClass = containingMethod.Ancestors().OfType<ClassDeclarationSyntax>().FirstOrDefault();
-        SyntaxNode newRoot = syntaxRoot;
-        if (containingClass != null)
-        {
-            var classWithUpdatedMethod = containingClass.ReplaceNode(containingMethod, updatedMethod);
-            var updatedClass = classWithUpdatedMethod.AddMembers(newMethod);
-            newRoot = syntaxRoot.ReplaceNode(containingClass, updatedClass);
-        }
+        var rewriter = new ExtractMethodRewriter(containingMethod, containingClass, statementsToExtract, methodName);
+        var newRoot = rewriter.Visit(syntaxRoot);
 
         var formattedRoot = Formatter.Format(newRoot!, document.Project.Solution.Workspace);
         var newDocument = document.WithSyntaxRoot(formattedRoot);
@@ -137,32 +114,9 @@ public static class ExtractMethodTool
         if (!statementsToExtract.Any())
             return RefactoringHelpers.ThrowMcpException("Error: Selected code does not contain extractable statements");
 
-        // Create the new method
-        var newMethod = SyntaxFactory.MethodDeclaration(
-            SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.VoidKeyword)),
-            methodName)
-            .WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PrivateKeyword)))
-            .WithBody(SyntaxFactory.Block(statementsToExtract));
-
-        // Replace selected statements with method call
-        var methodCall = SyntaxFactory.ExpressionStatement(
-            SyntaxFactory.InvocationExpression(
-                SyntaxFactory.IdentifierName(methodName)));
-
-        var methodBody = containingMethod.Body!;
-        var updatedBody = methodBody.ReplaceNode(statementsToExtract.First(), methodCall);
-        foreach (var statement in statementsToExtract.Skip(1))
-            updatedBody = updatedBody.RemoveNode(statement, SyntaxRemoveOptions.KeepNoTrivia);
-        var updatedMethod = containingMethod.WithBody(updatedBody);
-
         var containingClass = containingMethod.Ancestors().OfType<ClassDeclarationSyntax>().FirstOrDefault();
-        SyntaxNode newRoot = syntaxRoot;
-        if (containingClass != null)
-        {
-            var classWithUpdatedMethod = containingClass.ReplaceNode(containingMethod, updatedMethod);
-            var updatedClass = classWithUpdatedMethod.AddMembers(newMethod);
-            newRoot = syntaxRoot.ReplaceNode(containingClass, updatedClass);
-        }
+        var rewriter = new ExtractMethodRewriter(containingMethod, containingClass, statementsToExtract, methodName);
+        var newRoot = rewriter.Visit(syntaxRoot);
 
         var formattedRoot = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
         return formattedRoot.ToFullString();
