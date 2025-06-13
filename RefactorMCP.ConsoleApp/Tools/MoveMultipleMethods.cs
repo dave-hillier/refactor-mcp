@@ -183,17 +183,30 @@ public static class MoveMultipleMethodsTool
             {
                 if (op.IsStatic)
                 {
-                    results.Add(await MoveMethodsTool.MoveStaticMethod(solutionPath, filePath, op.Method, op.TargetClass, op.TargetFile));
+                    var (msg, updatedDoc) = await MoveMethodsTool.MoveStaticMethodWithSolution(
+                        currentDocument,
+                        op.Method,
+                        op.TargetClass,
+                        op.TargetFile);
+                    results.Add(msg);
+                    currentDocument = updatedDoc;
                 }
                 else
                 {
-                    // For instance methods, pass single method to avoid reloading solution
-                    results.Add(await MoveMethodsTool.MoveInstanceMethod(solutionPath, filePath, op.SourceClass, op.Method, op.TargetClass, op.AccessMember, op.AccessMemberType, op.TargetFile));
+                    var (msg, updatedDoc) = await MoveMethodsTool.MoveInstanceMethodWithSolution(
+                        currentDocument,
+                        op.SourceClass,
+                        op.Method,
+                        op.TargetClass,
+                        op.AccessMember,
+                        op.AccessMemberType);
+                    results.Add(msg);
+                    currentDocument = updatedDoc;
                 }
-
-                // Clear solution cache to force reload of updated file state
-                RefactoringHelpers.SolutionCache.Remove(solutionPath);
             }
+
+            // Clear cache after batch completes
+            RefactoringHelpers.SolutionCache.Remove(solutionPath);
 
             return string.Join("\n", results);
         }
