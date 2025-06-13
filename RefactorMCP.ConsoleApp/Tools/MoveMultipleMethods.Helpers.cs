@@ -58,11 +58,7 @@ public static partial class MoveMultipleMethodsTool
     internal static List<int> OrderOperations(
         SyntaxNode sourceRoot, 
         string[] sourceClasses,
-        string[] methodNames,
-        string[] targetClasses,
-        string[] accessMembers,
-        string[] accessMemberTypes,
-        bool[] isStatic)
+        string[] methodNames)
     {
         var deps = BuildDependencies(sourceRoot, sourceClasses, methodNames);
         var indices = Enumerable.Range(0, sourceClasses.Length).ToList();

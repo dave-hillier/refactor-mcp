@@ -78,11 +78,6 @@ public static partial class MoveMultipleMethodsTool
         if (methodNames.Length == 0)
             return RefactoringHelpers.ThrowMcpException("Error: No method names provided");
 
-        var sourceClasses = Enumerable.Repeat(sourceClass, methodNames.Length).ToArray();
-        var targetClasses = Enumerable.Repeat(targetClass, methodNames.Length).ToArray();
-        var accessMembers = Enumerable.Repeat(accessMember, methodNames.Length).ToArray();
-        var targetFiles = targetFilePath != null ? Enumerable.Repeat(targetFilePath, methodNames.Length).ToArray() : null;
-
         var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
         var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
 
@@ -113,14 +108,13 @@ public static partial class MoveMultipleMethodsTool
 
                 if (!isStatic[i])
                 {
-                    var accessMemberName = accessMembers[i];
-                    if (visitor.Members.TryGetValue(accessMemberName, out var memberInfo))
+                    if (visitor.Members.TryGetValue(accessMember, out var memberInfo))
                     {
                         accessMemberTypes[i] = memberInfo.Type;
                     }
                     else
                     {
-                        accessMemberTypes[i] = "field"; // Default to field if not found, consistent with original logic
+                        accessMemberTypes[i] = "field"; // Default to field if not found
                     }
                 }
                 else
@@ -129,35 +123,34 @@ public static partial class MoveMultipleMethodsTool
                 }
             }
 
-            // Solution-based: need to manage document state between operations
+            var sourceClasses = Enumerable.Repeat(sourceClass, methodNames.Length).ToArray();
+            var orderedIndices = OrderOperations(root, sourceClasses, methodNames);
+            
             var results = new List<string>();
-            var orderedIndices = OrderOperations(root, sourceClasses, methodNames, targetClasses, accessMembers, accessMemberTypes, isStatic);
-
             var currentDocument = document;
-            for (int i = 0; i < orderedIndices.Count; i++)
+            
+            foreach (var idx in orderedIndices)
             {
-                var idx = orderedIndices[i];
                 if (isStatic[idx])
                 {
                     var (msg, updatedDoc) = await MoveMethodsTool.MoveStaticMethodWithSolution(
                         currentDocument,
                         new[] { methodNames[idx] },
-                        targetClasses[idx],
-                        targetFiles?[idx]);
+                        targetClass,
+                        targetFilePath);
                     results.Add(msg);
                     currentDocument = updatedDoc;
-                    
                 }
                 else
                 {
                     var (msg, updatedDoc) = await MoveMethodsTool.MoveInstanceMethodWithSolution(
                         currentDocument,
-                        sourceClasses[idx],
+                        sourceClass,
                         new[] { methodNames[idx] },
-                        targetClasses[idx],
-                        accessMembers[idx],
+                        targetClass,
+                        accessMember,
                         accessMemberTypes[idx],
-                        targetFiles?[idx]);
+                        targetFilePath);
                     results.Add(msg);
                     currentDocument = updatedDoc;
                 }
