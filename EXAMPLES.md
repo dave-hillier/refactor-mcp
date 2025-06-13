@@ -691,6 +691,24 @@ Suggestions:
 - Field 'deprecatedCounter' appears unused -> safe-delete-field
 ```
 
+## 14. List Class Lengths
+
+**Purpose**: Display each class in the solution with its number of lines as a simple complexity metric.
+
+### Example
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli list-class-lengths "./RefactorMCP.sln"
+```
+
+**Expected Output**:
+```
+Class lengths:
+Calculator - 82 lines
+MathUtilities - 4 lines
+Logger - 8 lines
+```
+
 ## Range Format
 
 All refactoring commands that require selecting code use the range format:
