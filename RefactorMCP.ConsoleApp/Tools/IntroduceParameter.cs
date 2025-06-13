@@ -41,30 +41,9 @@ public static class IntroduceParameterTool
         var parameter = SyntaxFactory.Parameter(SyntaxFactory.Identifier(parameterName))
             .WithType(SyntaxFactory.ParseTypeName(typeName));
 
-        var invocations = syntaxRoot.DescendantNodes().OfType<InvocationExpressionSyntax>()
-            .Where(i =>
-                (i.Expression is IdentifierNameSyntax id && id.Identifier.ValueText == methodName) ||
-                (i.Expression is MemberAccessExpressionSyntax ma && ma.Name.Identifier.ValueText == methodName))
-            .ToList();
-
-        foreach (var invocation in invocations)
-        {
-            var newArgs = invocation.ArgumentList.AddArguments(SyntaxFactory.Argument(selectedExpression.WithoutTrivia()));
-            syntaxRoot = syntaxRoot.ReplaceNode(invocation, invocation.WithArgumentList(newArgs));
-        }
-
-        method = syntaxRoot.DescendantNodes().OfType<MethodDeclarationSyntax>()
-            .First(m => m.Identifier.ValueText == methodName);
-        selectedExpression = syntaxRoot.DescendantNodes()
-            .OfType<ExpressionSyntax>()
-            .Where(e => span.Contains(e.Span) || e.Span.Contains(span))
-            .OrderBy(e => Math.Abs(e.Span.Length - span.Length))
-            .ThenBy(e => e.Span.Length)
-            .First();
-
-        var newMethod = method.ReplaceNode(selectedExpression, SyntaxFactory.IdentifierName(parameterName))
-            .AddParameterListParameters(parameter);
-        SyntaxNode newRoot = syntaxRoot.ReplaceNode(method, newMethod);
+        var parameterReference = SyntaxFactory.IdentifierName(parameterName);
+        var rewriter = new ParameterIntroductionRewriter(selectedExpression, methodName, parameter, parameterReference);
+        var newRoot = rewriter.Visit(syntaxRoot);
 
         var formattedRoot = Formatter.Format(newRoot, document.Project.Solution.Workspace);
         var newDocument = document.WithSyntaxRoot(formattedRoot);
@@ -113,30 +92,9 @@ public static class IntroduceParameterTool
         var parameter = SyntaxFactory.Parameter(SyntaxFactory.Identifier(parameterName))
             .WithType(SyntaxFactory.ParseTypeName("object"));
 
-        var invocations = syntaxRoot.DescendantNodes().OfType<InvocationExpressionSyntax>()
-            .Where(i =>
-                (i.Expression is IdentifierNameSyntax id && id.Identifier.ValueText == methodName) ||
-                (i.Expression is MemberAccessExpressionSyntax ma && ma.Name.Identifier.ValueText == methodName))
-            .ToList();
-
-        foreach (var invocation in invocations)
-        {
-            var newArgs = invocation.ArgumentList.AddArguments(SyntaxFactory.Argument(selectedExpression.WithoutTrivia()));
-            syntaxRoot = syntaxRoot.ReplaceNode(invocation, invocation.WithArgumentList(newArgs));
-        }
-
-        method = syntaxRoot.DescendantNodes().OfType<MethodDeclarationSyntax>()
-            .First(m => m.Identifier.ValueText == methodName);
-        selectedExpression = syntaxRoot.DescendantNodes()
-            .OfType<ExpressionSyntax>()
-            .Where(e => span.Contains(e.Span) || e.Span.Contains(span))
-            .OrderBy(e => Math.Abs(e.Span.Length - span.Length))
-            .ThenBy(e => e.Span.Length)
-            .First();
-
-        var newMethod = method.ReplaceNode(selectedExpression, SyntaxFactory.IdentifierName(parameterName))
-            .AddParameterListParameters(parameter);
-        SyntaxNode newRoot = syntaxRoot.ReplaceNode(method, newMethod);
+        var parameterReference = SyntaxFactory.IdentifierName(parameterName);
+        var rewriter = new ParameterIntroductionRewriter(selectedExpression, methodName, parameter, parameterReference);
+        var newRoot = rewriter.Visit(syntaxRoot);
 
         var formattedRoot = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
         return formattedRoot.ToFullString();
