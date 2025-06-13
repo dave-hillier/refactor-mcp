@@ -6,10 +6,128 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Text;
+using System.Linq;
 
 [McpServerToolType]
 public static class ConvertToStaticWithParametersTool
 {
+    private static SyntaxNode ConvertToStaticWithParametersAst(
+        SyntaxNode root,
+        MethodDeclarationSyntax method,
+        SemanticModel? semanticModel = null)
+    {
+        var classDecl = method.Ancestors().OfType<ClassDeclarationSyntax>().First();
+
+        Dictionary<string, string> instanceMembers;
+        Dictionary<ISymbol, string>? semanticMap = null;
+
+        if (semanticModel != null)
+        {
+            var typeSymbol = (INamedTypeSymbol)semanticModel.GetDeclaredSymbol(classDecl)!;
+            semanticMap = new(SymbolEqualityComparer.Default);
+            instanceMembers = new();
+            foreach (var id in method.DescendantNodes().OfType<IdentifierNameSyntax>())
+            {
+                var symbol = semanticModel.GetSymbolInfo(id).Symbol;
+                if (symbol is IFieldSymbol or IPropertySymbol &&
+                    SymbolEqualityComparer.Default.Equals(symbol.ContainingType, typeSymbol) &&
+                    !symbol.IsStatic)
+                {
+                    if (!semanticMap.ContainsKey(symbol))
+                    {
+                        var name = symbol.Name;
+                        if (method.ParameterList.Parameters.Any(p => p.Identifier.ValueText == name))
+                            name += "Param";
+                        semanticMap[symbol] = name;
+                        var typeName = symbol switch
+                        {
+                            IFieldSymbol f => f.Type.ToDisplayString(),
+                            IPropertySymbol p => p.Type.ToDisplayString(),
+                            _ => "object"
+                        };
+                        instanceMembers[name] = typeName;
+                    }
+                }
+            }
+        }
+        else
+        {
+            instanceMembers = new();
+            foreach (var field in classDecl.Members.OfType<FieldDeclarationSyntax>())
+            {
+                if (field.Modifiers.Any(SyntaxKind.StaticKeyword)) continue;
+                var typeName = field.Declaration.Type.ToString();
+                foreach (var variable in field.Declaration.Variables)
+                    instanceMembers[variable.Identifier.ValueText] = typeName;
+            }
+
+            foreach (var prop in classDecl.Members.OfType<PropertyDeclarationSyntax>())
+            {
+                if (prop.Modifiers.Any(SyntaxKind.StaticKeyword)) continue;
+                instanceMembers[prop.Identifier.ValueText] = prop.Type.ToString();
+            }
+        }
+
+        var parameterList = method.ParameterList;
+        var renameMap = new Dictionary<string, string>();
+
+        if (semanticMap != null)
+        {
+            foreach (var kvp in semanticMap)
+            {
+                var typeName = instanceMembers[kvp.Value];
+                var paramName = kvp.Value;
+                parameterList = parameterList.AddParameters(
+                    SyntaxFactory.Parameter(SyntaxFactory.Identifier(paramName))
+                        .WithType(SyntaxFactory.ParseTypeName(typeName)));
+            }
+
+            var updatedMethod = method.ReplaceNodes(
+                method.DescendantNodes().OfType<IdentifierNameSyntax>().Where(id =>
+                {
+                    var sym = semanticModel!.GetSymbolInfo(id).Symbol;
+                    return sym != null && semanticMap.ContainsKey(sym);
+                }),
+                (old, _) =>
+                {
+                    var sym = semanticModel!.GetSymbolInfo(old).Symbol!;
+                    return SyntaxFactory.IdentifierName(semanticMap[sym]);
+                });
+
+            updatedMethod = AstTransformations.EnsureStaticModifier(updatedMethod)
+                .WithParameterList(parameterList);
+            return root.ReplaceNode(method, updatedMethod);
+        }
+        else
+        {
+            var usedMembers = method.DescendantNodes()
+                .OfType<IdentifierNameSyntax>()
+                .Where(id => instanceMembers.ContainsKey(id.Identifier.ValueText))
+                .Select(id => id.Identifier.ValueText)
+                .Distinct()
+                .ToList();
+
+            foreach (var name in usedMembers)
+            {
+                var paramName = name;
+                if (parameterList.Parameters.Any(p => p.Identifier.ValueText == paramName))
+                    paramName += "Param";
+                renameMap[name] = paramName;
+                var param = SyntaxFactory.Parameter(SyntaxFactory.Identifier(paramName))
+                    .WithType(SyntaxFactory.ParseTypeName(instanceMembers[name]));
+                parameterList = parameterList.AddParameters(param);
+            }
+
+            var updatedMethod = method.ReplaceNodes(
+                method.DescendantNodes().OfType<IdentifierNameSyntax>()
+                    .Where(id => renameMap.ContainsKey(id.Identifier.ValueText)),
+                (old, _) => SyntaxFactory.IdentifierName(renameMap[old.Identifier.ValueText]));
+
+            updatedMethod = AstTransformations.EnsureStaticModifier(updatedMethod)
+                .WithParameterList(parameterList);
+            return root.ReplaceNode(method, updatedMethod);
+        }
+    }
     [McpServerTool, Description("Transform instance method to static by converting dependencies to parameters (preferred for large C# file refactoring)")]
     public static async Task<string> ConvertToStaticWithParameters(
         [Description("Absolute path to the solution file (.sln)")] string solutionPath,
@@ -44,65 +162,7 @@ public static class ConvertToStaticWithParametersTool
             return RefactoringHelpers.ThrowMcpException($"Error: No method named '{methodName}' found");
 
         var semanticModel = await document.GetSemanticModelAsync();
-        var typeDecl = method.Ancestors().OfType<TypeDeclarationSyntax>().FirstOrDefault();
-        if (typeDecl == null)
-            return RefactoringHelpers.ThrowMcpException($"Error: Method '{methodName}' is not inside a type");
-
-        var typeSymbol = semanticModel!.GetDeclaredSymbol(typeDecl) as INamedTypeSymbol;
-        if (typeSymbol == null)
-            return RefactoringHelpers.ThrowMcpException($"Error: Unable to determine containing type");
-
-        var parameterList = method.ParameterList;
-        var paramMap = new Dictionary<ISymbol, string>(SymbolEqualityComparer.Default);
-
-        foreach (var id in method.DescendantNodes().OfType<IdentifierNameSyntax>())
-        {
-            var symbol = semanticModel.GetSymbolInfo(id).Symbol;
-            if (symbol is IFieldSymbol or IPropertySymbol &&
-                SymbolEqualityComparer.Default.Equals(symbol.ContainingType, typeSymbol) &&
-                !symbol.IsStatic)
-            {
-                if (!paramMap.ContainsKey(symbol))
-                {
-                    var name = symbol.Name;
-                    if (parameterList.Parameters.Any(p => p.Identifier.ValueText == name))
-                        name += "Param";
-                    paramMap[symbol] = name;
-
-                    var typeName = symbol switch
-                    {
-                        IFieldSymbol f => f.Type.ToDisplayString(),
-                        IPropertySymbol p => p.Type.ToDisplayString(),
-                        _ => "object"
-                    };
-
-                    var param = SyntaxFactory.Parameter(SyntaxFactory.Identifier(name))
-                        .WithType(SyntaxFactory.ParseTypeName(typeName));
-                    parameterList = parameterList.AddParameters(param);
-                }
-            }
-        }
-
-        var updatedMethod = method.ReplaceNodes(
-            method.DescendantNodes().OfType<IdentifierNameSyntax>().Where(id =>
-            {
-                var sym = semanticModel.GetSymbolInfo(id).Symbol;
-                return sym != null && paramMap.ContainsKey(sym);
-            }),
-            (old, _) =>
-            {
-                var sym = semanticModel.GetSymbolInfo(old).Symbol!;
-                return SyntaxFactory.IdentifierName(paramMap[sym]);
-            });
-
-        var modifiers = updatedMethod.Modifiers;
-        if (!modifiers.Any(m => m.IsKind(SyntaxKind.StaticKeyword)))
-            modifiers = modifiers.Add(SyntaxFactory.Token(SyntaxKind.StaticKeyword));
-
-        updatedMethod = updatedMethod.WithModifiers(modifiers)
-            .WithParameterList(parameterList);
-
-        var newRoot = syntaxRoot.ReplaceNode(method, updatedMethod);
+        var newRoot = ConvertToStaticWithParametersAst(syntaxRoot!, method, semanticModel);
         var formattedRoot = Formatter.Format(newRoot, document.Project.Solution.Workspace);
         var newDocument = document.WithSyntaxRoot(formattedRoot);
         var newText = await newDocument.GetTextAsync();
@@ -134,56 +194,7 @@ public static class ConvertToStaticWithParametersTool
         if (classDecl == null)
             return RefactoringHelpers.ThrowMcpException($"Error: Method '{methodName}' is not inside a class");
 
-        var instanceMembers = new Dictionary<string, string>();
-        foreach (var field in classDecl.Members.OfType<FieldDeclarationSyntax>())
-        {
-            if (field.Modifiers.Any(SyntaxKind.StaticKeyword)) continue;
-            var typeName = field.Declaration.Type.ToString();
-            foreach (var variable in field.Declaration.Variables)
-            {
-                instanceMembers[variable.Identifier.ValueText] = typeName;
-            }
-        }
-
-        foreach (var prop in classDecl.Members.OfType<PropertyDeclarationSyntax>())
-        {
-            if (prop.Modifiers.Any(SyntaxKind.StaticKeyword)) continue;
-            instanceMembers[prop.Identifier.ValueText] = prop.Type.ToString();
-        }
-
-        var usedMembers = method.DescendantNodes()
-            .OfType<IdentifierNameSyntax>()
-            .Where(id => instanceMembers.ContainsKey(id.Identifier.ValueText))
-            .Select(id => id.Identifier.ValueText)
-            .Distinct()
-            .ToList();
-
-        var parameterList = method.ParameterList;
-        var renameMap = new Dictionary<string, string>();
-        foreach (var name in usedMembers)
-        {
-            var paramName = name;
-            if (parameterList.Parameters.Any(p => p.Identifier.ValueText == paramName))
-                paramName += "Param";
-            renameMap[name] = paramName;
-            var param = SyntaxFactory.Parameter(SyntaxFactory.Identifier(paramName))
-                .WithType(SyntaxFactory.ParseTypeName(instanceMembers[name]));
-            parameterList = parameterList.AddParameters(param);
-        }
-
-        var updatedMethod = method.ReplaceNodes(
-            method.DescendantNodes().OfType<IdentifierNameSyntax>()
-                .Where(id => renameMap.ContainsKey(id.Identifier.ValueText)),
-            (old, _) => SyntaxFactory.IdentifierName(renameMap[old.Identifier.ValueText]));
-
-        var modifiers = updatedMethod.Modifiers;
-        if (!modifiers.Any(m => m.IsKind(SyntaxKind.StaticKeyword)))
-            modifiers = modifiers.Add(SyntaxFactory.Token(SyntaxKind.StaticKeyword));
-
-        updatedMethod = updatedMethod.WithModifiers(modifiers)
-            .WithParameterList(parameterList);
-
-        var newRoot = syntaxRoot.ReplaceNode(method, updatedMethod);
+        var newRoot = ConvertToStaticWithParametersAst(syntaxRoot, method);
         var formattedRoot = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
         return formattedRoot.ToFullString();
     }
