@@ -280,7 +280,7 @@ public static class MoveMultipleMethodsTool
                 {
                     var (msg, updatedDoc) = await MoveMethodsTool.MoveStaticMethodWithSolution(
                         currentDocument,
-                        op.Method,
+                        new[] { op.Method },
                         op.TargetClass,
                         op.TargetFile);
                     results.Add(msg);
@@ -292,7 +292,7 @@ public static class MoveMultipleMethodsTool
                     var (msg, updatedDoc) = await MoveMethodsTool.MoveInstanceMethodWithSolution(
                         currentDocument,
                         op.SourceClass,
-                        op.Method,
+                        new[] { op.Method },
                         op.TargetClass,
                         op.AccessMember,
                         op.AccessMemberType);
