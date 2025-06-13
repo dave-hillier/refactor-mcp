@@ -60,6 +60,9 @@ public class TestClass
 }
 """;
 
+    public static string GetSampleCodeForTransformSetter() =>
+        File.ReadAllText(Path.Combine(Path.GetDirectoryName(GetSolutionPath())!, "RefactorMCP.Tests", "ExampleCode.cs"));
+
     public static string GetSampleCodeForConvertToStaticInstance() =>
         File.ReadAllText(Path.Combine(Path.GetDirectoryName(GetSolutionPath())!, "RefactorMCP.Tests", "ExampleCode.cs"));
 

@@ -5,7 +5,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
-using Microsoft.CodeAnalysis.Text;
 using System.Linq;
 
 [McpServerToolType]
@@ -33,7 +32,6 @@ public static class MakeFieldReadonlyTool
 
     private static async Task<string> MakeFieldReadonlyWithSolution(Document document, string fieldName)
     {
-        var sourceText = await document.GetTextAsync();
         var syntaxRoot = await document.GetSyntaxRootAsync();
 
         var fieldDeclaration = syntaxRoot!.DescendantNodes()
@@ -43,79 +41,21 @@ public static class MakeFieldReadonlyTool
         if (fieldDeclaration == null)
             return RefactoringHelpers.ThrowMcpException($"Error: No field named '{fieldName}' found");
 
-        // Add readonly modifier
-        var readonlyModifier = SyntaxFactory.Token(SyntaxKind.ReadOnlyKeyword);
-        var newModifiers = fieldDeclaration.Modifiers.Add(readonlyModifier);
-        var newFieldDeclaration = fieldDeclaration.WithModifiers(newModifiers);
+        var variable = fieldDeclaration.Declaration.Variables.First(v => v.Identifier.ValueText == fieldName);
+        var initializer = variable.Initializer?.Value;
 
-        // Remove initializer if present (will be moved to constructor)
-        var variable = fieldDeclaration.Declaration.Variables.First();
-        var initializer = variable.Initializer;
+        var rewriter = new ReadonlyFieldRewriter(fieldName, initializer);
+        var newRoot = rewriter.Visit(syntaxRoot);
+
+        var formattedRoot = Formatter.Format(newRoot!, document.Project.Solution.Workspace);
+        var newDocument = document.WithSyntaxRoot(formattedRoot);
+        var newText = await newDocument.GetTextAsync();
+        await File.WriteAllTextAsync(document.FilePath!, newText.ToString());
 
         if (initializer != null)
-        {
-            var newVariable = variable.WithInitializer(null);
-            var newDeclaration = fieldDeclaration.Declaration.WithVariables(
-                SyntaxFactory.SingletonSeparatedList(newVariable));
-            newFieldDeclaration = newFieldDeclaration.WithDeclaration(newDeclaration);
+            return $"Successfully made field '{fieldName}' readonly and moved initialization to constructors in {document.FilePath}";
 
-            // Find constructors and add initialization
-            var containingClass = fieldDeclaration.Ancestors().OfType<ClassDeclarationSyntax>().FirstOrDefault();
-            if (containingClass != null)
-            {
-                var constructors = containingClass.Members.OfType<ConstructorDeclarationSyntax>().ToList();
-
-                if (constructors.Any())
-                {
-                    var updatedConstructors = new List<ConstructorDeclarationSyntax>();
-                    foreach (var constructor in constructors)
-                    {
-                        var assignment = SyntaxFactory.ExpressionStatement(
-                            SyntaxFactory.AssignmentExpression(
-                                SyntaxKind.SimpleAssignmentExpression,
-                                SyntaxFactory.IdentifierName(variable.Identifier.ValueText),
-                                initializer.Value));
-
-                        var newBody = constructor.Body?.AddStatements(assignment) ??
-                            SyntaxFactory.Block(assignment);
-
-                        updatedConstructors.Add(constructor.WithBody(newBody));
-                    }
-
-                    var newMembers = containingClass.Members.ToList();
-                    foreach (var (oldCtor, newCtor) in constructors.Zip(updatedConstructors))
-                    {
-                        var index = newMembers.IndexOf(oldCtor);
-                        newMembers[index] = newCtor;
-                    }
-
-                    var fieldIndex = newMembers.IndexOf(fieldDeclaration);
-                    newMembers[fieldIndex] = newFieldDeclaration;
-
-                    var updatedClass = containingClass.WithMembers(SyntaxFactory.List(newMembers));
-                    var newRoot = syntaxRoot.ReplaceNode(containingClass, updatedClass);
-
-                    var formattedRoot = Formatter.Format(newRoot, document.Project.Solution.Workspace);
-                    var newDocument = document.WithSyntaxRoot(formattedRoot);
-                    var newText = await newDocument.GetTextAsync();
-                    await File.WriteAllTextAsync(document.FilePath!, newText.ToString());
-
-                    return $"Successfully made field '{fieldName}' readonly and moved initialization to constructors in {document.FilePath}";
-                }
-            }
-        }
-        else
-        {
-            var newRoot = syntaxRoot.ReplaceNode(fieldDeclaration, newFieldDeclaration);
-            var formattedRoot = Formatter.Format(newRoot, document.Project.Solution.Workspace);
-            var newDocument = document.WithSyntaxRoot(formattedRoot);
-            var newText = await newDocument.GetTextAsync();
-            await File.WriteAllTextAsync(document.FilePath!, newText.ToString());
-
-            return $"Successfully made field '{fieldName}' readonly in {document.FilePath}";
-        }
-
-        return $"Field '{fieldName}' made readonly, but no constructors found for initialization";
+        return $"Successfully made field '{fieldName}' readonly in {document.FilePath}";
     }
 
     private static Task<string> MakeFieldReadonlySingleFile(string filePath, string fieldName)
@@ -130,6 +70,7 @@ public static class MakeFieldReadonlyTool
     {
         var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
         var syntaxRoot = syntaxTree.GetRoot();
+
         var fieldDeclaration = syntaxRoot.DescendantNodes()
             .OfType<FieldDeclarationSyntax>()
             .FirstOrDefault(f => f.Declaration.Variables.Any(v => v.Identifier.ValueText == fieldName));
@@ -137,67 +78,14 @@ public static class MakeFieldReadonlyTool
         if (fieldDeclaration == null)
             return RefactoringHelpers.ThrowMcpException($"Error: No field named '{fieldName}' found");
 
-        var readonlyModifier = SyntaxFactory.Token(SyntaxKind.ReadOnlyKeyword);
-        var newModifiers = fieldDeclaration.Modifiers.Add(readonlyModifier);
-        var newFieldDeclaration = fieldDeclaration.WithModifiers(newModifiers);
+        var variable = fieldDeclaration.Declaration.Variables.First(v => v.Identifier.ValueText == fieldName);
+        var initializer = variable.Initializer?.Value;
 
-        var variable = fieldDeclaration.Declaration.Variables.First();
-        var initializer = variable.Initializer;
+        var rewriter = new ReadonlyFieldRewriter(fieldName, initializer);
+        var newRoot = rewriter.Visit(syntaxRoot);
 
-        if (initializer != null)
-        {
-            var newVariable = variable.WithInitializer(null);
-            var newDeclaration = fieldDeclaration.Declaration.WithVariables(
-                SyntaxFactory.SingletonSeparatedList(newVariable));
-            newFieldDeclaration = newFieldDeclaration.WithDeclaration(newDeclaration);
-
-            var containingClass = fieldDeclaration.Ancestors().OfType<ClassDeclarationSyntax>().FirstOrDefault();
-            if (containingClass != null)
-            {
-                var constructors = containingClass.Members.OfType<ConstructorDeclarationSyntax>().ToList();
-
-                if (constructors.Any())
-                {
-                    var updatedConstructors = new List<ConstructorDeclarationSyntax>();
-                    foreach (var constructor in constructors)
-                    {
-                        var assignment = SyntaxFactory.ExpressionStatement(
-                            SyntaxFactory.AssignmentExpression(
-                                SyntaxKind.SimpleAssignmentExpression,
-                                SyntaxFactory.IdentifierName(variable.Identifier.ValueText),
-                                initializer.Value));
-
-                        var newBody = constructor.Body?.AddStatements(assignment) ??
-                            SyntaxFactory.Block(assignment);
-
-                        updatedConstructors.Add(constructor.WithBody(newBody));
-                    }
-
-                    var newMembers = containingClass.Members.ToList();
-                    foreach (var (oldCtor, newCtor) in constructors.Zip(updatedConstructors))
-                    {
-                        var index = newMembers.IndexOf(oldCtor);
-                        newMembers[index] = newCtor;
-                    }
-
-                    var fieldIndex = newMembers.IndexOf(fieldDeclaration);
-                    newMembers[fieldIndex] = newFieldDeclaration;
-
-                    var updatedClass = containingClass.WithMembers(SyntaxFactory.List(newMembers));
-                    var newRoot = syntaxRoot.ReplaceNode(containingClass, updatedClass);
-                    var formattedRoot = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
-                    return formattedRoot.ToFullString();
-                }
-            }
-        }
-        else
-        {
-            var newRoot = syntaxRoot.ReplaceNode(fieldDeclaration, newFieldDeclaration);
-            var formattedRoot = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
-            return formattedRoot.ToFullString();
-        }
-
-        return Formatter.Format(syntaxRoot, RefactoringHelpers.SharedWorkspace).ToFullString();
+        var formattedRoot = Formatter.Format(newRoot!, RefactoringHelpers.SharedWorkspace);
+        return formattedRoot.ToFullString();
     }
 
 }
