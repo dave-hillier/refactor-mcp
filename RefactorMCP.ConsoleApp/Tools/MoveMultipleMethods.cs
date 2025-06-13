@@ -24,19 +24,25 @@ public static class MoveMultipleMethodsTool
     {
         var tree = CSharpSyntaxTree.ParseText(sourceText);
         var root = tree.GetRoot();
-        var map = root.DescendantNodes()
-            .OfType<MethodDeclarationSyntax>()
-            .Where(m => ops.Any(o => o.Method == m.Identifier.ValueText))
-            .ToDictionary(m => m.Identifier.ValueText, m => m);
+
+        // Build map keyed by "Class.Method" to support duplicate method names in different classes
+        var opSet = ops.Select(o => ($"{o.SourceClass}.{o.Method}")).ToHashSet();
+        var map = root.DescendantNodes().OfType<ClassDeclarationSyntax>()
+            .SelectMany(cls => cls.Members.OfType<MethodDeclarationSyntax>()
+                .Select(m => new { Key = $"{cls.Identifier.ValueText}.{m.Identifier.ValueText}", Method = m }))
+            .Where(x => opSet.Contains(x.Key))
+            .ToDictionary(x => x.Key, x => x.Method);
 
         var deps = new Dictionary<string, HashSet<string>>();
         foreach (var op in ops)
         {
-            if (!map.TryGetValue(op.Method, out var method))
+            var key = $"{op.SourceClass}.{op.Method}";
+            if (!map.TryGetValue(key, out var method))
             {
-                deps[op.Method] = new HashSet<string>();
+                deps[key] = new HashSet<string>();
                 continue;
             }
+
             var called = method.DescendantNodes().OfType<InvocationExpressionSyntax>()
                 .Select(inv => inv.Expression switch
                 {
@@ -44,17 +50,21 @@ public static class MoveMultipleMethodsTool
                     MemberAccessExpressionSyntax ma => ma.Name.Identifier.ValueText,
                     _ => null
                 })
-                .Where(n => n != null && map.ContainsKey(n))
-                .ToHashSet()!;
-            deps[op.Method] = called;
+                .Where(n => n != null)
+                .Select(name => $"{op.SourceClass}.{name}")
+                .Where(n => map.ContainsKey(n))
+                .ToHashSet();
+
+            deps[key] = called;
         }
+
         return deps;
     }
 
     private static List<MoveOperation> OrderOperations(string sourceText, List<MoveOperation> ops)
     {
         var deps = BuildDependencies(sourceText, ops);
-        return ops.OrderBy(o => deps.TryGetValue(o.Method, out var d) ? d.Count : 0).ToList();
+        return ops.OrderBy(o => deps.TryGetValue($"{o.SourceClass}.{o.Method}", out var d) ? d.Count : 0).ToList();
     }
 
     public static string MoveMultipleMethodsInSource(string sourceText, string operationsJson)
@@ -92,11 +102,11 @@ public static class MoveMultipleMethodsTool
         var sourceText = await File.ReadAllTextAsync(filePath);
         var ordered = OrderOperations(sourceText, ops);
         var results = new List<string>();
-        
+
         // Check if we're using a solution or single-file mode
         var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
         var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
-        
+
         if (document != null)
         {
             // Solution-based: need to manage document state between operations
@@ -112,7 +122,7 @@ public static class MoveMultipleMethodsTool
                     // For instance methods, pass single method to avoid reloading solution
                     results.Add(await MoveMethodsTool.MoveInstanceMethod(solutionPath, filePath, op.SourceClass, op.Method, op.TargetClass, op.AccessMember, op.AccessMemberType, op.TargetFile));
                 }
-                
+
                 // Clear solution cache to force reload of updated file state
                 RefactoringHelpers.SolutionCache.Remove(solutionPath);
             }
@@ -136,7 +146,7 @@ public static class MoveMultipleMethodsTool
             }
             await File.WriteAllTextAsync(filePath, working);
         }
-        
+
         return string.Join("\n", results);
     }
 }
