@@ -13,20 +13,6 @@ using System.Collections.Generic;
 [McpServerToolType]
 public static class InlineMethodTool
 {
-    private class ParameterRewriter : CSharpSyntaxRewriter
-    {
-        private readonly Dictionary<string, ExpressionSyntax> _map;
-        public ParameterRewriter(Dictionary<string, ExpressionSyntax> map)
-        {
-            _map = map;
-        }
-        public override SyntaxNode? VisitIdentifierName(IdentifierNameSyntax node)
-        {
-            if (_map.TryGetValue(node.Identifier.ValueText, out var expr))
-                return expr;
-            return base.VisitIdentifierName(node);
-        }
-    }
 
     private static SyntaxNode InlineInvocation(MethodDeclarationSyntax method, InvocationExpressionSyntax invocation)
     {
