@@ -743,23 +743,68 @@ public static class MoveMethodsTool
     // ===== SOLUTION OPERATION LAYER =====
     // Solution/Document operations that use the AST layer
 
-    private static async Task<string> MoveInstanceMethodWithSolution(Document document, string sourceClass, string methodName, string targetClass, string accessMemberName, string accessMemberType)
+    internal static async Task<(string Message, Document UpdatedDocument)> MoveInstanceMethodWithSolution(
+        Document document,
+        string sourceClass,
+        string methodName,
+        string targetClass,
+        string accessMemberName,
+        string accessMemberType)
     {
         var syntaxRoot = await document.GetSyntaxRootAsync();
 
         // Perform AST transformation
-        var moveResult = MoveInstanceMethodAst(syntaxRoot!, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
+        var moveResult = MoveInstanceMethodAst(
+            syntaxRoot!,
+            sourceClass,
+            methodName,
+            targetClass,
+            accessMemberName,
+            accessMemberType);
 
         // Add method to target class in the same document
         var finalRoot = AddMethodToTargetClass(moveResult.NewSourceRoot, targetClass, moveResult.MovedMethod);
 
-        // Format and write using Document API
+        // Format and update the document
         var formatted = Formatter.Format(finalRoot, document.Project.Solution.Workspace);
         var newDocument = document.WithSyntaxRoot(formatted);
         var newText = await newDocument.GetTextAsync();
         await File.WriteAllTextAsync(document.FilePath!, newText.ToString());
 
-        return $"Successfully moved {sourceClass}.{methodName} instance method to {targetClass} in {document.FilePath}";
+        var message = $"Successfully moved {sourceClass}.{methodName} instance method to {targetClass} in {document.FilePath}";
+        return (message, newDocument);
+    }
+
+    internal static async Task<(string Message, Document UpdatedDocument)> MoveStaticMethodWithSolution(
+        Document document,
+        string methodName,
+        string targetClass,
+        string? targetFilePath)
+    {
+        var targetPath = targetFilePath ?? Path.Combine(Path.GetDirectoryName(document.FilePath!)!, $"{targetClass}.cs");
+        var sameFile = targetPath == document.FilePath;
+        var sourceRoot = await document.GetSyntaxRootAsync();
+
+        var context = new FileOperationContext
+        {
+            SourcePath = document.FilePath!,
+            TargetPath = targetPath,
+            SameFile = sameFile,
+            SourceRoot = sourceRoot!,
+            TargetClassName = targetClass
+        };
+
+        var moveResult = MoveStaticMethodAst(context.SourceRoot, methodName, targetClass);
+        var updatedTargetRoot = await PrepareTargetRoot(context, moveResult.MovedMethod);
+        await WriteTransformedFiles(context, moveResult.NewSourceRoot, updatedTargetRoot);
+
+        SyntaxNode newRoot = sameFile
+            ? Formatter.Format(updatedTargetRoot, document.Project.Solution.Workspace)
+            : Formatter.Format(moveResult.NewSourceRoot, document.Project.Solution.Workspace);
+
+        var updatedDocument = document.WithSyntaxRoot(newRoot);
+        var message = $"Successfully moved static method '{methodName}' to {targetClass} in {context.TargetPath}";
+        return (message, updatedDocument);
     }
 
     // ===== HELPER METHODS =====
@@ -1097,11 +1142,17 @@ public static class MoveMethodsTool
 
             foreach (var name in methodList)
             {
-                results.Add(await MoveInstanceMethodWithSolution(currentDocument, sourceClass, name, targetClass, accessMemberName, accessMemberType));
+                var (msg, updatedDoc) = await MoveInstanceMethodWithSolution(
+                    currentDocument,
+                    sourceClass,
+                    name,
+                    targetClass,
+                    accessMemberName,
+                    accessMemberType);
+                results.Add(msg);
 
-                // Refresh the document reference to get the updated version after the move
-                var solution = await RefactoringHelpers.GetOrLoadSolution(currentDocument.Project.Solution.FilePath!);
-                currentDocument = RefactoringHelpers.GetDocumentByPath(solution, filePath);
+                // Use returned document for subsequent operations
+                currentDocument = updatedDoc;
             }
             return string.Join("\n", results);
         }
