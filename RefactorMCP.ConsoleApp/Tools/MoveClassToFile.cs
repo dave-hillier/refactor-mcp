@@ -5,6 +5,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
+using System.Linq;
 
 [McpServerToolType]
 public static class MoveClassToFileTool
@@ -19,6 +20,8 @@ public static class MoveClassToFileTool
         {
             var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
             var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
+
+            var newFilePath = Path.Combine(Path.GetDirectoryName(filePath)!, $"{className}.cs");
 
             CompilationUnitSyntax root;
             if (document != null)
@@ -37,6 +40,10 @@ public static class MoveClassToFileTool
                 .FirstOrDefault(c => c.Identifier.Text == className);
             if (classNode == null)
                 return RefactoringHelpers.ThrowMcpException($"Error: Class {className} not found");
+
+            var duplicateDoc = await RefactoringHelpers.FindClassInSolution(solution, className, filePath, newFilePath);
+            if (duplicateDoc != null)
+                return RefactoringHelpers.ThrowMcpException($"Error: Class {className} already exists in {duplicateDoc.FilePath}");
 
             var rootWithoutClass = (CompilationUnitSyntax)root.RemoveNode(classNode, SyntaxRemoveOptions.KeepNoTrivia);
             rootWithoutClass = (CompilationUnitSyntax)Formatter.Format(rootWithoutClass, RefactoringHelpers.SharedWorkspace);
@@ -61,7 +68,8 @@ public static class MoveClassToFileTool
             }
 
             newRoot = (CompilationUnitSyntax)Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
-            var newFilePath = Path.Combine(Path.GetDirectoryName(filePath)!, $"{className}.cs");
+            if (File.Exists(newFilePath))
+                return RefactoringHelpers.ThrowMcpException($"Error: File {newFilePath} already exists");
             await File.WriteAllTextAsync(newFilePath, newRoot.ToFullString());
 
             return $"Successfully moved class '{className}' to {newFilePath}";

@@ -5,6 +5,8 @@ using Microsoft.CodeAnalysis.MSBuild;
 using Microsoft.Extensions.Caching.Memory;
 using System;
 using System.IO;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Linq;
 
 
 
@@ -80,5 +82,27 @@ internal static class RefactoringHelpers
         var newText = transform(sourceText);
         await File.WriteAllTextAsync(filePath, newText);
         return successMessage;
+    }
+
+    internal static async Task<Document?> FindClassInSolution(
+        Solution solution,
+        string className,
+        params string[]? excludingFilePaths)
+    {
+        foreach (var doc in solution.Projects.SelectMany(p => p.Documents))
+        {
+            var docPath = doc.FilePath ?? string.Empty;
+            if (excludingFilePaths != null && excludingFilePaths.Any(p => Path.GetFullPath(docPath) == Path.GetFullPath(p)))
+                continue;
+
+            var root = await doc.GetSyntaxRootAsync();
+            if (root != null && root.DescendantNodes().OfType<ClassDeclarationSyntax>()
+                    .Any(c => c.Identifier.Text == className))
+            {
+                return doc;
+            }
+        }
+
+        return null;
     }
 }
