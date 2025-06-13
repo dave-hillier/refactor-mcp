@@ -65,6 +65,7 @@ static async Task RunCliMode(string[] args)
         ["move-static-method"] = TestMoveStaticMethod,
         ["inline-method"] = TestInlineMethod,
         ["move-instance-method"] = TestMoveInstanceMethod,
+        ["move-to-separate-file"] = TestMoveToSeparateFile,
         ["transform-setter-to-init"] = TestTransformSetterToInit,
         ["safe-delete-field"] = TestSafeDeleteField,
         ["safe-delete-method"] = TestSafeDeleteMethod,
@@ -469,6 +470,18 @@ static async Task<string> TestMoveInstanceMethod(string[] args)
     var targetFile = args.Length > 9 ? args[9] : null;
 
     return await MoveMethodsTool.MoveInstanceMethod(solutionPath, filePath, sourceClass, methodName, targetClass, accessMember, memberType, targetFile);
+}
+
+static async Task<string> TestMoveToSeparateFile(string[] args)
+{
+    if (args.Length < 5)
+        return "Error: Missing arguments. Usage: --cli move-to-separate-file <solutionPath> <filePath> <className>";
+
+    var solutionPath = args[2];
+    var filePath = args[3];
+    var className = args[4];
+
+    return await MoveClassToFileTool.MoveToSeparateFile(solutionPath, filePath, className);
 }
 
 static async Task<string> TestTransformSetterToInit(string[] args)

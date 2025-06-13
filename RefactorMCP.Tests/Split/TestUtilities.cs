@@ -165,5 +165,8 @@ public class CleanupSample
     public void Say() => Console.WriteLine("Hi");
 }
 """;
+
+    public static string GetSampleCodeForMoveClassToFile() =>
+        File.ReadAllText(Path.Combine(Path.GetDirectoryName(GetSolutionPath())!, "RefactorMCP.Tests", "ExampleCode.cs"));
 }
 
