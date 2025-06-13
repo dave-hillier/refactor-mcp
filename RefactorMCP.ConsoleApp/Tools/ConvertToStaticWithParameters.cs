@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Text;
 using System.Linq;
+using System.Collections.Generic;
 
 [McpServerToolType]
 public static class ConvertToStaticWithParametersTool
@@ -68,38 +69,22 @@ public static class ConvertToStaticWithParametersTool
             }
         }
 
-        var parameterList = method.ParameterList;
-        var renameMap = new Dictionary<string, string>();
+        var parameters = new List<(string Name, string Type)>();
+        Dictionary<string, string>? renameMap = null;
+        Dictionary<ISymbol, string>? symbolMap = null;
 
         if (semanticMap != null)
         {
+            symbolMap = semanticMap;
             foreach (var kvp in semanticMap)
             {
                 var typeName = instanceMembers[kvp.Value];
-                var paramName = kvp.Value;
-                parameterList = parameterList.AddParameters(
-                    SyntaxFactory.Parameter(SyntaxFactory.Identifier(paramName))
-                        .WithType(SyntaxFactory.ParseTypeName(typeName)));
+                parameters.Add((kvp.Value, typeName));
             }
-
-            var updatedMethod = method.ReplaceNodes(
-                method.DescendantNodes().OfType<IdentifierNameSyntax>().Where(id =>
-                {
-                    var sym = semanticModel!.GetSymbolInfo(id).Symbol;
-                    return sym != null && semanticMap.ContainsKey(sym);
-                }),
-                (old, _) =>
-                {
-                    var sym = semanticModel!.GetSymbolInfo(old).Symbol!;
-                    return SyntaxFactory.IdentifierName(semanticMap[sym]);
-                });
-
-            updatedMethod = AstTransformations.EnsureStaticModifier(updatedMethod)
-                .WithParameterList(parameterList);
-            return root.ReplaceNode(method, updatedMethod);
         }
         else
         {
+            renameMap = new();
             var usedMembers = method.DescendantNodes()
                 .OfType<IdentifierNameSyntax>()
                 .Where(id => instanceMembers.ContainsKey(id.Identifier.ValueText))
@@ -110,23 +95,24 @@ public static class ConvertToStaticWithParametersTool
             foreach (var name in usedMembers)
             {
                 var paramName = name;
-                if (parameterList.Parameters.Any(p => p.Identifier.ValueText == paramName))
+                if (method.ParameterList.Parameters.Any(p => p.Identifier.ValueText == paramName))
                     paramName += "Param";
                 renameMap[name] = paramName;
-                var param = SyntaxFactory.Parameter(SyntaxFactory.Identifier(paramName))
-                    .WithType(SyntaxFactory.ParseTypeName(instanceMembers[name]));
-                parameterList = parameterList.AddParameters(param);
+                parameters.Add((paramName, instanceMembers[name]));
             }
-
-            var updatedMethod = method.ReplaceNodes(
-                method.DescendantNodes().OfType<IdentifierNameSyntax>()
-                    .Where(id => renameMap.ContainsKey(id.Identifier.ValueText)),
-                (old, _) => SyntaxFactory.IdentifierName(renameMap[old.Identifier.ValueText]));
-
-            updatedMethod = AstTransformations.EnsureStaticModifier(updatedMethod)
-                .WithParameterList(parameterList);
-            return root.ReplaceNode(method, updatedMethod);
         }
+
+        var rewriter = new StaticConversionRewriter(
+            parameters,
+            instanceParameterName: null,
+            knownInstanceMembers: null,
+            semanticModel: semanticModel,
+            typeSymbol: null,
+            symbolRenameMap: symbolMap,
+            nameRenameMap: renameMap);
+
+        var updatedMethod = rewriter.Rewrite(method);
+        return root.ReplaceNode(method, updatedMethod);
     }
     [McpServerTool, Description("Transform instance method to static by converting dependencies to parameters (preferred for large C# file refactoring)")]
     public static async Task<string> ConvertToStaticWithParameters(

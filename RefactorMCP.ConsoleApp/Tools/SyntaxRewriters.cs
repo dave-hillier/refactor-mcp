@@ -370,56 +370,152 @@ internal class ExtensionMethodRewriter : CSharpSyntaxRewriter
     }
 }
 
-internal class ParameterIntroductionRewriter : CSharpSyntaxRewriter
-{
-    private readonly ExpressionSyntax _targetExpression;
-    private readonly string _methodName;
-    private readonly ParameterSyntax _parameter;
-    private readonly IdentifierNameSyntax _parameterReference;
-
-    public ParameterIntroductionRewriter(
-        ExpressionSyntax targetExpression,
-        string methodName,
-        ParameterSyntax parameter,
-        IdentifierNameSyntax parameterReference)
+internal class StaticConversionRewriter : CSharpSyntaxRewriter
     {
-        _targetExpression = targetExpression;
-        _methodName = methodName;
-        _parameter = parameter;
-        _parameterReference = parameterReference;
-    }
+        private readonly List<ParameterSyntax> _parameters;
+        private readonly string? _instanceParameterName;
+        private readonly HashSet<string>? _knownInstanceMembers;
+        private readonly SemanticModel? _semanticModel;
+        private readonly INamedTypeSymbol? _typeSymbol;
+        private readonly Dictionary<ISymbol, string>? _symbolRenameMap;
+        private readonly Dictionary<string, string>? _nameRenameMap;
 
-    public override SyntaxNode Visit(SyntaxNode node)
-    {
-        if (node is ExpressionSyntax expr && SyntaxFactory.AreEquivalent(expr, _targetExpression))
-            return _parameterReference;
-
-        return base.Visit(node);
-    }
-
-    public override SyntaxNode VisitInvocationExpression(InvocationExpressionSyntax node)
-    {
-        var visited = (InvocationExpressionSyntax)base.VisitInvocationExpression(node);
-        var isTarget =
-            (visited.Expression is IdentifierNameSyntax id && id.Identifier.ValueText == _methodName) ||
-            (visited.Expression is MemberAccessExpressionSyntax ma && ma.Name.Identifier.ValueText == _methodName);
-
-        if (isTarget)
+        public StaticConversionRewriter(
+            IEnumerable<(string Name, string Type)> parameters,
+            string? instanceParameterName = null,
+            HashSet<string>? knownInstanceMembers = null,
+            SemanticModel? semanticModel = null,
+            INamedTypeSymbol? typeSymbol = null,
+            Dictionary<ISymbol, string>? symbolRenameMap = null,
+            Dictionary<string, string>? nameRenameMap = null)
         {
-            var newArgs = visited.ArgumentList.AddArguments(SyntaxFactory.Argument(_targetExpression.WithoutTrivia()));
-            visited = visited.WithArgumentList(newArgs);
+            _parameters = parameters
+                .Select(p => SyntaxFactory.Parameter(SyntaxFactory.Identifier(p.Name))
+                    .WithType(SyntaxFactory.ParseTypeName(p.Type)))
+                .ToList();
+            _instanceParameterName = instanceParameterName;
+            _knownInstanceMembers = knownInstanceMembers;
+            _semanticModel = semanticModel;
+            _typeSymbol = typeSymbol;
+            _symbolRenameMap = symbolRenameMap;
+            _nameRenameMap = nameRenameMap;
         }
 
-        return visited;
+        public MethodDeclarationSyntax Rewrite(MethodDeclarationSyntax method)
+        {
+            var visited = (MethodDeclarationSyntax)Visit(method)!;
+            if (_parameters.Count > 0)
+                visited = visited.WithParameterList(method.ParameterList.AddParameters(_parameters.ToArray()));
+            visited = AstTransformations.EnsureStaticModifier(visited);
+            return visited;
+        }
+
+        public override SyntaxNode VisitThisExpression(ThisExpressionSyntax node)
+        {
+            if (_instanceParameterName != null)
+                return SyntaxFactory.IdentifierName(_instanceParameterName).WithTriviaFrom(node);
+            return base.VisitThisExpression(node);
+        }
+
+        public override SyntaxNode? VisitIdentifierName(IdentifierNameSyntax node)
+        {
+            if (_semanticModel != null && _symbolRenameMap != null &&
+                _semanticModel.GetSymbolInfo(node).Symbol is ISymbol sym &&
+                _symbolRenameMap.TryGetValue(sym, out var newName))
+            {
+                return SyntaxFactory.IdentifierName(newName).WithTriviaFrom(node);
+            }
+
+            if (_nameRenameMap != null &&
+                _nameRenameMap.TryGetValue(node.Identifier.ValueText, out var n))
+            {
+                return SyntaxFactory.IdentifierName(n).WithTriviaFrom(node);
+            }
+
+            bool qualify = false;
+            if (_instanceParameterName != null)
+            {
+                if (_semanticModel != null && _typeSymbol != null)
+                {
+                    var s = _semanticModel.GetSymbolInfo(node).Symbol;
+                    if (s is IFieldSymbol or IPropertySymbol or IMethodSymbol &&
+                        SymbolEqualityComparer.Default.Equals(s.ContainingType, _typeSymbol) &&
+                        !s.IsStatic && node.Parent is not MemberAccessExpressionSyntax)
+                    {
+                        qualify = true;
+                    }
+                }
+                else if (_knownInstanceMembers != null &&
+                         _knownInstanceMembers.Contains(node.Identifier.ValueText) &&
+                         node.Parent is not MemberAccessExpressionSyntax)
+                {
+                    qualify = true;
+                }
+            }
+
+            if (qualify)
+            {
+                return SyntaxFactory.MemberAccessExpression(
+                        SyntaxKind.SimpleMemberAccessExpression,
+                        SyntaxFactory.IdentifierName(_instanceParameterName!),
+                        node.WithoutTrivia())
+                    .WithTriviaFrom(node);
+            }
+
+            return base.VisitIdentifierName(node);
+        }
     }
 
-    public override SyntaxNode VisitMethodDeclaration(MethodDeclarationSyntax node)
+    internal class ParameterIntroductionRewriter : CSharpSyntaxRewriter
     {
-        var visited = (MethodDeclarationSyntax)base.VisitMethodDeclaration(node);
-        if (node.Identifier.ValueText == _methodName)
-            visited = visited.AddParameterListParameters(_parameter);
+        private readonly ExpressionSyntax _targetExpression;
+        private readonly string _methodName;
+        private readonly ParameterSyntax _parameter;
+        private readonly IdentifierNameSyntax _parameterReference;
 
-        return visited;
+        public ParameterIntroductionRewriter(
+            ExpressionSyntax targetExpression,
+            string methodName,
+            ParameterSyntax parameter,
+            IdentifierNameSyntax parameterReference)
+        {
+            _targetExpression = targetExpression;
+            _methodName = methodName;
+            _parameter = parameter;
+            _parameterReference = parameterReference;
+        }
 
+        public override SyntaxNode Visit(SyntaxNode node)
+        {
+            if (node is ExpressionSyntax expr && SyntaxFactory.AreEquivalent(expr, _targetExpression))
+                return _parameterReference;
+
+            return base.Visit(node);
+        }
+
+        public override SyntaxNode VisitInvocationExpression(InvocationExpressionSyntax node)
+        {
+            var visited = (InvocationExpressionSyntax)base.VisitInvocationExpression(node);
+            var isTarget =
+                (visited.Expression is IdentifierNameSyntax id && id.Identifier.ValueText == _methodName) ||
+                (visited.Expression is MemberAccessExpressionSyntax ma && ma.Name.Identifier.ValueText == _methodName);
+
+            if (isTarget)
+            {
+                var newArgs = visited.ArgumentList.AddArguments(SyntaxFactory.Argument(_targetExpression.WithoutTrivia()));
+                visited = visited.WithArgumentList(newArgs);
+            }
+
+            return visited;
+        }
+
+        public override SyntaxNode VisitMethodDeclaration(MethodDeclarationSyntax node)
+        {
+            var visited = (MethodDeclarationSyntax)base.VisitMethodDeclaration(node);
+            if (node.Identifier.ValueText == _methodName)
+                visited = visited.AddParameterListParameters(_parameter);
+
+            return visited;
+
+        }
     }
-}
