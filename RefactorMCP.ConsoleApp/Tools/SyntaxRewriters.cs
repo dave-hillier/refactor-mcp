@@ -204,3 +204,90 @@ internal class StaticFieldRewriter : CSharpSyntaxRewriter
         return base.VisitIdentifierName(node);
     }
 }
+
+internal class FieldIntroductionRewriter : CSharpSyntaxRewriter
+{
+    private readonly ExpressionSyntax _targetExpression;
+    private readonly IdentifierNameSyntax _fieldReference;
+    private readonly FieldDeclarationSyntax _fieldDeclaration;
+    private readonly ClassDeclarationSyntax? _containingClass;
+
+    public FieldIntroductionRewriter(
+        ExpressionSyntax targetExpression,
+        IdentifierNameSyntax fieldReference,
+        FieldDeclarationSyntax fieldDeclaration,
+        ClassDeclarationSyntax? containingClass)
+    {
+        _targetExpression = targetExpression;
+        _fieldReference = fieldReference;
+        _fieldDeclaration = fieldDeclaration;
+        _containingClass = containingClass;
+    }
+
+    public override SyntaxNode Visit(SyntaxNode node)
+    {
+        if (node is ExpressionSyntax expr && SyntaxFactory.AreEquivalent(expr, _targetExpression))
+            return _fieldReference;
+
+        return base.Visit(node);
+    }
+
+    public override SyntaxNode VisitClassDeclaration(ClassDeclarationSyntax node)
+    {
+        var rewritten = (ClassDeclarationSyntax)base.VisitClassDeclaration(node);
+
+        if (_containingClass != null && node == _containingClass)
+        {
+            rewritten = rewritten.WithMembers(rewritten.Members.Insert(0, _fieldDeclaration));
+        }
+
+        return rewritten;
+    }
+}
+
+internal class VariableIntroductionRewriter : CSharpSyntaxRewriter
+{
+    private readonly ExpressionSyntax _targetExpression;
+    private readonly IdentifierNameSyntax _variableReference;
+    private readonly LocalDeclarationStatementSyntax _variableDeclaration;
+    private readonly StatementSyntax? _containingStatement;
+    private readonly BlockSyntax? _containingBlock;
+
+    public VariableIntroductionRewriter(
+        ExpressionSyntax targetExpression,
+        IdentifierNameSyntax variableReference,
+        LocalDeclarationStatementSyntax variableDeclaration,
+        StatementSyntax? containingStatement,
+        BlockSyntax? containingBlock)
+    {
+        _targetExpression = targetExpression;
+        _variableReference = variableReference;
+        _variableDeclaration = variableDeclaration;
+        _containingStatement = containingStatement;
+        _containingBlock = containingBlock;
+    }
+
+    public override SyntaxNode Visit(SyntaxNode node)
+    {
+        if (node is ExpressionSyntax expr && SyntaxFactory.AreEquivalent(expr, _targetExpression))
+            return _variableReference;
+
+        return base.Visit(node);
+    }
+
+    public override SyntaxNode VisitBlock(BlockSyntax node)
+    {
+        int insertIndex = -1;
+        if (_containingBlock != null && node == _containingBlock && _containingStatement != null)
+            insertIndex = node.Statements.IndexOf(_containingStatement);
+
+        var rewritten = (BlockSyntax)base.VisitBlock(node);
+
+        if (_containingBlock != null && node == _containingBlock && _containingStatement != null && insertIndex >= 0)
+        {
+            rewritten = rewritten.WithStatements(rewritten.Statements.Insert(insertIndex, _variableDeclaration));
+        }
+
+        return rewritten;
+    }
+}

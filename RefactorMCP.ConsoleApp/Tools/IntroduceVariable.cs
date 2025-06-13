@@ -70,29 +70,15 @@ public static class IntroduceVariableTool
 
         var variableReference = SyntaxFactory.IdentifierName(variableName);
 
-        var nodesToReplace = syntaxRoot.DescendantNodes()
-            .OfType<ExpressionSyntax>()
-            .Where(e => SyntaxFactory.AreEquivalent(e, selectedExpression))
-            .ToList();
-
         var containingStatement = selectedExpression.Ancestors().OfType<StatementSyntax>().FirstOrDefault();
-        SyntaxNode newRoot;
-        if (containingStatement != null && containingStatement.Parent is BlockSyntax containingBlock)
-        {
-            var nodesToTrack = nodesToReplace.Cast<SyntaxNode>().Append(containingBlock).Append(containingStatement);
-            var trackedRoot = syntaxRoot.TrackNodes(nodesToTrack);
-            var replacedRoot = trackedRoot.ReplaceNodes(nodesToReplace.Select(n => trackedRoot.GetCurrentNode(n)!), (_1, _2) => variableReference);
-            var currentBlock = replacedRoot.GetCurrentNode(containingBlock)!;
-            var currentStatement = replacedRoot.GetCurrentNode(containingStatement)!;
-            var statementIndex = currentBlock.Statements.IndexOf(currentStatement);
-            var newStatements = currentBlock.Statements.Insert(statementIndex, variableDeclaration);
-            var newBlock = currentBlock.WithStatements(newStatements);
-            newRoot = replacedRoot.ReplaceNode(currentBlock, newBlock);
-        }
-        else
-        {
-            newRoot = syntaxRoot.ReplaceNodes(nodesToReplace, (_1, _2) => variableReference);
-        }
+        var containingBlock = containingStatement?.Parent as BlockSyntax;
+        var rewriter = new VariableIntroductionRewriter(
+            selectedExpression,
+            variableReference,
+            variableDeclaration,
+            containingStatement,
+            containingBlock);
+        var newRoot = rewriter.Visit(syntaxRoot);
 
         var formattedRoot = Formatter.Format(newRoot, document.Project.Solution.Workspace);
         var newDocument = document.WithSyntaxRoot(formattedRoot);
@@ -145,28 +131,15 @@ public static class IntroduceVariableTool
                         .WithInitializer(SyntaxFactory.EqualsValueClause(initializerExpression)))));
 
         var variableReference = SyntaxFactory.IdentifierName(variableName);
-        var nodesToReplace = syntaxRoot.DescendantNodes()
-            .OfType<ExpressionSyntax>()
-            .Where(e => SyntaxFactory.AreEquivalent(e, selectedExpression))
-            .ToList();
         var containingStatement = selectedExpression.Ancestors().OfType<StatementSyntax>().FirstOrDefault();
-        SyntaxNode newRoot;
-        if (containingStatement != null && containingStatement.Parent is BlockSyntax containingBlock)
-        {
-            var nodesToTrack = nodesToReplace.Cast<SyntaxNode>().Append(containingBlock).Append(containingStatement);
-            var trackedRoot = syntaxRoot.TrackNodes(nodesToTrack);
-            var replacedRoot = trackedRoot.ReplaceNodes(nodesToReplace.Select(n => trackedRoot.GetCurrentNode(n)!), (_1, _2) => variableReference);
-            var currentBlock = replacedRoot.GetCurrentNode(containingBlock)!;
-            var currentStatement = replacedRoot.GetCurrentNode(containingStatement)!;
-            var statementIndex = currentBlock.Statements.IndexOf(currentStatement);
-            var newStatements = currentBlock.Statements.Insert(statementIndex, variableDeclaration);
-            var newBlock = currentBlock.WithStatements(newStatements);
-            newRoot = replacedRoot.ReplaceNode(currentBlock, newBlock);
-        }
-        else
-        {
-            newRoot = syntaxRoot.ReplaceNodes(nodesToReplace, (_1, _2) => variableReference);
-        }
+        var containingBlock = containingStatement?.Parent as BlockSyntax;
+        var rewriter = new VariableIntroductionRewriter(
+            selectedExpression,
+            variableReference,
+            variableDeclaration,
+            containingStatement,
+            containingBlock);
+        var newRoot = rewriter.Visit(syntaxRoot);
 
         var formattedRoot = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
         return formattedRoot.ToFullString();
