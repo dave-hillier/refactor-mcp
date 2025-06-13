@@ -411,7 +411,19 @@ class Target
 }
 ```
 
-## 11. Move Class to Separate File
+## 11. Batch Move Methods
+
+**Purpose**: Move several methods at once using a JSON description. This supersedes the older move commands.
+
+### Example
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli batch-move-methods \
+  "./RefactorMCP.sln" \
+  "./RefactorMCP.Tests/ExampleCode.cs" \
+  "[{\"SourceClass\":\"Helper\",\"Method\":\"A\",\"TargetClass\":\"Target\",\"AccessMember\":\"t\"}]"
+```
+
+## 12. Move Class to Separate File
 
 **Purpose**: Move a class into its own file named after the class.
 

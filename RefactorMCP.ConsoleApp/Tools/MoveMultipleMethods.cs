@@ -1,5 +1,6 @@
 using ModelContextProtocol.Server;
 using ModelContextProtocol;
+using System;
 using System.ComponentModel;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -239,7 +240,8 @@ public static class MoveMultipleMethodsTool
     // ===== SOLUTION OPERATION LAYER =====
     // Solution/Document operations that use the AST layer
 
-    [McpServerTool, Description("Move multiple methods to target classes, automatically ordering by dependencies")]
+    [Obsolete("Use BatchMoveMethodsTool.BatchMoveMethods instead")]
+    [McpServerTool, Description("Move multiple methods to target classes, automatically ordering by dependencies [DEPRECATED]")]
     public static async Task<string> MoveMultipleMethods(
         [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file containing the methods")] string filePath,
@@ -313,7 +315,8 @@ public static class MoveMultipleMethodsTool
         }
     }
 
-    [McpServerTool, Description("Move multiple methods using explicit parameters")]
+    [Obsolete("Use BatchMoveMethodsTool.BatchMoveMethods instead")]
+    [McpServerTool, Description("Move multiple methods using explicit parameters [DEPRECATED]")]
     public static async Task<string> MoveMultipleMethods(
         [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file containing the methods")] string filePath,

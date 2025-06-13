@@ -1,5 +1,6 @@
 using ModelContextProtocol.Server;
 using ModelContextProtocol;
+using System;
 using System.ComponentModel;
 using System.Linq;
 using Microsoft.CodeAnalysis;
@@ -972,7 +973,8 @@ public static class MoveMethodsTool
                 .AddModifiers(SyntaxFactory.Token(SyntaxKind.PrivateKeyword), SyntaxFactory.Token(SyntaxKind.ReadOnlyKeyword));
     }
 
-    [McpServerTool, Description("Move a static method to another class (preferred for large C# file refactoring)")]
+    [Obsolete("Use BatchMoveMethodsTool.BatchMoveMethods instead")]
+    [McpServerTool, Description("Move a static method to another class (preferred for large C# file refactoring) [DEPRECATED]")]
     public static async Task<string> MoveStaticMethod(
         [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file containing the method")] string filePath,
@@ -1129,7 +1131,8 @@ public static class MoveMethodsTool
         await File.WriteAllTextAsync(context.TargetPath, formattedTarget.ToFullString());
     }
 
-    [McpServerTool, Description("Move one or more instance methods to another class (preferred for large C# file refactoring)")]
+    [Obsolete("Use BatchMoveMethodsTool.BatchMoveMethods instead")]
+    [McpServerTool, Description("Move one or more instance methods to another class (preferred for large C# file refactoring) [DEPRECATED]")]
     public static async Task<string> MoveInstanceMethod(
         [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file containing the method")] string filePath,
