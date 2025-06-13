@@ -73,6 +73,7 @@ static async Task RunCliMode(string[] args)
         ["safe-delete-variable"] = TestSafeDeleteVariable,
         ["cleanup-usings"] = TestCleanupUsings,
         ["analyze-refactoring-opportunities"] = TestAnalyzeRefactoringOpportunities,
+        ["list-class-lengths"] = TestListClassLengths,
         ["list-tools"] = _ => Task.FromResult(ListAvailableTools()),
         ["version"] = _ => Task.FromResult(ShowVersionInfo())
     };
@@ -109,6 +110,7 @@ static void ShowCliHelp()
         Console.WriteLine($"  {tool}");
     Console.WriteLine("  list-tools - List all available refactoring tools");
     Console.WriteLine("  analyze-refactoring-opportunities <solutionPath> <filePath> - Analyze code for potential refactorings");
+    Console.WriteLine("  list-class-lengths <solutionPath> - Show line counts for all classes in the solution");
 
     Console.WriteLine();
     Console.WriteLine("Examples:");
@@ -118,6 +120,7 @@ static void ShowCliHelp()
     Console.WriteLine("  --cli make-field-readonly ./MySolution.sln ./MyFile.cs 15");
     Console.WriteLine("  --cli cleanup-usings ./MySolution.sln ./MyFile.cs");
     Console.WriteLine("  --cli analyze-refactoring-opportunities ./MySolution.sln ./MyFile.cs");
+    Console.WriteLine("  --cli list-class-lengths ./MySolution.sln");
     Console.WriteLine("  --cli version");
     Console.WriteLine();
     Console.WriteLine("JSON mode: --json ToolName '{\"param\":\"value\"}'");
@@ -507,4 +510,14 @@ static async Task<string> TestInlineMethod(string[] args)
     var methodName = args[4];
 
     return await InlineMethodTool.InlineMethod(solutionPath, filePath, methodName);
+}
+
+static async Task<string> TestListClassLengths(string[] args)
+{
+    if (args.Length < 3)
+        return "Error: Missing arguments. Usage: --cli list-class-lengths <solutionPath>";
+
+    var solutionPath = args[2];
+
+    return await ClassLengthMetricsTool.ListClassLengths(solutionPath);
 }
