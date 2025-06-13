@@ -361,6 +361,16 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli move-multiple-methods \
   "[{\"sourceClass\":\"Helper\",\"method\":\"A\",\"targetClass\":\"Target\",\"accessMember\":\"t\",\"accessMemberType\":\"field\"},{\"sourceClass\":\"Helper\",\"method\":\"B\",\"targetClass\":\"Target\",\"accessMember\":\"t\",\"accessMemberType\":\"field\"}]"
 ```
 
+### Cross-file Example
+Move methods to separate files using the `targetFile` property:
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli move-multiple-methods \
+  "./RefactorMCP.sln" \
+  "./RefactorMCP.Tests/ExampleCode.cs" \
+  "[{\"sourceClass\":\"Helper\",\"method\":\"A\",\"targetClass\":\"Target\",\"accessMember\":\"t\",\"accessMemberType\":\"field\",\"isStatic\":false,\"targetFile\":\"./Target.cs\"}]"
+```
+
 **After**:
 ```csharp
 class Helper
