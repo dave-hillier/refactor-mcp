@@ -30,11 +30,13 @@ public static class StringProcessorExtensions
     }
 }";
         var output = ConvertToExtensionMethodTool.ConvertToExtensionMethodInSource(input, "FormatText", null);
-Assert.Equal(expected, output.Trim());
+        Assert.Equal(expected, output.Trim());
     }
-public void ConvertToExtensionMethodInSource_AppendsToExistingClass()
-{
-    var input = @"class StringProcessor
+
+    [Fact]
+    public void ConvertToExtensionMethodInSource_AppendsToExistingClass()
+    {
+        var input = @"class StringProcessor
 {
     void FormatText()
     {
@@ -62,11 +64,13 @@ public static class StringProcessorExtensions
     }
 }";
         var output = ConvertToExtensionMethodTool.ConvertToExtensionMethodInSource(input, "FormatText", "StringProcessorExtensions");
-Assert.Equal(expected, output.Trim());
+        Assert.Equal(expected, output.Trim());
     }
-public void ConvertToStaticWithInstanceInSource_TransformsMethod()
-{
-    var input = @"class DataProcessor
+
+    [Fact]
+    public void ConvertToStaticWithInstanceInSource_TransformsMethod()
+    {
+        var input = @"class DataProcessor
 {
     int dataCount;
     int GetDataCount()
@@ -74,7 +78,7 @@ public void ConvertToStaticWithInstanceInSource_TransformsMethod()
         return dataCount;
     }
 }";
-    var expected = @"class DataProcessor
+        var expected = @"class DataProcessor
 {
     int dataCount;
 
@@ -83,13 +87,14 @@ public void ConvertToStaticWithInstanceInSource_TransformsMethod()
         return instance.dataCount;
     }
 }";
-    var output = ConvertToStaticWithInstanceTool.ConvertToStaticWithInstanceInSource(input, "GetDataCount", "instance");
-    Assert.Equal(expected, output.Trim());
-}
+        var output = ConvertToStaticWithInstanceTool.ConvertToStaticWithInstanceInSource(input, "GetDataCount", "instance");
+        Assert.Equal(expected, output.Trim());
+    }
 
-public void ConvertToStaticWithParametersInSource_TransformsMethod()
-{
-    var input = @"class Calculator
+    [Fact]
+    public void ConvertToStaticWithParametersInSource_TransformsMethod()
+    {
+        var input = @"class Calculator
 {
     int multiplier;
     int MultiplyValue()
@@ -97,7 +102,7 @@ public void ConvertToStaticWithParametersInSource_TransformsMethod()
         return multiplier;
     }
 }";
-    var expected = @"class Calculator
+        var expected = @"class Calculator
 {
     int multiplier;
 
@@ -106,7 +111,7 @@ public void ConvertToStaticWithParametersInSource_TransformsMethod()
         return multiplier;
     }
 }";
-    var output = ConvertToStaticWithParametersTool.ConvertToStaticWithParametersInSource(input, "MultiplyValue");
-    Assert.Equal(expected, output.Trim());
-}
+        var output = ConvertToStaticWithParametersTool.ConvertToStaticWithParametersInSource(input, "MultiplyValue");
+        Assert.Equal(expected, output.Trim());
+    }
 }
