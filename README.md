@@ -166,7 +166,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --json ToolName '{"param":"value"
 - `list-tools` - Show all available refactoring tools
 - `load-solution <solutionPath>` - Load a solution file and set the working directory
 - `extract-method <solutionPath> <filePath> <range> <methodName>` - Extract code into method
-- `introduce-field <solutionPath> <filePath> <range> <fieldName> [accessModifier]` - Create field from expression
+- `introduce-field <solutionPath> <filePath> <range> <fieldName> [accessModifier]` - Create field from expression. Fails if a field with the same name already exists
 - `introduce-variable <solutionPath> <filePath> <range> <variableName>` - Create variable from expression
 - `make-field-readonly <solutionPath> <filePath> <fieldLine>` - Make field readonly
 - `introduce-parameter <solutionPath> <filePath> <methodLine> <range> <parameterName>` - Create parameter from expression
@@ -276,6 +276,8 @@ public double GetAverage()
 dotnet run --project RefactorMCP.ConsoleApp -- --cli introduce-field \
   "./RefactorMCP.sln" "./MyFile.cs" "3:12-3:54" "_averageValue" "private"
 ```
+The specified field name must be unique within the class. If a field with the
+same name already exists, the tool returns an error.
 
 **After**:
 ```csharp

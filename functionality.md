@@ -16,7 +16,7 @@ These refactorings are focused on maintaining the public API and moving the code
 Creates a new method from selected code and replaces the original with a method call. Specify ranges using `line:column-line:column` format.
 
 ### Introduce Field/Parameter/Variable
-Creates a new field, parameter, or variable from selected code. Use `line:column-line:column` ranges to specify the target code.
+Creates a new field, parameter, or variable from selected code. Use `line:column-line:column` ranges to specify the target code. Introducing a field fails if the class already defines a field with the same name.
 
 ### Convert to Static
 **With Parameters**: Transforms instance methods to static by converting instance dependencies into method parameters.

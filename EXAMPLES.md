@@ -99,6 +99,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli introduce-field \
   "_averageValue" \
   "private"
 ```
+If a field named `_averageValue` already exists on the `Calculator` class, the command will fail with an error.
 
 **After**:
 ```csharp
