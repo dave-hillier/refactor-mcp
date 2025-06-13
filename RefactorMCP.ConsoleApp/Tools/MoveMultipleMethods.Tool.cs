@@ -135,7 +135,7 @@ public static partial class MoveMultipleMethodsTool
                 {
                     var (msg, updatedDoc) = await MoveMethodsTool.MoveStaticMethodWithSolution(
                         currentDocument,
-                        new[] { methodNames[idx] },
+                        methodNames[idx],
                         targetClass,
                         targetFilePath);
                     results.Add(msg);
@@ -146,7 +146,7 @@ public static partial class MoveMultipleMethodsTool
                     var (msg, updatedDoc) = await MoveMethodsTool.MoveInstanceMethodWithSolution(
                         currentDocument,
                         sourceClass,
-                        new[] { methodNames[idx] },
+                        methodNames[idx],
                         targetClass,
                         accessMember,
                         accessMemberTypes[idx],
