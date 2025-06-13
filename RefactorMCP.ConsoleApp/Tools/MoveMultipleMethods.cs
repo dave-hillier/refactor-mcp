@@ -4,7 +4,29 @@ using System.ComponentModel;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Formatting;
 using System.Text.Json;
+
+// ===============================================================================
+// MULTIPLE METHOD MOVEMENT TOOL
+// ===============================================================================
+// This tool extends the single method movement tool to handle multiple methods
+// with automatic dependency ordering. It follows the same layered architecture:
+//
+// 1. AST TRANSFORMATION LAYER: Pure syntax tree operations (no file I/O)
+//    - MoveMultipleMethodsAst(): Coordinates multiple method moves
+//    - OrderOperations(): Analyzes dependencies and orders moves
+//    - BuildDependencies(): Maps method call dependencies
+//
+// 2. FILE OPERATION LAYER: File I/O operations using AST layer
+//    - MoveMultipleMethodsInFile(): Handles file-based bulk moves
+//
+// 3. SOLUTION OPERATION LAYER: Solution/Document operations using AST layer
+//    - MoveMultipleMethods(): Public API for solution-based bulk moves
+//
+// 4. LEGACY COMPATIBILITY: String-based methods for backward compatibility
+//    - MoveMultipleMethodsInSource(): Legacy string-based bulk moves
+// ===============================================================================
 
 [McpServerToolType]
 public static class MoveMultipleMethodsTool
@@ -20,14 +42,64 @@ public static class MoveMultipleMethodsTool
         public string? TargetFile { get; set; }
     }
 
-    private static Dictionary<string, HashSet<string>> BuildDependencies(string sourceText, IEnumerable<MoveOperation> ops)
-    {
-        var tree = CSharpSyntaxTree.ParseText(sourceText);
-        var root = tree.GetRoot();
+    // ===== AST TRANSFORMATION LAYER =====
+    // Pure syntax tree operations with no file I/O
 
+    public static SyntaxNode MoveMultipleMethodsAst(SyntaxNode sourceRoot, IEnumerable<MoveOperation> operations)
+    {
+        var orderedOps = OrderOperations(sourceRoot, operations.ToList());
+        var workingRoot = sourceRoot;
+
+        foreach (var op in orderedOps)
+        {
+            if (op.IsStatic)
+            {
+                var moveResult = MoveMethodsTool.MoveStaticMethodAst(workingRoot, op.Method, op.TargetClass);
+                workingRoot = MoveMethodsTool.AddMethodToTargetClass(moveResult.NewSourceRoot, op.TargetClass, moveResult.MovedMethod);
+            }
+            else
+            {
+                var moveResult = MoveMethodsTool.MoveInstanceMethodAst(workingRoot, op.SourceClass, op.Method, op.TargetClass, op.AccessMember, op.AccessMemberType);
+                workingRoot = MoveMethodsTool.AddMethodToTargetClass(moveResult.NewSourceRoot, op.TargetClass, moveResult.MovedMethod);
+            }
+        }
+
+        return workingRoot;
+    }
+
+    // ===== FILE OPERATION LAYER =====
+    // File I/O operations that use the AST layer
+
+    public static async Task<string> MoveMultipleMethodsInFile(string filePath, string operationsJson)
+    {
+        var ops = JsonSerializer.Deserialize<List<MoveOperation>>(operationsJson);
+        if (ops == null || ops.Count == 0)
+            throw new McpException("Error: No operations provided");
+
+        if (!File.Exists(filePath))
+            throw new McpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
+
+        var sourceText = await File.ReadAllTextAsync(filePath);
+        var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
+        var sourceRoot = await syntaxTree.GetRootAsync();
+
+        // Perform AST transformations
+        var resultRoot = MoveMultipleMethodsAst(sourceRoot, ops);
+
+        // Format and write back
+        var formatted = Formatter.Format(resultRoot, RefactoringHelpers.SharedWorkspace);
+        await File.WriteAllTextAsync(filePath, formatted.ToFullString());
+
+        return $"Successfully moved {ops.Count} methods";
+    }
+
+    // ===== HELPER METHODS =====
+
+    private static Dictionary<string, HashSet<string>> BuildDependencies(SyntaxNode sourceRoot, IEnumerable<MoveOperation> ops)
+    {
         // Build map keyed by "Class.Method" to support duplicate method names in different classes
         var opSet = ops.Select(o => ($"{o.SourceClass}.{o.Method}")).ToHashSet();
-        var map = root.DescendantNodes().OfType<ClassDeclarationSyntax>()
+        var map = sourceRoot.DescendantNodes().OfType<ClassDeclarationSyntax>()
             .SelectMany(cls => cls.Members.OfType<MethodDeclarationSyntax>()
                 .Select(m => new { Key = $"{cls.Identifier.ValueText}.{m.Identifier.ValueText}", Method = m }))
             .Where(x => opSet.Contains(x.Key))
@@ -61,11 +133,13 @@ public static class MoveMultipleMethodsTool
         return deps;
     }
 
-    private static List<MoveOperation> OrderOperations(string sourceText, List<MoveOperation> ops)
+    private static List<MoveOperation> OrderOperations(SyntaxNode sourceRoot, List<MoveOperation> ops)
     {
-        var deps = BuildDependencies(sourceText, ops);
+        var deps = BuildDependencies(sourceRoot, ops);
         return ops.OrderBy(o => deps.TryGetValue($"{o.SourceClass}.{o.Method}", out var d) ? d.Count : 0).ToList();
     }
+
+    // ===== LEGACY STRING-BASED METHODS (for backward compatibility) =====
 
     public static string MoveMultipleMethodsInSource(string sourceText, string operationsJson)
     {
@@ -73,21 +147,16 @@ public static class MoveMultipleMethodsTool
         if (ops == null || ops.Count == 0)
             return RefactoringHelpers.ThrowMcpException("Error: No operations provided");
 
-        var ordered = OrderOperations(sourceText, ops);
-        var working = sourceText;
-        foreach (var op in ordered)
-        {
-            if (op.IsStatic)
-            {
-                working = MoveMethodsTool.MoveStaticMethodInSource(working, op.Method, op.TargetClass);
-            }
-            else
-            {
-                working = MoveMethodsTool.MoveInstanceMethodInSource(working, op.SourceClass, op.Method, op.TargetClass, op.AccessMember, op.AccessMemberType);
-            }
-        }
-        return working;
+        var tree = CSharpSyntaxTree.ParseText(sourceText);
+        var root = tree.GetRoot();
+
+        var resultRoot = MoveMultipleMethodsAst(root, ops);
+        var formatted = Formatter.Format(resultRoot, RefactoringHelpers.SharedWorkspace);
+        return formatted.ToFullString();
     }
+
+    // ===== SOLUTION OPERATION LAYER =====
+    // Solution/Document operations that use the AST layer
 
     [McpServerTool, Description("Move multiple methods to target classes, automatically ordering by dependencies")]
     public static async Task<string> MoveMultipleMethods(
@@ -99,17 +168,16 @@ public static class MoveMultipleMethodsTool
         if (ops == null || ops.Count == 0)
             return RefactoringHelpers.ThrowMcpException("Error: No operations provided");
 
-        var sourceText = await File.ReadAllTextAsync(filePath);
-        var ordered = OrderOperations(sourceText, ops);
-        var results = new List<string>();
-
-        // Check if we're using a solution or single-file mode
         var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
         var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
 
         if (document != null)
         {
             // Solution-based: need to manage document state between operations
+            var sourceText = await File.ReadAllTextAsync(filePath);
+            var results = new List<string>();
+            var ordered = OrderOperations(CSharpSyntaxTree.ParseText(sourceText).GetRoot(), ops);
+            
             var currentDocument = document;
             foreach (var op in ordered)
             {
@@ -126,27 +194,13 @@ public static class MoveMultipleMethodsTool
                 // Clear solution cache to force reload of updated file state
                 RefactoringHelpers.SolutionCache.Remove(solutionPath);
             }
+            
+            return string.Join("\n", results);
         }
         else
         {
-            // Single-file mode: use the more efficient string-based operations
-            var working = sourceText;
-            foreach (var op in ordered)
-            {
-                if (op.IsStatic)
-                {
-                    working = MoveMethodsTool.MoveStaticMethodInSource(working, op.Method, op.TargetClass);
-                    results.Add($"Successfully moved static method '{op.Method}' to {op.TargetClass}");
-                }
-                else
-                {
-                    working = MoveMethodsTool.MoveInstanceMethodInSource(working, op.SourceClass, op.Method, op.TargetClass, op.AccessMember, op.AccessMemberType);
-                    results.Add($"Successfully moved instance method '{op.Method}' from {op.SourceClass} to {op.TargetClass}");
-                }
-            }
-            await File.WriteAllTextAsync(filePath, working);
+            // Single-file mode: use the more efficient AST-based operations
+            return await MoveMultipleMethodsInFile(filePath, operationsJson);
         }
-
-        return string.Join("\n", results);
     }
 }
