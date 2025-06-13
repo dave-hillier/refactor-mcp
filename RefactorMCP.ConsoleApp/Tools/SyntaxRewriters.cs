@@ -367,6 +367,7 @@ internal class ExtensionMethodRewriter : CSharpSyntaxRewriter
         }
 
         return base.VisitIdentifierName(node);
+    }
 }
 
 internal class ParameterIntroductionRewriter : CSharpSyntaxRewriter
