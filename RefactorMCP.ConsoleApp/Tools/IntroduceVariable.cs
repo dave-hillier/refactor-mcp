@@ -10,6 +10,7 @@ using Microsoft.CodeAnalysis.Text;
 [McpServerToolType]
 public static class IntroduceVariableTool
 {
+    [McpServerTool, Description("Introduce a new variable from selected expression (preferred for large C# file refactoring)")]
     public static async Task<string> IntroduceVariable(
         [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
