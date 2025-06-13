@@ -81,6 +81,13 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli analyze-refactoring-opportu
 ```
 Prompt the server to analyze the file and suggest possible refactorings such as extract-method or safe-delete-method.
 
+### List Class Lengths
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli list-class-lengths \
+  "./RefactorMCP.sln"
+```
+Show each class in the solution with its line count for complexity insight.
+
 ### Safe Delete Parameter
 ```bash
 dotnet run --project RefactorMCP.ConsoleApp -- --cli safe-delete-parameter \

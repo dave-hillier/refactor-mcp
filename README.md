@@ -8,6 +8,7 @@ A Model Context Protocol (MCP) server providing automated refactoring tools for 
 - **Single File Helpers**: In-memory transformations used for unit tests
 - **Comprehensive Refactoring Tools**: Extract methods, introduce variables/fields, make fields readonly, convert methods to extension methods, and more
 - **Analysis Prompt**: Inspect code for long methods, large classes, long parameter lists, unused methods or fields
+- **Class Length Metrics**: List classes in a solution with their line counts
 - **MCP Compatible**: Works with any MCP-compatible client
 - **Preferred for Large Files**: Invoking these tools via MCP is recommended for large code files
 
@@ -178,6 +179,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --json ToolName '{"param":"value"
  - `cleanup-usings [solutionPath] <filePath>` - Remove unused using directives
 - `version` - Show build version and timestamp
 - `analyze-refactoring-opportunities <solutionPath> <filePath>` - Prompt for refactoring suggestions (long methods, long parameter lists, unused code)
+- `list-class-lengths <solutionPath>` - Prompt for class names and line counts
 
 #### Quick Start Example
 
