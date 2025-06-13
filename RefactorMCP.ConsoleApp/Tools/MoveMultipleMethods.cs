@@ -6,6 +6,9 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
 using System.Text.Json;
+using System.Collections.Generic;
+using System.Linq;
+using System.IO;
 
 // ===============================================================================
 // MULTIPLE METHOD MOVEMENT TOOL
@@ -85,16 +88,90 @@ public static class MoveMultipleMethodsTool
 
         var sourceText = await File.ReadAllTextAsync(filePath);
         var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
-        var sourceRoot = await syntaxTree.GetRootAsync();
+        var originalSourceRoot = await syntaxTree.GetRootAsync();
 
-        // Perform AST transformations
-        var resultRoot = MoveMultipleMethodsAst(sourceRoot, ops);
+        var ordered = OrderOperations(originalSourceRoot, ops);
+        var workingSourceRoot = originalSourceRoot;
+        var targetRoots = new Dictionary<string, SyntaxNode>();
 
-        // Format and write back
-        var formatted = Formatter.Format(resultRoot, RefactoringHelpers.SharedWorkspace);
-        await File.WriteAllTextAsync(filePath, formatted.ToFullString());
+        foreach (var op in ordered)
+        {
+            var targetPath = op.TargetFile ?? Path.Combine(Path.GetDirectoryName(filePath)!, $"{op.TargetClass}.cs");
+            var sameFile = targetPath == filePath;
+
+            if (op.IsStatic)
+            {
+                var moveResult = MoveMethodsTool.MoveStaticMethodAst(workingSourceRoot, op.Method, op.TargetClass);
+                workingSourceRoot = moveResult.NewSourceRoot;
+
+                if (sameFile)
+                {
+                    workingSourceRoot = MoveMethodsTool.AddMethodToTargetClass(workingSourceRoot, op.TargetClass, moveResult.MovedMethod);
+                }
+                else
+                {
+                    if (!targetRoots.TryGetValue(targetPath, out var targetRoot))
+                    {
+                        targetRoot = await LoadOrCreateTargetRoot(targetPath);
+                        targetRoot = MoveMethodsTool.PropagateUsings(originalSourceRoot, targetRoot);
+                    }
+
+                    targetRoot = MoveMethodsTool.AddMethodToTargetClass(targetRoot, op.TargetClass, moveResult.MovedMethod);
+                    targetRoots[targetPath] = targetRoot;
+                }
+            }
+            else
+            {
+                var moveResult = MoveMethodsTool.MoveInstanceMethodAst(
+                    workingSourceRoot,
+                    op.SourceClass,
+                    op.Method,
+                    op.TargetClass,
+                    op.AccessMember,
+                    op.AccessMemberType);
+
+                workingSourceRoot = moveResult.NewSourceRoot;
+
+                if (sameFile)
+                {
+                    workingSourceRoot = MoveMethodsTool.AddMethodToTargetClass(workingSourceRoot, op.TargetClass, moveResult.MovedMethod);
+                }
+                else
+                {
+                    if (!targetRoots.TryGetValue(targetPath, out var targetRoot))
+                    {
+                        targetRoot = await LoadOrCreateTargetRoot(targetPath);
+                        targetRoot = MoveMethodsTool.PropagateUsings(originalSourceRoot, targetRoot);
+                    }
+
+                    targetRoot = MoveMethodsTool.AddMethodToTargetClass(targetRoot, op.TargetClass, moveResult.MovedMethod);
+                    targetRoots[targetPath] = targetRoot;
+                }
+            }
+        }
+
+        var formattedSource = Formatter.Format(workingSourceRoot, RefactoringHelpers.SharedWorkspace);
+        await File.WriteAllTextAsync(filePath, formattedSource.ToFullString());
+
+        foreach (var kvp in targetRoots)
+        {
+            var formatted = Formatter.Format(kvp.Value, RefactoringHelpers.SharedWorkspace);
+            Directory.CreateDirectory(Path.GetDirectoryName(kvp.Key)!);
+            await File.WriteAllTextAsync(kvp.Key, formatted.ToFullString());
+        }
 
         return $"Successfully moved {ops.Count} methods";
+    }
+
+    private static async Task<SyntaxNode> LoadOrCreateTargetRoot(string targetPath)
+    {
+        if (File.Exists(targetPath))
+        {
+            var targetText = await File.ReadAllTextAsync(targetPath);
+            return await CSharpSyntaxTree.ParseText(targetText).GetRootAsync();
+        }
+
+        return SyntaxFactory.CompilationUnit();
     }
 
     // ===== HELPER METHODS =====
