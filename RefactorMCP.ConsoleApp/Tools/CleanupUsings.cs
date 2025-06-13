@@ -5,6 +5,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
+
 using System.IO;
 using System;
 
@@ -36,9 +37,18 @@ public static class CleanupUsingsTool
 
     private static async Task<string> CleanupUsingsWithSolution(Document document)
     {
-        var sourceText = await document.GetTextAsync();
-        var newText = CleanupUsingsInSource(sourceText.ToString());
-        await File.WriteAllTextAsync(document.FilePath!, newText);
+        var model = await document.GetSemanticModelAsync();
+        var root = await document.GetSyntaxRootAsync();
+        var diagnostics = model!.GetDiagnostics();
+        var unused = diagnostics
+            .Where(d => d.Id == "CS8019")
+            .Select(d => root!.FindNode(d.Location.SourceSpan))
+            .OfType<UsingDirectiveSyntax>()
+            .ToList();
+
+        var newRoot = root!.RemoveNodes(unused, SyntaxRemoveOptions.KeepNoTrivia);
+        var formatted = Formatter.Format(newRoot, document.Project.Solution.Workspace);
+        await File.WriteAllTextAsync(document.FilePath!, formatted.ToFullString());
         return $"Removed unused usings in {document.FilePath}";
     }
 
