@@ -9,6 +9,7 @@ using Microsoft.CodeAnalysis.Formatting;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
+using System.Threading.Tasks;
 
 public class MethodAndMemberVisitor : CSharpSyntaxWalker
 {
@@ -62,6 +63,112 @@ public class MethodAndMemberVisitor : CSharpSyntaxWalker
 [McpServerToolType]
 public static partial class MoveMultipleMethodsTool
 {
+    private class FileOperationContext
+    {
+        public Document Document { get; set; }
+        public string SourcePath => Document.FilePath!;
+        public string TargetPath { get; set; }
+        public bool SameFile => SourcePath == TargetPath;
+        public SyntaxNode SourceRoot { get; set; }
+        public string SourceClassName { get; set; }
+        public string TargetClassName { get; set; }
+    }
+
+    private static async Task<string> MoveSingleMethod(
+        FileOperationContext context,
+        string methodName,
+        bool isStatic,
+        string accessMember,
+        string accessMemberType)
+    {
+        dynamic moveResult;
+        if (isStatic)
+        {
+            moveResult = MoveMethodsTool.MoveStaticMethodAst(context.SourceRoot, methodName, context.TargetClassName);
+        }
+        else
+        {
+            moveResult = MoveMethodsTool.MoveInstanceMethodAst(
+                context.SourceRoot,
+                context.SourceClassName,
+                methodName,
+                context.TargetClassName,
+                accessMember,
+                accessMemberType);
+        }
+
+        var newSourceRoot = (SyntaxNode)moveResult.NewSourceRoot;
+        var movedMethod = (MethodDeclarationSyntax)moveResult.MovedMethod;
+
+        var updatedTargetRoot = await PrepareTargetRoot(context, newSourceRoot, movedMethod);
+        await WriteTransformedFiles(context, newSourceRoot, updatedTargetRoot);
+
+        if (!context.SameFile)
+        {
+            RefactoringHelpers.AddDocumentToProject(context.Document.Project, context.TargetPath);
+        }
+        
+        var newRoot = context.SameFile
+            ? Formatter.Format(updatedTargetRoot, RefactoringHelpers.SharedWorkspace)
+            : Formatter.Format(newSourceRoot, RefactoringHelpers.SharedWorkspace);
+
+        var updatedDoc = context.Document.WithSyntaxRoot(newRoot);
+        RefactoringHelpers.UpdateSolutionCache(updatedDoc);
+        context.Document = updatedDoc;
+        context.SourceRoot = await updatedDoc.GetSyntaxRootAsync();
+
+        return isStatic
+            ? $"Successfully moved static method '{methodName}' to {context.TargetClassName} in {context.TargetPath}"
+            : $"Successfully moved {context.SourceClassName}.{methodName} instance method to {context.TargetClassName} in {context.TargetPath}";
+    }
+
+    private static async Task<SyntaxNode> PrepareTargetRoot(FileOperationContext context, SyntaxNode newSourceRoot, MethodDeclarationSyntax methodToMove)
+    {
+        SyntaxNode targetRoot;
+
+        if (context.SameFile)
+        {
+            targetRoot = newSourceRoot;
+        }
+        else
+        {
+            targetRoot = await LoadOrCreateTargetRoot(context.TargetPath);
+            targetRoot = MoveMethodsTool.PropagateUsings(context.SourceRoot, targetRoot);
+        }
+
+        return MoveMethodsTool.AddMethodToTargetClass(targetRoot, context.TargetClassName, methodToMove);
+    }
+
+    private static async Task<SyntaxNode> LoadOrCreateTargetRoot(string targetPath)
+    {
+        if (File.Exists(targetPath))
+        {
+            var targetText = await File.ReadAllTextAsync(targetPath);
+            return await CSharpSyntaxTree.ParseText(targetText).GetRootAsync();
+        }
+        else
+        {
+            return SyntaxFactory.CompilationUnit();
+        }
+    }
+
+    private static async Task WriteTransformedFiles(
+        FileOperationContext context,
+        SyntaxNode newSourceRoot,
+        SyntaxNode targetRoot)
+    {
+        var formattedTarget = Formatter.Format(targetRoot, RefactoringHelpers.SharedWorkspace);
+
+        if (!context.SameFile)
+        {
+            var formattedSource = Formatter.Format(newSourceRoot, RefactoringHelpers.SharedWorkspace);
+            await File.WriteAllTextAsync(context.SourcePath, formattedSource.ToFullString());
+        }
+
+        Directory.CreateDirectory(Path.GetDirectoryName(context.TargetPath)!);
+        await File.WriteAllTextAsync(context.TargetPath, formattedTarget.ToFullString());
+    }
+
     // Solution/Document operations that use the AST layer
 
     [McpServerTool, Description("Move multiple methods from a source class to a target class, automatically ordering by dependencies. " +
@@ -127,36 +234,25 @@ public static partial class MoveMultipleMethodsTool
             var orderedIndices = OrderOperations(root, sourceClasses, methodNames);
             
             var results = new List<string>();
-            var currentDocument = document;
-            
+            var context = new FileOperationContext
+            {
+                Document = document,
+                SourceRoot = root,
+                SourceClassName = sourceClass,
+                TargetClassName = targetClass,
+                TargetPath = targetFilePath ?? Path.Combine(Path.GetDirectoryName(document.FilePath!)!, $"{targetClass}.cs")
+            };
+
             foreach (var idx in orderedIndices)
             {
-                if (isStatic[idx])
-                {
-                    var (msg, updatedDoc) = await MoveMethodsTool.MoveStaticMethodWithSolution(
-                        currentDocument,
-                        methodNames[idx],
-                        targetClass,
-                        targetFilePath);
-                    results.Add(msg);
-                    currentDocument = updatedDoc;
-                }
-                else
-                {
-                    var (msg, updatedDoc) = await MoveMethodsTool.MoveInstanceMethodWithSolution(
-                        currentDocument,
-                        sourceClass,
-                        methodNames[idx],
-                        targetClass,
-                        accessMember,
-                        accessMemberTypes[idx],
-                        targetFilePath);
-                    results.Add(msg);
-                    currentDocument = updatedDoc;
-                }
+                var resultMessage = await MoveSingleMethod(
+                    context,
+                    methodNames[idx],
+                    isStatic[idx],
+                    accessMember,
+                    accessMemberTypes[idx]);
+                results.Add(resultMessage);
             }
-
-            RefactoringHelpers.UpdateSolutionCache(currentDocument);
 
             return string.Join("\n", results);
         }
