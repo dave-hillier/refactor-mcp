@@ -1,11 +1,9 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
 using System.Collections.Generic;
-using System.Linq;
 
-internal class StaticFieldChecker : CSharpSyntaxRewriter
+internal class StaticFieldChecker : CSharpSyntaxWalker
 {
     private readonly HashSet<string> _staticFieldNames;
     public bool HasStaticFieldReferences { get; private set; }
@@ -15,11 +13,14 @@ internal class StaticFieldChecker : CSharpSyntaxRewriter
         _staticFieldNames = staticFieldNames;
     }
 
-    public override SyntaxNode? VisitIdentifierName(IdentifierNameSyntax node)
+    public override void VisitIdentifierName(IdentifierNameSyntax node)
     {
         var parent = node.Parent;
         if (parent is ParameterSyntax || parent is TypeSyntax)
-            return base.VisitIdentifierName(node);
+        {
+            base.VisitIdentifierName(node);
+            return;
+        }
 
         if (_staticFieldNames.Contains(node.Identifier.ValueText))
         {
@@ -30,7 +31,7 @@ internal class StaticFieldChecker : CSharpSyntaxRewriter
             }
         }
 
-        return base.VisitIdentifierName(node);
+        base.VisitIdentifierName(node);
     }
 }
 

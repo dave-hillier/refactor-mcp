@@ -1,11 +1,9 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
 using System.Collections.Generic;
-using System.Linq;
 
-internal class MethodCallChecker : CSharpSyntaxRewriter
+internal class MethodCallChecker : CSharpSyntaxWalker
 {
     private readonly HashSet<string> _classMethodNames;
     public bool HasMethodCalls { get; private set; }
@@ -15,7 +13,7 @@ internal class MethodCallChecker : CSharpSyntaxRewriter
         _classMethodNames = classMethodNames;
     }
 
-    public override SyntaxNode? VisitInvocationExpression(InvocationExpressionSyntax node)
+    public override void VisitInvocationExpression(InvocationExpressionSyntax node)
     {
         if (node.Expression is IdentifierNameSyntax identifier)
         {
@@ -24,8 +22,7 @@ internal class MethodCallChecker : CSharpSyntaxRewriter
                 HasMethodCalls = true;
             }
         }
-
-        return base.VisitInvocationExpression(node);
+        base.VisitInvocationExpression(node);
     }
 }
 
