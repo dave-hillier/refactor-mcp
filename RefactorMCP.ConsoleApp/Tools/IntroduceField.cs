@@ -6,6 +6,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Text;
+using System.Linq;
 
 [McpServerToolType]
 public static class IntroduceFieldTool
@@ -75,6 +76,12 @@ public static class IntroduceFieldTool
 
         var fieldReference = SyntaxFactory.IdentifierName(fieldName);
         var containingClass = selectedExpression.Ancestors().OfType<ClassDeclarationSyntax>().FirstOrDefault();
+        if (containingClass != null)
+        {
+            var classSymbol = semanticModel.GetDeclaredSymbol(containingClass);
+            if (classSymbol?.GetMembers().OfType<IFieldSymbol>().Any(f => f.Name == fieldName) == true)
+                return RefactoringHelpers.ThrowMcpException($"Error: Field '{fieldName}' already exists");
+        }
         var rewriter = new FieldIntroductionRewriter(selectedExpression, fieldReference, fieldDeclaration, containingClass);
         var newRoot = rewriter.Visit(syntaxRoot);
 
@@ -137,6 +144,15 @@ public static class IntroduceFieldTool
 
         var fieldReference = SyntaxFactory.IdentifierName(fieldName);
         var containingClass = selectedExpression.Ancestors().OfType<ClassDeclarationSyntax>().FirstOrDefault();
+        if (containingClass != null)
+        {
+            var exists = containingClass.Members
+                .OfType<FieldDeclarationSyntax>()
+                .SelectMany(f => f.Declaration.Variables)
+                .Any(v => v.Identifier.ValueText == fieldName);
+            if (exists)
+                return RefactoringHelpers.ThrowMcpException($"Error: Field '{fieldName}' already exists");
+        }
         var rewriter = new FieldIntroductionRewriter(selectedExpression, fieldReference, fieldDeclaration, containingClass);
         var newRoot = rewriter.Visit(syntaxRoot);
 

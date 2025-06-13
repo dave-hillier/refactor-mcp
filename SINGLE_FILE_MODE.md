@@ -60,9 +60,10 @@ The refactoring engine automatically detects which mode to use:
 - Inserts declaration at appropriate scope
 
 #### ✅ Introduce Field
-- Creates private fields from expressions  
+- Creates private fields from expressions
 - Uses `var` type with initializer
 - Adds field to class members
+- Refactoring fails if the field name already exists
 
 #### ✅ Make Field Readonly
 - Adds `readonly` modifier to fields
