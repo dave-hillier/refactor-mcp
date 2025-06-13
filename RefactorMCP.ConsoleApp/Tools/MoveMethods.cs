@@ -8,6 +8,30 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Text;
 
+// ===============================================================================
+// REFACTORED METHOD MOVEMENT ARCHITECTURE
+// ===============================================================================
+// This tool follows a layered architecture with clear separation of concerns:
+//
+// 1. AST TRANSFORMATION LAYER: Pure syntax tree operations (no file I/O)
+//    - MoveStaticMethodAst(): Transforms static methods in memory
+//    - MoveInstanceMethodAst(): Transforms instance methods in memory
+//    - AddMethodToTargetClass(): Adds methods to target classes
+//    - PropagateUsings(): Manages using statements
+//
+// 2. FILE OPERATION LAYER: File I/O operations using AST layer
+//    - MoveStaticMethodInFile(): Handles file-based static method moves
+//    - MoveInstanceMethodInFile(): Handles file-based instance method moves
+//
+// 3. SOLUTION OPERATION LAYER: Solution/Document operations using AST layer
+//    - MoveStaticMethod(): Public API for solution-based moves
+//    - MoveInstanceMethod(): Public API for solution-based moves
+//
+// 4. LEGACY COMPATIBILITY: String-based methods for backward compatibility
+//    - MoveStaticMethodInSource(): Legacy string-based static moves
+//    - MoveInstanceMethodInSource(): Legacy string-based instance moves
+// ===============================================================================
+
 public class InstanceMemberUsageChecker : CSharpSyntaxRewriter
 {
     private readonly HashSet<string> _knownInstanceMembers;
@@ -234,130 +258,40 @@ public class StaticFieldRewriter : CSharpSyntaxRewriter
 [McpServerToolType]
 public static class MoveMethodsTool
 {
-    private static bool HasInstanceMemberUsage(MethodDeclarationSyntax method, HashSet<string> knownMembers)
+    // ===== AST TRANSFORMATION LAYER =====
+    // Pure syntax tree operations with no file I/O
+
+    public class MoveStaticMethodResult
     {
-        var usageChecker = new InstanceMemberUsageChecker(knownMembers);
-        usageChecker.Visit(method);
-        return usageChecker.HasInstanceMemberUsage;
+        public SyntaxNode NewSourceRoot { get; set; }
+        public MethodDeclarationSyntax MovedMethod { get; set; }
+        public MethodDeclarationSyntax StubMethod { get; set; }
     }
 
-    // New: Check if method calls other methods in the same class
-    private static bool HasMethodCalls(MethodDeclarationSyntax method, HashSet<string> methodNames)
+    public class MoveInstanceMethodResult
     {
-        var callChecker = new MethodCallChecker(methodNames);
-        callChecker.Visit(method);
-        return callChecker.HasMethodCalls;
+        public SyntaxNode NewSourceRoot { get; set; }
+        public MethodDeclarationSyntax MovedMethod { get; set; }
+        public MethodDeclarationSyntax StubMethod { get; set; }
+        public MemberDeclarationSyntax? AccessMember { get; set; }
+        public bool NeedsThisParameter { get; set; }
     }
 
-    // New: Check if static method references static fields
-    private static bool HasStaticFieldReferences(MethodDeclarationSyntax method, HashSet<string> staticFieldNames)
+    public static MoveStaticMethodResult MoveStaticMethodAst(SyntaxNode sourceRoot, string methodName, string targetClass)
     {
-        var fieldChecker = new StaticFieldChecker(staticFieldNames);
-        fieldChecker.Visit(method);
-        return fieldChecker.HasStaticFieldReferences;
-    }
-
-    private static HashSet<string> GetInstanceMemberNames(ClassDeclarationSyntax originClass)
-    {
-        var knownMembers = new HashSet<string>();
-        foreach (var member in originClass.Members)
-        {
-            if (member is FieldDeclarationSyntax field)
-            {
-                foreach (var variable in field.Declaration.Variables)
-                {
-                    knownMembers.Add(variable.Identifier.ValueText);
-                }
-            }
-            else if (member is PropertyDeclarationSyntax property)
-            {
-                knownMembers.Add(property.Identifier.ValueText);
-            }
-        }
-        return knownMembers;
-    }
-
-    // New: Get method names in the class
-    private static HashSet<string> GetMethodNames(ClassDeclarationSyntax originClass)
-    {
-        var methodNames = new HashSet<string>();
-        foreach (var member in originClass.Members)
-        {
-            if (member is MethodDeclarationSyntax method)
-            {
-                methodNames.Add(method.Identifier.ValueText);
-            }
-        }
-        return methodNames;
-    }
-
-    // New: Get static field names in the class
-    private static HashSet<string> GetStaticFieldNames(ClassDeclarationSyntax originClass)
-    {
-        var staticFieldNames = new HashSet<string>();
-        foreach (var member in originClass.Members)
-        {
-            if (member is FieldDeclarationSyntax field && field.Modifiers.Any(SyntaxKind.StaticKeyword))
-            {
-                foreach (var variable in field.Declaration.Variables)
-                {
-                    staticFieldNames.Add(variable.Identifier.ValueText);
-                }
-            }
-        }
-        return staticFieldNames;
-    }
-
-    private static bool MemberExists(ClassDeclarationSyntax classDecl, string memberName)
-    {
-        return classDecl.Members.OfType<FieldDeclarationSyntax>()
-                   .Any(f => f.Declaration.Variables.Any(v => v.Identifier.ValueText == memberName))
-               || classDecl.Members.OfType<PropertyDeclarationSyntax>()
-                   .Any(p => p.Identifier.ValueText == memberName);
-    }
-
-    private static MemberDeclarationSyntax CreateAccessMember(string accessMemberType, string accessMemberName, string targetClass)
-    {
-        if (accessMemberType == "property")
-        {
-            return SyntaxFactory.PropertyDeclaration(SyntaxFactory.ParseTypeName(targetClass), accessMemberName)
-                .AddModifiers(SyntaxFactory.Token(SyntaxKind.PrivateKeyword))
-                .AddAccessorListAccessors(
-                    SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
-                    SyntaxFactory.AccessorDeclaration(SyntaxKind.SetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)));
-        }
-
-        return SyntaxFactory.FieldDeclaration(
-                    SyntaxFactory.VariableDeclaration(
-                        SyntaxFactory.ParseTypeName(targetClass),
-                        SyntaxFactory.SeparatedList(new[]
-                        {
-                            SyntaxFactory.VariableDeclarator(accessMemberName)
-                                .WithInitializer(SyntaxFactory.EqualsValueClause(
-                                    SyntaxFactory.ObjectCreationExpression(SyntaxFactory.ParseTypeName(targetClass))
-                                        .WithArgumentList(SyntaxFactory.ArgumentList())))
-                        })))
-                .AddModifiers(SyntaxFactory.Token(SyntaxKind.PrivateKeyword), SyntaxFactory.Token(SyntaxKind.ReadOnlyKeyword));
-    }
-
-    public static string MoveStaticMethodInSource(string sourceText, string methodName, string targetClass)
-    {
-        var tree = CSharpSyntaxTree.ParseText(sourceText);
-        var root = tree.GetRoot();
-
-        var method = root.DescendantNodes()
+        var method = sourceRoot.DescendantNodes()
             .OfType<MethodDeclarationSyntax>()
             .FirstOrDefault(m => m.Identifier.ValueText == methodName &&
                                  m.Modifiers.Any(SyntaxKind.StaticKeyword));
         if (method == null)
-            return RefactoringHelpers.ThrowMcpException($"Error: Static method '{methodName}' not found");
+            throw new McpException($"Error: Static method '{methodName}' not found");
 
         // Find the source class containing this method
-        var sourceClass = root.DescendantNodes()
+        var sourceClass = sourceRoot.DescendantNodes()
             .OfType<ClassDeclarationSyntax>()
             .FirstOrDefault(c => c.Members.Contains(method));
         if (sourceClass == null)
-            return RefactoringHelpers.ThrowMcpException($"Error: Could not find source class for method '{methodName}'");
+            throw new McpException($"Error: Could not find source class for method '{methodName}'");
 
         // Enhanced: Check if method references static fields and qualify them
         var staticFieldNames = GetStaticFieldNames(sourceClass);
@@ -384,11 +318,6 @@ public static class MoveMethodsTool
                 method.ParameterList.Parameters
                     .Select(p => SyntaxFactory.Argument(SyntaxFactory.IdentifierName(p.Identifier)))));
 
-        var memberAccess = SyntaxFactory.MemberAccessExpression(
-            SyntaxKind.SimpleMemberAccessExpression,
-            SyntaxFactory.IdentifierName(targetClass),
-            SyntaxFactory.IdentifierName(methodName));
-
         // Enhanced: Add generic type arguments if present (static methods always include them)
         SimpleNameSyntax methodExpression = typeArgumentList != null
             ? SyntaxFactory.GenericName(methodName).WithTypeArgumentList(typeArgumentList)
@@ -410,46 +339,35 @@ public static class MoveMethodsTool
             .WithExpressionBody(null)
             .WithSemicolonToken(default);
 
-        var rootWithStub = root.ReplaceNode(method, stubMethod);
+        var newSourceRoot = sourceRoot.ReplaceNode(method, stubMethod);
 
-        var targetClassDecl = rootWithStub.DescendantNodes()
-            .OfType<ClassDeclarationSyntax>()
-            .FirstOrDefault(c => c.Identifier.ValueText == targetClass);
-
-        SyntaxNode newRoot;
-        if (targetClassDecl == null)
+        return new MoveStaticMethodResult
         {
-            var newClass = SyntaxFactory.ClassDeclaration(targetClass)
-                .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
-                .AddMembers(movedMethod.WithLeadingTrivia());
-            newRoot = ((CompilationUnitSyntax)rootWithStub).AddMembers(newClass);
-        }
-        else
-        {
-            var updatedClass = targetClassDecl.AddMembers(movedMethod.WithLeadingTrivia());
-            newRoot = rootWithStub.ReplaceNode(targetClassDecl, updatedClass);
-        }
-
-        var formatted = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
-        return formatted.ToFullString();
+            NewSourceRoot = newSourceRoot,
+            MovedMethod = movedMethod,
+            StubMethod = stubMethod
+        };
     }
 
-    public static string MoveInstanceMethodInSource(string sourceText, string sourceClass, string methodName, string targetClass, string accessMemberName, string accessMemberType)
+    public static MoveInstanceMethodResult MoveInstanceMethodAst(
+        SyntaxNode sourceRoot,
+        string sourceClass,
+        string methodName,
+        string targetClass,
+        string accessMemberName,
+        string accessMemberType)
     {
-        var tree = CSharpSyntaxTree.ParseText(sourceText);
-        var root = tree.GetRoot();
-
-        var originClass = root.DescendantNodes()
+        var originClass = sourceRoot.DescendantNodes()
             .OfType<ClassDeclarationSyntax>()
             .FirstOrDefault(c => c.Identifier.ValueText == sourceClass);
         if (originClass == null)
-            return RefactoringHelpers.ThrowMcpException($"Error: Source class '{sourceClass}' not found");
+            throw new McpException($"Error: Source class '{sourceClass}' not found");
 
         var method = originClass.Members
             .OfType<MethodDeclarationSyntax>()
             .FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            return RefactoringHelpers.ThrowMcpException($"Error: No method named '{methodName}' found");
+            throw new McpException($"Error: No method named '{methodName}' found");
 
         // Check if method uses instance members
         var knownMembers = GetInstanceMemberNames(originClass);
@@ -590,27 +508,251 @@ public static class MoveMethodsTool
             movedMethod = movedMethod.WithModifiers(SyntaxFactory.TokenList(mods).Add(SyntaxFactory.Token(SyntaxKind.PublicKeyword)));
         }
 
-        var rootWithStub = root.ReplaceNode(originClass, newOriginClass);
+        var newSourceRoot = sourceRoot.ReplaceNode(originClass, newOriginClass);
 
-        var targetClassDecl = rootWithStub.DescendantNodes()
+        return new MoveInstanceMethodResult
+        {
+            NewSourceRoot = newSourceRoot,
+            MovedMethod = movedMethod,
+            StubMethod = stubMethod,
+            AccessMember = accessMember,
+            NeedsThisParameter = needsThisParameter
+        };
+    }
+
+    public static SyntaxNode AddMethodToTargetClass(SyntaxNode targetRoot, string targetClass, MethodDeclarationSyntax method)
+    {
+        var targetClassDecl = targetRoot.DescendantNodes()
             .OfType<ClassDeclarationSyntax>()
             .FirstOrDefault(c => c.Identifier.ValueText == targetClass);
 
-        SyntaxNode newRoot;
         if (targetClassDecl == null)
         {
             var newClass = SyntaxFactory.ClassDeclaration(targetClass)
                 .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
-                .AddMembers(movedMethod.WithLeadingTrivia());
-            newRoot = ((CompilationUnitSyntax)rootWithStub).AddMembers(newClass);
+                .AddMembers(method.WithLeadingTrivia());
+            return ((CompilationUnitSyntax)targetRoot).AddMembers(newClass);
         }
         else
         {
-            var replaced = targetClassDecl.AddMembers(movedMethod.WithLeadingTrivia());
-            newRoot = rootWithStub.ReplaceNode(targetClassDecl, replaced);
+            var updatedClass = targetClassDecl.AddMembers(method.WithLeadingTrivia());
+            return targetRoot.ReplaceNode(targetClassDecl, updatedClass);
+        }
+    }
+
+    public static SyntaxNode PropagateUsings(SyntaxNode sourceRoot, SyntaxNode targetRoot)
+    {
+        var sourceCompilationUnit = (CompilationUnitSyntax)sourceRoot;
+        var sourceUsings = sourceCompilationUnit.Usings.ToList();
+
+        var targetCompilationUnit = (CompilationUnitSyntax)targetRoot;
+        var targetUsingNames = targetCompilationUnit.Usings
+            .Select(u => u.Name.ToString())
+            .ToHashSet();
+        var missingUsings = sourceUsings
+            .Where(u => !targetUsingNames.Contains(u.Name.ToString()))
+            .ToArray();
+        
+        if (missingUsings.Length > 0)
+        {
+            return targetCompilationUnit.AddUsings(missingUsings);
         }
 
-        var formatted = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
+        return targetRoot;
+    }
+
+    // ===== FILE OPERATION LAYER =====
+    // File I/O operations that use the AST layer
+
+    public static async Task<string> MoveStaticMethodInFile(
+        string filePath,
+        string methodName,
+        string targetClass,
+        string? targetFilePath = null)
+    {
+        if (!File.Exists(filePath))
+            throw new McpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
+
+        var targetPath = targetFilePath ?? Path.Combine(Path.GetDirectoryName(filePath)!, $"{targetClass}.cs");
+        var sameFile = targetPath == filePath;
+
+        var sourceText = await File.ReadAllTextAsync(filePath);
+        var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
+        var sourceRoot = await syntaxTree.GetRootAsync();
+
+        // Perform AST transformation
+        var moveResult = MoveStaticMethodAst(sourceRoot, methodName, targetClass);
+
+        SyntaxNode targetRoot;
+        if (sameFile)
+        {
+            targetRoot = moveResult.NewSourceRoot;
+        }
+        else if (File.Exists(targetPath))
+        {
+            var targetText = await File.ReadAllTextAsync(targetPath);
+            targetRoot = await CSharpSyntaxTree.ParseText(targetText).GetRootAsync();
+        }
+        else
+        {
+            targetRoot = SyntaxFactory.CompilationUnit();
+        }
+
+        // Propagate using statements
+        targetRoot = PropagateUsings(sourceRoot, targetRoot);
+
+        // Add method to target class
+        targetRoot = AddMethodToTargetClass(targetRoot, targetClass, moveResult.MovedMethod);
+
+        // Write files
+        var formattedTarget = Formatter.Format(targetRoot, RefactoringHelpers.SharedWorkspace);
+        
+        if (!sameFile)
+        {
+            var formattedSource = Formatter.Format(moveResult.NewSourceRoot, RefactoringHelpers.SharedWorkspace);
+            await File.WriteAllTextAsync(filePath, formattedSource.ToFullString());
+        }
+
+        Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
+        await File.WriteAllTextAsync(targetPath, formattedTarget.ToFullString());
+
+        return $"Successfully moved static method '{methodName}' to {targetClass} in {targetPath}";
+    }
+
+    public static async Task<string> MoveInstanceMethodInFile(
+        string filePath,
+        string sourceClass,
+        string methodName,
+        string targetClass,
+        string accessMemberName,
+        string accessMemberType,
+        string? targetFilePath = null)
+    {
+        if (!File.Exists(filePath))
+            throw new McpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
+
+        var targetPath = targetFilePath ?? filePath;
+        var sameFile = targetPath == filePath;
+
+        var sourceText = await File.ReadAllTextAsync(filePath);
+        var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
+        var sourceRoot = await syntaxTree.GetRootAsync();
+
+        // Perform AST transformation
+        var moveResult = MoveInstanceMethodAst(sourceRoot, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
+
+        SyntaxNode targetRoot;
+        if (sameFile)
+        {
+            targetRoot = moveResult.NewSourceRoot;
+        }
+        else if (File.Exists(targetPath))
+        {
+            var targetText = await File.ReadAllTextAsync(targetPath);
+            targetRoot = await CSharpSyntaxTree.ParseText(targetText).GetRootAsync();
+        }
+        else
+        {
+            targetRoot = SyntaxFactory.CompilationUnit();
+        }
+
+        // Propagate using statements
+        if (!sameFile)
+        {
+            targetRoot = PropagateUsings(sourceRoot, targetRoot);
+        }
+
+        // Add method to target class
+        targetRoot = AddMethodToTargetClass(targetRoot, targetClass, moveResult.MovedMethod);
+
+        // Write files
+        if (sameFile)
+        {
+            var formatted = Formatter.Format(targetRoot, RefactoringHelpers.SharedWorkspace);
+            await File.WriteAllTextAsync(targetPath, formatted.ToFullString());
+        }
+        else
+        {
+            var formattedSource = Formatter.Format(moveResult.NewSourceRoot, RefactoringHelpers.SharedWorkspace);
+            await File.WriteAllTextAsync(filePath, formattedSource.ToFullString());
+
+            var formattedTarget = Formatter.Format(targetRoot, RefactoringHelpers.SharedWorkspace);
+            Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
+            await File.WriteAllTextAsync(targetPath, formattedTarget.ToFullString());
+        }
+
+        return $"Successfully moved instance method {sourceClass}.{methodName} to {targetClass}" +
+               (targetFilePath != null ? $" in {targetPath}" : "");
+    }
+
+    // ===== SOLUTION OPERATION LAYER =====
+    // Solution/Document operations that use the AST layer
+
+    private static async Task<string> MoveInstanceMethodWithSolution(Document document, string sourceClass, string methodName, string targetClass, string accessMemberName, string accessMemberType)
+    {
+        var syntaxRoot = await document.GetSyntaxRootAsync();
+
+        // Perform AST transformation
+        var moveResult = MoveInstanceMethodAst(syntaxRoot!, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
+
+        // Add method to target class in the same document
+        var finalRoot = AddMethodToTargetClass(moveResult.NewSourceRoot, targetClass, moveResult.MovedMethod);
+
+        // Format and write using Document API
+        var formatted = Formatter.Format(finalRoot, document.Project.Solution.Workspace);
+        var newDocument = document.WithSyntaxRoot(formatted);
+        var newText = await newDocument.GetTextAsync();
+        await File.WriteAllTextAsync(document.FilePath!, newText.ToString());
+
+        return $"Successfully moved {sourceClass}.{methodName} instance method to {targetClass} in {document.FilePath}";
+    }
+
+    // ===== HELPER METHODS =====
+
+    private static bool HasInstanceMemberUsage(MethodDeclarationSyntax method, HashSet<string> knownMembers)
+    {
+        var usageChecker = new InstanceMemberUsageChecker(knownMembers);
+        usageChecker.Visit(method);
+        return usageChecker.HasInstanceMemberUsage;
+    }
+
+    private static bool HasMethodCalls(MethodDeclarationSyntax method, HashSet<string> methodNames)
+    {
+        var callChecker = new MethodCallChecker(methodNames);
+        callChecker.Visit(method);
+        return callChecker.HasMethodCalls;
+    }
+
+    private static bool HasStaticFieldReferences(MethodDeclarationSyntax method, HashSet<string> staticFieldNames)
+    {
+        var fieldChecker = new StaticFieldChecker(staticFieldNames);
+        fieldChecker.Visit(method);
+        return fieldChecker.HasStaticFieldReferences;
+    }
+
+    // ===== LEGACY STRING-BASED METHODS (for backward compatibility) =====
+
+    public static string MoveStaticMethodInSource(string sourceText, string methodName, string targetClass)
+    {
+        var tree = CSharpSyntaxTree.ParseText(sourceText);
+        var root = tree.GetRoot();
+
+        var moveResult = MoveStaticMethodAst(root, methodName, targetClass);
+        var finalRoot = AddMethodToTargetClass(moveResult.NewSourceRoot, targetClass, moveResult.MovedMethod);
+
+        var formatted = Formatter.Format(finalRoot, RefactoringHelpers.SharedWorkspace);
+        return formatted.ToFullString();
+    }
+
+    public static string MoveInstanceMethodInSource(string sourceText, string sourceClass, string methodName, string targetClass, string accessMemberName, string accessMemberType)
+    {
+        var tree = CSharpSyntaxTree.ParseText(sourceText);
+        var root = tree.GetRoot();
+
+        var moveResult = MoveInstanceMethodAst(root, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
+        var finalRoot = AddMethodToTargetClass(moveResult.NewSourceRoot, targetClass, moveResult.MovedMethod);
+
+        var formatted = Formatter.Format(finalRoot, RefactoringHelpers.SharedWorkspace);
         return formatted.ToFullString();
     }
 
@@ -618,426 +760,98 @@ public static class MoveMethodsTool
     {
         var tree = CSharpSyntaxTree.ParseText(sourceText);
         var root = tree.GetRoot();
-
-        var originClass = root.DescendantNodes()
-            .OfType<ClassDeclarationSyntax>()
-            .FirstOrDefault(c => c.Identifier.ValueText == sourceClass);
-        if (originClass == null)
-            return RefactoringHelpers.ThrowMcpException($"Error: Source class '{sourceClass}' not found");
-
-        // Find all methods to move
-        var methodsToMove = new List<MethodDeclarationSyntax>();
+        
         foreach (var methodName in methodNames)
         {
-            var method = originClass.Members
-                .OfType<MethodDeclarationSyntax>()
-                .FirstOrDefault(m => m.Identifier.ValueText == methodName);
-            if (method == null)
-                return RefactoringHelpers.ThrowMcpException($"Error: No method named '{methodName}' found");
-            methodsToMove.Add(method);
+            var moveResult = MoveInstanceMethodAst(root, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
+            root = AddMethodToTargetClass(moveResult.NewSourceRoot, targetClass, moveResult.MovedMethod);
         }
-
-        // Get instance members for rewriting
-        var knownMembers = GetInstanceMemberNames(originClass);
-
-        // Enhanced: Get method names for rewriting (excluding methods being moved)
-        var classMethodNames = GetMethodNames(originClass);
-        var otherMethodNames = new HashSet<string>(classMethodNames);
-        foreach (var methodName in methodNames)
-        {
-            otherMethodNames.Remove(methodName);
-        }
-
-        // Create access member once if it doesn't already exist
-        MemberDeclarationSyntax? accessMember = null;
-        bool accessMemberExists = MemberExists(originClass, accessMemberName);
-        if (!accessMemberExists)
-        {
-            accessMember = CreateAccessMember(accessMemberType, accessMemberName, targetClass);
-        }
-
-        // Process all methods and create stubs
-        var originMembers = originClass.Members.ToList();
-        var movedMethods = new List<MethodDeclarationSyntax>();
-
-        foreach (var method in methodsToMove)
-        {
-            // Enhanced: Check if method uses instance members or calls other methods
-            bool usesInstanceMembers = HasInstanceMemberUsage(method, knownMembers);
-            bool callsOtherMethods = HasMethodCalls(method, otherMethodNames);
-            bool isRecursive = HasMethodCalls(method, new HashSet<string> { method.Identifier.ValueText });
-            
-            // Need to pass 'this' if using instance members OR calling other methods OR is recursive
-            bool needsThisParameter = usesInstanceMembers || callsOtherMethods || isRecursive;
-
-            // Enhanced: Preserve generic type arguments and async patterns
-            var typeArgumentList = method.TypeParameterList != null 
-                ? SyntaxFactory.TypeArgumentList(
-                    SyntaxFactory.SeparatedList(
-                        method.TypeParameterList.Parameters.Select(p => 
-                            (TypeSyntax)SyntaxFactory.IdentifierName(p.Identifier))))
-                : null;
-
-            bool isAsync = method.Modifiers.Any(SyntaxKind.AsyncKeyword);
-
-            // Build call to the moved method for the stub
-            var originalParameters = method.ParameterList.Parameters
-                .Select(p => SyntaxFactory.Argument(SyntaxFactory.IdentifierName(p.Identifier))).ToList();
-
-            // Only add 'this' as the last argument if the method needs it
-            if (needsThisParameter)
-            {
-                originalParameters.Add(SyntaxFactory.Argument(SyntaxFactory.ThisExpression()));
-            }
-
-            var argumentList = SyntaxFactory.ArgumentList(SyntaxFactory.SeparatedList(originalParameters));
-
-            var accessExpression = SyntaxFactory.IdentifierName(accessMemberName);
-
-            // Enhanced: Add generic type arguments only if method needs 'this' parameter
-            SimpleNameSyntax methodExpression = (typeArgumentList != null && needsThisParameter)
-                ? SyntaxFactory.GenericName(method.Identifier.ValueText).WithTypeArgumentList(typeArgumentList)
-                : SyntaxFactory.IdentifierName(method.Identifier.ValueText);
-
-            var invocation = SyntaxFactory.InvocationExpression(
-                SyntaxFactory.MemberAccessExpression(
-                    SyntaxKind.SimpleMemberAccessExpression,
-                    accessExpression,
-                    methodExpression),
-                argumentList);
-
-            bool isVoid = method.ReturnType is PredefinedTypeSyntax pts && pts.Keyword.IsKind(SyntaxKind.VoidKeyword);
-
-            // Enhanced: Preserve async/await pattern in delegation
-            ExpressionSyntax returnExpression = invocation;
-            if (isAsync && !isVoid)
-            {
-                returnExpression = SyntaxFactory.AwaitExpression(invocation);
-            }
-
-            StatementSyntax callStatement = isVoid
-                ? SyntaxFactory.ExpressionStatement(invocation)
-                : SyntaxFactory.ReturnStatement(returnExpression);
-
-            var stubMethod = method.WithBody(SyntaxFactory.Block(callStatement))
-                .WithExpressionBody(null)
-                .WithSemicolonToken(default);
-
-            // Replace the original method with the stub
-            var methodIndex = originMembers.FindIndex(m => m == method);
-            if (methodIndex >= 0)
-            {
-                originMembers[methodIndex] = stubMethod;
-            }
-
-            // Prepare moved method
-            var movedMethod = method;
-
-            // Only add source class parameter if method needs it
-            if (needsThisParameter)
-            {
-                var sourceParameter = SyntaxFactory.Parameter(SyntaxFactory.Identifier(sourceClass.ToLower()))
-                    .WithType(SyntaxFactory.IdentifierName(sourceClass));
-
-                var newParameters = method.ParameterList.Parameters.Concat(new[] { sourceParameter });
-                var newParameterList = SyntaxFactory.ParameterList(SyntaxFactory.SeparatedList(newParameters));
-                movedMethod = movedMethod.WithParameterList(newParameterList);
-
-                // Replace references to instance members with parameter access
-                if (usesInstanceMembers)
-                {
-                    var memberRewriter = new InstanceMemberRewriter(sourceClass.ToLower(), knownMembers);
-                    movedMethod = (MethodDeclarationSyntax)memberRewriter.Visit(movedMethod)!;
-                }
-
-                // Enhanced: Replace method calls with parameter access
-                if (callsOtherMethods)
-                {
-                    var methodCallRewriter = new MethodCallRewriter(otherMethodNames, sourceClass.ToLower());
-                    movedMethod = (MethodDeclarationSyntax)methodCallRewriter.Visit(movedMethod)!;
-                }
-
-                // Enhanced: Replace recursive calls with parameter access
-                if (isRecursive)
-                {
-                    var recursiveCallRewriter = new MethodCallRewriter(new HashSet<string> { method.Identifier.ValueText }, sourceClass.ToLower());
-                    movedMethod = (MethodDeclarationSyntax)recursiveCallRewriter.Visit(movedMethod)!;
-                }
-            }
-
-            // Ensure moved method is public in the target class
-            if (!method.Modifiers.Any(m => m.IsKind(SyntaxKind.PublicKeyword)))
-            {
-                var mods = method.Modifiers.Where(m => !m.IsKind(SyntaxKind.PrivateKeyword) && !m.IsKind(SyntaxKind.ProtectedKeyword) && !m.IsKind(SyntaxKind.InternalKeyword));
-                movedMethod = movedMethod.WithModifiers(SyntaxFactory.TokenList(mods).Add(SyntaxFactory.Token(SyntaxKind.PublicKeyword)));
-            }
-
-            movedMethods.Add(movedMethod);
-        }
-
-        // Find the insertion position for the access member (after existing fields/properties)
-        var fieldIndex = originMembers.FindLastIndex(m => m is FieldDeclarationSyntax || m is PropertyDeclarationSyntax);
-        var insertIndex = fieldIndex >= 0 ? fieldIndex + 1 : 0;
-
-        // Insert the access member at the correct position if needed
-        if (accessMember != null)
-        {
-            originMembers.Insert(insertIndex, accessMember);
-        }
-
-        var newOriginClass = originClass.WithMembers(SyntaxFactory.List(originMembers));
-
-        var rootWithStubs = root.ReplaceNode(originClass, newOriginClass);
-
-        var targetClassDecl = rootWithStubs.DescendantNodes()
-            .OfType<ClassDeclarationSyntax>()
-            .FirstOrDefault(c => c.Identifier.ValueText == targetClass);
-
-        SyntaxNode newRoot;
-        if (targetClassDecl == null)
-        {
-            var newClass = SyntaxFactory.ClassDeclaration(targetClass)
-                .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
-                .AddMembers(movedMethods.Select(m => m.WithLeadingTrivia()).ToArray());
-            newRoot = ((CompilationUnitSyntax)rootWithStubs).AddMembers(newClass);
-        }
-        else
-        {
-            var updatedClass = targetClassDecl.AddMembers(movedMethods.Select(m => m.WithLeadingTrivia()).ToArray());
-            newRoot = rootWithStubs.ReplaceNode(targetClassDecl, updatedClass);
-        }
-
-        var formatted = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
+        
+        var formatted = Formatter.Format(root, RefactoringHelpers.SharedWorkspace);
         return formatted.ToFullString();
     }
 
-    private static async Task<(SyntaxNode sourceRoot, SyntaxNode targetRoot, string successMessage)> MoveInstanceMethodCore(
-        SyntaxNode sourceSyntaxRoot,
-        string sourceClass,
-        string methodName,
-        string targetClass,
-        string accessMemberName,
-        string accessMemberType,
-        SyntaxNode? targetSyntaxRoot = null,
-        string? targetPath = null)
+    private static HashSet<string> GetInstanceMemberNames(ClassDeclarationSyntax originClass)
     {
-        var originClass = sourceSyntaxRoot.DescendantNodes()
-            .OfType<ClassDeclarationSyntax>()
-            .FirstOrDefault(c => c.Identifier.ValueText == sourceClass);
-        if (originClass == null)
-            throw new McpException($"Error: Source class '{sourceClass}' not found");
-
-        var method = originClass.Members
-            .OfType<MethodDeclarationSyntax>()
-            .FirstOrDefault(m => m.Identifier.ValueText == methodName);
-        if (method == null)
-            throw new McpException($"Error: No method named '{methodName}' found");
-
-        var targetClassDecl = sourceSyntaxRoot.DescendantNodes()
-            .OfType<ClassDeclarationSyntax>()
-            .FirstOrDefault(c => c.Identifier.ValueText == targetClass);
-        SyntaxNode workingSourceRoot = sourceSyntaxRoot;
-
-        // Create target class if it doesn't exist in source
-        if (targetClassDecl == null)
+        var knownMembers = new HashSet<string>();
+        foreach (var member in originClass.Members)
         {
-            targetClassDecl = SyntaxFactory.ClassDeclaration(targetClass)
-                .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword));
-
-            if (originClass.Parent is NamespaceDeclarationSyntax ns)
+            if (member is FieldDeclarationSyntax field)
             {
-                var updatedNs = ns.AddMembers(targetClassDecl);
-                workingSourceRoot = workingSourceRoot.ReplaceNode(ns, updatedNs);
+                foreach (var variable in field.Declaration.Variables)
+                {
+                    knownMembers.Add(variable.Identifier.ValueText);
+                }
             }
-            else
+            else if (member is PropertyDeclarationSyntax property)
             {
-                workingSourceRoot = ((CompilationUnitSyntax)workingSourceRoot).AddMembers(targetClassDecl);
+                knownMembers.Add(property.Identifier.ValueText);
             }
         }
+        return knownMembers;
+    }
 
-        // Get the updated reference to the origin class after any modifications to workingSourceRoot
-        var currentOriginClass = workingSourceRoot.DescendantNodes()
-            .OfType<ClassDeclarationSyntax>()
-            .FirstOrDefault(c => c.Identifier.ValueText == sourceClass);
-        if (currentOriginClass == null)
-            throw new McpException($"Error: Could not find updated reference to source class '{sourceClass}'");
-
-        // Find the method in the current origin class reference
-        var currentMethod = currentOriginClass.Members
-            .OfType<MethodDeclarationSyntax>()
-            .FirstOrDefault(m => m.Identifier.ValueText == methodName);
-        if (currentMethod == null)
-            throw new McpException($"Error: No method named '{methodName}' found in updated class reference");
-
-        // Remove method from source class
-        ClassDeclarationSyntax newOriginClass = currentOriginClass.RemoveNode(currentMethod, SyntaxRemoveOptions.KeepNoTrivia);
-
-        // Add access member to source class if it doesn't already exist
-        if (!MemberExists(newOriginClass, accessMemberName))
+    // New: Get method names in the class
+    private static HashSet<string> GetMethodNames(ClassDeclarationSyntax originClass)
+    {
+        var methodNames = new HashSet<string>();
+        foreach (var member in originClass.Members)
         {
-            if (accessMemberType == "field")
+            if (member is MethodDeclarationSyntax method)
             {
-                var field = SyntaxFactory.FieldDeclaration(
-                        SyntaxFactory.VariableDeclaration(
-                            SyntaxFactory.ParseTypeName(targetClass),
-                            SyntaxFactory.SeparatedList(new[] { SyntaxFactory.VariableDeclarator(accessMemberName)
+                methodNames.Add(method.Identifier.ValueText);
+            }
+        }
+        return methodNames;
+    }
+
+    // New: Get static field names in the class
+    private static HashSet<string> GetStaticFieldNames(ClassDeclarationSyntax originClass)
+    {
+        var staticFieldNames = new HashSet<string>();
+        foreach (var member in originClass.Members)
+        {
+            if (member is FieldDeclarationSyntax field && field.Modifiers.Any(SyntaxKind.StaticKeyword))
+            {
+                foreach (var variable in field.Declaration.Variables)
+                {
+                    staticFieldNames.Add(variable.Identifier.ValueText);
+                }
+            }
+        }
+        return staticFieldNames;
+    }
+
+    private static bool MemberExists(ClassDeclarationSyntax classDecl, string memberName)
+    {
+        return classDecl.Members.OfType<FieldDeclarationSyntax>()
+                   .Any(f => f.Declaration.Variables.Any(v => v.Identifier.ValueText == memberName))
+               || classDecl.Members.OfType<PropertyDeclarationSyntax>()
+                   .Any(p => p.Identifier.ValueText == memberName);
+    }
+
+    private static MemberDeclarationSyntax CreateAccessMember(string accessMemberType, string accessMemberName, string targetClass)
+    {
+        if (accessMemberType == "property")
+        {
+            return SyntaxFactory.PropertyDeclaration(SyntaxFactory.ParseTypeName(targetClass), accessMemberName)
+                .AddModifiers(SyntaxFactory.Token(SyntaxKind.PrivateKeyword))
+                .AddAccessorListAccessors(
+                    SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
+                    SyntaxFactory.AccessorDeclaration(SyntaxKind.SetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)));
+        }
+
+        return SyntaxFactory.FieldDeclaration(
+                    SyntaxFactory.VariableDeclaration(
+                        SyntaxFactory.ParseTypeName(targetClass),
+                        SyntaxFactory.SeparatedList(new[]
+                        {
+                            SyntaxFactory.VariableDeclarator(accessMemberName)
                                 .WithInitializer(SyntaxFactory.EqualsValueClause(
                                     SyntaxFactory.ObjectCreationExpression(SyntaxFactory.ParseTypeName(targetClass))
-                                        .WithArgumentList(SyntaxFactory.ArgumentList()))) }))
-                    ).AddModifiers(SyntaxFactory.Token(SyntaxKind.PrivateKeyword), SyntaxFactory.Token(SyntaxKind.ReadOnlyKeyword));
-
-                newOriginClass = newOriginClass.AddMembers(field);
-            }
-            else if (accessMemberType == "property")
-            {
-                var prop = SyntaxFactory.PropertyDeclaration(SyntaxFactory.ParseTypeName(targetClass), accessMemberName)
-                    .AddModifiers(SyntaxFactory.Token(SyntaxKind.PrivateKeyword))
-                    .AddAccessorListAccessors(
-                        SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
-                        SyntaxFactory.AccessorDeclaration(SyntaxKind.SetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)));
-                newOriginClass = newOriginClass.AddMembers(prop);
-            }
-        }
-
-        // Prepare the method for moving (make it public)
-        var updatedMethod = currentMethod;
-        if (!currentMethod.Modifiers.Any(m => m.IsKind(SyntaxKind.PublicKeyword)))
-        {
-            var mods = currentMethod.Modifiers.Where(m => !m.IsKind(SyntaxKind.PrivateKeyword) && !m.IsKind(SyntaxKind.ProtectedKeyword) && !m.IsKind(SyntaxKind.InternalKeyword));
-            updatedMethod = currentMethod.WithModifiers(SyntaxFactory.TokenList(mods).Add(SyntaxFactory.Token(SyntaxKind.PublicKeyword)));
-        }
-
-        // Update source root with modified origin class
-        var finalSourceRoot = workingSourceRoot.ReplaceNode(currentOriginClass, newOriginClass);
-
-        // Handle target root
-        SyntaxNode finalTargetRoot;
-        if (targetSyntaxRoot != null)
-        {
-            // Cross-file scenario - work with separate target root
-            finalTargetRoot = targetSyntaxRoot;
-
-            // Handle using statements propagation
-            var sourceCompilationUnit = (CompilationUnitSyntax)sourceSyntaxRoot;
-            var sourceUsings = sourceCompilationUnit.Usings.ToList();
-
-            var targetCompilationUnit = (CompilationUnitSyntax)finalTargetRoot;
-            var targetUsingNames = targetCompilationUnit.Usings
-                .Select(u => u.Name.ToString())
-                .ToHashSet();
-            var missingUsings = sourceUsings
-                .Where(u => !targetUsingNames.Contains(u.Name.ToString()))
-                .ToArray();
-            if (missingUsings.Length > 0)
-            {
-                targetCompilationUnit = targetCompilationUnit.AddUsings(missingUsings);
-                finalTargetRoot = targetCompilationUnit;
-            }
-        }
-        else
-        {
-            // Same-file scenario
-            finalTargetRoot = finalSourceRoot;
-        }
-
-        // Add method to target class
-        var newTargetClass = finalTargetRoot.DescendantNodes()
-            .OfType<ClassDeclarationSyntax>()
-            .FirstOrDefault(c => c.Identifier.ValueText == targetClass);
-        if (newTargetClass == null)
-        {
-            var newClass = SyntaxFactory.ClassDeclaration(targetClass)
-                .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
-                .AddMembers(updatedMethod.WithLeadingTrivia());
-            finalTargetRoot = ((CompilationUnitSyntax)finalTargetRoot).AddMembers(newClass);
-        }
-        else
-        {
-            var replaced = newTargetClass.AddMembers(updatedMethod.WithLeadingTrivia());
-            finalTargetRoot = finalTargetRoot.ReplaceNode(newTargetClass, replaced);
-        }
-
-        var successMessage = $"Successfully moved {sourceClass}.{methodName} instance method to {targetClass}" +
-            (targetPath != null ? $" in {targetPath}" : "");
-
-        return (finalSourceRoot, finalTargetRoot, successMessage);
-    }
-
-    private static async Task<string> MoveInstanceMethodWithSolution(Document document, string sourceClass, string methodName, string targetClass, string accessMemberName, string accessMemberType)
-    {
-        var syntaxRoot = await document.GetSyntaxRootAsync();
-
-        var (finalSourceRoot, finalTargetRoot, successMessage) = await MoveInstanceMethodCore(
-            syntaxRoot!,
-            sourceClass,
-            methodName,
-            targetClass,
-            accessMemberName,
-            accessMemberType);
-
-        // Format and write using Document API
-        var formatted = Formatter.Format(finalTargetRoot, document.Project.Solution.Workspace);
-        var newDocument = document.WithSyntaxRoot(formatted);
-        var newText = await newDocument.GetTextAsync();
-        await File.WriteAllTextAsync(document.FilePath!, newText.ToString());
-
-        return successMessage + $" in {document.FilePath}";
-    }
-
-    private static async Task<string> MoveInstanceMethodSingleFile(string filePath, string sourceClass, string methodName, string targetClass, string accessMemberName, string accessMemberType, string? targetFilePath)
-    {
-        if (!File.Exists(filePath))
-            return RefactoringHelpers.ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
-
-        var targetPath = targetFilePath ?? filePath;
-        var sameFile = targetPath == filePath;
-
-        var sourceText = await File.ReadAllTextAsync(filePath);
-        var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
-        var sourceSyntaxRoot = await syntaxTree.GetRootAsync();
-
-        SyntaxNode? targetSyntaxRoot = null;
-        if (!sameFile)
-        {
-            if (File.Exists(targetPath))
-            {
-                var targetText = await File.ReadAllTextAsync(targetPath);
-                targetSyntaxRoot = await CSharpSyntaxTree.ParseText(targetText).GetRootAsync();
-            }
-            else
-            {
-                targetSyntaxRoot = SyntaxFactory.CompilationUnit();
-            }
-        }
-
-        var (finalSourceRoot, finalTargetRoot, successMessage) = await MoveInstanceMethodCore(
-            sourceSyntaxRoot,
-            sourceClass,
-            methodName,
-            targetClass,
-            accessMemberName,
-            accessMemberType,
-            targetSyntaxRoot,
-            targetPath);
-
-        // Handle file I/O
-        if (sameFile)
-        {
-            var formatted = Formatter.Format(finalTargetRoot, RefactoringHelpers.SharedWorkspace);
-            Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
-            await File.WriteAllTextAsync(targetPath, formatted.ToFullString());
-        }
-        else
-        {
-            var formattedSource = Formatter.Format(finalSourceRoot, RefactoringHelpers.SharedWorkspace);
-            await File.WriteAllTextAsync(filePath, formattedSource.ToFullString());
-
-            var formattedTarget = Formatter.Format(finalTargetRoot, RefactoringHelpers.SharedWorkspace);
-            Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
-            await File.WriteAllTextAsync(targetPath, formattedTarget.ToFullString());
-        }
-
-        return successMessage;
+                                        .WithArgumentList(SyntaxFactory.ArgumentList())))
+                        })))
+                .AddModifiers(SyntaxFactory.Token(SyntaxKind.PrivateKeyword), SyntaxFactory.Token(SyntaxKind.ReadOnlyKeyword));
     }
 
     [McpServerTool, Description("Move a static method to another class (preferred for large C# file refactoring)")]
@@ -1190,16 +1004,16 @@ public static class MoveMethodsTool
             // For single-file operations, use the bulk move method for better efficiency
             if (methodList.Length == 1)
             {
-                return await MoveInstanceMethodSingleFile(filePath, sourceClass, methodList[0], targetClass, accessMemberName, accessMemberType, targetFilePath);
+                return await MoveInstanceMethodInFile(filePath, sourceClass, methodList[0], targetClass, accessMemberName, accessMemberType, targetFilePath);
             }
             else
             {
-                return await MoveBulkInstanceMethodsSingleFile(filePath, sourceClass, methodList, targetClass, accessMemberName, accessMemberType, targetFilePath);
+                return await MoveBulkInstanceMethodsInFile(filePath, sourceClass, methodList, targetClass, accessMemberName, accessMemberType, targetFilePath);
             }
         }
     }
 
-    private static async Task<string> MoveBulkInstanceMethodsSingleFile(string filePath, string sourceClass, string[] methodNames, string targetClass, string accessMemberName, string accessMemberType, string? targetFilePath)
+    private static async Task<string> MoveBulkInstanceMethodsInFile(string filePath, string sourceClass, string[] methodNames, string targetClass, string accessMemberName, string accessMemberType, string? targetFilePath)
     {
         if (!File.Exists(filePath))
             return RefactoringHelpers.ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
@@ -1211,9 +1025,18 @@ public static class MoveMethodsTool
 
         if (sameFile)
         {
-            // Same file operation
-            var result = MoveMultipleInstanceMethodsInSource(sourceText, sourceClass, methodNames, targetClass, accessMemberName, accessMemberType);
-            await File.WriteAllTextAsync(filePath, result);
+            // Same file operation - use multiple individual AST transformations
+            var tree = CSharpSyntaxTree.ParseText(sourceText);
+            var root = tree.GetRoot();
+            
+            foreach (var methodName in methodNames)
+            {
+                var moveResult = MoveInstanceMethodAst(root, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
+                root = AddMethodToTargetClass(moveResult.NewSourceRoot, targetClass, moveResult.MovedMethod);
+            }
+            
+            var formatted = Formatter.Format(root, RefactoringHelpers.SharedWorkspace);
+            await File.WriteAllTextAsync(filePath, formatted.ToFullString());
             return $"Successfully moved {methodNames.Length} methods from {sourceClass} to {targetClass} in {filePath}";
         }
         else
@@ -1223,7 +1046,7 @@ public static class MoveMethodsTool
             var results = new List<string>();
             foreach (var methodName in methodNames)
             {
-                results.Add(await MoveInstanceMethodSingleFile(filePath, sourceClass, methodName, targetClass, accessMemberName, accessMemberType, targetFilePath));
+                results.Add(await MoveInstanceMethodInFile(filePath, sourceClass, methodName, targetClass, accessMemberName, accessMemberType, targetFilePath));
             }
             return string.Join("\n", results);
         }
