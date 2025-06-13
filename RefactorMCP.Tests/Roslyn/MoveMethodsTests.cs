@@ -401,32 +401,35 @@ class Logger
     }
 }";
 
-        // Create JSON operations for multiple method moves
-        var operationsJson = @"[
+        var operations = new[]
+        {
+            new MoveMultipleMethodsTool.MoveOperation
             {
-                ""SourceClass"": ""DataProcessor"",
-                ""Method"": ""ValidateData"",
-                ""TargetClass"": ""DataValidator"",
-                ""AccessMember"": ""dataValidator"",
-                ""AccessMemberType"": ""field"",
-                ""IsStatic"": false
+                SourceClass = "DataProcessor",
+                Method = "ValidateData",
+                TargetClass = "DataValidator",
+                AccessMember = "dataValidator",
+                AccessMemberType = "field",
+                IsStatic = false
             },
+            new MoveMultipleMethodsTool.MoveOperation
             {
-                ""SourceClass"": ""DataProcessor"",
-                ""Method"": ""TransformData"",
-                ""TargetClass"": ""DataValidator"",
-                ""AccessMember"": ""dataValidator"",
-                ""AccessMemberType"": ""field"",
-                ""IsStatic"": false
+                SourceClass = "DataProcessor",
+                Method = "TransformData",
+                TargetClass = "DataValidator",
+                AccessMember = "dataValidator",
+                AccessMemberType = "field",
+                IsStatic = false
             },
+            new MoveMultipleMethodsTool.MoveOperation
             {
-                ""Method"": ""LogOperation"",
-                ""TargetClass"": ""Logger"",
-                ""IsStatic"": true
+                Method = "LogOperation",
+                TargetClass = "Logger",
+                IsStatic = true
             }
-        ]";
+        };
 
-        var output = MoveMultipleMethodsTool.MoveMultipleMethodsInSource(input, operationsJson);
+        var output = MoveMultipleMethodsTool.MoveMultipleMethodsInSource(input, operations);
         Assert.Contains("private readonly DataValidator dataValidator", output);
         Assert.Contains("dataValidator.ValidateData()", output);
         Assert.Contains("dataValidator.TransformData()", output);
@@ -491,27 +494,30 @@ class MathOperations
     }
 }";
 
-        // Create JSON operations that have dependencies (PerformCalculation depends on LogOperation)
-        var operationsJson = @"[
+        // Operations that have dependencies (PerformCalculation depends on LogOperation)
+        var operations = new[]
+        {
+            new MoveMultipleMethodsTool.MoveOperation
             {
-                ""SourceClass"": ""Calculator"",
-                ""Method"": ""PerformCalculation"",
-                ""TargetClass"": ""MathOperations"",
-                ""AccessMember"": ""mathOperations"",
-                ""AccessMemberType"": ""field"",
-                ""IsStatic"": false
+                SourceClass = "Calculator",
+                Method = "PerformCalculation",
+                TargetClass = "MathOperations",
+                AccessMember = "mathOperations",
+                AccessMemberType = "field",
+                IsStatic = false
             },
+            new MoveMultipleMethodsTool.MoveOperation
             {
-                ""SourceClass"": ""Calculator"",
-                ""Method"": ""LogOperation"",
-                ""TargetClass"": ""MathOperations"",
-                ""AccessMember"": ""mathOperations"",
-                ""AccessMemberType"": ""field"",
-                ""IsStatic"": false
+                SourceClass = "Calculator",
+                Method = "LogOperation",
+                TargetClass = "MathOperations",
+                AccessMember = "mathOperations",
+                AccessMemberType = "field",
+                IsStatic = false
             }
-        ]";
+        };
 
-        var output = MoveMultipleMethodsTool.MoveMultipleMethodsInSource(input, operationsJson);
+        var output = MoveMultipleMethodsTool.MoveMultipleMethodsInSource(input, operations);
         Assert.Contains("private readonly MathOperations mathOperations", output);
         Assert.Contains("mathOperations.PerformCalculation", output);
     }
@@ -548,6 +554,28 @@ class Bar
         Console.WriteLine(""hi"");
     }
 }";
+
+        var operations = new[]
+        {
+            new MoveMultipleMethodsTool.MoveOperation
+            {
+                Method = "FormatString",
+                TargetClass = "StringHelper",
+                IsStatic = true
+            },
+            new MoveMultipleMethodsTool.MoveOperation
+            {
+                Method = "AddNumbers",
+                TargetClass = "MathHelper",
+                IsStatic = true
+            },
+            new MoveMultipleMethodsTool.MoveOperation
+            {
+                Method = "IsValidEmail",
+                TargetClass = "ValidationHelper",
+                IsStatic = true
+            }
+        };
 
         var output = MoveMethodsTool.MoveInstanceMethodInSource(input, "Foo", "Do", "Bar", "bar", "field");
         Assert.Contains("private readonly Bar bar", output);
@@ -941,26 +969,29 @@ class MathHelper
 class ValidationHelper
 {
 }";
-
-        var operationsJson = @"[
+        var operations = new[]
+        {
+            new MoveMultipleMethodsTool.MoveOperation
             {
-                ""Method"": ""FormatString"",
-                ""TargetClass"": ""StringHelper"",
-                ""IsStatic"": true
+                Method = "FormatString",
+                TargetClass = "StringHelper",
+                IsStatic = true
             },
+            new MoveMultipleMethodsTool.MoveOperation
             {
-                ""Method"": ""AddNumbers"",
-                ""TargetClass"": ""MathHelper"",
-                ""IsStatic"": true
+                Method = "AddNumbers",
+                TargetClass = "MathHelper",
+                IsStatic = true
             },
+            new MoveMultipleMethodsTool.MoveOperation
             {
-                ""Method"": ""IsValidEmail"",
-                ""TargetClass"": ""ValidationHelper"",
-                ""IsStatic"": true
+                Method = "IsValidEmail",
+                TargetClass = "ValidationHelper",
+                IsStatic = true
             }
-        ]";
+        };
 
-        var output = MoveMultipleMethodsTool.MoveMultipleMethodsInSource(input, operationsJson);
+        var output = MoveMultipleMethodsTool.MoveMultipleMethodsInSource(input, operations);
 
         // Verify that methods are moved to correct classes
         Assert.Contains("class StringHelper", output);
@@ -1177,42 +1208,47 @@ class Operations
 {
 }";
 
-        var operationsJson = @"[
+        var operations = new[]
+        {
+            new MoveMultipleMethodsTool.MoveOperation
             {
-                ""SourceClass"": ""ComplexCalculator"",
-                ""Method"": ""MethodA"",
-                ""TargetClass"": ""Operations"",
-                ""AccessMember"": ""operations"",
-                ""AccessMemberType"": ""field"",
-                ""IsStatic"": false
+                SourceClass = "ComplexCalculator",
+                Method = "MethodA",
+                TargetClass = "Operations",
+                AccessMember = "operations",
+                AccessMemberType = "field",
+                IsStatic = false
             },
+            new MoveMultipleMethodsTool.MoveOperation
             {
-                ""SourceClass"": ""ComplexCalculator"",
-                ""Method"": ""MethodB"",
-                ""TargetClass"": ""Operations"",
-                ""AccessMember"": ""operations"",
-                ""AccessMemberType"": ""field"",
-                ""IsStatic"": false
+                SourceClass = "ComplexCalculator",
+                Method = "MethodB",
+                TargetClass = "Operations",
+                AccessMember = "operations",
+                AccessMemberType = "field",
+                IsStatic = false
             },
+            new MoveMultipleMethodsTool.MoveOperation
             {
-                ""SourceClass"": ""ComplexCalculator"",
-                ""Method"": ""MethodC"",
-                ""TargetClass"": ""Operations"",
-                ""AccessMember"": ""operations"",
-                ""AccessMemberType"": ""field"",
-                ""IsStatic"": false
+                SourceClass = "ComplexCalculator",
+                Method = "MethodC",
+                TargetClass = "Operations",
+                AccessMember = "operations",
+                AccessMemberType = "field",
+                IsStatic = false
             },
+            new MoveMultipleMethodsTool.MoveOperation
             {
-                ""SourceClass"": ""ComplexCalculator"",
-                ""Method"": ""MethodD"",
-                ""TargetClass"": ""Operations"",
-                ""AccessMember"": ""operations"",
-                ""AccessMemberType"": ""field"",
-                ""IsStatic"": false
+                SourceClass = "ComplexCalculator",
+                Method = "MethodD",
+                TargetClass = "Operations",
+                AccessMember = "operations",
+                AccessMemberType = "field",
+                IsStatic = false
             }
-        ]";
+        };
 
-        var output = MoveMultipleMethodsTool.MoveMultipleMethodsInSource(input, operationsJson);
+        var output = MoveMultipleMethodsTool.MoveMultipleMethodsInSource(input, operations);
 
         // Verify that all methods are moved
         Assert.Contains("class Operations", output);
@@ -1413,34 +1449,38 @@ class LoggingService
 }";
 
         // Create JSON operations for multiple method moves to different targets
-        var operationsJson = @"[
-            {
-                ""SourceClass"": ""DocumentProcessor"",
-                ""Method"": ""ValidateDocument"",
-                ""TargetClass"": ""ValidationService"",
-                ""AccessMember"": ""validationService"",
-                ""AccessMemberType"": ""field"",
-                ""IsStatic"": false
-            },
-            {
-                ""SourceClass"": ""DocumentProcessor"",
-                ""Method"": ""ProcessDocument"",
-                ""TargetClass"": ""ProcessingService"",
-                ""AccessMember"": ""processingService"",
-                ""AccessMemberType"": ""field"",
-                ""IsStatic"": false
-            },
-            {
-                ""SourceClass"": ""DocumentProcessor"",
-                ""Method"": ""LogActivity"",
-                ""TargetClass"": ""LoggingService"",
-                ""AccessMember"": ""loggingService"",
-                ""AccessMemberType"": ""field"",
-                ""IsStatic"": false
-            }
-        ]";
 
-        var output = MoveMultipleMethodsTool.MoveMultipleMethodsInSource(input, operationsJson);
+        var operations = new[]
+        {
+            new MoveMultipleMethodsTool.MoveOperation
+            {
+                SourceClass = "DocumentProcessor",
+                Method = "ValidateDocument",
+                TargetClass = "ValidationService",
+                AccessMember = "validationService",
+                AccessMemberType = "field",
+                IsStatic = false
+            },
+            new MoveMultipleMethodsTool.MoveOperation
+            {
+                SourceClass = "DocumentProcessor",
+                Method = "ProcessDocument",
+                TargetClass = "ProcessingService",
+                AccessMember = "processingService",
+                AccessMemberType = "field",
+                IsStatic = false
+            },
+            new MoveMultipleMethodsTool.MoveOperation
+            {
+                SourceClass = "DocumentProcessor",
+                Method = "LogActivity",
+                TargetClass = "LoggingService",
+                AccessMember = "loggingService",
+                AccessMemberType = "field",
+                IsStatic = false
+            }
+        };
+        var output = MoveMultipleMethodsTool.MoveMultipleMethodsInSource(input, operations);
 
         Assert.Equal(expected, output.Trim());
 
