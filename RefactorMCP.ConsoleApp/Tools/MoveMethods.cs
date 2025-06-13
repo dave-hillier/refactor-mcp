@@ -95,6 +95,142 @@ public class InstanceMemberRewriter : CSharpSyntaxRewriter
     }
 }
 
+// New: Detect method calls to other methods in the same class
+public class MethodCallChecker : CSharpSyntaxRewriter
+{
+    private readonly HashSet<string> _classMethodNames;
+    public bool HasMethodCalls { get; private set; }
+
+    public MethodCallChecker(HashSet<string> classMethodNames)
+    {
+        _classMethodNames = classMethodNames;
+    }
+
+    public override SyntaxNode? VisitInvocationExpression(InvocationExpressionSyntax node)
+    {
+        // Check for simple method calls (not member access)
+        if (node.Expression is IdentifierNameSyntax identifier)
+        {
+            if (_classMethodNames.Contains(identifier.Identifier.ValueText))
+            {
+                HasMethodCalls = true;
+            }
+        }
+
+        return base.VisitInvocationExpression(node);
+    }
+}
+
+// New: Rewrite method calls to include this parameter
+public class MethodCallRewriter : CSharpSyntaxRewriter
+{
+    private readonly HashSet<string> _classMethodNames;
+    private readonly string _parameterName;
+
+    public MethodCallRewriter(HashSet<string> classMethodNames, string parameterName)
+    {
+        _classMethodNames = classMethodNames;
+        _parameterName = parameterName;
+    }
+
+    public override SyntaxNode? VisitInvocationExpression(InvocationExpressionSyntax node)
+    {
+        // Check for simple method calls (not member access)
+        if (node.Expression is IdentifierNameSyntax identifier)
+        {
+            if (_classMethodNames.Contains(identifier.Identifier.ValueText))
+            {
+                // Replace with parameter.method(args)
+                var memberAccess = SyntaxFactory.MemberAccessExpression(
+                    SyntaxKind.SimpleMemberAccessExpression,
+                    SyntaxFactory.IdentifierName(_parameterName),
+                    identifier);
+                
+                return node.WithExpression(memberAccess);
+            }
+        }
+
+        return base.VisitInvocationExpression(node);
+    }
+}
+
+// New: Detect static field references
+public class StaticFieldChecker : CSharpSyntaxRewriter
+{
+    private readonly HashSet<string> _staticFieldNames;
+    public bool HasStaticFieldReferences { get; private set; }
+
+    public StaticFieldChecker(HashSet<string> staticFieldNames)
+    {
+        _staticFieldNames = staticFieldNames;
+    }
+
+    public override SyntaxNode? VisitIdentifierName(IdentifierNameSyntax node)
+    {
+        var parent = node.Parent;
+
+        // Skip if this is part of a parameter or type declaration
+        if (parent is ParameterSyntax || parent is TypeSyntax)
+        {
+            return base.VisitIdentifierName(node);
+        }
+
+        // Check if this is a static field being accessed directly (not through class qualification)
+        if (_staticFieldNames.Contains(node.Identifier.ValueText))
+        {
+            // Make sure it's not already qualified
+            if (parent is not MemberAccessExpressionSyntax || 
+                (parent is MemberAccessExpressionSyntax memberAccess && memberAccess.Name == node))
+            {
+                HasStaticFieldReferences = true;
+            }
+        }
+
+        return base.VisitIdentifierName(node);
+    }
+}
+
+// New: Rewrite static field references to include class qualification
+public class StaticFieldRewriter : CSharpSyntaxRewriter
+{
+    private readonly HashSet<string> _staticFieldNames;
+    private readonly string _sourceClassName;
+
+    public StaticFieldRewriter(HashSet<string> staticFieldNames, string sourceClassName)
+    {
+        _staticFieldNames = staticFieldNames;
+        _sourceClassName = sourceClassName;
+    }
+
+    public override SyntaxNode? VisitIdentifierName(IdentifierNameSyntax node)
+    {
+        var parent = node.Parent;
+
+        // Skip if this is part of a parameter or type declaration
+        if (parent is ParameterSyntax || parent is TypeSyntax)
+        {
+            return base.VisitIdentifierName(node);
+        }
+
+        // Check if this is a static field being accessed directly
+        if (_staticFieldNames.Contains(node.Identifier.ValueText))
+        {
+            // Make sure it's not already qualified and it's not the name part of a member access
+            if (parent is not MemberAccessExpressionSyntax || 
+                (parent is MemberAccessExpressionSyntax memberAccess && memberAccess.Name == node))
+            {
+                // Replace with ClassName.field
+                return SyntaxFactory.MemberAccessExpression(
+                    SyntaxKind.SimpleMemberAccessExpression,
+                    SyntaxFactory.IdentifierName(_sourceClassName),
+                    node);
+            }
+        }
+
+        return base.VisitIdentifierName(node);
+    }
+}
+
 [McpServerToolType]
 public static class MoveMethodsTool
 {
@@ -103,6 +239,22 @@ public static class MoveMethodsTool
         var usageChecker = new InstanceMemberUsageChecker(knownMembers);
         usageChecker.Visit(method);
         return usageChecker.HasInstanceMemberUsage;
+    }
+
+    // New: Check if method calls other methods in the same class
+    private static bool HasMethodCalls(MethodDeclarationSyntax method, HashSet<string> methodNames)
+    {
+        var callChecker = new MethodCallChecker(methodNames);
+        callChecker.Visit(method);
+        return callChecker.HasMethodCalls;
+    }
+
+    // New: Check if static method references static fields
+    private static bool HasStaticFieldReferences(MethodDeclarationSyntax method, HashSet<string> staticFieldNames)
+    {
+        var fieldChecker = new StaticFieldChecker(staticFieldNames);
+        fieldChecker.Visit(method);
+        return fieldChecker.HasStaticFieldReferences;
     }
 
     private static HashSet<string> GetInstanceMemberNames(ClassDeclarationSyntax originClass)
@@ -123,6 +275,37 @@ public static class MoveMethodsTool
             }
         }
         return knownMembers;
+    }
+
+    // New: Get method names in the class
+    private static HashSet<string> GetMethodNames(ClassDeclarationSyntax originClass)
+    {
+        var methodNames = new HashSet<string>();
+        foreach (var member in originClass.Members)
+        {
+            if (member is MethodDeclarationSyntax method)
+            {
+                methodNames.Add(method.Identifier.ValueText);
+            }
+        }
+        return methodNames;
+    }
+
+    // New: Get static field names in the class
+    private static HashSet<string> GetStaticFieldNames(ClassDeclarationSyntax originClass)
+    {
+        var staticFieldNames = new HashSet<string>();
+        foreach (var member in originClass.Members)
+        {
+            if (member is FieldDeclarationSyntax field && field.Modifiers.Any(SyntaxKind.StaticKeyword))
+            {
+                foreach (var variable in field.Declaration.Variables)
+                {
+                    staticFieldNames.Add(variable.Identifier.ValueText);
+                }
+            }
+        }
+        return staticFieldNames;
     }
 
     private static bool MemberExists(ClassDeclarationSyntax classDecl, string memberName)
@@ -169,17 +352,53 @@ public static class MoveMethodsTool
         if (method == null)
             return RefactoringHelpers.ThrowMcpException($"Error: Static method '{methodName}' not found");
 
+        // Find the source class containing this method
+        var sourceClass = root.DescendantNodes()
+            .OfType<ClassDeclarationSyntax>()
+            .FirstOrDefault(c => c.Members.Contains(method));
+        if (sourceClass == null)
+            return RefactoringHelpers.ThrowMcpException($"Error: Could not find source class for method '{methodName}'");
+
+        // Enhanced: Check if method references static fields and qualify them
+        var staticFieldNames = GetStaticFieldNames(sourceClass);
+        var needsStaticFieldQualification = HasStaticFieldReferences(method, staticFieldNames);
+        
+        var movedMethod = method;
+        if (needsStaticFieldQualification)
+        {
+            var staticFieldRewriter = new StaticFieldRewriter(staticFieldNames, sourceClass.Identifier.ValueText);
+            movedMethod = (MethodDeclarationSyntax)staticFieldRewriter.Visit(movedMethod)!;
+        }
+
+        // Enhanced: Preserve generic type arguments in delegation call
+        var typeArgumentList = method.TypeParameterList != null 
+            ? SyntaxFactory.TypeArgumentList(
+                SyntaxFactory.SeparatedList(
+                    method.TypeParameterList.Parameters.Select(p => 
+                        (TypeSyntax)SyntaxFactory.IdentifierName(p.Identifier))))
+            : null;
+
         // Prepare stub in the original class that delegates to the moved method
         var argumentList = SyntaxFactory.ArgumentList(
             SyntaxFactory.SeparatedList(
                 method.ParameterList.Parameters
                     .Select(p => SyntaxFactory.Argument(SyntaxFactory.IdentifierName(p.Identifier)))));
 
+        var memberAccess = SyntaxFactory.MemberAccessExpression(
+            SyntaxKind.SimpleMemberAccessExpression,
+            SyntaxFactory.IdentifierName(targetClass),
+            SyntaxFactory.IdentifierName(methodName));
+
+        // Enhanced: Add generic type arguments if present (static methods always include them)
+        SimpleNameSyntax methodExpression = typeArgumentList != null
+            ? SyntaxFactory.GenericName(methodName).WithTypeArgumentList(typeArgumentList)
+            : SyntaxFactory.IdentifierName(methodName);
+
         var invocation = SyntaxFactory.InvocationExpression(
             SyntaxFactory.MemberAccessExpression(
                 SyntaxKind.SimpleMemberAccessExpression,
                 SyntaxFactory.IdentifierName(targetClass),
-                SyntaxFactory.IdentifierName(methodName)),
+                methodExpression),
             argumentList);
 
         bool isVoid = method.ReturnType is PredefinedTypeSyntax pts && pts.Keyword.IsKind(SyntaxKind.VoidKeyword);
@@ -202,12 +421,12 @@ public static class MoveMethodsTool
         {
             var newClass = SyntaxFactory.ClassDeclaration(targetClass)
                 .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
-                .AddMembers(method.WithLeadingTrivia());
+                .AddMembers(movedMethod.WithLeadingTrivia());
             newRoot = ((CompilationUnitSyntax)rootWithStub).AddMembers(newClass);
         }
         else
         {
-            var updatedClass = targetClassDecl.AddMembers(method.WithLeadingTrivia());
+            var updatedClass = targetClassDecl.AddMembers(movedMethod.WithLeadingTrivia());
             newRoot = rootWithStub.ReplaceNode(targetClassDecl, updatedClass);
         }
 
@@ -234,34 +453,68 @@ public static class MoveMethodsTool
 
         // Check if method uses instance members
         var knownMembers = GetInstanceMemberNames(originClass);
+        
+        // Enhanced: Get method names for rewriting (excluding methods being moved)
+        var classMethodNames = GetMethodNames(originClass);
+        var otherMethodNames = new HashSet<string>(classMethodNames);
+        otherMethodNames.Remove(methodName);
 
-        // Check if method uses any instance members
+        // Check if method uses any instance members or calls other methods (including itself for recursion)
         bool usesInstanceMembers = HasInstanceMemberUsage(method, knownMembers);
+        bool callsOtherMethods = HasMethodCalls(method, otherMethodNames);
+        bool isRecursive = HasMethodCalls(method, new HashSet<string> { methodName });
+        
+        // Need to pass 'this' if using instance members OR calling other methods OR is recursive
+        bool needsThisParameter = usesInstanceMembers || callsOtherMethods || isRecursive;
+
+        // Enhanced: Preserve generic type arguments and async patterns in delegation call
+        var typeArgumentList = method.TypeParameterList != null 
+            ? SyntaxFactory.TypeArgumentList(
+                SyntaxFactory.SeparatedList(
+                    method.TypeParameterList.Parameters.Select(p => 
+                        (TypeSyntax)SyntaxFactory.IdentifierName(p.Identifier))))
+            : null;
+
+        bool isAsync = method.Modifiers.Any(SyntaxKind.AsyncKeyword);
 
         // Build call to the moved method for the stub
         var originalParameters = method.ParameterList.Parameters
             .Select(p => SyntaxFactory.Argument(SyntaxFactory.IdentifierName(p.Identifier))).ToList();
 
-        // Only add 'this' as the first argument if the method uses instance members
-        if (usesInstanceMembers)
+        // Only add 'this' as the last argument if the method needs it
+        if (needsThisParameter)
         {
-            originalParameters.Insert(0, SyntaxFactory.Argument(SyntaxFactory.ThisExpression()));
+            originalParameters.Add(SyntaxFactory.Argument(SyntaxFactory.ThisExpression()));
         }
 
         var argumentList = SyntaxFactory.ArgumentList(SyntaxFactory.SeparatedList(originalParameters));
 
         var accessExpression = SyntaxFactory.IdentifierName(accessMemberName);
+
+        // Enhanced: Add generic type arguments only if method needs 'this' parameter
+        SimpleNameSyntax methodExpression = (typeArgumentList != null && needsThisParameter)
+            ? SyntaxFactory.GenericName(methodName).WithTypeArgumentList(typeArgumentList)
+            : SyntaxFactory.IdentifierName(methodName);
+
         var invocation = SyntaxFactory.InvocationExpression(
             SyntaxFactory.MemberAccessExpression(
                 SyntaxKind.SimpleMemberAccessExpression,
                 accessExpression,
-                SyntaxFactory.IdentifierName(methodName)),
+                methodExpression),
             argumentList);
 
         bool isVoid = method.ReturnType is PredefinedTypeSyntax pts && pts.Keyword.IsKind(SyntaxKind.VoidKeyword);
+        
+        // Enhanced: Preserve async/await pattern in delegation
+        ExpressionSyntax returnExpression = invocation;
+        if (isAsync && !isVoid)
+        {
+            returnExpression = SyntaxFactory.AwaitExpression(invocation);
+        }
+
         StatementSyntax callStatement = isVoid
             ? SyntaxFactory.ExpressionStatement(invocation)
-            : SyntaxFactory.ReturnStatement(invocation);
+            : SyntaxFactory.ReturnStatement(returnExpression);
 
         var stubMethod = method.WithBody(SyntaxFactory.Block(callStatement))
             .WithExpressionBody(null)
@@ -298,19 +551,36 @@ public static class MoveMethodsTool
         // Create the moved method
         var movedMethod = method;
 
-        // Only add source class parameter if method uses instance members
-        if (usesInstanceMembers)
+        // Only add source class parameter if method needs it
+        if (needsThisParameter)
         {
             var sourceParameter = SyntaxFactory.Parameter(SyntaxFactory.Identifier(sourceClass.ToLower()))
                 .WithType(SyntaxFactory.IdentifierName(sourceClass));
 
-            var newParameters = new[] { sourceParameter }.Concat(method.ParameterList.Parameters);
+            var newParameters = method.ParameterList.Parameters.Concat(new[] { sourceParameter });
             var newParameterList = SyntaxFactory.ParameterList(SyntaxFactory.SeparatedList(newParameters));
             movedMethod = movedMethod.WithParameterList(newParameterList);
 
             // Replace references to instance members with parameter access
-            var memberRewriter = new InstanceMemberRewriter(sourceClass.ToLower(), knownMembers);
-            movedMethod = (MethodDeclarationSyntax)memberRewriter.Visit(movedMethod)!;
+            if (usesInstanceMembers)
+            {
+                var memberRewriter = new InstanceMemberRewriter(sourceClass.ToLower(), knownMembers);
+                movedMethod = (MethodDeclarationSyntax)memberRewriter.Visit(movedMethod)!;
+            }
+
+            // Enhanced: Replace method calls with parameter access
+            if (callsOtherMethods)
+            {
+                var methodCallRewriter = new MethodCallRewriter(otherMethodNames, sourceClass.ToLower());
+                movedMethod = (MethodDeclarationSyntax)methodCallRewriter.Visit(movedMethod)!;
+            }
+
+            // Enhanced: Replace recursive calls with parameter access
+            if (isRecursive)
+            {
+                var recursiveCallRewriter = new MethodCallRewriter(new HashSet<string> { methodName }, sourceClass.ToLower());
+                movedMethod = (MethodDeclarationSyntax)recursiveCallRewriter.Visit(movedMethod)!;
+            }
         }
 
         // Ensure moved method is public in the target class
@@ -370,6 +640,14 @@ public static class MoveMethodsTool
         // Get instance members for rewriting
         var knownMembers = GetInstanceMemberNames(originClass);
 
+        // Enhanced: Get method names for rewriting (excluding methods being moved)
+        var classMethodNames = GetMethodNames(originClass);
+        var otherMethodNames = new HashSet<string>(classMethodNames);
+        foreach (var methodName in methodNames)
+        {
+            otherMethodNames.Remove(methodName);
+        }
+
         // Create access member once if it doesn't already exist
         MemberDeclarationSyntax? accessMember = null;
         bool accessMemberExists = MemberExists(originClass, accessMemberName);
@@ -384,33 +662,62 @@ public static class MoveMethodsTool
 
         foreach (var method in methodsToMove)
         {
-            // Check if method uses instance members
+            // Enhanced: Check if method uses instance members or calls other methods
             bool usesInstanceMembers = HasInstanceMemberUsage(method, knownMembers);
+            bool callsOtherMethods = HasMethodCalls(method, otherMethodNames);
+            bool isRecursive = HasMethodCalls(method, new HashSet<string> { method.Identifier.ValueText });
+            
+            // Need to pass 'this' if using instance members OR calling other methods OR is recursive
+            bool needsThisParameter = usesInstanceMembers || callsOtherMethods || isRecursive;
+
+            // Enhanced: Preserve generic type arguments and async patterns
+            var typeArgumentList = method.TypeParameterList != null 
+                ? SyntaxFactory.TypeArgumentList(
+                    SyntaxFactory.SeparatedList(
+                        method.TypeParameterList.Parameters.Select(p => 
+                            (TypeSyntax)SyntaxFactory.IdentifierName(p.Identifier))))
+                : null;
+
+            bool isAsync = method.Modifiers.Any(SyntaxKind.AsyncKeyword);
 
             // Build call to the moved method for the stub
             var originalParameters = method.ParameterList.Parameters
                 .Select(p => SyntaxFactory.Argument(SyntaxFactory.IdentifierName(p.Identifier))).ToList();
 
-            // Only add 'this' as the first argument if the method uses instance members
-            if (usesInstanceMembers)
+            // Only add 'this' as the last argument if the method needs it
+            if (needsThisParameter)
             {
-                originalParameters.Insert(0, SyntaxFactory.Argument(SyntaxFactory.ThisExpression()));
+                originalParameters.Add(SyntaxFactory.Argument(SyntaxFactory.ThisExpression()));
             }
 
             var argumentList = SyntaxFactory.ArgumentList(SyntaxFactory.SeparatedList(originalParameters));
 
             var accessExpression = SyntaxFactory.IdentifierName(accessMemberName);
+
+            // Enhanced: Add generic type arguments only if method needs 'this' parameter
+            SimpleNameSyntax methodExpression = (typeArgumentList != null && needsThisParameter)
+                ? SyntaxFactory.GenericName(method.Identifier.ValueText).WithTypeArgumentList(typeArgumentList)
+                : SyntaxFactory.IdentifierName(method.Identifier.ValueText);
+
             var invocation = SyntaxFactory.InvocationExpression(
                 SyntaxFactory.MemberAccessExpression(
                     SyntaxKind.SimpleMemberAccessExpression,
                     accessExpression,
-                    SyntaxFactory.IdentifierName(method.Identifier.ValueText)),
+                    methodExpression),
                 argumentList);
 
             bool isVoid = method.ReturnType is PredefinedTypeSyntax pts && pts.Keyword.IsKind(SyntaxKind.VoidKeyword);
+
+            // Enhanced: Preserve async/await pattern in delegation
+            ExpressionSyntax returnExpression = invocation;
+            if (isAsync && !isVoid)
+            {
+                returnExpression = SyntaxFactory.AwaitExpression(invocation);
+            }
+
             StatementSyntax callStatement = isVoid
                 ? SyntaxFactory.ExpressionStatement(invocation)
-                : SyntaxFactory.ReturnStatement(invocation);
+                : SyntaxFactory.ReturnStatement(returnExpression);
 
             var stubMethod = method.WithBody(SyntaxFactory.Block(callStatement))
                 .WithExpressionBody(null)
@@ -423,22 +730,39 @@ public static class MoveMethodsTool
                 originMembers[methodIndex] = stubMethod;
             }
 
-            // Prepare the moved method
+            // Prepare moved method
             var movedMethod = method;
 
-            // Only add source class parameter if method uses instance members
-            if (usesInstanceMembers)
+            // Only add source class parameter if method needs it
+            if (needsThisParameter)
             {
                 var sourceParameter = SyntaxFactory.Parameter(SyntaxFactory.Identifier(sourceClass.ToLower()))
                     .WithType(SyntaxFactory.IdentifierName(sourceClass));
 
-                var newParameters = new[] { sourceParameter }.Concat(method.ParameterList.Parameters);
+                var newParameters = method.ParameterList.Parameters.Concat(new[] { sourceParameter });
                 var newParameterList = SyntaxFactory.ParameterList(SyntaxFactory.SeparatedList(newParameters));
                 movedMethod = movedMethod.WithParameterList(newParameterList);
 
                 // Replace references to instance members with parameter access
-                var memberRewriter = new InstanceMemberRewriter(sourceClass.ToLower(), knownMembers);
-                movedMethod = (MethodDeclarationSyntax)memberRewriter.Visit(movedMethod)!;
+                if (usesInstanceMembers)
+                {
+                    var memberRewriter = new InstanceMemberRewriter(sourceClass.ToLower(), knownMembers);
+                    movedMethod = (MethodDeclarationSyntax)memberRewriter.Visit(movedMethod)!;
+                }
+
+                // Enhanced: Replace method calls with parameter access
+                if (callsOtherMethods)
+                {
+                    var methodCallRewriter = new MethodCallRewriter(otherMethodNames, sourceClass.ToLower());
+                    movedMethod = (MethodDeclarationSyntax)methodCallRewriter.Visit(movedMethod)!;
+                }
+
+                // Enhanced: Replace recursive calls with parameter access
+                if (isRecursive)
+                {
+                    var recursiveCallRewriter = new MethodCallRewriter(new HashSet<string> { method.Identifier.ValueText }, sourceClass.ToLower());
+                    movedMethod = (MethodDeclarationSyntax)recursiveCallRewriter.Visit(movedMethod)!;
+                }
             }
 
             // Ensure moved method is public in the target class
@@ -451,19 +775,21 @@ public static class MoveMethodsTool
             movedMethods.Add(movedMethod);
         }
 
-        // Insert the access member at the correct position if needed
+        // Find the insertion position for the access member (after existing fields/properties)
         var fieldIndex = originMembers.FindLastIndex(m => m is FieldDeclarationSyntax || m is PropertyDeclarationSyntax);
         var insertIndex = fieldIndex >= 0 ? fieldIndex + 1 : 0;
+
+        // Insert the access member at the correct position if needed
         if (accessMember != null)
         {
             originMembers.Insert(insertIndex, accessMember);
         }
 
         var newOriginClass = originClass.WithMembers(SyntaxFactory.List(originMembers));
-        var rootWithStub = root.ReplaceNode(originClass, newOriginClass);
 
-        // Add all moved methods to target class
-        var targetClassDecl = rootWithStub.DescendantNodes()
+        var rootWithStubs = root.ReplaceNode(originClass, newOriginClass);
+
+        var targetClassDecl = rootWithStubs.DescendantNodes()
             .OfType<ClassDeclarationSyntax>()
             .FirstOrDefault(c => c.Identifier.ValueText == targetClass);
 
@@ -473,12 +799,12 @@ public static class MoveMethodsTool
             var newClass = SyntaxFactory.ClassDeclaration(targetClass)
                 .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
                 .AddMembers(movedMethods.Select(m => m.WithLeadingTrivia()).ToArray());
-            newRoot = ((CompilationUnitSyntax)rootWithStub).AddMembers(newClass);
+            newRoot = ((CompilationUnitSyntax)rootWithStubs).AddMembers(newClass);
         }
         else
         {
-            var replaced = targetClassDecl.AddMembers(movedMethods.Select(m => m.WithLeadingTrivia()).ToArray());
-            newRoot = rootWithStub.ReplaceNode(targetClassDecl, replaced);
+            var updatedClass = targetClassDecl.AddMembers(movedMethods.Select(m => m.WithLeadingTrivia()).ToArray());
+            newRoot = rootWithStubs.ReplaceNode(targetClassDecl, updatedClass);
         }
 
         var formatted = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
