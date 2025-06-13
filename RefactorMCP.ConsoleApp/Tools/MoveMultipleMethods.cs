@@ -252,7 +252,11 @@ public static class MoveMultipleMethodsTool
         var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
         var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
 
-        if (document != null)
+        var crossFile = ops.Any(o =>
+            !string.IsNullOrEmpty(o.TargetFile) &&
+            Path.GetFullPath(o.TargetFile!) != Path.GetFullPath(filePath));
+
+        if (document != null && !crossFile)
         {
             // Solution-based: need to manage document state between operations
             var sourceText = await File.ReadAllTextAsync(filePath);
@@ -293,7 +297,7 @@ public static class MoveMultipleMethodsTool
         }
         else
         {
-            // Single-file mode: use the more efficient AST-based operations
+            // Fallback to AST-based approach for single-file mode or cross-file operations
             return await MoveMultipleMethodsInFile(filePath, operationsJson);
         }
     }

@@ -60,7 +60,7 @@ public class MoveMultipleMethodsTests : TestBase
 
         var target1Content = await File.ReadAllTextAsync(target1);
         Assert.Contains("class Target1", target1Content);
-        Assert.Contains("void A()", target1Content);
+        Assert.Contains("void A(SourceClass", target1Content);
         Assert.Contains("void B()", target1Content);
 
         var target2Content = await File.ReadAllTextAsync(target2);
