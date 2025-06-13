@@ -26,6 +26,23 @@ public class ExtractMethodTests : TestBase
     }
 
     [Fact]
+    public async Task ExtractMethod_CreatesPrivateMethod()
+    {
+        await LoadSolutionTool.LoadSolution(SolutionPath);
+        var testFile = Path.Combine(TestOutputPath, "ExtractPrivate.cs");
+        await TestUtilities.CreateTestFile(testFile, TestUtilities.GetSampleCodeForExtractMethod());
+
+        await ExtractMethodTool.ExtractMethod(
+            SolutionPath,
+            testFile,
+            "7:9-10:10",
+            "ValidateInputs");
+
+        var fileContent = await File.ReadAllTextAsync(testFile);
+        Assert.Contains("private void ValidateInputs()", fileContent);
+    }
+
+    [Fact]
     public async Task ExtractMethod_InvalidRange_ReturnsError()
     {
         await LoadSolutionTool.LoadSolution(SolutionPath);
