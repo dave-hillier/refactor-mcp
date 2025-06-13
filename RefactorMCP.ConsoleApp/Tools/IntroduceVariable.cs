@@ -19,12 +19,11 @@ public static class IntroduceVariableTool
     {
         try
         {
-            var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
-            var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
-            if (document != null)
-                return await IntroduceVariableWithSolution(document, selectionRange, variableName);
-
-            return await IntroduceVariableSingleFile(filePath, selectionRange, variableName);
+            return await RefactoringHelpers.RunWithSolutionOrFile(
+                solutionPath,
+                filePath,
+                doc => IntroduceVariableWithSolution(doc, selectionRange, variableName),
+                path => IntroduceVariableSingleFile(path, selectionRange, variableName));
         }
         catch (Exception ex)
         {

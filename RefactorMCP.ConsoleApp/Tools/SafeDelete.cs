@@ -19,12 +19,11 @@ public static class SafeDeleteTool
     {
         try
         {
-            var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
-            var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
-            if (document != null)
-                return await SafeDeleteFieldWithSolution(document, fieldName);
-
-            return await SafeDeleteFieldSingleFile(filePath, fieldName);
+            return await RefactoringHelpers.RunWithSolutionOrFile(
+                solutionPath,
+                filePath,
+                doc => SafeDeleteFieldWithSolution(doc, fieldName),
+                path => SafeDeleteFieldSingleFile(path, fieldName));
         }
         catch (Exception ex)
         {
@@ -40,12 +39,11 @@ public static class SafeDeleteTool
     {
         try
         {
-            var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
-            var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
-            if (document != null)
-                return await SafeDeleteMethodWithSolution(document, methodName);
-
-            return await SafeDeleteMethodSingleFile(filePath, methodName);
+            return await RefactoringHelpers.RunWithSolutionOrFile(
+                solutionPath,
+                filePath,
+                doc => SafeDeleteMethodWithSolution(doc, methodName),
+                path => SafeDeleteMethodSingleFile(path, methodName));
         }
         catch (Exception ex)
         {
@@ -62,12 +60,11 @@ public static class SafeDeleteTool
     {
         try
         {
-            var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
-            var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
-            if (document != null)
-                return await SafeDeleteParameterWithSolution(document, methodName, parameterName);
-
-            return await SafeDeleteParameterSingleFile(filePath, methodName, parameterName);
+            return await RefactoringHelpers.RunWithSolutionOrFile(
+                solutionPath,
+                filePath,
+                doc => SafeDeleteParameterWithSolution(doc, methodName, parameterName),
+                path => SafeDeleteParameterSingleFile(path, methodName, parameterName));
         }
         catch (Exception ex)
         {
@@ -83,12 +80,11 @@ public static class SafeDeleteTool
     {
         try
         {
-            var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
-            var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
-            if (document != null)
-                return await SafeDeleteVariableWithSolution(document, selectionRange);
-
-            return await SafeDeleteVariableSingleFile(filePath, selectionRange);
+            return await RefactoringHelpers.RunWithSolutionOrFile(
+                solutionPath,
+                filePath,
+                doc => SafeDeleteVariableWithSolution(doc, selectionRange),
+                path => SafeDeleteVariableSingleFile(path, selectionRange));
         }
         catch (Exception ex)
         {

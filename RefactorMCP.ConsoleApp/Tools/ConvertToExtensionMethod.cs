@@ -21,12 +21,11 @@ public static class ConvertToExtensionMethodTool
     {
         try
         {
-            var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
-            var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
-            if (document != null)
-                return await ConvertToExtensionMethodWithSolution(document, methodName, extensionClass);
-
-            return await ConvertToExtensionMethodSingleFile(filePath, methodName, extensionClass);
+            return await RefactoringHelpers.RunWithSolutionOrFile(
+                solutionPath,
+                filePath,
+                doc => ConvertToExtensionMethodWithSolution(doc, methodName, extensionClass),
+                path => ConvertToExtensionMethodSingleFile(path, methodName, extensionClass));
         }
         catch (Exception ex)
         {
