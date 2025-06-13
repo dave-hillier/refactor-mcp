@@ -163,6 +163,14 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli move-multiple-methods \
   "[{'sourceClass':'A','method':'Foo','targetClass':'B','accessMember':'b','accessMemberType':'field','isStatic':false}]"
 ```
 
+### Move To Separate File
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli move-to-separate-file \
+  "./RefactorMCP.sln" \
+  "./path/to/file.cs" \
+  ClassName
+```
+
 ### Convert To Extension Method
 ```bash
 dotnet run --project RefactorMCP.ConsoleApp -- --cli convert-to-extension-method \

@@ -392,7 +392,43 @@ class Target
 }
 ```
 
-## 11. Inline Method
+## 11. Move Class to Separate File
+
+**Purpose**: Move a class into its own file named after the class.
+
+### Example
+**Before**:
+```csharp
+public class Logger
+{
+    public void Log(string message)
+    {
+        Console.WriteLine($"[LOG] {message}");
+    }
+}
+```
+
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli move-to-separate-file \
+  "./RefactorMCP.sln" \
+  "./RefactorMCP.Tests/ExampleCode.cs" \
+  Logger
+```
+
+**After**:
+```csharp
+// Logger.cs
+public class Logger
+{
+    public void Log(string message)
+    {
+        Console.WriteLine($"[LOG] {message}");
+    }
+}
+```
+
+## 12. Inline Method
 
 **Purpose**: Replace method calls with the method body and remove the original method.
 

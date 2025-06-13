@@ -23,7 +23,8 @@ All CLI tools require an absolute path to a solution file. The working directory
 
 **Use solution mode for:**
 - Move Method operations
-- Convert to Static (requires dependency analysis)  
+- Move class to separate file
+- Convert to Static (requires dependency analysis)
 - Convert to Extension Method (for instance methods)
 - Safe Delete (requires usage analysis)
 - Any refactoring requiring cross-references
@@ -469,6 +470,39 @@ using System;
 public class Sample
 {
     public void Say() => Console.WriteLine("Hi");
+}
+```
+
+### 10. Move Class to Separate File
+
+**Before**:
+```csharp
+public class Logger
+{
+    public void Log(string message)
+    {
+        Console.WriteLine($"[LOG] {message}");
+    }
+}
+```
+
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli move-to-separate-file \
+  "./RefactorMCP.sln" \
+  "./RefactorMCP.Tests/ExampleCode.cs" \
+  Logger
+```
+
+**After**:
+```csharp
+// Logger.cs
+public class Logger
+{
+    public void Log(string message)
+    {
+        Console.WriteLine($"[LOG] {message}");
+    }
 }
 ```
 
