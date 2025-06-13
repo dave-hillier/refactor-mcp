@@ -13,21 +13,22 @@ public class MoveInstanceMethodTests : TestBase
     [Fact]
     public async Task MoveInstanceMethod_ReturnsSuccess()
     {
+        UnloadSolutionTool.ClearSolutionCache();
+        var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "MoveInstanceMethod.cs"));
+        await TestUtilities.CreateTestFile(testFile, "public class A { public void Do(){} } public class B { }");
         await LoadSolutionTool.LoadSolution(SolutionPath);
-        var testFile = Path.Combine(TestOutputPath, "MoveInstanceMethod.cs");
-        await TestUtilities.CreateTestFile(testFile, TestUtilities.GetSampleCodeForMoveInstanceMethod());
 
         var result = await MoveMethodsTool.MoveInstanceMethod(
             SolutionPath,
             testFile,
-            "Calculator",
-            "LogOperation",
-            "Logger",
-            "_logger",
+            "A",
+            "Do",
+            "B",
+            "_b",
             "field");
 
         Assert.Contains("Successfully moved", result);
-        Assert.Contains("Calculator.LogOperation", result);
-        Assert.Contains("Logger", result);
+        Assert.Contains("A.Do", result);
+        Assert.Contains("B", result);
     }
 }
