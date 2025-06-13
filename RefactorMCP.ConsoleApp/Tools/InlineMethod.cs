@@ -101,12 +101,11 @@ public static class InlineMethodTool
     {
         try
         {
-            var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
-            var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
-            if (document != null)
-                return await InlineMethodWithSolution(document, methodName);
-
-            return await InlineMethodSingleFile(filePath, methodName);
+            return await RefactoringHelpers.RunWithSolutionOrFile(
+                solutionPath,
+                filePath,
+                doc => InlineMethodWithSolution(doc, methodName),
+                path => InlineMethodSingleFile(path, methodName));
         }
         catch (Exception ex)
         {

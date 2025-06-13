@@ -18,12 +18,11 @@ public static class MakeFieldReadonlyTool
     {
         try
         {
-            var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
-            var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
-            if (document != null)
-                return await MakeFieldReadonlyWithSolution(document, fieldName);
-
-            return await MakeFieldReadonlySingleFile(filePath, fieldName);
+            return await RefactoringHelpers.RunWithSolutionOrFile(
+                solutionPath,
+                filePath,
+                doc => MakeFieldReadonlyWithSolution(doc, fieldName),
+                path => MakeFieldReadonlySingleFile(path, fieldName));
         }
         catch (Exception ex)
         {

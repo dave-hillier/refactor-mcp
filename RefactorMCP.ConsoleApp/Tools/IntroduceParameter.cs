@@ -110,12 +110,11 @@ public static class IntroduceParameterTool
     {
         try
         {
-            var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
-            var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
-            if (document != null)
-                return await IntroduceParameterWithSolution(document, methodName, selectionRange, parameterName);
-
-            return await IntroduceParameterSingleFile(filePath, methodName, selectionRange, parameterName);
+            return await RefactoringHelpers.RunWithSolutionOrFile(
+                solutionPath,
+                filePath,
+                doc => IntroduceParameterWithSolution(doc, methodName, selectionRange, parameterName),
+                path => IntroduceParameterSingleFile(path, methodName, selectionRange, parameterName));
         }
         catch (Exception ex)
         {
