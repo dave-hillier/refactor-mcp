@@ -596,7 +596,7 @@ class MathUtilities
 
     void CheckIn_UseAdvanceDeposits()
     {
-        resRoom.CheckIn_UseAdvanceDeposits();
+        resRoom.CheckIn_UseAdvanceDeposits(this);
     }
 
     private object GetAdvanceDeposits() => null;
@@ -605,21 +605,19 @@ class MathUtilities
 
 public class ResRoomDepositManager
 {
-    public void CheckIn_UseAdvanceDeposits()
+    public void CheckIn_UseAdvanceDeposits(cResRoom cresroom)
     {
         Console.WriteLine(""Processing advance deposits"");
         // Some complex logic here
-        var deposits = GetAdvanceDeposits();
-        ProcessDeposits(deposits);
+        var deposits = cresroom.GetAdvanceDeposits();
+        cresroom.ProcessDeposits(deposits);
     }
 }";
 
 
         var output = MoveMethodsTool.MoveInstanceMethodInSource(input, "cResRoom", "CheckIn_UseAdvanceDeposits", "ResRoomDepositManager", "resRoom", "field");
 
-        Assert.Contains("private readonly ResRoomDepositManager resRoom", output);
-        Assert.Contains("resRoom.CheckIn_UseAdvanceDeposits()", output);
-
+        Assert.Equal(expected, output.Trim());
     }
 
     [Fact]
