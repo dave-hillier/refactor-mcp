@@ -1,11 +1,9 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
 using System.Collections.Generic;
-using System.Linq;
 
-internal class InstanceMemberUsageChecker : CSharpSyntaxRewriter
+internal class InstanceMemberUsageChecker : CSharpSyntaxWalker
 {
     private readonly HashSet<string> _knownInstanceMembers;
     public bool HasInstanceMemberUsage { get; private set; }
@@ -15,11 +13,14 @@ internal class InstanceMemberUsageChecker : CSharpSyntaxRewriter
         _knownInstanceMembers = knownInstanceMembers;
     }
 
-    public override SyntaxNode? VisitIdentifierName(IdentifierNameSyntax node)
+    public override void VisitIdentifierName(IdentifierNameSyntax node)
     {
         var parent = node.Parent;
         if (parent is ParameterSyntax || parent is TypeSyntax)
-            return base.VisitIdentifierName(node);
+        {
+            base.VisitIdentifierName(node);
+            return;
+        }
 
         if (_knownInstanceMembers.Contains(node.Identifier.ValueText))
         {
@@ -33,16 +34,16 @@ internal class InstanceMemberUsageChecker : CSharpSyntaxRewriter
             }
         }
 
-        return base.VisitIdentifierName(node);
+        base.VisitIdentifierName(node);
     }
 
-    public override SyntaxNode? VisitMemberAccessExpression(MemberAccessExpressionSyntax node)
+    public override void VisitMemberAccessExpression(MemberAccessExpressionSyntax node)
     {
         if (node.Expression is ThisExpressionSyntax && _knownInstanceMembers.Contains(node.Name.Identifier.ValueText))
         {
             HasInstanceMemberUsage = true;
         }
-        return base.VisitMemberAccessExpression(node);
+        base.VisitMemberAccessExpression(node);
     }
 }
 
