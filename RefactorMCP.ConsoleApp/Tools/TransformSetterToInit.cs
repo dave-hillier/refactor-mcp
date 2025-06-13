@@ -5,7 +5,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
-using Microsoft.CodeAnalysis.Text;
 
 [McpServerToolType]
 public static class TransformSetterToInitTool
@@ -33,7 +32,6 @@ public static class TransformSetterToInitTool
 
     private static async Task<string> TransformSetterToInitWithSolution(Document document, string propertyName)
     {
-        var sourceText = await document.GetTextAsync();
         var syntaxRoot = await document.GetSyntaxRootAsync();
 
         var property = syntaxRoot!.DescendantNodes()
@@ -46,12 +44,9 @@ public static class TransformSetterToInitTool
         if (setter == null)
             return RefactoringHelpers.ThrowMcpException($"Error: Property '{propertyName}' has no setter");
 
-        var initAccessor = SyntaxFactory.AccessorDeclaration(SyntaxKind.InitAccessorDeclaration)
-            .WithSemicolonToken(setter.SemicolonToken);
-        var newProperty = property.ReplaceNode(setter, initAccessor);
-
-        var newRoot = syntaxRoot.ReplaceNode(property, newProperty);
-        var formatted = Formatter.Format(newRoot, document.Project.Solution.Workspace);
+        var rewriter = new SetterToInitRewriter(propertyName);
+        var newRoot = rewriter.Visit(syntaxRoot);
+        var formatted = Formatter.Format(newRoot!, document.Project.Solution.Workspace);
         var newDocument = document.WithSyntaxRoot(formatted);
         var newText = await newDocument.GetTextAsync();
         await File.WriteAllTextAsync(document.FilePath!, newText.ToString());
@@ -82,12 +77,9 @@ public static class TransformSetterToInitTool
         if (setter == null)
             return RefactoringHelpers.ThrowMcpException($"Error: Property '{propertyName}' has no setter");
 
-        var initAccessor = SyntaxFactory.AccessorDeclaration(SyntaxKind.InitAccessorDeclaration)
-            .WithSemicolonToken(setter.SemicolonToken);
-        var newProperty = property.ReplaceNode(setter, initAccessor);
-
-        var newRoot = syntaxRoot.ReplaceNode(property, newProperty);
-        var formatted = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
+        var rewriter = new SetterToInitRewriter(propertyName);
+        var newRoot = rewriter.Visit(syntaxRoot);
+        var formatted = Formatter.Format(newRoot!, RefactoringHelpers.SharedWorkspace);
         return formatted.ToFullString();
     }
 }
