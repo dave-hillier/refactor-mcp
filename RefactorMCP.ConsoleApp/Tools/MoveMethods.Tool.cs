@@ -201,39 +201,34 @@ public static partial class MoveMethodsTool
             if (duplicateDoc != null)
                 return RefactoringHelpers.ThrowMcpException($"Error: Class {targetClass} already exists in {duplicateDoc.FilePath}");
 
-            return await MoveMethods(filePath, sourceClass, targetClass, accessMemberName, accessMemberType, targetFilePath, methodList, document);
+            if (document != null)
+            {
+                var (msg, _) = await MoveInstanceMethodWithSolution(
+                    document,
+                    sourceClass,
+                    methodList,
+                    targetClass,
+                    accessMemberName,
+                    accessMemberType,
+                    targetFilePath);
+                return msg;
+            }
+            else
+            {
+                // For single-file operations, use the bulk move method for better efficiency
+                if (methodList.Length == 1)
+                {
+                    return await MoveInstanceMethodInFile(filePath, sourceClass, methodList[0], targetClass, accessMemberName, accessMemberType, targetFilePath);
+                }
+                else
+                {
+                    return await MoveBulkInstanceMethodsInFile(filePath, sourceClass, methodList, targetClass, accessMemberName, accessMemberType, targetFilePath);
+                }
+            }
         }
         catch (Exception ex)
         {
             throw new McpException($"Error moving instance method: {ex.Message}", ex);
-        }
-    }
-
-    public static async Task<string> MoveMethods(string filePath, string sourceClass, string targetClass, string accessMemberName,
-        string accessMemberType, string? targetFilePath, string[] methodList, Document? document)
-    {
-        if (document != null)
-        {
-            var (msg, _) = await MoveInstanceMethodWithSolution(
-                document,
-                sourceClass,
-                methodList,
-                targetClass,
-                accessMemberName,
-                accessMemberType);
-            return msg;
-        }
-        else
-        {
-            // For single-file operations, use the bulk move method for better efficiency
-            if (methodList.Length == 1)
-            {
-                return await MoveInstanceMethodInFile(filePath, sourceClass, methodList[0], targetClass, accessMemberName, accessMemberType, targetFilePath);
-            }
-            else
-            {
-                return await MoveBulkInstanceMethodsInFile(filePath, sourceClass, methodList, targetClass, accessMemberName, accessMemberType, targetFilePath);
-            }
         }
     }
 
@@ -274,5 +269,88 @@ public static partial class MoveMethodsTool
             }
             return string.Join("\n", results);
         }
+    }
+
+    public static async Task<(string, Document)> MoveInstanceMethodWithSolution(
+        Document document,
+        string sourceClassName,
+        string[] methodNames,
+        string targetClassName,
+        string accessMemberName,
+        string accessMemberType,
+        string? targetFilePath = null)
+    {
+        var messages = new List<string>();
+        var currentDocument = document;
+
+        foreach (var methodName in methodNames)
+        {
+            var sourceRoot = await currentDocument.GetSyntaxRootAsync();
+            if (sourceRoot == null)
+            {
+                throw new McpException($"Could not get syntax root for document {currentDocument.FilePath}");
+            }
+
+            var moveResult = MoveInstanceMethodAst(
+                sourceRoot,
+                sourceClassName,
+                methodName,
+                targetClassName,
+                accessMemberName,
+                accessMemberType);
+            
+            var targetPath = targetFilePath ?? currentDocument.FilePath!;
+            var sameFile = targetPath == currentDocument.FilePath;
+            
+            var context = new InstanceFileOperationContext
+            {
+                SourcePath = currentDocument.FilePath!,
+                TargetPath = targetPath,
+                SameFile = sameFile,
+                SourceRoot = sourceRoot,
+                TargetClassName = targetClassName,
+                SourceClassName = sourceClassName,
+                MethodName = methodName,
+                AccessMemberName = accessMemberName,
+                AccessMemberType = accessMemberType
+            };
+
+            await ProcessInstanceMethodFileOperations(context, moveResult);
+
+            if (sameFile)
+            {
+                var newText = await File.ReadAllTextAsync(targetPath);
+                var newRoot = await CSharpSyntaxTree.ParseText(newText).GetRootAsync();
+                currentDocument = document.Project.Solution.WithDocumentSyntaxRoot(currentDocument.Id, newRoot).GetDocument(currentDocument.Id);
+            }
+            else
+            {
+                var newSourceText = await File.ReadAllTextAsync(context.SourcePath);
+                var newSourceRoot = await CSharpSyntaxTree.ParseText(newSourceText).GetRootAsync();
+                var solution = document.Project.Solution.WithDocumentSyntaxRoot(currentDocument.Id, newSourceRoot);
+
+                var project = solution.GetProject(document.Project.Id);
+                var targetDocument = project.Documents.FirstOrDefault(d => d.FilePath == targetPath);
+                if (targetDocument == null)
+                {
+                    var targetText = await File.ReadAllTextAsync(targetPath);
+                    var targetSourceText = SourceText.From(targetText, System.Text.Encoding.UTF8);
+                    targetDocument = project.AddDocument(Path.GetFileName(targetPath), targetSourceText, filePath: targetPath);
+                    solution = targetDocument.Project.Solution;
+                }
+                else
+                {
+                    var targetText = await File.ReadAllTextAsync(targetPath);
+                    var targetSourceText = SourceText.From(targetText, System.Text.Encoding.UTF8);
+                    solution = solution.WithDocumentText(targetDocument.Id, targetSourceText);
+                }
+                currentDocument = solution.GetDocument(currentDocument.Id);
+            }
+            
+            RefactoringHelpers.UpdateSolutionCache(currentDocument);
+            messages.Add(BuildInstanceMethodSuccessMessage(context, sourceClassName, methodName, targetClassName, targetFilePath));
+        }
+
+        return (string.Join("\n", messages), currentDocument);
     }
 }
