@@ -60,7 +60,7 @@ public class IntroduceFieldTests : TestBase
             var result = await IntroduceFieldTool.IntroduceField(
                 SolutionPath,
                 modifierTestFile,
-                "4:16-4:58",
+                "36:20-36:56",
                 $"_{modifier}Field",
                 modifier);
 
@@ -68,5 +68,21 @@ public class IntroduceFieldTests : TestBase
             var fileContent = await File.ReadAllTextAsync(modifierTestFile);
             Assert.Contains($"_{modifier}Field", fileContent);
         }
+    }
+
+    [Fact]
+    public async Task IntroduceField_FieldNameAlreadyExists_ReturnsError()
+    {
+        await LoadSolutionTool.LoadSolution(SolutionPath);
+        var testFile = Path.Combine(TestOutputPath, "IntroduceFieldDuplicate.cs");
+        await TestUtilities.CreateTestFile(testFile, TestUtilities.GetSampleCodeForIntroduceField());
+
+        await Assert.ThrowsAsync<McpException>(async () =>
+            await IntroduceFieldTool.IntroduceField(
+                SolutionPath,
+                testFile,
+                "36:20-36:56",
+                "numbers",
+                "private"));
     }
 }
