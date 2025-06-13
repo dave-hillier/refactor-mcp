@@ -358,11 +358,12 @@ class Target { }
 dotnet run --project RefactorMCP.ConsoleApp -- --cli move-multiple-methods \
   "./RefactorMCP.sln" \
   "./RefactorMCP.Tests/ExampleCode.cs" \
-  "[{\"sourceClass\":\"Helper\",\"method\":\"A\",\"targetClass\":\"Target\",\"accessMember\":\"t\",\"accessMemberType\":\"field\"},{\"sourceClass\":\"Helper\",\"method\":\"B\",\"targetClass\":\"Target\",\"accessMember\":\"t\",\"accessMemberType\":\"field\"}]"
+  "[{\"sourceClass\":\"Helper\",\"method\":\"A\",\"targetClass\":\"Target\",\"accessMember\":\"t\",\"accessMemberType\":\"field\"},{\"sourceClass\":\"Helper\",\"method\":\"B\",\"targetClass\":\"Target\",\"accessMember\":\"t\",\"accessMemberType\":\"field\"}]" \
+  "./Target.cs"
 ```
 
 ### Cross-file Example
-Move methods to separate files using the `targetFile` property:
+Move methods to a separate file using the `targetFile` property or by passing a default path:
 
 ```bash
 dotnet run --project RefactorMCP.ConsoleApp -- --cli move-multiple-methods \
