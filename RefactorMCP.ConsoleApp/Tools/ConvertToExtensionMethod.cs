@@ -108,6 +108,7 @@ public static class ConvertToExtensionMethodTool
         var newDocument = document.WithSyntaxRoot(formatted);
         var newText = await newDocument.GetTextAsync();
         await File.WriteAllTextAsync(document.FilePath!, newText.ToString());
+        RefactoringHelpers.UpdateSolutionCache(newDocument);
 
         return $"Successfully converted method '{methodName}' to extension method in {document.FilePath} (solution mode)";
     }

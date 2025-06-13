@@ -770,6 +770,7 @@ public static class MoveMethodsTool
         var newDocument = document.WithSyntaxRoot(formatted);
         var newText = await newDocument.GetTextAsync();
         await File.WriteAllTextAsync(document.FilePath!, newText.ToString());
+        RefactoringHelpers.UpdateSolutionCache(newDocument);
 
         var message = $"Successfully moved {sourceClass}.{methodName} instance method to {targetClass} in {document.FilePath}";
         return (message, newDocument);
@@ -803,6 +804,7 @@ public static class MoveMethodsTool
             : Formatter.Format(moveResult.NewSourceRoot, document.Project.Solution.Workspace);
 
         var updatedDocument = document.WithSyntaxRoot(newRoot);
+        RefactoringHelpers.UpdateSolutionCache(updatedDocument);
         var message = $"Successfully moved static method '{methodName}' to {targetClass} in {context.TargetPath}";
         return (message, updatedDocument);
     }

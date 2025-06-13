@@ -84,6 +84,7 @@ public static class IntroduceVariableTool
         var newDocument = document.WithSyntaxRoot(formattedRoot);
         var newText = await newDocument.GetTextAsync();
         await File.WriteAllTextAsync(document.FilePath!, newText.ToString());
+        RefactoringHelpers.UpdateSolutionCache(newDocument);
 
         return $"Successfully introduced variable '{variableName}' from {selectionRange} in {document.FilePath} (solution mode)";
     }
