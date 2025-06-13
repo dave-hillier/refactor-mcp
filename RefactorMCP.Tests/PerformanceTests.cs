@@ -118,7 +118,7 @@ public class PerformanceTests
         var variableResult = await IntroduceVariableTool.IntroduceVariable(
             SolutionPath,
             testFile,
-            "19:20-19:35",
+            "12:20-12:29",
             "processedValue"
         );
 

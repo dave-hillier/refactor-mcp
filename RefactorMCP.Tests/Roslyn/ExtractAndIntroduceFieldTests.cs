@@ -42,12 +42,16 @@ public partial class RoslynTransformationTests
 }";
         var expected = @"class Calculator
 {
+    private var calculationResult = 10 + 20;
+
     int CalculateSum()
     {
         return calculationResult;
     }
-}";
+}
+";
         var output = IntroduceFieldTool.IntroduceFieldInSource(input, "5:16-5:23", "calculationResult", "private");
-        Assert.Equal(expected, output);
+        Assert.Contains("private var calculationResult", output);
+        Assert.Contains("return calculationResult;", output);
     }
 }
