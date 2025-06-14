@@ -26,6 +26,9 @@ public static class IntroduceParameterTool
         if (!RefactoringHelpers.TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
             return RefactoringHelpers.ThrowMcpException("Error: Invalid selection range format");
 
+        if (!RefactoringHelpers.ValidateRange(sourceText, startLine, startColumn, endLine, endColumn, out var error))
+            return RefactoringHelpers.ThrowMcpException(error);
+
         var startPosition = textLines[startLine - 1].Start + startColumn - 1;
         var endPosition = textLines[endLine - 1].Start + endColumn - 1;
         var span = TextSpan.FromBounds(startPosition, endPosition);
@@ -67,7 +70,8 @@ public static class IntroduceParameterTool
     {
         var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
         var syntaxRoot = syntaxTree.GetRoot();
-        var textLines = SourceText.From(sourceText).Lines;
+        var text = SourceText.From(sourceText);
+        var textLines = text.Lines;
 
         var method = syntaxRoot.DescendantNodes()
             .OfType<MethodDeclarationSyntax>()
@@ -77,6 +81,9 @@ public static class IntroduceParameterTool
 
         if (!RefactoringHelpers.TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
             return RefactoringHelpers.ThrowMcpException("Error: Invalid selection range format");
+
+        if (!RefactoringHelpers.ValidateRange(text, startLine, startColumn, endLine, endColumn, out var error))
+            return RefactoringHelpers.ThrowMcpException(error);
 
         var startPosition = textLines[startLine - 1].Start + startColumn - 1;
         var endPosition = textLines[endLine - 1].Start + endColumn - 1;

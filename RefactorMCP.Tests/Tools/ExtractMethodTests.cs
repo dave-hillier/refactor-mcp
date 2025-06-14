@@ -81,4 +81,18 @@ public class ExtractMethodTests : TestBase
                 range,
                 methodName));
     }
+
+    [Theory]
+    [InlineData("0:1-1:1", "TestMethod")]
+    [InlineData("5:5-3:1", "TestMethod")]
+    public async Task ExtractMethod_InvalidRangeValues_ReturnsError(string range, string methodName)
+    {
+        await LoadSolutionTool.LoadSolution(SolutionPath);
+        await Assert.ThrowsAsync<McpException>(async () =>
+            await ExtractMethodTool.ExtractMethod(
+                SolutionPath,
+                ExampleFilePath,
+                range,
+                methodName));
+    }
 }
