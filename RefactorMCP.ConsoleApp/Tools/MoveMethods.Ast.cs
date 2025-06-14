@@ -187,13 +187,17 @@ public static partial class MoveMethodsTool
 
         var instanceMembers = GetInstanceMemberNames(originClass);
         var methodNames = GetMethodNames(originClass);
+
+        var analysis = new MethodAnalysisWalker(instanceMembers, methodNames, methodName);
+        analysis.Visit(method);
+
+        bool usesInstanceMembers = analysis.UsesInstanceMembers;
+        bool callsOtherMethods = analysis.CallsOtherMethods;
+        bool isRecursive = analysis.IsRecursive;
+        bool needsThisParameter = usesInstanceMembers || callsOtherMethods || isRecursive;
+
         var otherMethodNames = new HashSet<string>(methodNames);
         otherMethodNames.Remove(methodName);
-
-        bool usesInstanceMembers = HasInstanceMemberUsage(method, instanceMembers);
-        bool callsOtherMethods = HasMethodCalls(method, otherMethodNames);
-        bool isRecursive = HasMethodCalls(method, new HashSet<string> { methodName });
-        bool needsThisParameter = usesInstanceMembers || callsOtherMethods || isRecursive;
 
         var accessMember = MemberExists(originClass, accessMemberName)
             ? null
