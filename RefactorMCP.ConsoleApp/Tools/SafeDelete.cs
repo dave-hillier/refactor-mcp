@@ -284,6 +284,9 @@ public static class SafeDeleteTool
         if (!RefactoringHelpers.TryParseRange(selectionRange, out var sl, out var sc, out var el, out var ec))
             return RefactoringHelpers.ThrowMcpException("Error: Invalid selection range format");
 
+        if (!RefactoringHelpers.ValidateRange(text, sl, sc, el, ec, out var error))
+            return RefactoringHelpers.ThrowMcpException(error);
+
         var start = text.Lines[sl - 1].Start + sc - 1;
         var end = text.Lines[el - 1].Start + ec - 1;
         var span = TextSpan.FromBounds(start, end);
@@ -322,9 +325,13 @@ public static class SafeDeleteTool
     {
         var tree = CSharpSyntaxTree.ParseText(sourceText);
         var root = tree.GetRoot();
-        var lines = SourceText.From(sourceText).Lines;
+        var text = SourceText.From(sourceText);
+        var lines = text.Lines;
         if (!RefactoringHelpers.TryParseRange(selectionRange, out var sl, out var sc, out var el, out var ec))
             return RefactoringHelpers.ThrowMcpException("Error: Invalid selection range format");
+
+        if (!RefactoringHelpers.ValidateRange(text, sl, sc, el, ec, out var error))
+            return RefactoringHelpers.ThrowMcpException(error);
 
         var start = lines[sl - 1].Start + sc - 1;
         var end = lines[el - 1].Start + ec - 1;

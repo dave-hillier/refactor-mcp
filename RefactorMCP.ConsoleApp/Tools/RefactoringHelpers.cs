@@ -96,6 +96,33 @@ internal static class RefactoringHelpers
                int.TryParse(endParts[1], out endColumn);
     }
 
+    internal static bool ValidateRange(
+        SourceText text,
+        int startLine,
+        int startColumn,
+        int endLine,
+        int endColumn,
+        out string error)
+    {
+        error = string.Empty;
+        if (startLine <= 0 || startColumn <= 0 || endLine <= 0 || endColumn <= 0)
+        {
+            error = "Error: Range values must be positive";
+            return false;
+        }
+        if (startLine > endLine || (startLine == endLine && startColumn >= endColumn))
+        {
+            error = "Error: Range start must precede end";
+            return false;
+        }
+        if (startLine > text.Lines.Count || endLine > text.Lines.Count)
+        {
+            error = "Error: Range exceeds file length";
+            return false;
+        }
+        return true;
+    }
+
     internal static string ThrowMcpException(string message)
     {
         throw new McpException(message);
