@@ -9,6 +9,7 @@ using System.IO;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Linq;
 using Microsoft.CodeAnalysis.Text;
+using System.Text;
 
 
 
@@ -103,9 +104,9 @@ internal static class RefactoringHelpers
         if (!File.Exists(filePath))
             return ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
 
-        var sourceText = await File.ReadAllTextAsync(filePath);
+        var (sourceText, encoding) = await ReadFileWithEncodingAsync(filePath);
         var newText = transform(sourceText);
-        await File.WriteAllTextAsync(filePath, newText);
+        await File.WriteAllTextAsync(filePath, newText, encoding);
         return successMessage;
     }
 
@@ -145,6 +146,46 @@ internal static class RefactoringHelpers
         {
             SolutionCache.Set(solutionPath!, newDoc.Project.Solution);
         }
+    }
+
+    internal static async Task<(string Text, Encoding Encoding)> ReadFileWithEncodingAsync(string filePath)
+    {
+        var bytes = await File.ReadAllBytesAsync(filePath);
+        var encoding = DetectEncoding(bytes);
+        var text = encoding.GetString(bytes);
+        return (text, encoding);
+    }
+
+    internal static async Task<Encoding> GetFileEncodingAsync(string filePath)
+    {
+        var bytes = await File.ReadAllBytesAsync(filePath);
+        return DetectEncoding(bytes);
+    }
+
+    private static Encoding DetectEncoding(byte[] bytes)
+    {
+        if (bytes.Length >= 4)
+        {
+            if (bytes[0] == 0x00 && bytes[1] == 0x00 && bytes[2] == 0xFE && bytes[3] == 0xFF)
+                return new UTF32Encoding(true, true);
+            if (bytes[0] == 0xFF && bytes[1] == 0xFE && bytes[2] == 0x00 && bytes[3] == 0x00)
+                return new UTF32Encoding(false, true);
+        }
+        if (bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF)
+            return Encoding.UTF8;
+        if (bytes.Length >= 2)
+        {
+            if (bytes[0] == 0xFE && bytes[1] == 0xFF)
+                return Encoding.BigEndianUnicode;
+            if (bytes[0] == 0xFF && bytes[1] == 0xFE)
+                return Encoding.Unicode;
+        }
+        return Encoding.UTF8;
+    }
+
+    internal static async Task WriteFileWithEncodingAsync(string filePath, string text, Encoding encoding)
+    {
+        await File.WriteAllTextAsync(filePath, text, encoding);
     }
 
     internal static async Task<string> RunWithSolutionOrFile(
