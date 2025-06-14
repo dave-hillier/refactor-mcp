@@ -23,7 +23,7 @@ namespace RefactorMCP.Tests.Roslyn
 
             var orderedIndices = MoveMultipleMethodsTool.OrderOperations(root, sourceClasses, methodNames);
 
-            foreach(var i in orderedIndices)
+            foreach (var i in orderedIndices)
             {
                 if (isStatic[i])
                 {
@@ -36,7 +36,7 @@ namespace RefactorMCP.Tests.Roslyn
                     root = MoveMethodsTool.AddMethodToTargetClass(moveResult.NewSourceRoot, targetClasses[i], moveResult.MovedMethod);
                 }
             }
-            
+
             var workspace = new AdhocWorkspace();
             var formattedRoot = Formatter.Format(root, workspace);
             return formattedRoot.ToFullString();

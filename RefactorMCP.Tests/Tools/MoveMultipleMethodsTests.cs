@@ -21,7 +21,7 @@ public class MoveMultipleMethodsTests
 
         var orderedIndices = MoveMultipleMethodsTool.OrderOperations(root, sourceClasses, methodNames);
 
-        foreach(var i in orderedIndices)
+        foreach (var i in orderedIndices)
         {
             if (isStatic[i])
             {
@@ -34,7 +34,7 @@ public class MoveMultipleMethodsTests
                 root = MoveMethodsTool.AddMethodToTargetClass(moveResult.NewSourceRoot, targetClasses[i], moveResult.MovedMethod);
             }
         }
-        
+
         var workspace = new AdhocWorkspace();
         var formattedRoot = Formatter.Format(root, workspace);
         return formattedRoot.ToFullString();
@@ -154,4 +154,4 @@ public class TargetClass
         Assert.Contains("return TargetClass.Method1()", sourceClassCode);
         Assert.Contains("return this.field1.Method2(this)", sourceClassCode);
     }
-} 
+}
