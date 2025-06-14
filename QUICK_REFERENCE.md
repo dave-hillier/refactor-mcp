@@ -73,7 +73,6 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli convert-to-extension-method
   methodName
 ```
 The original method remains and calls the extension method so the interface stays the same.
-The original method remains and calls the extension method so the interface stays the same.
 
 ### Analyze Refactoring Opportunities
 ```bash
