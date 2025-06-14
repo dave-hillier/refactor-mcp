@@ -152,6 +152,17 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli cleanup-usings \
   "./path/to/file.cs"
 ```
 
+### Rename Symbol
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli rename-symbol \
+  "./RefactorMCP.sln" \
+  "./path/to/file.cs" \
+  OldName \
+  NewName \
+  10 \
+  5
+```
+
 ### Move Instance Method
 ```bash
 dotnet run --project RefactorMCP.ConsoleApp -- --cli move-instance-method \
