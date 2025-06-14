@@ -101,19 +101,24 @@ public static class IntroduceFieldTool
         return $"Successfully introduced {accessModifier} field '{fieldName}' from {selectionRange} in {document.FilePath} (solution mode)";
     }
 
-    private static Task<string> IntroduceFieldSingleFile(string filePath, string selectionRange, string fieldName, string accessModifier)
+    private static async Task<string> IntroduceFieldSingleFile(string filePath, string selectionRange, string fieldName, string accessModifier)
     {
-        return RefactoringHelpers.ApplySingleFileEdit(
-            filePath,
-            text => IntroduceFieldInSource(text, selectionRange, fieldName, accessModifier),
-            $"Successfully introduced {accessModifier} field '{fieldName}' from {selectionRange} in {filePath} (single file mode)");
+        if (!File.Exists(filePath))
+            return RefactoringHelpers.ThrowMcpException($"Error: File {filePath} not found");
+
+        var (sourceText, encoding) = await RefactoringHelpers.ReadFileWithEncodingAsync(filePath);
+        var model = await RefactoringHelpers.GetOrCreateSemanticModelAsync(filePath);
+        var newText = IntroduceFieldInSource(sourceText, selectionRange, fieldName, accessModifier, model);
+        await File.WriteAllTextAsync(filePath, newText, encoding);
+        RefactoringHelpers.UpdateFileCaches(filePath, newText);
+        return $"Successfully introduced {accessModifier} field '{fieldName}' from {selectionRange} in {filePath} (single file mode)";
     }
 
-    public static string IntroduceFieldInSource(string sourceText, string selectionRange, string fieldName, string accessModifier)
+    public static string IntroduceFieldInSource(string sourceText, string selectionRange, string fieldName, string accessModifier, SemanticModel? model = null)
     {
-        var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
+        var syntaxTree = model?.SyntaxTree ?? CSharpSyntaxTree.ParseText(sourceText);
         var syntaxRoot = syntaxTree.GetRoot();
-        var text = SourceText.From(sourceText);
+        var text = syntaxTree.GetText();
         var textLines = text.Lines;
 
         if (!RefactoringHelpers.TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
@@ -133,8 +138,13 @@ public static class IntroduceFieldTool
         if (selectedExpression == null)
             return RefactoringHelpers.ThrowMcpException("Error: Selected code is not a valid expression");
 
-        // In single file mode, use 'var' for type since we don't have semantic analysis
         var typeName = "var";
+        if (model != null)
+        {
+            var typeInfo = model.GetTypeInfo(selectedExpression);
+            if (typeInfo.Type != null)
+                typeName = typeInfo.Type.ToDisplayString();
+        }
 
         // Create the field declaration
         var accessModifierToken = accessModifier.ToLower() switch
