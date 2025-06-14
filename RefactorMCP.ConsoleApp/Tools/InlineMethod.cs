@@ -33,7 +33,8 @@ public static class InlineMethodTool
                 var formatted = Formatter.Format(newRoot!, refDoc.Project.Solution.Workspace);
                 var newDoc = refDoc.WithSyntaxRoot(formatted);
                 var text = await newDoc.GetTextAsync();
-                await File.WriteAllTextAsync(refDoc.FilePath!, text.ToString());
+                var encoding = await RefactoringHelpers.GetFileEncodingAsync(refDoc.FilePath!);
+                await File.WriteAllTextAsync(refDoc.FilePath!, text.ToString(), encoding);
                 RefactoringHelpers.UpdateSolutionCache(newDoc);
             }
         }
@@ -60,7 +61,8 @@ public static class InlineMethodTool
         var formattedRoot = Formatter.Format(newRoot, document.Project.Solution.Workspace);
         var newDocument = document.WithSyntaxRoot(formattedRoot);
         var newText = await newDocument.GetTextAsync();
-        await File.WriteAllTextAsync(document.FilePath!, newText.ToString());
+        var encoding = await RefactoringHelpers.GetFileEncodingAsync(document.FilePath!);
+        await File.WriteAllTextAsync(document.FilePath!, newText.ToString(), encoding);
         RefactoringHelpers.UpdateSolutionCache(newDocument);
 
         return $"Successfully inlined method '{methodName}' in {document.FilePath} (solution mode)";

@@ -40,12 +40,18 @@ public static class AnalyzeRefactoringOpportunitiesTool
         var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
         if (document != null)
         {
-            var tree = await document.GetSyntaxTreeAsync() ?? CSharpSyntaxTree.ParseText(await File.ReadAllTextAsync(filePath));
+            var tree = await document.GetSyntaxTreeAsync();
+            if (tree == null)
+            {
+                var (text, _) = await RefactoringHelpers.ReadFileWithEncodingAsync(filePath);
+                tree = CSharpSyntaxTree.ParseText(text);
+            }
             var model = await document.GetSemanticModelAsync();
             return (tree, model, solution);
         }
 
-        var syntaxTree = CSharpSyntaxTree.ParseText(await File.ReadAllTextAsync(filePath));
+        var (fileText, _) = await RefactoringHelpers.ReadFileWithEncodingAsync(filePath);
+        var syntaxTree = CSharpSyntaxTree.ParseText(fileText);
         return (syntaxTree, null, null);
     }
 

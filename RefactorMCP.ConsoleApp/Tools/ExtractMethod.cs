@@ -70,7 +70,8 @@ public static class ExtractMethodTool
 
         // Write the changes back to the file
         var newText = await newDocument.GetTextAsync();
-        await File.WriteAllTextAsync(document.FilePath!, newText.ToString());
+        var encoding = await RefactoringHelpers.GetFileEncodingAsync(document.FilePath!);
+        await File.WriteAllTextAsync(document.FilePath!, newText.ToString(), encoding);
         RefactoringHelpers.UpdateSolutionCache(newDocument);
 
         return $"Successfully extracted method '{methodName}' from {selectionRange} in {document.FilePath} (solution mode)";

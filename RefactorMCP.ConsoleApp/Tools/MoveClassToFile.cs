@@ -33,7 +33,7 @@ public static class MoveClassToFileTool
                 if (!File.Exists(filePath))
                     return RefactoringHelpers.ThrowMcpException($"Error: File {filePath} not found");
 
-                var text = await File.ReadAllTextAsync(filePath);
+                var (text, _) = await RefactoringHelpers.ReadFileWithEncodingAsync(filePath);
                 root = (CompilationUnitSyntax)CSharpSyntaxTree.ParseText(text).GetRoot();
             }
             var classNode = root.DescendantNodes().OfType<ClassDeclarationSyntax>()
@@ -47,7 +47,8 @@ public static class MoveClassToFileTool
 
             var rootWithoutClass = (CompilationUnitSyntax)root.RemoveNode(classNode, SyntaxRemoveOptions.KeepNoTrivia);
             rootWithoutClass = (CompilationUnitSyntax)Formatter.Format(rootWithoutClass, RefactoringHelpers.SharedWorkspace);
-            await File.WriteAllTextAsync(filePath, rootWithoutClass.ToFullString());
+            var sourceEncoding = await RefactoringHelpers.GetFileEncodingAsync(filePath);
+            await File.WriteAllTextAsync(filePath, rootWithoutClass.ToFullString(), sourceEncoding);
 
             var usingStatements = root.Usings;
             CompilationUnitSyntax newRoot = SyntaxFactory.CompilationUnit().WithUsings(usingStatements);
@@ -70,7 +71,8 @@ public static class MoveClassToFileTool
             newRoot = (CompilationUnitSyntax)Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
             if (File.Exists(newFilePath))
                 return RefactoringHelpers.ThrowMcpException($"Error: File {newFilePath} already exists");
-            await File.WriteAllTextAsync(newFilePath, newRoot.ToFullString());
+            var newFileEncoding = await RefactoringHelpers.GetFileEncodingAsync(filePath);
+            await File.WriteAllTextAsync(newFilePath, newRoot.ToFullString(), newFileEncoding);
 
             if (document != null)
             {
