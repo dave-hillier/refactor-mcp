@@ -2,6 +2,7 @@ using ModelContextProtocol.Server;
 using ModelContextProtocol;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.MSBuild;
+using Microsoft.Build.Locator;
 using Microsoft.Extensions.Caching.Memory;
 using System;
 using System.IO;
@@ -18,7 +19,30 @@ internal static class RefactoringHelpers
     private static readonly Lazy<AdhocWorkspace> _workspace =
         new(() => new AdhocWorkspace());
 
+    private static bool _msbuildRegistered;
+    private static readonly object _msbuildLock = new();
+
     internal static AdhocWorkspace SharedWorkspace => _workspace.Value;
+
+    private static void EnsureMsBuildRegistered()
+    {
+        if (_msbuildRegistered) return;
+        lock (_msbuildLock)
+        {
+            if (_msbuildRegistered) return;
+            MSBuildLocator.RegisterDefaults();
+            _msbuildRegistered = true;
+        }
+    }
+
+    internal static MSBuildWorkspace CreateWorkspace()
+    {
+        EnsureMsBuildRegistered();
+        var workspace = MSBuildWorkspace.Create();
+        workspace.WorkspaceFailed += (_, e) =>
+            Console.Error.WriteLine(e.Diagnostic.Message);
+        return workspace;
+    }
 
     internal static async Task<Solution> GetOrLoadSolution(string solutionPath)
     {
@@ -28,7 +52,7 @@ internal static class RefactoringHelpers
             Directory.SetCurrentDirectory(Path.GetDirectoryName(solutionPath)!);
             return cachedSolution!;
         }
-        using var workspace = MSBuildWorkspace.Create();
+        using var workspace = CreateWorkspace();
         var solution = await workspace.OpenSolutionAsync(solutionPath);
         SolutionCache.Set(solutionPath, solution);
         Directory.SetCurrentDirectory(Path.GetDirectoryName(solutionPath)!);
