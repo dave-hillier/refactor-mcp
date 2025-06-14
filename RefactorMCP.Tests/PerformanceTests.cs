@@ -13,38 +13,15 @@ namespace RefactorMCP.Tests;
 public class PerformanceTests
 {
     private readonly ITestOutputHelper _output;
-    private static readonly string SolutionPath = GetSolutionPath();
-    private static readonly string TestOutputPath =
-        Path.Combine(Path.GetDirectoryName(SolutionPath)!,
-            "RefactorMCP.Tests",
-            "TestOutput",
-            "Performance");
+    private static readonly string SolutionPath = TestHelpers.GetSolutionPath();
+    private readonly string _testOutputPath;
 
     public PerformanceTests(ITestOutputHelper output)
     {
         _output = output;
-        Directory.CreateDirectory(TestOutputPath);
+        _testOutputPath = TestHelpers.CreateTestOutputDir("Performance");
     }
 
-    private static string GetSolutionPath()
-    {
-        // Start from the current directory and walk up to find the solution file
-        var currentDir = Directory.GetCurrentDirectory();
-        var dir = new DirectoryInfo(currentDir);
-
-        while (dir != null)
-        {
-            var solutionFile = Path.Combine(dir.FullName, "RefactorMCP.sln");
-            if (File.Exists(solutionFile))
-            {
-                return solutionFile;
-            }
-            dir = dir.Parent;
-        }
-
-        // Fallback to relative path
-        return "./RefactorMCP.sln";
-    }
 
     [Fact]
     public async Task LoadSolution_LargeProject_CompletesInReasonableTime()
@@ -67,7 +44,7 @@ public class PerformanceTests
     public async Task ExtractMethod_LargeFile_CompletesInReasonableTime()
     {
         // Arrange
-        var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "LargeFileTest.cs"));
+        var testFile = Path.GetFullPath(Path.Combine(_testOutputPath, "LargeFileTest.cs"));
         await CreateLargeTestFile(testFile);
         await LoadSolutionTool.LoadSolution(SolutionPath);
 
@@ -93,7 +70,7 @@ public class PerformanceTests
     public async Task MultipleRefactorings_Sequential_AllComplete()
     {
         // Arrange
-        var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "MultipleRefactoringsTest.cs"));
+        var testFile = Path.GetFullPath(Path.Combine(_testOutputPath, "MultipleRefactoringsTest.cs"));
         await CreateTestFileForMultipleRefactorings(testFile);
         await LoadSolutionTool.LoadSolution(SolutionPath);
 
@@ -161,7 +138,7 @@ public class PerformanceTests
     public async Task MemoryUsage_MultipleOperations_DoesNotLeak()
     {
         // Arrange
-        var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "MemoryTest.cs"));
+        var testFile = Path.GetFullPath(Path.Combine(_testOutputPath, "MemoryTest.cs"));
         await CreateTestFileForMultipleRefactorings(testFile);
         await LoadSolutionTool.LoadSolution(SolutionPath);
 
