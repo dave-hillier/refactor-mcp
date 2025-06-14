@@ -48,7 +48,8 @@ public static class TransformSetterToInitTool
         var formatted = Formatter.Format(newRoot!, document.Project.Solution.Workspace);
         var newDocument = document.WithSyntaxRoot(formatted);
         var newText = await newDocument.GetTextAsync();
-        await File.WriteAllTextAsync(document.FilePath!, newText.ToString());
+        var encoding = await RefactoringHelpers.GetFileEncodingAsync(document.FilePath!);
+        await File.WriteAllTextAsync(document.FilePath!, newText.ToString(), encoding);
         RefactoringHelpers.UpdateSolutionCache(newDocument);
 
         return $"Successfully converted setter to init for '{propertyName}' in {document.FilePath} (solution mode)";

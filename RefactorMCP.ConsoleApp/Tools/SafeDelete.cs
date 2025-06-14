@@ -115,7 +115,8 @@ public static class SafeDeleteTool
         var formatted = Formatter.Format(newRoot, document.Project.Solution.Workspace);
         var newDoc = document.WithSyntaxRoot(formatted);
         var text = await newDoc.GetTextAsync();
-        await File.WriteAllTextAsync(document.FilePath!, text.ToString());
+        var encoding = await RefactoringHelpers.GetFileEncodingAsync(document.FilePath!);
+        await File.WriteAllTextAsync(document.FilePath!, text.ToString(), encoding);
         RefactoringHelpers.UpdateSolutionCache(newDoc);
         return $"Successfully deleted field '{fieldName}' in {document.FilePath}";
     }
@@ -174,7 +175,8 @@ public static class SafeDeleteTool
         var formatted = Formatter.Format(newRoot, document.Project.Solution.Workspace);
         var newDoc = document.WithSyntaxRoot(formatted);
         var text = await newDoc.GetTextAsync();
-        await File.WriteAllTextAsync(document.FilePath!, text.ToString());
+        var encoding = await RefactoringHelpers.GetFileEncodingAsync(document.FilePath!);
+        await File.WriteAllTextAsync(document.FilePath!, text.ToString(), encoding);
         RefactoringHelpers.UpdateSolutionCache(newDoc);
         return $"Successfully deleted method '{methodName}' in {document.FilePath}";
     }
@@ -240,7 +242,8 @@ public static class SafeDeleteTool
             var formattedRoot = Formatter.Format(rewritten!, doc.Project.Solution.Workspace);
             var newDoc = doc.WithSyntaxRoot(formattedRoot);
             var newText = await newDoc.GetTextAsync();
-            await File.WriteAllTextAsync(doc.FilePath!, newText.ToString());
+            var encoding = await RefactoringHelpers.GetFileEncodingAsync(doc.FilePath!);
+            await File.WriteAllTextAsync(doc.FilePath!, newText.ToString(), encoding);
             RefactoringHelpers.UpdateSolutionCache(newDoc);
         }
 
@@ -301,7 +304,8 @@ public static class SafeDeleteTool
         var formatted = Formatter.Format(newRoot, document.Project.Solution.Workspace);
         var newDoc = document.WithSyntaxRoot(formatted);
         var newText = await newDoc.GetTextAsync();
-        await File.WriteAllTextAsync(document.FilePath!, newText.ToString());
+        var encoding = await RefactoringHelpers.GetFileEncodingAsync(document.FilePath!);
+        await File.WriteAllTextAsync(document.FilePath!, newText.ToString(), encoding);
         RefactoringHelpers.UpdateSolutionCache(newDoc);
         return $"Successfully deleted variable '{variable.Identifier.ValueText}' in {document.FilePath}";
     }
