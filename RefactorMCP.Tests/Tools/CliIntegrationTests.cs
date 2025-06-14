@@ -10,7 +10,7 @@ namespace RefactorMCP.Tests;
 
 public class CliIntegrationTests
 {
-    private static string GetSolutionPath() => TestUtilities.GetSolutionPath();
+    private static string GetSolutionPath() => TestHelpers.GetSolutionPath();
 
     [Fact]
     public async Task CliTestMode_LoadSolution_WorksCorrectly()
