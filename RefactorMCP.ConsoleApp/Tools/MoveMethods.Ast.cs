@@ -190,9 +190,10 @@ public static partial class MoveMethodsTool
         var otherMethodNames = new HashSet<string>(methodNames);
         otherMethodNames.Remove(methodName);
 
-        bool usesInstanceMembers = HasInstanceMemberUsage(method, instanceMembers);
-        bool callsOtherMethods = HasMethodCalls(method, otherMethodNames);
-        bool isRecursive = HasMethodCalls(method, new HashSet<string> { methodName });
+        var analysis = AnalyzeInstanceMethod(method, methodName, instanceMembers, otherMethodNames);
+        bool usesInstanceMembers = analysis.usesInstanceMembers;
+        bool callsOtherMethods = analysis.callsOtherMethods;
+        bool isRecursive = analysis.isRecursive;
         bool needsThisParameter = usesInstanceMembers || callsOtherMethods || isRecursive;
 
         var accessMember = MemberExists(originClass, accessMemberName)

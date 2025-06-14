@@ -15,18 +15,15 @@ public static partial class MoveMethodsTool
 {
     // ===== HELPER METHODS =====
 
-    private static bool HasInstanceMemberUsage(MethodDeclarationSyntax method, HashSet<string> knownMembers)
+    private static (bool usesInstanceMembers, bool callsOtherMethods, bool isRecursive) AnalyzeInstanceMethod(
+        MethodDeclarationSyntax method,
+        string methodName,
+        HashSet<string> instanceMembers,
+        HashSet<string> methodNames)
     {
-        var usageChecker = new InstanceMemberUsageChecker(knownMembers);
-        usageChecker.Visit(method);
-        return usageChecker.HasInstanceMemberUsage;
-    }
-
-    private static bool HasMethodCalls(MethodDeclarationSyntax method, HashSet<string> methodNames)
-    {
-        var callChecker = new MethodCallChecker(methodNames);
-        callChecker.Visit(method);
-        return callChecker.HasMethodCalls;
+        var walker = new InstanceMethodAnalysisWalker(instanceMembers, methodNames, methodName);
+        walker.Visit(method);
+        return (walker.UsesInstanceMembers, walker.CallsOtherMethods, walker.IsRecursive);
     }
 
     private static bool HasStaticFieldReferences(MethodDeclarationSyntax method, HashSet<string> staticFieldNames)
