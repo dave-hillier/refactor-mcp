@@ -4,6 +4,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.MSBuild;
 using Microsoft.Build.Locator;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.CodeAnalysis.CSharp;
 using System;
 using System.IO;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -19,6 +20,8 @@ internal static class RefactoringHelpers
     // This allows us to store and access Solution instances across threads
     // without additional locking or synchronization.
     internal static MemoryCache SolutionCache = new(new MemoryCacheOptions());
+    internal static MemoryCache SyntaxTreeCache = new(new MemoryCacheOptions());
+    internal static MemoryCache ModelCache = new(new MemoryCacheOptions());
 
     private static readonly Lazy<AdhocWorkspace> _workspace =
         new(() => new AdhocWorkspace());
@@ -139,6 +142,7 @@ internal static class RefactoringHelpers
         var (sourceText, encoding) = await ReadFileWithEncodingAsync(filePath);
         var newText = transform(sourceText);
         await File.WriteAllTextAsync(filePath, newText, encoding);
+        UpdateFileCaches(filePath, newText);
         return successMessage;
     }
 
@@ -180,6 +184,48 @@ internal static class RefactoringHelpers
         }
     }
 
+    private static CSharpCompilation CreateCompilation(SyntaxTree tree)
+    {
+        var refs = ((string?)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES")!)
+            .Split(Path.PathSeparator)
+            .Select(p => MetadataReference.CreateFromFile(p));
+        return CSharpCompilation.Create(
+            "SingleFile",
+            new[] { tree },
+            refs,
+            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+    }
+
+    internal static async Task<SyntaxTree> GetOrParseSyntaxTreeAsync(string filePath)
+    {
+        if (SyntaxTreeCache.TryGetValue(filePath, out SyntaxTree? cached))
+            return cached!;
+        var (text, _) = await ReadFileWithEncodingAsync(filePath);
+        var tree = CSharpSyntaxTree.ParseText(text);
+        SyntaxTreeCache.Set(filePath, tree);
+        return tree;
+    }
+
+    internal static async Task<SemanticModel> GetOrCreateSemanticModelAsync(string filePath)
+    {
+        if (ModelCache.TryGetValue(filePath, out SemanticModel? cached))
+            return cached!;
+        var tree = await GetOrParseSyntaxTreeAsync(filePath);
+        var compilation = CreateCompilation(tree);
+        var model = compilation.GetSemanticModel(tree);
+        ModelCache.Set(filePath, model);
+        return model;
+    }
+
+    internal static void UpdateFileCaches(string filePath, string newText)
+    {
+        var tree = CSharpSyntaxTree.ParseText(newText);
+        SyntaxTreeCache.Set(filePath, tree);
+        var compilation = CreateCompilation(tree);
+        var model = compilation.GetSemanticModel(tree);
+        ModelCache.Set(filePath, model);
+    }
+
     internal static async Task<(string Text, Encoding Encoding)> ReadFileWithEncodingAsync(string filePath)
     {
         var bytes = await File.ReadAllBytesAsync(filePath);
@@ -218,6 +264,7 @@ internal static class RefactoringHelpers
     internal static async Task WriteFileWithEncodingAsync(string filePath, string text, Encoding encoding)
     {
         await File.WriteAllTextAsync(filePath, text, encoding);
+        UpdateFileCaches(filePath, text);
     }
 
     internal static async Task<string> RunWithSolutionOrFile(

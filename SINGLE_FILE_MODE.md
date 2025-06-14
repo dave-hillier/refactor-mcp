@@ -42,10 +42,13 @@ The refactoring engine automatically detects which mode to use:
    await File.WriteAllTextAsync(filePath, formattedRoot.ToFullString());
    ```
 
-3. **Type Inference Limitations**
-   - Uses `var` for type declarations since semantic analysis is not available
+3. **Basic Type Inference**
+   - Lightweight `CSharpCompilation` created per file
+   - Enables simple type lookup for expressions
    - No cross-reference validation
-   - Limited to syntax-level transformations
+4. **Syntax Tree Caching**
+   - Parsed syntax trees and semantic models are cached
+   - Reduces repeated parsing costs
 
 ### Supported Refactorings in Single File Mode
 
@@ -54,14 +57,13 @@ The refactoring engine automatically detects which mode to use:
 - Works within class boundaries
 - Maintains proper method signatures
 
-#### ✅ Introduce Variable  
+#### ✅ Introduce Variable
 - Creates local variables from expressions
-- Uses `var` type inference
+- Infers primitive types using cached compilation
 - Inserts declaration at appropriate scope
 
-#### ✅ Introduce Field
 - Creates private fields from expressions
-- Uses `var` type with initializer
+- Infers primitive types using cached compilation
 - Adds field to class members
 - Refactoring fails if the field name already exists
 
@@ -107,7 +109,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli make-field-readonly ./MyFil
 
 | Feature | Single File Mode | Solution Mode |
 |---------|------------------|---------------|
-| Type Information | ❌ Uses `var` | ✅ Full semantic types |
+| Type Information | ⚠️ Basic primitives | ✅ Full semantic types |
 | Cross-file Analysis | ❌ Not supported | ✅ Full project analysis |
 | Dependency Resolution | ❌ Syntax only | ✅ Complete dependency graph |
 | Performance | ✅ Very fast | ⚠️ Slower (solution loading) |
@@ -174,12 +176,10 @@ Both modes provide consistent error reporting:
 
 ## Future Enhancements
 
-Planned improvements for Single File Mode:
+Remaining improvements for Single File Mode:
 
-1. **Limited Semantic Analysis**: Add basic type inference without full solution loading
-2. **Caching**: Cache parsed syntax trees for better performance
-3. **Batch Operations**: Support multiple files in single operation
-4. **Configuration**: Allow customization of type inference behavior
+1. **Batch Operations**: Support multiple files in single operation
+2. **Configuration**: Allow customization of type inference behavior
 
 ## Contributing
 
