@@ -15,7 +15,7 @@ public static partial class MoveMultipleMethodsTool
     // ===== HELPER METHODS =====
 
     internal static Dictionary<string, HashSet<string>> BuildDependencies(
-        SyntaxNode sourceRoot, 
+        SyntaxNode sourceRoot,
         string[] sourceClasses,
         string[] methodNames)
     {
@@ -27,7 +27,9 @@ public static partial class MoveMultipleMethodsTool
             .Where(x => opSet.Contains(x.Key))
             .ToDictionary(x => x.Key, x => x.Method);
 
+        var methodNameSet = methodNames.ToHashSet();
         var deps = new Dictionary<string, HashSet<string>>();
+
         for (int i = 0; i < sourceClasses.Length; i++)
         {
             var key = $"{sourceClasses[i]}.{methodNames[i]}";
@@ -37,14 +39,10 @@ public static partial class MoveMultipleMethodsTool
                 continue;
             }
 
-            var called = method.DescendantNodes().OfType<InvocationExpressionSyntax>()
-                .Select(inv => inv.Expression switch
-                {
-                    IdentifierNameSyntax id => id.Identifier.ValueText,
-                    MemberAccessExpressionSyntax ma => ma.Name.Identifier.ValueText,
-                    _ => null
-                })
-                .Where(n => n != null)
+            var walker = new RefactorMCP.ConsoleApp.SyntaxRewriters.MethodDependencyWalker(methodNameSet);
+            walker.Visit(method);
+
+            var called = walker.Dependencies
                 .Select(name => $"{sourceClasses[i]}.{name}")
                 .Where(n => map.ContainsKey(n))
                 .ToHashSet();
@@ -56,7 +54,7 @@ public static partial class MoveMultipleMethodsTool
     }
 
     internal static List<int> OrderOperations(
-        SyntaxNode sourceRoot, 
+        SyntaxNode sourceRoot,
         string[] sourceClasses,
         string[] methodNames)
     {
