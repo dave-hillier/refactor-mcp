@@ -8,7 +8,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Server;
+using System.CommandLine;
 using System.ComponentModel;
+using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Runtime.CompilerServices;
@@ -50,86 +52,106 @@ static async Task RunCliMode(string[] args)
         return;
     }
 
-    var command = args[1].ToLowerInvariant();
+    var root = BuildCliRoot();
+    await root.InvokeAsync(args.Skip(1).ToArray());
+}
+static RootCommand BuildCliRoot()
+{
+    var root = new RootCommand("RefactorMCP CLI Mode");
 
-    var handlers = new Dictionary<string, Func<string[], Task<string>>>(StringComparer.OrdinalIgnoreCase)
-    {
-        ["load-solution"] = TestLoadSolution,
-        ["extract-method"] = TestExtractMethod,
-        ["introduce-field"] = TestIntroduceField,
-        ["introduce-variable"] = TestIntroduceVariable,
-        ["make-field-readonly"] = TestMakeFieldReadonly,
-        ["unload-solution"] = args => Task.FromResult(TestUnloadSolution(args)),
-        ["clear-solution-cache"] = _ => Task.FromResult(ClearCacheCommand()),
-        ["convert-to-extension-method"] = TestConvertToExtensionMethod,
-        ["convert-to-static-with-parameters"] = TestConvertToStaticWithParameters,
-        ["convert-to-static-with-instance"] = TestConvertToStaticWithInstance,
-        ["introduce-parameter"] = TestIntroduceParameter,
-        ["move-static-method"] = TestMoveStaticMethod,
-        ["inline-method"] = TestInlineMethod,
-        ["move-instance-method"] = TestMoveInstanceMethod,
-        ["move-to-separate-file"] = TestMoveToSeparateFile,
-        ["transform-setter-to-init"] = TestTransformSetterToInit,
-        ["safe-delete-field"] = TestSafeDeleteField,
-        ["safe-delete-method"] = TestSafeDeleteMethod,
-        ["safe-delete-parameter"] = TestSafeDeleteParameter,
-        ["safe-delete-variable"] = TestSafeDeleteVariable,
-        ["cleanup-usings"] = TestCleanupUsings,
-        ["analyze-refactoring-opportunities"] = TestAnalyzeRefactoringOpportunities,
-        ["list-class-lengths"] = TestListClassLengths,
-        ["list-tools"] = _ => Task.FromResult(ListAvailableTools()),
-        ["version"] = _ => Task.FromResult(ShowVersionInfo())
-    };
+    var toolMethods = typeof(LoadSolutionTool).Assembly
+        .GetTypes()
+        .Where(t => t.GetCustomAttributes(typeof(McpServerToolTypeAttribute), false).Length > 0)
+        .SelectMany(t => t.GetMethods(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static))
+        .Where(m => m.GetCustomAttributes(typeof(McpServerToolAttribute), false).Length > 0)
+        .ToArray();
 
-    try
+    foreach (var method in toolMethods)
     {
-        if (!handlers.TryGetValue(command, out var handler))
+        var commandName = ToKebabCase(method.Name);
+        var description = method.GetCustomAttribute<DescriptionAttribute>()?.Description;
+        var command = new Command(commandName, description ?? string.Empty);
+
+        var parameterSymbols = new List<(ParameterInfo param, Argument<string>? arg, Option<string?>? opt)>();
+        foreach (var p in method.GetParameters())
         {
-            Console.WriteLine($"Unknown command: {command}. Use --cli list-tools to see available commands.");
-            return;
+            var desc = p.GetCustomAttribute<DescriptionAttribute>()?.Description;
+            var kebab = ToKebabCase(p.Name!);
+            if (p.HasDefaultValue)
+            {
+                var opt = new Option<string?>("--" + kebab, desc);
+                command.AddOption(opt);
+                parameterSymbols.Add((p, null, opt));
+            }
+            else
+            {
+                var arg = new Argument<string>(kebab, desc);
+                command.AddArgument(arg);
+                parameterSymbols.Add((p, arg, null));
+            }
         }
 
+        command.SetHandler(async ctx =>
+        {
+            var values = new object?[parameterSymbols.Count];
+            for (int i = 0; i < parameterSymbols.Count; i++)
+            {
+                var (param, arg, opt) = parameterSymbols[i];
+                string? input = arg != null
+                    ? ctx.ParseResult.GetValueForArgument(arg)
+                    : ctx.ParseResult.GetValueForOption(opt!);
 
-        var result = await handler(args);
-        Console.WriteLine(result);
+                if (string.IsNullOrEmpty(input))
+                {
+                    values[i] = param.HasDefaultValue ? param.DefaultValue : null;
+                }
+                else
+                {
+                    values[i] = ConvertInput(input, param.ParameterType);
+                }
+            }
+
+            var result = method.Invoke(null, values);
+            if (result is Task<string> taskStr)
+                Console.WriteLine(await taskStr);
+            else if (result is Task task)
+            {
+                await task;
+                Console.WriteLine("Done");
+            }
+            else if (result != null)
+            {
+                Console.WriteLine(result.ToString());
+            }
+        });
+
+        root.AddCommand(command);
     }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Error: {ex.Message}");
-        Environment.Exit(1);
-    }
+
+    var listTools = new Command("list-tools", "List all available refactoring tools");
+    listTools.SetHandler(() => Console.WriteLine(ListAvailableTools()));
+    root.AddCommand(listTools);
+
+    return root;
 }
+
+static object? ConvertInput(string value, Type targetType)
+{
+    if (targetType == typeof(string))
+        return value;
+    if (targetType == typeof(string[]))
+        return value.Split(',', StringSplitOptions.RemoveEmptyEntries);
+    if (targetType == typeof(int))
+        return int.Parse(value);
+    if (targetType == typeof(bool))
+        return bool.Parse(value);
+    return Convert.ChangeType(value, targetType);
+}
+
 
 static void ShowCliHelp()
 {
-    Console.WriteLine("RefactorMCP CLI Mode");
-    Console.WriteLine("Usage: RefactorMCP.ConsoleApp --cli <command> [arguments]");
-    Console.WriteLine();
-    Console.WriteLine("Available commands:");
-    var toolsList = ListAvailableTools()
-        .Split('\n', StringSplitOptions.RemoveEmptyEntries)
-        .Skip(1); // Skip heading
-    foreach (var tool in toolsList)
-        Console.WriteLine($"  {tool}");
-    Console.WriteLine("  list-tools - List all available refactoring tools");
-    Console.WriteLine("  analyze-refactoring-opportunities <solutionPath> <filePath> - Analyze code for potential refactorings");
-    Console.WriteLine("  list-class-lengths <solutionPath> - Show line counts for all classes in the solution");
-
-    Console.WriteLine();
-    Console.WriteLine("Examples:");
-    Console.WriteLine("  --cli load-solution ./MySolution.sln");
-    Console.WriteLine("  --cli extract-method ./MySolution.sln ./MyFile.cs \"10:5-15:20\" \"ExtractedMethod\"");
-    Console.WriteLine("  --cli introduce-field ./MySolution.sln ./MyFile.cs \"12:10-12:25\" \"_myField\" \"private\"");
-    Console.WriteLine("  --cli make-field-readonly ./MySolution.sln ./MyFile.cs 15");
-    Console.WriteLine("  --cli cleanup-usings ./MySolution.sln ./MyFile.cs");
-    Console.WriteLine("  --cli analyze-refactoring-opportunities ./MySolution.sln ./MyFile.cs");
-    Console.WriteLine("  --cli list-class-lengths ./MySolution.sln");
-    Console.WriteLine("  --cli version");
-    Console.WriteLine();
-    Console.WriteLine("JSON mode: --json ToolName '{\"param\":\"value\"}'");
-    Console.WriteLine();
-    Console.WriteLine("Range format: \"startLine:startColumn-endLine:endColumn\" (1-based)");
-    Console.WriteLine("Note: Solution path is optional. When omitted, single file mode is used with limited semantic analysis.");
+    BuildCliRoot().Invoke("--help");
 }
 
 static async Task RunJsonMode(string[] args)
@@ -230,297 +252,18 @@ static string ListAvailableTools()
 
     return "Available refactoring tools:\n" + string.Join("\n", toolNames);
 
-    static string ToKebabCase(string name)
+}
+
+
+static string ToKebabCase(string name)
+{
+    var sb = new StringBuilder();
+    for (int i = 0; i < name.Length; i++)
     {
-        var sb = new StringBuilder();
-        for (int i = 0; i < name.Length; i++)
-        {
-            var c = name[i];
-            if (char.IsUpper(c) && i > 0)
-                sb.Append('-');
-
-            sb.Append(char.ToLowerInvariant(c));
-        }
-        return sb.ToString();
+        var c = name[i];
+        if (char.IsUpper(c) && i > 0)
+            sb.Append('-');
+        sb.Append(char.ToLowerInvariant(c));
     }
-}
-
-static async Task<string> TestLoadSolution(string[] args)
-{
-    if (args.Length < 3)
-        return "Error: Missing solution path. Usage: --cli load-solution <solutionPath>";
-
-    var solutionPath = args[2];
-    return await LoadSolutionTool.LoadSolution(solutionPath);
-}
-
-static async Task<string> TestExtractMethod(string[] args)
-{
-    if (args.Length < 6)
-        return "Error: Missing arguments. Usage: --cli extract-method <solutionPath> <filePath> <range> <methodName>";
-
-    var solutionPath = args[2];
-    var filePath = args[3];
-    var range = args[4];
-    var methodName = args[5];
-
-    return await ExtractMethodTool.ExtractMethod(solutionPath, filePath, range, methodName);
-}
-
-static async Task<string> TestIntroduceField(string[] args)
-{
-    if (args.Length < 6)
-        return "Error: Missing arguments. Usage: --cli introduce-field <solutionPath> <filePath> <range> <fieldName> [accessModifier]";
-
-    var solutionPath = args[2];
-    var filePath = args[3];
-    var range = args[4];
-    var fieldName = args[5];
-    var accessModifier = args.Length > 6 ? args[6] : "private";
-
-    return await IntroduceFieldTool.IntroduceField(solutionPath, filePath, range, fieldName, accessModifier);
-}
-
-static async Task<string> TestIntroduceVariable(string[] args)
-{
-    if (args.Length < 6)
-        return "Error: Missing arguments. Usage: --cli introduce-variable <solutionPath> <filePath> <range> <variableName>";
-
-    var solutionPath = args[2];
-    var filePath = args[3];
-    var range = args[4];
-    var variableName = args[5];
-
-    return await IntroduceVariableTool.IntroduceVariable(solutionPath, filePath, range, variableName);
-}
-
-static async Task<string> TestMakeFieldReadonly(string[] args)
-{
-    if (args.Length < 5)
-        return "Error: Missing arguments. Usage: --cli make-field-readonly <solutionPath> <filePath> <fieldName>";
-
-    var solutionPath = args[2];
-    var filePath = args[3];
-    var fieldName = args[4];
-
-    return await MakeFieldReadonlyTool.MakeFieldReadonly(solutionPath, filePath, fieldName);
-}
-
-static string TestUnloadSolution(string[] args)
-{
-    if (args.Length < 3)
-        return "Error: Missing solution path. Usage: --cli unload-solution <solutionPath>";
-
-    var solutionPath = args[2];
-    return UnloadSolutionTool.UnloadSolution(solutionPath);
-}
-
-static string ClearCacheCommand()
-{
-    return UnloadSolutionTool.ClearSolutionCache();
-}
-
-static string ShowVersionInfo()
-{
-    return VersionTool.Version();
-}
-
-static async Task<string> TestConvertToExtensionMethod(string[] args)
-{
-    if (args.Length < 5)
-        return "Error: Missing arguments. Usage: --cli convert-to-extension-method <solutionPath> <filePath> <methodName>";
-
-    var solutionPath = args[2];
-    var filePath = args[3];
-    var methodName = args[4];
-
-    return await ConvertToExtensionMethodTool.ConvertToExtensionMethod(solutionPath, filePath, methodName, null);
-}
-
-static async Task<string> TestSafeDeleteField(string[] args)
-{
-    if (args.Length < 5)
-        return "Error: Missing arguments. Usage: --cli safe-delete-field <solutionPath> <filePath> <fieldName>";
-
-    var solutionPath = args[2];
-    var filePath = args[3];
-    var fieldName = args[4];
-
-    return await SafeDeleteTool.SafeDeleteField(solutionPath, filePath, fieldName);
-}
-
-static async Task<string> TestSafeDeleteMethod(string[] args)
-{
-    if (args.Length < 5)
-        return "Error: Missing arguments. Usage: --cli safe-delete-method <solutionPath> <filePath> <methodName>";
-
-    var solutionPath = args[2];
-    var filePath = args[3];
-    var methodName = args[4];
-
-    return await SafeDeleteTool.SafeDeleteMethod(solutionPath, filePath, methodName);
-}
-
-static async Task<string> TestSafeDeleteParameter(string[] args)
-{
-    if (args.Length < 6)
-        return "Error: Missing arguments. Usage: --cli safe-delete-parameter <solutionPath> <filePath> <methodName> <parameterName>";
-
-    var solutionPath = args[2];
-    var filePath = args[3];
-    var methodName = args[4];
-    var parameterName = args[5];
-
-    return await SafeDeleteTool.SafeDeleteParameter(solutionPath, filePath, methodName, parameterName);
-}
-
-static async Task<string> TestSafeDeleteVariable(string[] args)
-{
-    if (args.Length < 5)
-        return "Error: Missing arguments. Usage: --cli safe-delete-variable <solutionPath> <filePath> <range>";
-
-    var solutionPath = args[2];
-    var filePath = args[3];
-    var range = args[4];
-
-    return await SafeDeleteTool.SafeDeleteVariable(solutionPath, filePath, range);
-}
-
-static async Task<string> TestCleanupUsings(string[] args)
-{
-    if (args.Length < 4)
-        return "Error: Missing arguments. Usage: --cli cleanup-usings <solutionPath> <filePath>";
-
-    var solutionPath = args[2];
-    var filePath = args[3];
-
-    return await CleanupUsingsTool.CleanupUsings(solutionPath, filePath);
-}
-
-static async Task<string> TestAnalyzeRefactoringOpportunities(string[] args)
-{
-    if (args.Length < 4)
-        return "Error: Missing arguments. Usage: --cli analyze-refactoring-opportunities <solutionPath> <filePath>";
-
-    var solutionPath = args[2];
-    var filePath = args[3];
-
-    return await AnalyzeRefactoringOpportunitiesTool.AnalyzeRefactoringOpportunities(solutionPath, filePath);
-}
-
-static async Task<string> TestConvertToStaticWithParameters(string[] args)
-{
-    if (args.Length < 5)
-        return "Error: Missing arguments. Usage: --cli convert-to-static-with-parameters <solutionPath> <filePath> <methodName>";
-
-    var solutionPath = args[2];
-    var filePath = args[3];
-    var methodName = args[4];
-
-    return await ConvertToStaticWithParametersTool.ConvertToStaticWithParameters(solutionPath, filePath, methodName);
-}
-
-static async Task<string> TestConvertToStaticWithInstance(string[] args)
-{
-    if (args.Length < 5)
-        return "Error: Missing arguments. Usage: --cli convert-to-static-with-instance <solutionPath> <filePath> <methodName> [instanceParamName]";
-
-    var solutionPath = args[2];
-    var filePath = args[3];
-    var methodName = args[4];
-    var instanceParam = args.Length > 5 ? args[5] : "instance";
-
-    return await ConvertToStaticWithInstanceTool.ConvertToStaticWithInstance(solutionPath, filePath, methodName, instanceParam);
-}
-
-static async Task<string> TestIntroduceParameter(string[] args)
-{
-    if (args.Length < 7)
-        return "Error: Missing arguments. Usage: --cli introduce-parameter <solutionPath> <filePath> <methodName> <range> <parameterName>";
-
-    var solutionPath = args[2];
-    var filePath = args[3];
-    var methodName = args[4];
-    var range = args[5];
-    var paramName = args[6];
-
-    return await IntroduceParameterTool.IntroduceParameter(solutionPath, filePath, methodName, range, paramName);
-}
-
-static async Task<string> TestMoveStaticMethod(string[] args)
-{
-    if (args.Length < 6)
-        return "Error: Missing arguments. Usage: --cli move-static-method <solutionPath> <filePath> <methodName> <targetClass> [targetFilePath]";
-
-    var solutionPath = args[2];
-    var filePath = args[3];
-    var methodName = args[4];
-    var targetClass = args[5];
-    var targetFilePath = args.Length > 6 ? args[6] : null;
-
-    return await MoveMethodsTool.MoveStaticMethod(solutionPath, filePath, methodName, targetClass, targetFilePath);
-}
-
-static async Task<string> TestMoveInstanceMethod(string[] args)
-{
-    if (args.Length < 8)
-        return "Error: Missing arguments. Usage: --cli move-instance-method <solutionPath> <filePath> <sourceClass> <methodName> <targetClass> <accessMember> [memberType] [targetFile]";
-
-    var solutionPath = args[2];
-    var filePath = args[3];
-    var sourceClass = args[4];
-    var methodName = args[5];
-    var targetClass = args[6];
-    var accessMember = args[7];
-    var memberType = args.Length > 8 ? args[8] : "field";
-    var targetFile = args.Length > 9 ? args[9] : null;
-
-    return await MoveMethodsTool.MoveInstanceMethod(solutionPath, filePath, sourceClass, methodName, targetClass, accessMember, memberType, targetFile);
-}
-
-static async Task<string> TestMoveToSeparateFile(string[] args)
-{
-    if (args.Length < 5)
-        return "Error: Missing arguments. Usage: --cli move-to-separate-file <solutionPath> <filePath> <className>";
-
-    var solutionPath = args[2];
-    var filePath = args[3];
-    var className = args[4];
-
-    return await MoveClassToFileTool.MoveToSeparateFile(solutionPath, filePath, className);
-}
-
-static async Task<string> TestTransformSetterToInit(string[] args)
-{
-    if (args.Length < 5)
-        return "Error: Missing arguments. Usage: --cli transform-setter-to-init <solutionPath> <filePath> <propertyName>";
-
-    var solutionPath = args[2];
-    var filePath = args[3];
-    var propertyName = args[4];
-
-    return await TransformSetterToInitTool.TransformSetterToInit(solutionPath, filePath, propertyName);
-}
-
-
-static async Task<string> TestInlineMethod(string[] args)
-{
-    if (args.Length < 5)
-        return "Error: Missing arguments. Usage: --cli inline-method <solutionPath> <filePath> <methodName>";
-
-    var solutionPath = args[2];
-    var filePath = args[3];
-    var methodName = args[4];
-
-    return await InlineMethodTool.InlineMethod(solutionPath, filePath, methodName);
-}
-
-static async Task<string> TestListClassLengths(string[] args)
-{
-    if (args.Length < 3)
-        return "Error: Missing arguments. Usage: --cli list-class-lengths <solutionPath>";
-
-    var solutionPath = args[2];
-
-    return await ClassLengthMetricsTool.ListClassLengths(solutionPath);
+    return sb.ToString();
 }
