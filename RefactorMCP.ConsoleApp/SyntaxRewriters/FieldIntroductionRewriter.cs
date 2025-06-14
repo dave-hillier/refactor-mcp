@@ -24,7 +24,7 @@ internal class FieldIntroductionRewriter : CSharpSyntaxRewriter
         _containingClass = containingClass;
     }
 
-    public override SyntaxNode Visit(SyntaxNode node)
+    public override SyntaxNode Visit(SyntaxNode? node)
     {
         if (node is ExpressionSyntax expr && SyntaxFactory.AreEquivalent(expr, _targetExpression))
             return _fieldReference;
