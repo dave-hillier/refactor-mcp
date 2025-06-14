@@ -186,6 +186,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --json ToolName '{"param":"value"
 - `move-instance-method <solutionPath> <filePath> <sourceClass> <methodNames> <targetClass> <accessMember> [memberType] [targetFilePath]` - Move one or more instance methods to another class. Wrapper methods remain in the original class so existing callers continue to work
 - `move-multiple-methods <solutionPath> <filePath> <sourceClass> <methodNames> <targetClass> <accessMember> [memberType] [targetFilePath]` - Move multiple methods from one class to another. Each method leaves a delegating wrapper behind. Accepts comma separated `methodNames`. The older JSON form is still supported for backward compatibility
 - `cleanup-usings [solutionPath] <filePath>` - Remove unused using directives
+- `rename-symbol <solutionPath> <filePath> <oldName> <newName> [line] [column]` - Rename a symbol across the solution
 - `version` - Show build version and timestamp
 - `analyze-refactoring-opportunities <solutionPath> <filePath>` - Prompt for refactoring suggestions (long methods, long parameter lists, unused code)
 - `list-class-lengths <solutionPath>` - Prompt for class names and line counts
@@ -528,6 +529,17 @@ public class Logger
         Console.WriteLine($"[LOG] {message}");
     }
 }
+```
+
+### 11. Rename Symbol
+
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli rename-symbol \
+  "./RefactorMCP.sln" \
+  "./RefactorMCP.Tests/ExampleCode.cs" \
+  numbers \
+  values
 ```
 
 ## Complete Examples
