@@ -252,7 +252,7 @@ public static partial class MoveMethodsTool
         {
             // Same file operation - use multiple individual AST transformations
             var tree = CSharpSyntaxTree.ParseText(sourceText);
-            var root = tree.GetRoot();
+            var root = await tree.GetRootAsync();
 
             foreach (var methodName in methodNames)
             {
@@ -266,14 +266,31 @@ public static partial class MoveMethodsTool
         }
         else
         {
-            // Cross-file operation - for now, fall back to individual moves
-            // TODO: Implement efficient cross-file bulk move
-            var results = new List<string>();
+            // Cross-file operation - update both files in memory and write once
+            var sourceTree = CSharpSyntaxTree.ParseText(sourceText);
+            var sourceRoot = await sourceTree.GetRootAsync();
+
+            var targetRoot = await LoadOrCreateTargetRoot(targetPath);
+            targetRoot = PropagateUsings(sourceRoot, targetRoot);
+
             foreach (var methodName in methodNames)
             {
-                results.Add(await MoveInstanceMethodInFile(filePath, sourceClass, methodName, targetClass, accessMemberName, accessMemberType, targetFilePath));
+                var moveResult = MoveInstanceMethodAst(sourceRoot, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
+                sourceRoot = moveResult.NewSourceRoot;
+                targetRoot = AddMethodToTargetClass(targetRoot, targetClass, moveResult.MovedMethod);
             }
-            return string.Join("\n", results);
+
+            var formattedSource = Formatter.Format(sourceRoot, RefactoringHelpers.SharedWorkspace);
+            await File.WriteAllTextAsync(filePath, formattedSource.ToFullString(), sourceEncoding);
+
+            var formattedTarget = Formatter.Format(targetRoot, RefactoringHelpers.SharedWorkspace);
+            Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
+            var targetEncoding = File.Exists(targetPath)
+                ? await RefactoringHelpers.GetFileEncodingAsync(targetPath)
+                : sourceEncoding;
+            await File.WriteAllTextAsync(targetPath, formattedTarget.ToFullString(), targetEncoding);
+
+            return $"Successfully moved {methodNames.Length} methods from {sourceClass} to {targetClass} in {targetPath}";
         }
     }
 
