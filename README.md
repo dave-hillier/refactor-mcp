@@ -189,6 +189,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --json ToolName '{"param":"value"
 - `version` - Show build version and timestamp
 - `analyze-refactoring-opportunities <solutionPath> <filePath>` - Prompt for refactoring suggestions (long methods, long parameter lists, unused code)
 - `list-class-lengths <solutionPath>` - Prompt for class names and line counts
+- `code-metrics <solutionPath> <filePath>` - Output metrics for classes and methods (results cached to disk)
 
 #### Quick Start Example
 
@@ -218,6 +219,11 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli convert-to-extension-method
 The original instance method remains in the class as a thin wrapper that
 invokes the generated extension method, ensuring existing call sites keep
 working.
+
+### Metrics Cache
+
+`code-metrics` stores results in `codeMetricsCache.json` under the current working directory. Repeated calls with the same
+solution and file paths return the cached JSON without recomputing. Delete this file to reset the cache.
 
 ## Range Format
 

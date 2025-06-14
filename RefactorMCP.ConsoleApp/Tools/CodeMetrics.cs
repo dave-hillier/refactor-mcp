@@ -6,11 +6,31 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.Extensions.Caching.Memory;
 using System.ComponentModel;
 using System.Text.Json;
+using System.IO;
 
 [McpServerToolType, McpServerPromptType]
 public static class CodeMetricsTool
 {
     private static readonly MemoryCache _cache = new(new MemoryCacheOptions());
+    private static string CacheFilePath => Path.Combine(Directory.GetCurrentDirectory(), "codeMetricsCache.json");
+
+    static CodeMetricsTool()
+    {
+        if (File.Exists(CacheFilePath))
+        {
+            try
+            {
+                var text = File.ReadAllText(CacheFilePath);
+                var dict = JsonSerializer.Deserialize<Dictionary<string, string>>(text) ?? new();
+                foreach (var kv in dict)
+                    _cache.Set(kv.Key, kv.Value);
+            }
+            catch
+            {
+                // ignore corrupted cache
+            }
+        }
+    }
 
     [McpServerPrompt, Description("Get code metrics for a C# file including classes and methods")]
     public static async Task<string> GetFileMetrics(
@@ -32,6 +52,26 @@ public static class CodeMetricsTool
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             });
             _cache.Set(key, json);
+            try
+            {
+                Dictionary<string, string> disk;
+                if (File.Exists(CacheFilePath))
+                {
+                    var text = await File.ReadAllTextAsync(CacheFilePath);
+                    disk = JsonSerializer.Deserialize<Dictionary<string, string>>(text) ?? new();
+                }
+                else
+                {
+                    disk = new();
+                }
+                disk[key] = json;
+                var diskJson = JsonSerializer.Serialize(disk, new JsonSerializerOptions { WriteIndented = true });
+                await File.WriteAllTextAsync(CacheFilePath, diskJson);
+            }
+            catch
+            {
+                // ignore disk cache errors
+            }
             return json;
         }
         catch (Exception ex)
