@@ -24,65 +24,46 @@ public static partial class MoveMethodsTool
     {
         ValidateFileExists(filePath);
 
-        var context = await CreateFileOperationContext(filePath, targetFilePath, targetClass);
-        var moveResult = MoveStaticMethodAst(context.SourceRoot, methodName, targetClass);
+        var targetPath = targetFilePath ?? Path.Combine(Path.GetDirectoryName(filePath)!, $"{targetClass}.cs");
+        var sameFile = targetPath == filePath;
 
-        var updatedTargetRoot = await PrepareTargetRoot(context, moveResult.MovedMethod);
-        await WriteTransformedFiles(context, moveResult.NewSourceRoot, updatedTargetRoot);
+        var sourceText = await File.ReadAllTextAsync(filePath);
+        var sourceRoot = (await CSharpSyntaxTree.ParseText(sourceText).GetRootAsync());
 
-        return $"Successfully moved static method '{methodName}' to {targetClass} in {context.TargetPath}";
+        var moveResult = MoveStaticMethodAst(sourceRoot, methodName, targetClass);
+
+        SyntaxNode targetRoot;
+        if (sameFile)
+        {
+            targetRoot = moveResult.NewSourceRoot;
+        }
+        else
+        {
+            targetRoot = await LoadOrCreateTargetRoot(targetPath);
+            targetRoot = PropagateUsings(sourceRoot, targetRoot);
+        }
+
+        targetRoot = AddMethodToTargetClass(targetRoot, targetClass, moveResult.MovedMethod);
+
+        var formattedTarget = Formatter.Format(targetRoot, RefactoringHelpers.SharedWorkspace);
+        Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
+        await File.WriteAllTextAsync(targetPath, formattedTarget.ToFullString());
+
+        if (!sameFile)
+        {
+            var formattedSource = Formatter.Format(moveResult.NewSourceRoot, RefactoringHelpers.SharedWorkspace);
+            await File.WriteAllTextAsync(filePath, formattedSource.ToFullString());
+        }
+
+        return $"Successfully moved static method '{methodName}' to {targetClass} in {targetPath}";
     }
 
-    private class FileOperationContext
-    {
-        public string SourcePath { get; set; }
-        public string TargetPath { get; set; }
-        public bool SameFile { get; set; }
-        public SyntaxNode SourceRoot { get; set; }
-        public string TargetClassName { get; set; }
-    }
+
 
     private static void ValidateFileExists(string filePath)
     {
         if (!File.Exists(filePath))
             throw new McpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
-    }
-
-    private static async Task<FileOperationContext> CreateFileOperationContext(
-        string filePath,
-        string? targetFilePath,
-        string targetClass)
-    {
-        var targetPath = targetFilePath ?? Path.Combine(Path.GetDirectoryName(filePath)!, $"{targetClass}.cs");
-        var sourceText = await File.ReadAllTextAsync(filePath);
-        var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
-        var sourceRoot = await syntaxTree.GetRootAsync();
-
-        return new FileOperationContext
-        {
-            SourcePath = filePath,
-            TargetPath = targetPath,
-            SameFile = targetPath == filePath,
-            SourceRoot = sourceRoot,
-            TargetClassName = targetClass
-        };
-    }
-
-    private static async Task<SyntaxNode> PrepareTargetRoot(FileOperationContext context, MethodDeclarationSyntax methodToMove)
-    {
-        SyntaxNode targetRoot;
-
-        if (context.SameFile)
-        {
-            targetRoot = context.SourceRoot;
-        }
-        else
-        {
-            targetRoot = await LoadOrCreateTargetRoot(context.TargetPath);
-            targetRoot = PropagateUsings(context.SourceRoot, targetRoot);
-        }
-
-        return AddMethodToTargetClass(targetRoot, context.TargetClassName, methodToMove);
     }
 
     private static async Task<SyntaxNode> LoadOrCreateTargetRoot(string targetPath)
@@ -98,22 +79,6 @@ public static partial class MoveMethodsTool
         }
     }
 
-    private static async Task WriteTransformedFiles(
-        FileOperationContext context,
-        SyntaxNode newSourceRoot,
-        SyntaxNode targetRoot)
-    {
-        var formattedTarget = Formatter.Format(targetRoot, RefactoringHelpers.SharedWorkspace);
-
-        if (!context.SameFile)
-        {
-            var formattedSource = Formatter.Format(newSourceRoot, RefactoringHelpers.SharedWorkspace);
-            await File.WriteAllTextAsync(context.SourcePath, formattedSource.ToFullString());
-        }
-
-        Directory.CreateDirectory(Path.GetDirectoryName(context.TargetPath)!);
-        await File.WriteAllTextAsync(context.TargetPath, formattedTarget.ToFullString());
-    }
 
     public static async Task<string> MoveInstanceMethodInFile(
         string filePath,
@@ -126,101 +91,38 @@ public static partial class MoveMethodsTool
     {
         ValidateFileExists(filePath);
 
-        var context = await CreateInstanceFileOperationContext(
-            filePath, targetFilePath ?? filePath, targetClass, sourceClass, methodName, accessMemberName, accessMemberType);
+        var targetPath = targetFilePath ?? filePath;
+        var sameFile = targetPath == filePath;
+
+        var sourceText = await File.ReadAllTextAsync(filePath);
+        var sourceRoot = (await CSharpSyntaxTree.ParseText(sourceText).GetRootAsync());
 
         var moveResult = MoveInstanceMethodAst(
-            context.SourceRoot, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
+            sourceRoot, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
 
-        await ProcessInstanceMethodFileOperations(context, moveResult);
-
-        return BuildInstanceMethodSuccessMessage(context, sourceClass, methodName, targetClass, targetFilePath);
-    }
-
-    private class InstanceFileOperationContext : FileOperationContext
-    {
-        public string SourceClassName { get; set; }
-        public string MethodName { get; set; }
-        public string AccessMemberName { get; set; }
-        public string AccessMemberType { get; set; }
-    }
-
-    private static async Task<InstanceFileOperationContext> CreateInstanceFileOperationContext(
-        string filePath,
-        string targetPath,
-        string targetClass,
-        string sourceClass,
-        string methodName,
-        string accessMemberName,
-        string accessMemberType)
-    {
-        var sourceText = await File.ReadAllTextAsync(filePath);
-        var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
-        var sourceRoot = await syntaxTree.GetRootAsync();
-
-        return new InstanceFileOperationContext
+        if (sameFile)
         {
-            SourcePath = filePath,
-            TargetPath = targetPath,
-            SameFile = targetPath == filePath,
-            SourceRoot = sourceRoot,
-            TargetClassName = targetClass,
-            SourceClassName = sourceClass,
-            MethodName = methodName,
-            AccessMemberName = accessMemberName,
-            AccessMemberType = accessMemberType
-        };
-    }
-
-    private static async Task ProcessInstanceMethodFileOperations(
-        InstanceFileOperationContext context,
-        MoveInstanceMethodResult moveResult)
-    {
-        if (context.SameFile)
-        {
-            await ProcessSameFileInstanceMove(context, moveResult);
+            var targetRoot = AddMethodToTargetClass(moveResult.NewSourceRoot, targetClass, moveResult.MovedMethod);
+            var formatted = Formatter.Format(targetRoot, RefactoringHelpers.SharedWorkspace);
+            await File.WriteAllTextAsync(targetPath, formatted.ToFullString());
         }
         else
         {
-            await ProcessCrossFileInstanceMove(context, moveResult);
+            var formattedSource = Formatter.Format(moveResult.NewSourceRoot, RefactoringHelpers.SharedWorkspace);
+            await File.WriteAllTextAsync(filePath, formattedSource.ToFullString());
+
+            var targetRoot = await LoadOrCreateTargetRoot(targetPath);
+            targetRoot = PropagateUsings(sourceRoot, targetRoot);
+            targetRoot = AddMethodToTargetClass(targetRoot, targetClass, moveResult.MovedMethod);
+
+            var formattedTarget = Formatter.Format(targetRoot, RefactoringHelpers.SharedWorkspace);
+            Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
+            await File.WriteAllTextAsync(targetPath, formattedTarget.ToFullString());
         }
-    }
 
-    private static async Task ProcessSameFileInstanceMove(
-        InstanceFileOperationContext context,
-        MoveInstanceMethodResult moveResult)
-    {
-        var targetRoot = AddMethodToTargetClass(moveResult.NewSourceRoot, context.TargetClassName, moveResult.MovedMethod);
-        var formatted = Formatter.Format(targetRoot, RefactoringHelpers.SharedWorkspace);
-        await File.WriteAllTextAsync(context.TargetPath, formatted.ToFullString());
-    }
-
-    private static async Task ProcessCrossFileInstanceMove(
-        InstanceFileOperationContext context,
-        MoveInstanceMethodResult moveResult)
-    {
-        // Handle source file
-        var formattedSource = Formatter.Format(moveResult.NewSourceRoot, RefactoringHelpers.SharedWorkspace);
-        await File.WriteAllTextAsync(context.SourcePath, formattedSource.ToFullString());
-
-        // Handle target file
-        var targetRoot = await LoadOrCreateTargetRoot(context.TargetPath);
-        targetRoot = PropagateUsings(context.SourceRoot, targetRoot);
-        targetRoot = AddMethodToTargetClass(targetRoot, context.TargetClassName, moveResult.MovedMethod);
-
-        var formattedTarget = Formatter.Format(targetRoot, RefactoringHelpers.SharedWorkspace);
-        Directory.CreateDirectory(Path.GetDirectoryName(context.TargetPath)!);
-        await File.WriteAllTextAsync(context.TargetPath, formattedTarget.ToFullString());
-    }
-
-    private static string BuildInstanceMethodSuccessMessage(
-        InstanceFileOperationContext context,
-        string sourceClass,
-        string methodName,
-        string targetClass,
-        string? targetFilePath)
-    {
-        var locationInfo = targetFilePath != null ? $" in {context.TargetPath}" : "";
+        var locationInfo = targetFilePath != null ? $" in {targetPath}" : string.Empty;
         return $"Successfully moved instance method {sourceClass}.{methodName} to {targetClass}{locationInfo}";
     }
+
+
 }
