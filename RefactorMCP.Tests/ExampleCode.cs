@@ -81,9 +81,16 @@ namespace RefactorMCP.Tests.Examples
         // Example for Safe Delete - unused method and variable
         private void UnusedHelper()
         {
+#pragma warning disable CS0219 // Variable is intentionally unused for testing
+            int tempValue = 0; // tempValue can be safely deleted
+#pragma warning restore CS0219
         }
 
         // Example field that might be safe to delete
+        // Field intentionally unused for safe-delete tests
+#pragma warning disable CS0414 // Field is used for analyzer tests
+        private int deprecatedCounter = 0;
+#pragma warning restore CS0414
     }
 
     // Example class for Move Method target
