@@ -6,6 +6,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.CodeAnalysis.Editing;
 using System.Linq;
 
 [McpServerToolType]
@@ -86,7 +87,9 @@ public static class IntroduceFieldTool
         var newRoot = rewriter.Visit(syntaxRoot);
 
         var formattedRoot = Formatter.Format(newRoot, document.Project.Solution.Workspace);
-        var newDocument = document.WithSyntaxRoot(formattedRoot);
+        var editor = await DocumentEditor.CreateAsync(document);
+        editor.ReplaceNode(syntaxRoot, formattedRoot);
+        var newDocument = editor.GetChangedDocument();
         var newText = await newDocument.GetTextAsync();
         await File.WriteAllTextAsync(document.FilePath!, newText.ToString());
         RefactoringHelpers.UpdateSolutionCache(newDocument);
