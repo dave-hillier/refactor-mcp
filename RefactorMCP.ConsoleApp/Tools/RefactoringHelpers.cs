@@ -15,6 +15,9 @@ using System.Text;
 
 internal static class RefactoringHelpers
 {
+    // MemoryCache is thread-safe and Solution objects from Roslyn are immutable.
+    // This allows us to store and access Solution instances across threads
+    // without additional locking or synchronization.
     internal static MemoryCache SolutionCache = new(new MemoryCacheOptions());
 
     private static readonly Lazy<AdhocWorkspace> _workspace =
@@ -60,6 +63,8 @@ internal static class RefactoringHelpers
         return solution;
     }
 
+    // Solutions are immutable, so replacing the cached instance is safe even
+    // when accessed concurrently by multiple threads.
     internal static void UpdateSolutionCache(Document updatedDocument)
     {
         var solutionPath = updatedDocument.Project.Solution.FilePath;
