@@ -31,12 +31,31 @@ public static partial class MoveMethodsTool
         public bool NeedsThisParameter { get; set; }
     }
 
-    public static MoveStaticMethodResult MoveStaticMethodAst(SyntaxNode sourceRoot, string methodName, string targetClass)
+    public static MoveStaticMethodResult MoveStaticMethodAst(
+        SyntaxNode sourceRoot,
+        string methodName,
+        string targetClass)
     {
-        var context = CreateStaticMoveContext(sourceRoot, methodName, targetClass);
-        var transformedMethod = TransformStaticMethodForMove(context);
-        var stubMethod = CreateStaticStubMethod(context);
-        var updatedSourceRoot = UpdateSourceRootWithStub(sourceRoot, context.Method, stubMethod);
+        var method = FindStaticMethod(sourceRoot, methodName);
+        var sourceClass = FindSourceClassForMethod(sourceRoot, method);
+        var staticFieldNames = GetStaticFieldNames(sourceClass);
+        var needsQualification = HasStaticFieldReferences(method, staticFieldNames);
+        var typeParameters = method.TypeParameterList;
+        var isVoid = method.ReturnType is PredefinedTypeSyntax pts &&
+                     pts.Keyword.IsKind(SyntaxKind.VoidKeyword);
+
+        var transformedMethod = TransformStaticMethodForMove(
+            method,
+            needsQualification,
+            staticFieldNames,
+            sourceClass.Identifier.ValueText);
+        var stubMethod = CreateStaticStubMethod(
+            method,
+            methodName,
+            targetClass,
+            isVoid,
+            typeParameters);
+        var updatedSourceRoot = UpdateSourceRootWithStub(sourceRoot, method, stubMethod);
 
         return new MoveStaticMethodResult
         {
@@ -46,36 +65,6 @@ public static partial class MoveMethodsTool
         };
     }
 
-    private class StaticMoveContext
-    {
-        public MethodDeclarationSyntax Method { get; set; }
-        public ClassDeclarationSyntax SourceClass { get; set; }
-        public string MethodName { get; set; }
-        public string TargetClassName { get; set; }
-        public HashSet<string> StaticFieldNames { get; set; }
-        public bool NeedsStaticFieldQualification { get; set; }
-        public TypeParameterListSyntax? TypeParameters { get; set; }
-        public bool IsVoid { get; set; }
-    }
-
-    private static StaticMoveContext CreateStaticMoveContext(SyntaxNode sourceRoot, string methodName, string targetClass)
-    {
-        var method = FindStaticMethod(sourceRoot, methodName);
-        var sourceClass = FindSourceClassForMethod(sourceRoot, method);
-        var staticFieldNames = GetStaticFieldNames(sourceClass);
-
-        return new StaticMoveContext
-        {
-            Method = method,
-            SourceClass = sourceClass,
-            MethodName = methodName,
-            TargetClassName = targetClass,
-            StaticFieldNames = staticFieldNames,
-            NeedsStaticFieldQualification = HasStaticFieldReferences(method, staticFieldNames),
-            TypeParameters = method.TypeParameterList,
-            IsVoid = method.ReturnType is PredefinedTypeSyntax pts && pts.Keyword.IsKind(SyntaxKind.VoidKeyword)
-        };
-    }
 
     private static MethodDeclarationSyntax FindStaticMethod(SyntaxNode sourceRoot, string methodName)
     {
@@ -102,27 +91,36 @@ public static partial class MoveMethodsTool
         return sourceClass;
     }
 
-    private static MethodDeclarationSyntax TransformStaticMethodForMove(StaticMoveContext context)
+    private static MethodDeclarationSyntax TransformStaticMethodForMove(
+        MethodDeclarationSyntax method,
+        bool needsStaticFieldQualification,
+        HashSet<string> staticFieldNames,
+        string sourceClassName)
     {
-        var transformedMethod = context.Method;
+        var transformedMethod = method;
 
-        if (context.NeedsStaticFieldQualification)
+        if (needsStaticFieldQualification)
         {
-            var staticFieldRewriter = new StaticFieldRewriter(context.StaticFieldNames, context.SourceClass.Identifier.ValueText);
+            var staticFieldRewriter = new StaticFieldRewriter(staticFieldNames, sourceClassName);
             transformedMethod = (MethodDeclarationSyntax)staticFieldRewriter.Visit(transformedMethod)!;
         }
 
         return transformedMethod;
     }
 
-    private static MethodDeclarationSyntax CreateStaticStubMethod(StaticMoveContext context)
+    private static MethodDeclarationSyntax CreateStaticStubMethod(
+        MethodDeclarationSyntax method,
+        string methodName,
+        string targetClassName,
+        bool isVoid,
+        TypeParameterListSyntax? typeParameters)
     {
-        var argumentList = CreateStaticMethodArgumentList(context.Method);
-        var methodExpression = CreateStaticMethodExpression(context);
-        var invocation = CreateStaticMethodInvocation(context.TargetClassName, methodExpression, argumentList);
-        var callStatement = CreateStaticCallStatement(context, invocation);
+        var argumentList = CreateStaticMethodArgumentList(method);
+        var methodExpression = CreateStaticMethodExpression(methodName, typeParameters);
+        var invocation = CreateStaticMethodInvocation(targetClassName, methodExpression, argumentList);
+        var callStatement = CreateStaticCallStatement(isVoid, invocation);
 
-        return context.Method.WithBody(SyntaxFactory.Block(callStatement))
+        return method.WithBody(SyntaxFactory.Block(callStatement))
             .WithExpressionBody(null)
             .WithSemicolonToken(default);
     }
@@ -135,18 +133,20 @@ public static partial class MoveMethodsTool
                     .Select(p => SyntaxFactory.Argument(SyntaxFactory.IdentifierName(p.Identifier)))));
     }
 
-    private static SimpleNameSyntax CreateStaticMethodExpression(StaticMoveContext context)
+    private static SimpleNameSyntax CreateStaticMethodExpression(
+        string methodName,
+        TypeParameterListSyntax? typeParameters)
     {
-        var typeArgumentList = context.TypeParameters != null
+        var typeArgumentList = typeParameters != null
             ? SyntaxFactory.TypeArgumentList(
                 SyntaxFactory.SeparatedList(
-                    context.TypeParameters.Parameters.Select(p =>
+                    typeParameters.Parameters.Select(p =>
                         (TypeSyntax)SyntaxFactory.IdentifierName(p.Identifier))))
             : null;
 
         return typeArgumentList != null
-            ? SyntaxFactory.GenericName(context.MethodName).WithTypeArgumentList(typeArgumentList)
-            : SyntaxFactory.IdentifierName(context.MethodName);
+            ? SyntaxFactory.GenericName(methodName).WithTypeArgumentList(typeArgumentList)
+            : SyntaxFactory.IdentifierName(methodName);
     }
 
     private static InvocationExpressionSyntax CreateStaticMethodInvocation(
@@ -162,9 +162,9 @@ public static partial class MoveMethodsTool
             argumentList);
     }
 
-    private static StatementSyntax CreateStaticCallStatement(StaticMoveContext context, InvocationExpressionSyntax invocation)
+    private static StatementSyntax CreateStaticCallStatement(bool isVoid, InvocationExpressionSyntax invocation)
     {
-        return context.IsVoid
+        return isVoid
             ? SyntaxFactory.ExpressionStatement(invocation)
             : SyntaxFactory.ReturnStatement(invocation);
     }
@@ -182,79 +182,61 @@ public static partial class MoveMethodsTool
         string accessMemberName,
         string accessMemberType)
     {
-        var context = CreateInstanceMoveContext(sourceRoot, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
+        var originClass = FindSourceClass(sourceRoot, sourceClass);
+        var method = FindMethodInClass(originClass, methodName);
 
-        var transformedMethod = TransformMethodForMove(context);
-        var stubMethod = CreateStubMethod(context);
-        var updatedSourceRoot = UpdateSourceClassWithStub(context, stubMethod);
+        var instanceMembers = GetInstanceMemberNames(originClass);
+        var methodNames = GetMethodNames(originClass);
+        var otherMethodNames = new HashSet<string>(methodNames);
+        otherMethodNames.Remove(methodName);
+
+        bool usesInstanceMembers = HasInstanceMemberUsage(method, instanceMembers);
+        bool callsOtherMethods = HasMethodCalls(method, otherMethodNames);
+        bool isRecursive = HasMethodCalls(method, new HashSet<string> { methodName });
+        bool needsThisParameter = usesInstanceMembers || callsOtherMethods || isRecursive;
+
+        var accessMember = MemberExists(originClass, accessMemberName)
+            ? null
+            : CreateAccessMember(accessMemberType, accessMemberName, targetClass);
+
+        bool isAsync = method.Modifiers.Any(SyntaxKind.AsyncKeyword);
+        bool isVoid = method.ReturnType is PredefinedTypeSyntax pts &&
+                       pts.Keyword.IsKind(SyntaxKind.VoidKeyword);
+        var typeParameters = method.TypeParameterList;
+
+        var transformedMethod = TransformMethodForMove(
+            method,
+            sourceClass,
+            methodName,
+            needsThisParameter,
+            usesInstanceMembers,
+            callsOtherMethods,
+            isRecursive,
+            instanceMembers,
+            otherMethodNames);
+
+        var stubMethod = CreateStubMethod(
+            method,
+            methodName,
+            accessMemberName,
+            accessMemberType,
+            needsThisParameter,
+            isVoid,
+            isAsync,
+            typeParameters);
+
+        var updatedSourceRoot = UpdateSourceClassWithStub(originClass, method, stubMethod, accessMember);
 
         return new MoveInstanceMethodResult
         {
             NewSourceRoot = updatedSourceRoot,
             MovedMethod = transformedMethod,
             StubMethod = stubMethod,
-            AccessMember = context.AccessMember,
-            NeedsThisParameter = context.NeedsThisParameter
+            AccessMember = accessMember,
+            NeedsThisParameter = needsThisParameter
         };
     }
 
-    private class InstanceMoveContext
-    {
-        public ClassDeclarationSyntax SourceClass { get; set; }
-        public MethodDeclarationSyntax Method { get; set; }
-        public string SourceClassName { get; set; }
-        public string MethodName { get; set; }
-        public string TargetClassName { get; set; }
-        public string AccessMemberName { get; set; }
-        public string AccessMemberType { get; set; }
-        public HashSet<string> InstanceMembers { get; set; }
-        public HashSet<string> MethodNames { get; set; }
-        public HashSet<string> OtherMethodNames { get; set; }
-        public bool UsesInstanceMembers { get; set; }
-        public bool CallsOtherMethods { get; set; }
-        public bool IsRecursive { get; set; }
-        public bool NeedsThisParameter { get; set; }
-        public MemberDeclarationSyntax? AccessMember { get; set; }
-        public bool IsAsync { get; set; }
-        public bool IsVoid { get; set; }
-        public TypeParameterListSyntax? TypeParameters { get; set; }
-    }
-
-    private static InstanceMoveContext CreateInstanceMoveContext(
-        SyntaxNode sourceRoot,
-        string sourceClass,
-        string methodName,
-        string targetClass,
-        string accessMemberName,
-        string accessMemberType)
-    {
-        var originClass = FindSourceClass(sourceRoot, sourceClass);
-        var method = FindMethodInClass(originClass, methodName);
-
-        var context = new InstanceMoveContext
-        {
-            SourceClass = originClass,
-            Method = method,
-            SourceClassName = sourceClass,
-            MethodName = methodName,
-            TargetClassName = targetClass,
-            AccessMemberName = accessMemberName,
-            AccessMemberType = accessMemberType,
-            InstanceMembers = GetInstanceMemberNames(originClass),
-            MethodNames = GetMethodNames(originClass),
-            IsAsync = method.Modifiers.Any(SyntaxKind.AsyncKeyword),
-            IsVoid = method.ReturnType is PredefinedTypeSyntax pts && pts.Keyword.IsKind(SyntaxKind.VoidKeyword),
-            TypeParameters = method.TypeParameterList
-        };
-
-        context.OtherMethodNames = new HashSet<string>(context.MethodNames);
-        context.OtherMethodNames.Remove(methodName);
-
-        AnalyzeMethodDependencies(context);
-        CreateAccessMemberIfNeeded(context);
-
-        return context;
-    }
 
     private static ClassDeclarationSyntax FindSourceClass(SyntaxNode sourceRoot, string sourceClass)
     {
@@ -280,40 +262,42 @@ public static partial class MoveMethodsTool
         return method;
     }
 
-    private static void AnalyzeMethodDependencies(InstanceMoveContext context)
-    {
-        context.UsesInstanceMembers = HasInstanceMemberUsage(context.Method, context.InstanceMembers);
-        context.CallsOtherMethods = HasMethodCalls(context.Method, context.OtherMethodNames);
-        context.IsRecursive = HasMethodCalls(context.Method, new HashSet<string> { context.MethodName });
-        context.NeedsThisParameter = context.UsesInstanceMembers || context.CallsOtherMethods || context.IsRecursive;
-    }
 
-    private static void CreateAccessMemberIfNeeded(InstanceMoveContext context)
+    private static MethodDeclarationSyntax TransformMethodForMove(
+        MethodDeclarationSyntax method,
+        string sourceClassName,
+        string methodName,
+        bool needsThisParameter,
+        bool usesInstanceMembers,
+        bool callsOtherMethods,
+        bool isRecursive,
+        HashSet<string> instanceMembers,
+        HashSet<string> otherMethodNames)
     {
-        bool accessMemberExists = MemberExists(context.SourceClass, context.AccessMemberName);
-        if (!accessMemberExists)
+        var transformedMethod = method;
+
+        if (needsThisParameter)
         {
-            context.AccessMember = CreateAccessMember(context.AccessMemberType, context.AccessMemberName, context.TargetClassName);
-        }
-    }
-
-    private static MethodDeclarationSyntax TransformMethodForMove(InstanceMoveContext context)
-    {
-        var transformedMethod = context.Method;
-
-        if (context.NeedsThisParameter)
-        {
-            transformedMethod = AddThisParameterToMethod(transformedMethod, context);
-            transformedMethod = RewriteMethodBody(transformedMethod, context);
+            transformedMethod = AddThisParameterToMethod(transformedMethod, sourceClassName);
+            transformedMethod = RewriteMethodBody(
+                transformedMethod,
+                methodName,
+                usesInstanceMembers,
+                callsOtherMethods,
+                isRecursive,
+                instanceMembers,
+                otherMethodNames);
         }
 
         return EnsureMethodIsPublic(transformedMethod);
     }
 
-    private static MethodDeclarationSyntax AddThisParameterToMethod(MethodDeclarationSyntax method, InstanceMoveContext context)
+    private static MethodDeclarationSyntax AddThisParameterToMethod(
+        MethodDeclarationSyntax method,
+        string sourceClassName)
     {
         var sourceParameter = SyntaxFactory.Parameter(SyntaxFactory.Identifier("@this"))
-            .WithType(SyntaxFactory.IdentifierName(context.SourceClassName));
+            .WithType(SyntaxFactory.IdentifierName(sourceClassName));
 
         var parameters = method.ParameterList.Parameters.Insert(0, sourceParameter);
         var newParameterList = method.ParameterList.WithParameters(parameters);
@@ -321,25 +305,32 @@ public static partial class MoveMethodsTool
         return method.WithParameterList(newParameterList);
     }
 
-    private static MethodDeclarationSyntax RewriteMethodBody(MethodDeclarationSyntax method, InstanceMoveContext context)
+    private static MethodDeclarationSyntax RewriteMethodBody(
+        MethodDeclarationSyntax method,
+        string methodName,
+        bool usesInstanceMembers,
+        bool callsOtherMethods,
+        bool isRecursive,
+        HashSet<string> instanceMembers,
+        HashSet<string> otherMethodNames)
     {
         var parameterName = "@this";
 
-        if (context.UsesInstanceMembers)
+        if (usesInstanceMembers)
         {
-            var memberRewriter = new InstanceMemberRewriter(parameterName, context.InstanceMembers);
+            var memberRewriter = new InstanceMemberRewriter(parameterName, instanceMembers);
             method = (MethodDeclarationSyntax)memberRewriter.Visit(method)!;
         }
 
-        if (context.CallsOtherMethods)
+        if (callsOtherMethods)
         {
-            var methodCallRewriter = new MethodCallRewriter(context.OtherMethodNames, parameterName);
+            var methodCallRewriter = new MethodCallRewriter(otherMethodNames, parameterName);
             method = (MethodDeclarationSyntax)methodCallRewriter.Visit(method)!;
         }
 
-        if (context.IsRecursive)
+        if (isRecursive)
         {
-            var recursiveCallRewriter = new MethodCallRewriter(new HashSet<string> { context.MethodName }, parameterName);
+            var recursiveCallRewriter = new MethodCallRewriter(new HashSet<string> { methodName }, parameterName);
             method = (MethodDeclarationSyntax)recursiveCallRewriter.Visit(method)!;
         }
 
@@ -358,22 +349,42 @@ public static partial class MoveMethodsTool
         return method;
     }
 
-    private static MethodDeclarationSyntax CreateStubMethod(InstanceMoveContext context)
+    private static MethodDeclarationSyntax CreateStubMethod(
+        MethodDeclarationSyntax method,
+        string methodName,
+        string accessMemberName,
+        string accessMemberType,
+        bool needsThisParameter,
+        bool isVoid,
+        bool isAsync,
+        TypeParameterListSyntax? typeParameters)
     {
-        var invocation = BuildDelegationInvocation(context);
-        var callStatement = CreateDelegationStatement(context, invocation);
+        var invocation = BuildDelegationInvocation(
+            method,
+            methodName,
+            accessMemberName,
+            accessMemberType,
+            needsThisParameter,
+            typeParameters);
+        var callStatement = CreateDelegationStatement(isVoid, isAsync, invocation);
 
-        return context.Method.WithBody(SyntaxFactory.Block(callStatement))
+        return method.WithBody(SyntaxFactory.Block(callStatement))
             .WithExpressionBody(null)
             .WithSemicolonToken(default);
     }
 
-    private static InvocationExpressionSyntax BuildDelegationInvocation(InstanceMoveContext context)
+    private static InvocationExpressionSyntax BuildDelegationInvocation(
+        MethodDeclarationSyntax method,
+        string methodName,
+        string accessMemberName,
+        string accessMemberType,
+        bool needsThisParameter,
+        TypeParameterListSyntax? typeParameters)
     {
-        var originalParameters = context.Method.ParameterList.Parameters
+        var originalParameters = method.ParameterList.Parameters
             .Select(p => SyntaxFactory.Argument(SyntaxFactory.IdentifierName(p.Identifier))).ToList();
 
-        if (context.NeedsThisParameter)
+        if (needsThisParameter)
         {
             originalParameters.Insert(0, SyntaxFactory.Argument(SyntaxFactory.ThisExpression()));
         }
@@ -381,20 +392,20 @@ public static partial class MoveMethodsTool
         var argumentList = SyntaxFactory.ArgumentList(SyntaxFactory.SeparatedList(originalParameters));
 
         ExpressionSyntax accessExpression;
-        if (string.Equals(context.AccessMemberType, "field", StringComparison.OrdinalIgnoreCase) || 
-            string.Equals(context.AccessMemberType, "property", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(accessMemberType, "field", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(accessMemberType, "property", StringComparison.OrdinalIgnoreCase))
         {
             accessExpression = SyntaxFactory.MemberAccessExpression(
                 SyntaxKind.SimpleMemberAccessExpression,
                 SyntaxFactory.ThisExpression(),
-                SyntaxFactory.IdentifierName(context.AccessMemberName));
+                SyntaxFactory.IdentifierName(accessMemberName));
         }
         else
         {
-            accessExpression = SyntaxFactory.IdentifierName(context.AccessMemberName);
+            accessExpression = SyntaxFactory.IdentifierName(accessMemberName);
         }
-        
-        var methodExpression = CreateMethodExpression(context);
+
+        var methodExpression = CreateMethodExpression(methodName, typeParameters, needsThisParameter);
 
         return SyntaxFactory.InvocationExpression(
             SyntaxFactory.MemberAccessExpression(
@@ -404,29 +415,35 @@ public static partial class MoveMethodsTool
             argumentList);
     }
 
-    private static SimpleNameSyntax CreateMethodExpression(InstanceMoveContext context)
+    private static SimpleNameSyntax CreateMethodExpression(
+        string methodName,
+        TypeParameterListSyntax? typeParameters,
+        bool needsThisParameter)
     {
-        var typeArgumentList = context.TypeParameters != null
+        var typeArgumentList = typeParameters != null
             ? SyntaxFactory.TypeArgumentList(
                 SyntaxFactory.SeparatedList(
-                    context.TypeParameters.Parameters.Select(p =>
+                    typeParameters.Parameters.Select(p =>
                         (TypeSyntax)SyntaxFactory.IdentifierName(p.Identifier))))
             : null;
 
-        return (typeArgumentList != null && context.NeedsThisParameter)
-            ? SyntaxFactory.GenericName(context.MethodName).WithTypeArgumentList(typeArgumentList)
-            : SyntaxFactory.IdentifierName(context.MethodName);
+        return (typeArgumentList != null && needsThisParameter)
+            ? SyntaxFactory.GenericName(methodName).WithTypeArgumentList(typeArgumentList)
+            : SyntaxFactory.IdentifierName(methodName);
     }
 
-    private static StatementSyntax CreateDelegationStatement(InstanceMoveContext context, InvocationExpressionSyntax invocation)
+    private static StatementSyntax CreateDelegationStatement(
+        bool isVoid,
+        bool isAsync,
+        InvocationExpressionSyntax invocation)
     {
-        if (context.IsVoid)
+        if (isVoid)
         {
             return SyntaxFactory.ExpressionStatement(invocation);
         }
 
         ExpressionSyntax returnExpression = invocation;
-        if (context.IsAsync)
+        if (isAsync)
         {
             returnExpression = SyntaxFactory.AwaitExpression(invocation);
         }
@@ -434,24 +451,28 @@ public static partial class MoveMethodsTool
         return SyntaxFactory.ReturnStatement(returnExpression);
     }
 
-    private static SyntaxNode UpdateSourceClassWithStub(InstanceMoveContext context, MethodDeclarationSyntax stubMethod)
+    private static SyntaxNode UpdateSourceClassWithStub(
+        ClassDeclarationSyntax sourceClass,
+        MethodDeclarationSyntax originalMethod,
+        MethodDeclarationSyntax stubMethod,
+        MemberDeclarationSyntax? accessMember)
     {
-        var originMembers = context.SourceClass.Members.ToList();
+        var originMembers = sourceClass.Members.ToList();
 
-        if (context.AccessMember != null)
+        if (accessMember != null)
         {
             var insertIndex = FindAccessMemberInsertionIndex(originMembers);
-            originMembers.Insert(insertIndex, context.AccessMember);
+            originMembers.Insert(insertIndex, accessMember);
         }
 
-        var methodIndex = originMembers.FindIndex(m => m == context.Method);
+        var methodIndex = originMembers.FindIndex(m => m == originalMethod);
         if (methodIndex >= 0)
         {
             originMembers[methodIndex] = stubMethod;
         }
 
-        var newOriginClass = context.SourceClass.WithMembers(SyntaxFactory.List(originMembers));
-        return context.SourceClass.SyntaxTree.GetRoot().ReplaceNode(context.SourceClass, newOriginClass);
+        var newOriginClass = sourceClass.WithMembers(SyntaxFactory.List(originMembers));
+        return sourceClass.SyntaxTree.GetRoot().ReplaceNode(sourceClass, newOriginClass);
     }
 
     private static int FindAccessMemberInsertionIndex(List<MemberDeclarationSyntax> members)
