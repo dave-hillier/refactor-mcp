@@ -24,7 +24,7 @@ internal class ParameterIntroductionRewriter : CSharpSyntaxRewriter
         _parameterReference = parameterReference;
     }
 
-    public override SyntaxNode Visit(SyntaxNode node)
+    public override SyntaxNode Visit(SyntaxNode? node)
     {
         if (node is ExpressionSyntax expr && SyntaxFactory.AreEquivalent(expr, _targetExpression))
             return _parameterReference;
