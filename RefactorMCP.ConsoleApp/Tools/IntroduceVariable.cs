@@ -96,19 +96,24 @@ public static class IntroduceVariableTool
         return $"Successfully introduced variable '{variableName}' from {selectionRange} in {document.FilePath} (solution mode)";
     }
 
-    private static Task<string> IntroduceVariableSingleFile(string filePath, string selectionRange, string variableName)
+    private static async Task<string> IntroduceVariableSingleFile(string filePath, string selectionRange, string variableName)
     {
-        return RefactoringHelpers.ApplySingleFileEdit(
-            filePath,
-            text => IntroduceVariableInSource(text, selectionRange, variableName),
-            $"Successfully introduced variable '{variableName}' from {selectionRange} in {filePath} (single file mode)");
+        if (!File.Exists(filePath))
+            return RefactoringHelpers.ThrowMcpException($"Error: File {filePath} not found");
+
+        var (sourceText, encoding) = await RefactoringHelpers.ReadFileWithEncodingAsync(filePath);
+        var model = await RefactoringHelpers.GetOrCreateSemanticModelAsync(filePath);
+        var newText = IntroduceVariableInSource(sourceText, selectionRange, variableName, model);
+        await File.WriteAllTextAsync(filePath, newText, encoding);
+        RefactoringHelpers.UpdateFileCaches(filePath, newText);
+        return $"Successfully introduced variable '{variableName}' from {selectionRange} in {filePath} (single file mode)";
     }
 
-    public static string IntroduceVariableInSource(string sourceText, string selectionRange, string variableName)
+    public static string IntroduceVariableInSource(string sourceText, string selectionRange, string variableName, SemanticModel? model = null)
     {
-        var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
+        var syntaxTree = model?.SyntaxTree ?? CSharpSyntaxTree.ParseText(sourceText);
         var syntaxRoot = syntaxTree.GetRoot();
-        var text = SourceText.From(sourceText);
+        var text = syntaxTree.GetText();
         var textLines = text.Lines;
 
         if (!RefactoringHelpers.TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
@@ -135,6 +140,12 @@ public static class IntroduceVariableTool
             return RefactoringHelpers.ThrowMcpException("Error: Selected code is not a valid expression");
 
         var typeName = "var";
+        if (model != null)
+        {
+            var typeInfo = model.GetTypeInfo(initializerExpression ?? selectedExpression!);
+            if (typeInfo.Type != null)
+                typeName = typeInfo.Type.ToDisplayString();
+        }
 
         var variableDeclaration = SyntaxFactory.LocalDeclarationStatement(
             SyntaxFactory.VariableDeclaration(SyntaxFactory.IdentifierName(typeName))
