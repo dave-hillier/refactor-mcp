@@ -285,37 +285,18 @@ public static partial class MoveMethodsTool
 
         foreach (var methodName in methodNames)
         {
-            var sourceRoot = await currentDocument.GetSyntaxRootAsync();
-            if (sourceRoot == null)
-            {
-                throw new McpException($"Could not get syntax root for document {currentDocument.FilePath}");
-            }
 
-            var moveResult = MoveInstanceMethodAst(
-                sourceRoot,
+            var targetPath = targetFilePath ?? currentDocument.FilePath!;
+            var sameFile = targetPath == currentDocument.FilePath;
+
+            var message = await MoveInstanceMethodInFile(
+                currentDocument.FilePath!,
                 sourceClassName,
                 methodName,
                 targetClassName,
                 accessMemberName,
-                accessMemberType);
-            
-            var targetPath = targetFilePath ?? currentDocument.FilePath!;
-            var sameFile = targetPath == currentDocument.FilePath;
-            
-            var context = new InstanceFileOperationContext
-            {
-                SourcePath = currentDocument.FilePath!,
-                TargetPath = targetPath,
-                SameFile = sameFile,
-                SourceRoot = sourceRoot,
-                TargetClassName = targetClassName,
-                SourceClassName = sourceClassName,
-                MethodName = methodName,
-                AccessMemberName = accessMemberName,
-                AccessMemberType = accessMemberType
-            };
-
-            await ProcessInstanceMethodFileOperations(context, moveResult);
+                accessMemberType,
+                targetFilePath);
 
             if (sameFile)
             {
@@ -325,7 +306,7 @@ public static partial class MoveMethodsTool
             }
             else
             {
-                var newSourceText = await File.ReadAllTextAsync(context.SourcePath);
+                var newSourceText = await File.ReadAllTextAsync(currentDocument.FilePath!);
                 var newSourceRoot = await CSharpSyntaxTree.ParseText(newSourceText).GetRootAsync();
                 var solution = document.Project.Solution.WithDocumentSyntaxRoot(currentDocument.Id, newSourceRoot);
 
@@ -346,9 +327,9 @@ public static partial class MoveMethodsTool
                 }
                 currentDocument = solution.GetDocument(currentDocument.Id);
             }
-            
+
             RefactoringHelpers.UpdateSolutionCache(currentDocument);
-            messages.Add(BuildInstanceMethodSuccessMessage(context, sourceClassName, methodName, targetClassName, targetFilePath));
+            messages.Add(message);
         }
 
         return (string.Join("\n", messages), currentDocument);

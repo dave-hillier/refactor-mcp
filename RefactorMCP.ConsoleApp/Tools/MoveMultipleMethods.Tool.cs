@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis.Text;
 
 public class MethodAndMemberVisitor : CSharpSyntaxWalker
 {
@@ -63,111 +64,60 @@ public class MethodAndMemberVisitor : CSharpSyntaxWalker
 [McpServerToolType]
 public static partial class MoveMultipleMethodsTool
 {
-    private class FileOperationContext
-    {
-        public Document Document { get; set; }
-        public string SourcePath => Document.FilePath!;
-        public string TargetPath { get; set; }
-        public bool SameFile => SourcePath == TargetPath;
-        public SyntaxNode SourceRoot { get; set; }
-        public string SourceClassName { get; set; }
-        public string TargetClassName { get; set; }
-    }
-
-    private static async Task<string> MoveSingleMethod(
-        FileOperationContext context,
+    private static async Task<(string message, Document updatedDocument)> MoveSingleMethod(
+        Document document,
+        string sourceClass,
         string methodName,
         bool isStatic,
+        string targetClass,
         string accessMember,
-        string accessMemberType)
+        string accessMemberType,
+        string targetPath)
     {
-        dynamic moveResult;
+        string message;
         if (isStatic)
         {
-            moveResult = MoveMethodsTool.MoveStaticMethodAst(context.SourceRoot, methodName, context.TargetClassName);
+            message = await MoveMethodsTool.MoveStaticMethodInFile(document.FilePath!, methodName, targetClass, targetPath);
         }
         else
         {
-            moveResult = MoveMethodsTool.MoveInstanceMethodAst(
-                context.SourceRoot,
-                context.SourceClassName,
+            message = await MoveMethodsTool.MoveInstanceMethodInFile(
+                document.FilePath!,
+                sourceClass,
                 methodName,
-                context.TargetClassName,
+                targetClass,
                 accessMember,
-                accessMemberType);
+                accessMemberType,
+                targetPath);
         }
 
-        var newSourceRoot = (SyntaxNode)moveResult.NewSourceRoot;
-        var movedMethod = (MethodDeclarationSyntax)moveResult.MovedMethod;
+        var newText = await File.ReadAllTextAsync(document.FilePath!);
+        var newRoot = await CSharpSyntaxTree.ParseText(newText).GetRootAsync();
+        var solution = document.Project.Solution.WithDocumentSyntaxRoot(document.Id, newRoot);
 
-        var updatedTargetRoot = await PrepareTargetRoot(context, newSourceRoot, movedMethod);
-        await WriteTransformedFiles(context, newSourceRoot, updatedTargetRoot);
-
-        if (!context.SameFile)
-        {
-            RefactoringHelpers.AddDocumentToProject(context.Document.Project, context.TargetPath);
-        }
-        
-        var newRoot = context.SameFile
-            ? Formatter.Format(updatedTargetRoot, RefactoringHelpers.SharedWorkspace)
-            : Formatter.Format(newSourceRoot, RefactoringHelpers.SharedWorkspace);
-
-        var updatedDoc = context.Document.WithSyntaxRoot(newRoot);
-        RefactoringHelpers.UpdateSolutionCache(updatedDoc);
-        context.Document = updatedDoc;
-        context.SourceRoot = await updatedDoc.GetSyntaxRootAsync();
-
-        return isStatic
-            ? $"Successfully moved static method '{methodName}' to {context.TargetClassName} in {context.TargetPath}"
-            : $"Successfully moved {context.SourceClassName}.{methodName} instance method to {context.TargetClassName} in {context.TargetPath}";
-    }
-
-    private static async Task<SyntaxNode> PrepareTargetRoot(FileOperationContext context, SyntaxNode newSourceRoot, MethodDeclarationSyntax methodToMove)
-    {
-        SyntaxNode targetRoot;
-
-        if (context.SameFile)
-        {
-            targetRoot = newSourceRoot;
-        }
-        else
-        {
-            targetRoot = await LoadOrCreateTargetRoot(context.TargetPath);
-            targetRoot = MoveMethodsTool.PropagateUsings(context.SourceRoot, targetRoot);
-        }
-
-        return MoveMethodsTool.AddMethodToTargetClass(targetRoot, context.TargetClassName, methodToMove);
-    }
-
-    private static async Task<SyntaxNode> LoadOrCreateTargetRoot(string targetPath)
-    {
-        if (File.Exists(targetPath))
+        var project = solution.GetProject(document.Project.Id);
+        var targetDocument = project.Documents.FirstOrDefault(d => d.FilePath == targetPath);
+        if (targetDocument == null)
         {
             var targetText = await File.ReadAllTextAsync(targetPath);
-            return await CSharpSyntaxTree.ParseText(targetText).GetRootAsync();
+            var targetSource = SourceText.From(targetText, System.Text.Encoding.UTF8);
+            targetDocument = project.AddDocument(Path.GetFileName(targetPath), targetSource, filePath: targetPath);
+            solution = targetDocument.Project.Solution;
         }
         else
         {
-            return SyntaxFactory.CompilationUnit();
-        }
-    }
-
-    private static async Task WriteTransformedFiles(
-        FileOperationContext context,
-        SyntaxNode newSourceRoot,
-        SyntaxNode targetRoot)
-    {
-        var formattedTarget = Formatter.Format(targetRoot, RefactoringHelpers.SharedWorkspace);
-
-        if (!context.SameFile)
-        {
-            var formattedSource = Formatter.Format(newSourceRoot, RefactoringHelpers.SharedWorkspace);
-            await File.WriteAllTextAsync(context.SourcePath, formattedSource.ToFullString());
+            var targetText = await File.ReadAllTextAsync(targetPath);
+            var targetSource = SourceText.From(targetText, System.Text.Encoding.UTF8);
+            solution = solution.WithDocumentText(targetDocument.Id, targetSource);
         }
 
-        Directory.CreateDirectory(Path.GetDirectoryName(context.TargetPath)!);
-        await File.WriteAllTextAsync(context.TargetPath, formattedTarget.ToFullString());
+        var updatedDoc = solution.GetDocument(document.Id)!;
+        RefactoringHelpers.UpdateSolutionCache(updatedDoc);
+
+        return (message, updatedDoc);
     }
+
+
 
     // Solution/Document operations that use the AST layer
 
@@ -232,31 +182,29 @@ public static partial class MoveMultipleMethodsTool
 
             var sourceClasses = Enumerable.Repeat(sourceClass, methodNames.Length).ToArray();
             var orderedIndices = OrderOperations(root, sourceClasses, methodNames);
-            
+
             var results = new List<string>();
-            var context = new FileOperationContext
-            {
-                Document = document,
-                SourceRoot = root,
-                SourceClassName = sourceClass,
-                TargetClassName = targetClass,
-                TargetPath = targetFilePath ?? Path.Combine(Path.GetDirectoryName(document.FilePath!)!, $"{targetClass}.cs")
-            };
+            var currentDoc = document;
+            var targetPath = targetFilePath ?? Path.Combine(Path.GetDirectoryName(document.FilePath!)!, $"{targetClass}.cs");
 
             foreach (var idx in orderedIndices)
             {
-                var resultMessage = await MoveSingleMethod(
-                    context,
+                var (msg, updatedDoc) = await MoveSingleMethod(
+                    currentDoc,
+                    sourceClass,
                     methodNames[idx],
                     isStatic[idx],
+                    targetClass,
                     accessMember,
-                    accessMemberTypes[idx]);
-                results.Add(resultMessage);
+                    accessMemberTypes[idx],
+                    targetPath);
+                currentDoc = updatedDoc;
+                results.Add(msg);
             }
 
             return string.Join("\n", results);
         }
-        
+
         // Fallback to AST-based approach for single-file mode or cross-file operations
         // This path is no longer needed after unification
         return RefactoringHelpers.ThrowMcpException("Error: Could not find document in solution and AST fallback is disabled.");
