@@ -27,7 +27,7 @@ internal class VariableIntroductionRewriter : CSharpSyntaxRewriter
         _containingBlock = containingBlock;
     }
 
-    public override SyntaxNode Visit(SyntaxNode node)
+    public override SyntaxNode Visit(SyntaxNode? node)
     {
         if (node is ExpressionSyntax expr && SyntaxFactory.AreEquivalent(expr, _targetExpression))
             return _variableReference;
