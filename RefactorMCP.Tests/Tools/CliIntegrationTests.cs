@@ -20,7 +20,7 @@ public class CliIntegrationTests
     }
 
     [Fact]
-    public async Task CliTestMode_AllToolsListed_ReturnsExpectedTools()
+    public void CliTestMode_AllToolsListed_ReturnsExpectedTools()
     {
         var expectedCommands = new[]
         {
