@@ -2,16 +2,9 @@
 
 ## Test Structure
 
-The RefactorMCP test suite is organized into three main test classes:
-
-### 1. RefactoringToolsTests (`UnitTest1.cs`)
-**Core functionality tests** that validate the basic refactoring operations:
-- ✅ `LoadSolution_ValidPath_ReturnsSuccess` - Tests solution loading
-- ✅ `LoadSolution_InvalidPath_ReturnsError` - Tests error handling for missing files
-- 🚧 `ExtractMethod_ValidSelection_ReturnsSuccess` - Tests method extraction
-- 🚧 `IntroduceField_ValidExpression_ReturnsSuccess` - Tests field introduction
-- 🚧 `IntroduceVariable_ValidExpression_ReturnsSuccess` - Tests variable introduction
-- 🚧 `MakeFieldReadonly_FieldWithInitializer_ReturnsSuccess` - Tests readonly conversion
+The RefactorMCP test suite is organized into several test categories:
+### 1. Tool Tests (`Tools/`)
+Unit tests for each refactoring tool in the `Tools` folder covering solution loading, extraction, introduction, moving code and more.
 
 ### 2. ExampleValidationTests (`ExampleValidationTests.cs`)
 **Documentation validation tests** that ensure all examples in EXAMPLES.md work correctly:
@@ -28,7 +21,16 @@ The RefactorMCP test suite is organized into three main test classes:
 - ✅ `SolutionCaching_SecondLoad_IsFaster` (may vary)
 - 🚧 `MemoryUsage_MultipleOperations_DoesNotLeak`
 
-### 4. CliIntegrationTests (`UnitTest1.cs`)
+### 4. Metrics and Analysis
+Tests covering code metrics and refactoring suggestions:
+- ✅ `CodeMetricsTests` - JSON metrics output
+- ✅ `ClassLengthMetricsTests` - Class length listings
+- ✅ `AnalyzeRefactoringOpportunitiesTests` - Suggests safe deletions
+
+### 5. RoslynTransformationTests (`Roslyn/`)
+Unit tests for single-file syntax transformations used by many tools.
+
+### 6. CliIntegrationTests (`UnitTest1.cs`)
 **CLI integration tests**:
 - ✅ `CliTestMode_LoadSolution_WorksCorrectly`
 - ✅ `CliTestMode_AllToolsListed_ReturnsExpectedTools`
@@ -53,7 +55,7 @@ You can run the reliably working tests with:
 ```bash
 # Basic solution loading tests
 dotnet test RefactorMCP.Tests/RefactorMCP.Tests.csproj \
-  --filter "FullyQualifiedName=RefactorMCP.Tests.RefactoringToolsTests.LoadSolution_ValidPath_ReturnsSuccess"
+  --filter "FullyQualifiedName=RefactorMCP.Tests.LoadSolutionTests.LoadSolution_ValidPath_ReturnsSuccess"
 
 # CLI integration tests  
 dotnet test RefactorMCP.Tests/RefactorMCP.Tests.csproj \
@@ -86,13 +88,14 @@ To make the test suite fully functional:
 
 ```
 RefactorMCP.Tests/
-├── UnitTest1.cs              # Core functionality tests
+├── Tools/                   # Tool-specific unit tests
+├── Roslyn/                  # Syntax tree transformation tests
 ├── ExampleValidationTests.cs # Documentation validation
-├── PerformanceTests.cs       # Performance tests  
+├── PerformanceTests.cs       # Performance tests
+├── CodeMetricsTests.cs       # Code metrics validation
+├── ClassLengthMetricsTests.cs # Class size metrics
+├── AnalyzeRefactoringOpportunitiesTests.cs
 ├── ExampleCode.cs            # Sample code for testing
-├── TestOutput/               # Generated test files
-│   ├── Examples/            # Example validation outputs
-│   └── Performance/         # Performance test outputs
 └── TEST_SUMMARY.md          # This file
 ```
 
