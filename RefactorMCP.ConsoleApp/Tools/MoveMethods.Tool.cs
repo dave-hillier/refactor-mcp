@@ -51,19 +51,19 @@ public static partial class MoveMethodsTool
 
     private class StaticMethodMoveContext
     {
-        public string SourcePath { get; set; }
-        public string TargetPath { get; set; }
+        public required string SourcePath { get; set; }
+        public required string TargetPath { get; set; }
         public bool SameFile { get; set; }
-        public SyntaxNode SourceRoot { get; set; }
-        public List<UsingDirectiveSyntax> SourceUsings { get; set; }
-        public string TargetClassName { get; set; }
-        public Encoding SourceEncoding { get; set; }
+        public required SyntaxNode SourceRoot { get; set; }
+        public required List<UsingDirectiveSyntax> SourceUsings { get; set; }
+        public required string TargetClassName { get; set; }
+        public required Encoding SourceEncoding { get; set; }
     }
 
     private class SourceAndTargetRoots
     {
-        public SyntaxNode UpdatedSourceRoot { get; set; }
-        public SyntaxNode UpdatedTargetRoot { get; set; }
+        public required SyntaxNode UpdatedSourceRoot { get; set; }
+        public required SyntaxNode UpdatedTargetRoot { get; set; }
     }
 
     private static async Task<StaticMethodMoveContext> PrepareStaticMethodMove(
@@ -333,7 +333,7 @@ public static partial class MoveMethodsTool
                 var newSourceRoot = await CSharpSyntaxTree.ParseText(newSourceText).GetRootAsync();
                 var solution = document.Project.Solution.WithDocumentSyntaxRoot(currentDocument.Id, newSourceRoot);
 
-                var project = solution.GetProject(document.Project.Id);
+                var project = solution.GetProject(document.Project.Id)!;
                 var targetDocument = project.Documents.FirstOrDefault(d => d.FilePath == targetPath);
                 if (targetDocument == null)
                 {
@@ -348,10 +348,10 @@ public static partial class MoveMethodsTool
                     var targetSourceText = SourceText.From(targetText, targetEnc);
                     solution = solution.WithDocumentText(targetDocument.Id, targetSourceText);
                 }
-                currentDocument = solution.GetDocument(currentDocument.Id);
+                currentDocument = solution.GetDocument(currentDocument.Id)!;
             }
 
-            RefactoringHelpers.UpdateSolutionCache(currentDocument);
+            RefactoringHelpers.UpdateSolutionCache(currentDocument!);
             messages.Add(message);
         }
 

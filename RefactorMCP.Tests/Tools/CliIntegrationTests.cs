@@ -72,5 +72,7 @@ public class CliIntegrationTests
                 m.Name.Equals(pascal, StringComparison.OrdinalIgnoreCase));
             Assert.NotNull(method);
         }
+
+        await Task.CompletedTask;
     }
 }
