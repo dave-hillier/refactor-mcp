@@ -10,6 +10,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Text;
 using System.IO;
+using System.Text;
 
 [McpServerToolType]
 public static partial class MoveMethodsTool
@@ -37,7 +38,7 @@ public static partial class MoveMethodsTool
             if (duplicateDoc != null)
                 return RefactoringHelpers.ThrowMcpException($"Error: Class {targetClass} already exists in {duplicateDoc.FilePath}");
             var method = ExtractStaticMethodFromSource(moveContext.SourceRoot, methodName);
-            var updatedSources = UpdateSourceAndTargetForStaticMove(moveContext, method);
+            var updatedSources = await UpdateSourceAndTargetForStaticMove(moveContext, method);
             await WriteStaticMethodMoveResults(moveContext, updatedSources);
 
             return $"Successfully moved static method '{methodName}' to {targetClass} in {moveContext.TargetPath}";
@@ -56,6 +57,7 @@ public static partial class MoveMethodsTool
         public SyntaxNode SourceRoot { get; set; }
         public List<UsingDirectiveSyntax> SourceUsings { get; set; }
         public string TargetClassName { get; set; }
+        public Encoding SourceEncoding { get; set; }
     }
 
     private class SourceAndTargetRoots
@@ -69,7 +71,7 @@ public static partial class MoveMethodsTool
         string? targetFilePath,
         string targetClass)
     {
-        var sourceText = await File.ReadAllTextAsync(filePath);
+        var (sourceText, sourceEncoding) = await RefactoringHelpers.ReadFileWithEncodingAsync(filePath);
         var targetPath = targetFilePath ?? Path.Combine(Path.GetDirectoryName(filePath)!, $"{targetClass}.cs");
 
         var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
@@ -83,7 +85,8 @@ public static partial class MoveMethodsTool
             SameFile = targetPath == filePath,
             SourceRoot = syntaxRoot,
             SourceUsings = sourceUsings,
-            TargetClassName = targetClass
+            TargetClassName = targetClass,
+            SourceEncoding = sourceEncoding
         };
     }
 
@@ -100,12 +103,12 @@ public static partial class MoveMethodsTool
         return method;
     }
 
-    private static SourceAndTargetRoots UpdateSourceAndTargetForStaticMove(
+    private static async Task<SourceAndTargetRoots> UpdateSourceAndTargetForStaticMove(
         StaticMethodMoveContext context,
         MethodDeclarationSyntax method)
     {
         var newSourceRoot = context.SourceRoot.RemoveNode(method, SyntaxRemoveOptions.KeepNoTrivia);
-        var targetRoot = PrepareTargetRootForStaticMove(context);
+        var targetRoot = await PrepareTargetRootForStaticMove(context);
         var updatedTargetRoot = AddMethodToTargetClass(targetRoot, context.TargetClassName, method);
 
         return new SourceAndTargetRoots
@@ -115,7 +118,7 @@ public static partial class MoveMethodsTool
         };
     }
 
-    private static SyntaxNode PrepareTargetRootForStaticMove(StaticMethodMoveContext context)
+    private static async Task<SyntaxNode> PrepareTargetRootForStaticMove(StaticMethodMoveContext context)
     {
         SyntaxNode targetRoot;
 
@@ -125,7 +128,7 @@ public static partial class MoveMethodsTool
         }
         else if (File.Exists(context.TargetPath))
         {
-            var targetText = File.ReadAllText(context.TargetPath);
+            var (targetText, _) = await RefactoringHelpers.ReadFileWithEncodingAsync(context.TargetPath);
             targetRoot = CSharpSyntaxTree.ParseText(targetText).GetRoot();
         }
         else
@@ -165,11 +168,14 @@ public static partial class MoveMethodsTool
         if (!context.SameFile)
         {
             var formattedSource = Formatter.Format(updatedRoots.UpdatedSourceRoot, RefactoringHelpers.SharedWorkspace);
-            await File.WriteAllTextAsync(context.SourcePath, formattedSource.ToFullString());
+            await File.WriteAllTextAsync(context.SourcePath, formattedSource.ToFullString(), context.SourceEncoding);
         }
 
         Directory.CreateDirectory(Path.GetDirectoryName(context.TargetPath)!);
-        await File.WriteAllTextAsync(context.TargetPath, formattedTarget.ToFullString());
+        var targetEncoding = File.Exists(context.TargetPath)
+            ? await RefactoringHelpers.GetFileEncodingAsync(context.TargetPath)
+            : context.SourceEncoding;
+        await File.WriteAllTextAsync(context.TargetPath, formattedTarget.ToFullString(), targetEncoding);
     }
 
     [McpServerTool, Description("Move one or more instance methods to another class (preferred for large C# file refactoring). " +
@@ -240,7 +246,7 @@ public static partial class MoveMethodsTool
         var targetPath = targetFilePath ?? filePath;
         var sameFile = targetPath == filePath;
 
-        var sourceText = await File.ReadAllTextAsync(filePath);
+        var (sourceText, sourceEncoding) = await RefactoringHelpers.ReadFileWithEncodingAsync(filePath);
 
         if (sameFile)
         {
@@ -255,7 +261,7 @@ public static partial class MoveMethodsTool
             }
 
             var formatted = Formatter.Format(root, RefactoringHelpers.SharedWorkspace);
-            await File.WriteAllTextAsync(filePath, formatted.ToFullString());
+            await File.WriteAllTextAsync(filePath, formatted.ToFullString(), sourceEncoding);
             return $"Successfully moved {methodNames.Length} methods from {sourceClass} to {targetClass} in {filePath}";
         }
         else
@@ -300,13 +306,13 @@ public static partial class MoveMethodsTool
 
             if (sameFile)
             {
-                var newText = await File.ReadAllTextAsync(targetPath);
+                var (newText, _) = await RefactoringHelpers.ReadFileWithEncodingAsync(targetPath);
                 var newRoot = await CSharpSyntaxTree.ParseText(newText).GetRootAsync();
                 currentDocument = document.Project.Solution.WithDocumentSyntaxRoot(currentDocument.Id, newRoot).GetDocument(currentDocument.Id);
             }
             else
             {
-                var newSourceText = await File.ReadAllTextAsync(currentDocument.FilePath!);
+                var (newSourceText, _) = await RefactoringHelpers.ReadFileWithEncodingAsync(currentDocument.FilePath!);
                 var newSourceRoot = await CSharpSyntaxTree.ParseText(newSourceText).GetRootAsync();
                 var solution = document.Project.Solution.WithDocumentSyntaxRoot(currentDocument.Id, newSourceRoot);
 
@@ -314,15 +320,15 @@ public static partial class MoveMethodsTool
                 var targetDocument = project.Documents.FirstOrDefault(d => d.FilePath == targetPath);
                 if (targetDocument == null)
                 {
-                    var targetText = await File.ReadAllTextAsync(targetPath);
-                    var targetSourceText = SourceText.From(targetText, System.Text.Encoding.UTF8);
+                    var (targetText, targetEnc) = await RefactoringHelpers.ReadFileWithEncodingAsync(targetPath);
+                    var targetSourceText = SourceText.From(targetText, targetEnc);
                     targetDocument = project.AddDocument(Path.GetFileName(targetPath), targetSourceText, filePath: targetPath);
                     solution = targetDocument.Project.Solution;
                 }
                 else
                 {
-                    var targetText = await File.ReadAllTextAsync(targetPath);
-                    var targetSourceText = SourceText.From(targetText, System.Text.Encoding.UTF8);
+                    var (targetText, targetEnc) = await RefactoringHelpers.ReadFileWithEncodingAsync(targetPath);
+                    var targetSourceText = SourceText.From(targetText, targetEnc);
                     solution = solution.WithDocumentText(targetDocument.Id, targetSourceText);
                 }
                 currentDocument = solution.GetDocument(currentDocument.Id);

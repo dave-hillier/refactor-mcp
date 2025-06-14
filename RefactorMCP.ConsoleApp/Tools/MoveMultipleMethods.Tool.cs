@@ -91,7 +91,7 @@ public static partial class MoveMultipleMethodsTool
                 targetPath);
         }
 
-        var newText = await File.ReadAllTextAsync(document.FilePath!);
+        var (newText, _) = await RefactoringHelpers.ReadFileWithEncodingAsync(document.FilePath!);
         var newRoot = await CSharpSyntaxTree.ParseText(newText).GetRootAsync();
         var solution = document.Project.Solution.WithDocumentSyntaxRoot(document.Id, newRoot);
 
@@ -99,15 +99,15 @@ public static partial class MoveMultipleMethodsTool
         var targetDocument = project.Documents.FirstOrDefault(d => d.FilePath == targetPath);
         if (targetDocument == null)
         {
-            var targetText = await File.ReadAllTextAsync(targetPath);
-            var targetSource = SourceText.From(targetText, System.Text.Encoding.UTF8);
+            var (targetText, targetEncoding) = await RefactoringHelpers.ReadFileWithEncodingAsync(targetPath);
+            var targetSource = SourceText.From(targetText, targetEncoding);
             targetDocument = project.AddDocument(Path.GetFileName(targetPath), targetSource, filePath: targetPath);
             solution = targetDocument.Project.Solution;
         }
         else
         {
-            var targetText = await File.ReadAllTextAsync(targetPath);
-            var targetSource = SourceText.From(targetText, System.Text.Encoding.UTF8);
+            var (targetText, targetEncoding) = await RefactoringHelpers.ReadFileWithEncodingAsync(targetPath);
+            var targetSource = SourceText.From(targetText, targetEncoding);
             solution = solution.WithDocumentText(targetDocument.Id, targetSource);
         }
 

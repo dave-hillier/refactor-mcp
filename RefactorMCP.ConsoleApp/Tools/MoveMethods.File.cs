@@ -27,7 +27,7 @@ public static partial class MoveMethodsTool
         var targetPath = targetFilePath ?? Path.Combine(Path.GetDirectoryName(filePath)!, $"{targetClass}.cs");
         var sameFile = targetPath == filePath;
 
-        var sourceText = await File.ReadAllTextAsync(filePath);
+        var (sourceText, sourceEncoding) = await RefactoringHelpers.ReadFileWithEncodingAsync(filePath);
         var sourceRoot = (await CSharpSyntaxTree.ParseText(sourceText).GetRootAsync());
 
         var moveResult = MoveStaticMethodAst(sourceRoot, methodName, targetClass);
@@ -47,12 +47,15 @@ public static partial class MoveMethodsTool
 
         var formattedTarget = Formatter.Format(targetRoot, RefactoringHelpers.SharedWorkspace);
         Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
-        await File.WriteAllTextAsync(targetPath, formattedTarget.ToFullString());
+        var targetEncoding = File.Exists(targetPath)
+            ? await RefactoringHelpers.GetFileEncodingAsync(targetPath)
+            : sourceEncoding;
+        await File.WriteAllTextAsync(targetPath, formattedTarget.ToFullString(), targetEncoding);
 
         if (!sameFile)
         {
             var formattedSource = Formatter.Format(moveResult.NewSourceRoot, RefactoringHelpers.SharedWorkspace);
-            await File.WriteAllTextAsync(filePath, formattedSource.ToFullString());
+            await File.WriteAllTextAsync(filePath, formattedSource.ToFullString(), sourceEncoding);
         }
 
         return $"Successfully moved static method '{methodName}' to {targetClass} in {targetPath}";
@@ -70,7 +73,7 @@ public static partial class MoveMethodsTool
     {
         if (File.Exists(targetPath))
         {
-            var targetText = await File.ReadAllTextAsync(targetPath);
+            var (targetText, _) = await RefactoringHelpers.ReadFileWithEncodingAsync(targetPath);
             return await CSharpSyntaxTree.ParseText(targetText).GetRootAsync();
         }
         else
@@ -94,7 +97,7 @@ public static partial class MoveMethodsTool
         var targetPath = targetFilePath ?? filePath;
         var sameFile = targetPath == filePath;
 
-        var sourceText = await File.ReadAllTextAsync(filePath);
+        var (sourceText, sourceEncoding) = await RefactoringHelpers.ReadFileWithEncodingAsync(filePath);
         var sourceRoot = (await CSharpSyntaxTree.ParseText(sourceText).GetRootAsync());
 
         var moveResult = MoveInstanceMethodAst(
@@ -104,12 +107,15 @@ public static partial class MoveMethodsTool
         {
             var targetRoot = AddMethodToTargetClass(moveResult.NewSourceRoot, targetClass, moveResult.MovedMethod);
             var formatted = Formatter.Format(targetRoot, RefactoringHelpers.SharedWorkspace);
-            await File.WriteAllTextAsync(targetPath, formatted.ToFullString());
+            var targetEncoding = File.Exists(targetPath)
+                ? await RefactoringHelpers.GetFileEncodingAsync(targetPath)
+                : sourceEncoding;
+            await File.WriteAllTextAsync(targetPath, formatted.ToFullString(), targetEncoding);
         }
         else
         {
             var formattedSource = Formatter.Format(moveResult.NewSourceRoot, RefactoringHelpers.SharedWorkspace);
-            await File.WriteAllTextAsync(filePath, formattedSource.ToFullString());
+            await File.WriteAllTextAsync(filePath, formattedSource.ToFullString(), sourceEncoding);
 
             var targetRoot = await LoadOrCreateTargetRoot(targetPath);
             targetRoot = PropagateUsings(sourceRoot, targetRoot);
@@ -117,7 +123,10 @@ public static partial class MoveMethodsTool
 
             var formattedTarget = Formatter.Format(targetRoot, RefactoringHelpers.SharedWorkspace);
             Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
-            await File.WriteAllTextAsync(targetPath, formattedTarget.ToFullString());
+            var targetEncoding2 = File.Exists(targetPath)
+                ? await RefactoringHelpers.GetFileEncodingAsync(targetPath)
+                : sourceEncoding;
+            await File.WriteAllTextAsync(targetPath, formattedTarget.ToFullString(), targetEncoding2);
         }
 
         var locationInfo = targetFilePath != null ? $" in {targetPath}" : string.Empty;

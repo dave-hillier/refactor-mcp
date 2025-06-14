@@ -54,7 +54,8 @@ public static class CleanupUsingsTool
 
         var newRoot = root.RemoveNodes(unused, SyntaxRemoveOptions.KeepNoTrivia);
         var formatted = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
-        await File.WriteAllTextAsync(document.FilePath!, formatted.ToFullString());
+        var encoding = await RefactoringHelpers.GetFileEncodingAsync(document.FilePath!);
+        await File.WriteAllTextAsync(document.FilePath!, formatted.ToFullString(), encoding);
 
         var newDocument = document.WithSyntaxRoot(formatted);
         RefactoringHelpers.UpdateSolutionCache(newDocument);
