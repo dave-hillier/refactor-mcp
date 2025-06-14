@@ -28,7 +28,7 @@ public static class LoadSolutionTool
                 return $"Successfully loaded solution '{Path.GetFileName(solutionPath)}' with {cachedProjects.Count} projects: {string.Join(", ", cachedProjects)}";
             }
 
-            using var workspace = MSBuildWorkspace.Create();
+            using var workspace = RefactoringHelpers.CreateWorkspace();
             var solution = await workspace.OpenSolutionAsync(solutionPath);
 
             RefactoringHelpers.SolutionCache.Set(solutionPath, solution);
