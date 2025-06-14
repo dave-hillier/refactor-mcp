@@ -12,51 +12,27 @@ namespace RefactorMCP.Tests;
 /// </summary>
 public class ExampleValidationTests : IDisposable
 {
-    private static readonly string SolutionPath = GetSolutionPath();
-    private static readonly string TestOutputPath =
-        Path.Combine(Path.GetDirectoryName(SolutionPath)!,
-            "RefactorMCP.Tests",
-            "TestOutput",
-            "Examples");
+    private static readonly string SolutionPath = TestHelpers.GetSolutionPath();
+    private readonly string _testOutputPath;
 
     public ExampleValidationTests()
     {
-        Directory.CreateDirectory(TestOutputPath);
+        _testOutputPath = TestHelpers.CreateTestOutputDir("Examples");
     }
 
     public void Dispose()
     {
-        if (Directory.Exists(TestOutputPath))
+        if (Directory.Exists(_testOutputPath))
         {
-            Directory.Delete(TestOutputPath, true);
+            Directory.Delete(_testOutputPath, true);
         }
-    }
-
-    private static string GetSolutionPath()
-    {
-        // Start from the current directory and walk up to find the solution file
-        var currentDir = Directory.GetCurrentDirectory();
-        var dir = new DirectoryInfo(currentDir);
-
-        while (dir != null)
-        {
-            var solutionFile = Path.Combine(dir.FullName, "RefactorMCP.sln");
-            if (File.Exists(solutionFile))
-            {
-                return solutionFile;
-            }
-            dir = dir.Parent;
-        }
-
-        // Fallback to relative path
-        return "./RefactorMCP.sln";
     }
 
     [Fact]
     public async Task Example_ExtractMethod_ValidationLogic_WorksAsDocumented()
     {
         // Arrange - Create the exact code from our documentation
-        var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "ExtractMethodExample.cs"));
+        var testFile = Path.GetFullPath(Path.Combine(_testOutputPath, "ExtractMethodExample.cs"));
         await CreateTestFile(testFile, GetCalculatorCodeForExtractMethod());
         await LoadSolutionTool.LoadSolution(SolutionPath);
 
@@ -78,7 +54,7 @@ public class ExampleValidationTests : IDisposable
     public async Task Example_IntroduceField_AverageCalculation_WorksAsDocumented()
     {
         // Arrange - Create the exact code from our documentation
-        var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "IntroduceFieldExample.cs"));
+        var testFile = Path.GetFullPath(Path.Combine(_testOutputPath, "IntroduceFieldExample.cs"));
         await CreateTestFile(testFile, GetCalculatorCodeForIntroduceField());
         await LoadSolutionTool.LoadSolution(SolutionPath);
 
@@ -101,7 +77,7 @@ public class ExampleValidationTests : IDisposable
     public async Task Example_IntroduceVariable_ComplexExpression_WorksAsDocumented()
     {
         // Arrange - Create the exact code from our documentation
-        var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "IntroduceVariableExample.cs"));
+        var testFile = Path.GetFullPath(Path.Combine(_testOutputPath, "IntroduceVariableExample.cs"));
         await CreateTestFile(testFile, GetCalculatorCodeForIntroduceVariable());
         await LoadSolutionTool.LoadSolution(SolutionPath);
 
@@ -123,7 +99,7 @@ public class ExampleValidationTests : IDisposable
     public async Task Example_IntroduceParameter_ComplexExpression_WorksAsDocumented()
     {
         // Arrange - Create the exact code from our documentation
-        var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "IntroduceParameterExample.cs"));
+        var testFile = Path.GetFullPath(Path.Combine(_testOutputPath, "IntroduceParameterExample.cs"));
         await CreateTestFile(testFile, GetCalculatorCodeForIntroduceParameter());
         await LoadSolutionTool.LoadSolution(SolutionPath);
 
@@ -145,7 +121,7 @@ public class ExampleValidationTests : IDisposable
     public async Task Example_MakeFieldReadonly_FormatField_WorksAsDocumented()
     {
         // Arrange - Create the exact code from our documentation
-        var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "MakeFieldReadonlyExample.cs"));
+        var testFile = Path.GetFullPath(Path.Combine(_testOutputPath, "MakeFieldReadonlyExample.cs"));
         await CreateTestFile(testFile, GetCalculatorCodeForMakeFieldReadonly());
         await LoadSolutionTool.LoadSolution(SolutionPath);
 
@@ -165,7 +141,7 @@ public class ExampleValidationTests : IDisposable
     [Fact]
     public async Task Example_SafeDeleteParameter_UnusedParam_WorksAsDocumented()
     {
-        var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "SafeDeleteParameter.cs"));
+        var testFile = Path.GetFullPath(Path.Combine(_testOutputPath, "SafeDeleteParameter.cs"));
         await CreateTestFile(testFile, GetCalculatorCodeForSafeDelete());
         await LoadSolutionTool.LoadSolution(SolutionPath);
 
@@ -184,7 +160,7 @@ public class ExampleValidationTests : IDisposable
     [Fact]
     public async Task Example_CleanupUsings_WorksAsDocumented()
     {
-        var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "CleanupSample.cs"));
+        var testFile = Path.GetFullPath(Path.Combine(_testOutputPath, "CleanupSample.cs"));
         await CreateTestFile(testFile, TestUtilities.GetSampleCodeForCleanupUsings());
         await LoadSolutionTool.LoadSolution(SolutionPath);
 
@@ -199,7 +175,7 @@ public class ExampleValidationTests : IDisposable
     public async Task QuickReference_ExtractMethod_WorksAsDocumented()
     {
         // Test the quick reference example
-        var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "QuickRefExtractMethod.cs"));
+        var testFile = Path.GetFullPath(Path.Combine(_testOutputPath, "QuickRefExtractMethod.cs"));
         await CreateTestFile(testFile, GetCalculatorCodeForExtractMethod());
         await LoadSolutionTool.LoadSolution(SolutionPath);
 
@@ -219,7 +195,7 @@ public class ExampleValidationTests : IDisposable
     public async Task QuickReference_IntroduceField_WorksAsDocumented()
     {
         // Test the quick reference example
-        var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "QuickRefIntroduceField.cs"));
+        var testFile = Path.GetFullPath(Path.Combine(_testOutputPath, "QuickRefIntroduceField.cs"));
         await CreateTestFile(testFile, GetCalculatorCodeForIntroduceField());
         await LoadSolutionTool.LoadSolution(SolutionPath);
 
@@ -245,7 +221,7 @@ public class ExampleValidationTests : IDisposable
     public async Task Example_IntroduceField_AllAccessModifiers_WorkCorrectly(string accessModifier)
     {
         // Test that all documented access modifiers work
-        var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, $"AccessModifier_{accessModifier}.cs"));
+        var testFile = Path.GetFullPath(Path.Combine(_testOutputPath, $"AccessModifier_{accessModifier}.cs"));
         await CreateTestFile(testFile, GetCalculatorCodeForIntroduceField());
         await LoadSolutionTool.LoadSolution(SolutionPath);
 
@@ -266,7 +242,7 @@ public class ExampleValidationTests : IDisposable
     public async Task Documentation_RangeFormat_ExamplesAreAccurate()
     {
         // Test the range calculation example from EXAMPLES.md
-        var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "RangeFormatTest.cs"));
+        var testFile = Path.GetFullPath(Path.Combine(_testOutputPath, "RangeFormatTest.cs"));
         var code = """
 public int Calculate(int a, int b)
 {

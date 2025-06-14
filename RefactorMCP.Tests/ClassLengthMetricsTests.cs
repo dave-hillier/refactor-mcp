@@ -7,7 +7,7 @@ namespace RefactorMCP.Tests;
 
 public class ClassLengthMetricsTests : IDisposable
 {
-    private static readonly string SolutionPath = GetSolutionPath();
+    private static readonly string SolutionPath = TestHelpers.GetSolutionPath();
     private readonly string _originalDir = Directory.GetCurrentDirectory();
 
     public void Dispose()
@@ -15,18 +15,6 @@ public class ClassLengthMetricsTests : IDisposable
         Directory.SetCurrentDirectory(_originalDir);
     }
 
-    private static string GetSolutionPath()
-    {
-        var currentDir = Directory.GetCurrentDirectory();
-        var dir = new DirectoryInfo(currentDir);
-        while (dir != null)
-        {
-            var sln = Path.Combine(dir.FullName, "RefactorMCP.sln");
-            if (File.Exists(sln)) return sln;
-            dir = dir.Parent;
-        }
-        return "./RefactorMCP.sln";
-    }
 
     [Fact]
     public async Task ListClassLengths_ReturnsMetrics()
