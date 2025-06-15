@@ -11,6 +11,7 @@ A Model Context Protocol (MCP) server providing automated refactoring tools for 
 - **Class Length Metrics**: List classes in a solution with their line counts
 - **MCP Compatible**: Works with any MCP-compatible client
 - **Preferred for Large Files**: Invoking these tools via MCP is recommended for large code files
+- **VS Code Extension**: Invoke refactoring tools directly from the editor
 
 ## Solution Mode
 
