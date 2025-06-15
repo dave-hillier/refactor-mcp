@@ -42,6 +42,21 @@ cd RefactorMCP
 dotnet build
 ```
 
+## VS Code Extension Development
+
+To work on the VS Code extension located in `vscode-extension`:
+
+1. Install the npm dependencies:
+   ```bash
+   cd vscode-extension
+   npm install
+   ```
+2. Start the TypeScript compiler in watch mode:
+   ```bash
+   npm run watch
+   ```
+3. In VS Code, press `F5` (or choose **Run > Start Debugging**) to launch an Extension Development Host that loads the extension for testing.
+
 ## Usage
 
 ### Command Line Testing
