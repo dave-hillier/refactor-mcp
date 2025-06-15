@@ -189,6 +189,7 @@ public class ExampleValidationTests : IDisposable
 
         Assert.Contains("Successfully extracted method", result);
         var fileContent = await File.ReadAllTextAsync(testFile);
+        Assert.Contains("ValidateInputs();", fileContent);
     }
 
     [Fact]
