@@ -174,5 +174,13 @@ public class CleanupSample
 
     public static string GetSampleCodeForRenameSymbol() =>
         File.ReadAllText(Path.Combine(Path.GetDirectoryName(GetSolutionPath())!, "RefactorMCP.Tests", "ExampleCode.cs"));
+
+    public static string GetSampleCodeForExtractInterface() => """
+public class Person
+{
+    public string Name { get; set; }
+    public void Greet() { }
+}
+""";
 }
 

@@ -730,6 +730,45 @@ MathUtilities - 4 lines
 Logger - 8 lines
 ```
 
+## 15. Extract Interface
+
+**Purpose**: Generate an interface from specific class members.
+
+### Example
+**Before**:
+```csharp
+public class Person
+{
+    public string Name { get; set; }
+    public void Greet() { Console.WriteLine(Name); }
+}
+```
+
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli extract-interface \
+  "./RefactorMCP.sln" \
+  "./RefactorMCP.Tests/ExampleCode.cs" \
+  Person \
+  "Name,Greet" \
+  "./IPerson.cs"
+```
+
+**After**:
+```csharp
+public interface IPerson
+{
+    string Name { get; set; }
+    void Greet();
+}
+
+public class Person : IPerson
+{
+    public string Name { get; set; }
+    public void Greet() { Console.WriteLine(Name); }
+}
+```
+
 ## Range Format
 
 All refactoring commands that require selecting code use the range format:
