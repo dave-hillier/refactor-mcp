@@ -12,6 +12,56 @@ A Model Context Protocol (MCP) server providing automated refactoring tools for 
 - **MCP Compatible**: Works with any MCP-compatible client
 - **Preferred for Large Files**: Invoking these tools via MCP is recommended for large code files
 - **VS Code Extension**: Invoke refactoring tools directly from the editor
+## Refactoring Tools
+
+Below is a quick reference of all tool classes provided by RefactorMCP. Each tool is decorated with `[McpServerToolType]` and some also include `[McpServerPromptType]` for prompt-based actions.
+
+- **AnalyzeRefactoringOpportunitiesTool** `[McpServerToolType, McpServerPromptType]`  
+  Analyze a C# file for refactoring opportunities like long methods or unused code.
+- **ClassLengthMetricsTool** `[McpServerToolType, McpServerPromptType]`  
+  List all classes in the solution with their line counts.
+- **CleanupUsingsTool** `[McpServerToolType]`  
+  Remove unused using directives from a C# file (preferred for large C# file refactoring).
+- **CodeMetricsTool** `[McpServerToolType, McpServerPromptType]`  
+  Get code metrics for a C# file including classes and methods.
+- **ConvertToExtensionMethodTool** `[McpServerToolType]`  
+  Convert an instance method to an extension method in a static class.
+- **ConvertToStaticWithInstanceTool** `[McpServerToolType]`  
+  Transform instance method to static by adding instance parameter (preferred for large C# file refactoring).
+- **ConvertToStaticWithParametersTool** `[McpServerToolType]`  
+  Transform instance method to static by converting dependencies to parameters (preferred for large C# file refactoring).
+- **ExtractInterfaceTool** `[McpServerToolType]`  
+  Extract a simple interface from a class.
+- **ExtractMethodTool** `[McpServerToolType]`  
+  Extract a code block into a new method (preferred for large C# file refactoring).
+- **InlineMethodTool** `[McpServerToolType]`  
+  Inline a method and remove its declaration (preferred for large C# file refactoring).
+- **IntroduceFieldTool** `[McpServerToolType]`  
+  Introduce a new field from selected expression (preferred for large C# file refactoring).
+- **IntroduceParameterTool** `[McpServerToolType]`  
+  Create a new parameter from selected code (preferred for large C# file refactoring).
+- **IntroduceVariableTool** `[McpServerToolType]`  
+  Introduce a new variable from selected expression (preferred for large C# file refactoring).
+- **LoadSolutionTool** `[McpServerToolType]`  
+  Load a solution file for refactoring operations and set the current directory to the solution directory.
+- **MakeFieldReadonlyTool** `[McpServerToolType]`  
+  Make a field readonly if assigned only during initialization (preferred for large C# file refactoring).
+- **MoveClassToFileTool** `[McpServerToolType]`  
+  Move a class to a separate file with the same name.
+- **MoveMethodsTool** `[McpServerToolType]`  
+  Move a static method to another class (preferred for large C# file refactoring).
+- **MoveMultipleMethodsTool** `[McpServerToolType]`  
+  Move multiple methods from a source class to a target class, automatically ordering by dependencies.
+- **RenameSymbolTool** `[McpServerToolType]`  
+  Rename a symbol across the solution using Roslyn.
+- **SafeDeleteTool** `[McpServerToolType]`  
+  Safely delete an unused field (preferred for large C# file refactoring).
+- **TransformSetterToInitTool** `[McpServerToolType]`  
+  Convert property setter to init-only setter (preferred for large C# file refactoring).
+- **UnloadSolutionTool** `[McpServerToolType]`  
+  Unload a solution and remove it from the cache.
+- **VersionTool** `[McpServerToolType]`  
+  Show the current version and build timestamp.
 
 ## Solution Mode
 
