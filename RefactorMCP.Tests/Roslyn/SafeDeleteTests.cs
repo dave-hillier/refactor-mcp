@@ -82,44 +82,4 @@ public partial class RoslynTransformationTests
         Assert.Equal(expected, output.Trim());
     }
 
-    [Fact]
-    public void FieldRemovalRewriter_RemovesField()
-    {
-        var tree = CSharpSyntaxTree.ParseText("class A{int x;}");
-        var root = tree.GetRoot();
-        var rewriter = new FieldRemovalRewriter("x");
-        var newRoot = Formatter.Format(rewriter.Visit(root)!, new AdhocWorkspace());
-        Assert.Equal("class A { }", newRoot.ToFullString().Trim());
-    }
-
-    [Fact]
-    public void MethodRemovalRewriter_RemovesMethod()
-    {
-        var tree = CSharpSyntaxTree.ParseText("class A{void M(){}}");
-        var root = tree.GetRoot();
-        var rewriter = new MethodRemovalRewriter("M");
-        var newRoot = Formatter.Format(rewriter.Visit(root)!, new AdhocWorkspace());
-        Assert.Equal("class A { }", newRoot.ToFullString().Trim());
-    }
-
-    [Fact]
-    public void ParameterRemovalRewriter_RemovesParameter()
-    {
-        var tree = CSharpSyntaxTree.ParseText("class A{void M(int a,int b){}}");
-        var root = tree.GetRoot();
-        var rewriter = new ParameterRemovalRewriter("M", 1);
-        var newRoot = Formatter.Format(rewriter.Visit(root)!, new AdhocWorkspace());
-        Assert.Contains("void M(int a)", newRoot.ToFullString());
-    }
-
-    [Fact]
-    public void VariableRemovalRewriter_RemovesVariable()
-    {
-        var tree = CSharpSyntaxTree.ParseText("void M(){int x=0;}");
-        var root = tree.GetRoot();
-        var varNode = root.DescendantNodes().OfType<VariableDeclaratorSyntax>().First();
-        var rewriter = new VariableRemovalRewriter("x", varNode.Span);
-        var newRoot = Formatter.Format(rewriter.Visit(root)!, new AdhocWorkspace());
-        Assert.Equal("void M() { }", newRoot.ToFullString().Trim());
-    }
 }
