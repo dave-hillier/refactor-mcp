@@ -11,7 +11,8 @@ using System.Collections.Generic;
 [McpServerToolType]
 public static class ConvertToExtensionMethodTool
 {
-    [McpServerTool, Description("Convert an instance method to an extension method in a static class")]
+    [McpServerTool, Description("Convert an instance method to an extension method in a static class. " +
+        "A wrapper method remains so existing call sites continue to work.")]
     public static async Task<string> ConvertToExtensionMethod(
         [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
@@ -20,12 +21,11 @@ public static class ConvertToExtensionMethodTool
     {
         try
         {
-            var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
-            var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
-            if (document != null)
-                return await ConvertToExtensionMethodWithSolution(document, methodName, extensionClass);
-
-            return await ConvertToExtensionMethodSingleFile(filePath, methodName, extensionClass);
+            return await RefactoringHelpers.RunWithSolutionOrFile(
+                solutionPath,
+                filePath,
+                doc => ConvertToExtensionMethodWithSolution(doc, methodName, extensionClass),
+                path => ConvertToExtensionMethodSingleFile(path, methodName, extensionClass));
         }
         catch (Exception ex)
         {
@@ -53,34 +53,9 @@ public static class ConvertToExtensionMethodTool
         var extClassName = extensionClass ?? className + "Extensions";
         var paramName = char.ToLower(className[0]) + className.Substring(1);
 
-        var thisParam = SyntaxFactory.Parameter(SyntaxFactory.Identifier(paramName))
-            .WithType(SyntaxFactory.ParseTypeName(className))
-            .AddModifiers(SyntaxFactory.Token(SyntaxKind.ThisKeyword));
-
-        var updatedMethod = method.WithParameterList(method.ParameterList.AddParameters(thisParam));
-
-        updatedMethod = updatedMethod.ReplaceNodes(
-            updatedMethod.DescendantNodes().OfType<ThisExpressionSyntax>(),
-            (_, _) => SyntaxFactory.IdentifierName(paramName));
-
-        updatedMethod = updatedMethod.ReplaceNodes(
-            updatedMethod.DescendantNodes().OfType<IdentifierNameSyntax>().Where(id =>
-            {
-                var sym = semanticModel!.GetSymbolInfo(id).Symbol;
-                return sym is IFieldSymbol or IPropertySymbol or IMethodSymbol &&
-                       SymbolEqualityComparer.Default.Equals(sym.ContainingType, semanticModel.GetDeclaredSymbol(classDecl)) &&
-                       !sym.IsStatic && id.Parent is not MemberAccessExpressionSyntax;
-            }),
-            (old, _) => SyntaxFactory.MemberAccessExpression(
-                SyntaxKind.SimpleMemberAccessExpression,
-                SyntaxFactory.IdentifierName(paramName),
-                SyntaxFactory.IdentifierName(old.Identifier)));
-
-        var modifiers = updatedMethod.Modifiers;
-        if (!modifiers.Any(m => m.IsKind(SyntaxKind.StaticKeyword)))
-            modifiers = modifiers.Add(SyntaxFactory.Token(SyntaxKind.StaticKeyword));
-
-        updatedMethod = updatedMethod.WithModifiers(modifiers);
+        var typeSymbol = (INamedTypeSymbol)semanticModel!.GetDeclaredSymbol(classDecl)!;
+        var rewriter = new ExtensionMethodRewriter(paramName, className, semanticModel!, typeSymbol);
+        var updatedMethod = rewriter.Rewrite(method);
 
         // Replace the original method with a wrapper that calls the new extension
         var wrapperArgs = new List<ArgumentSyntax> { SyntaxFactory.Argument(SyntaxFactory.ThisExpression()) };
@@ -114,6 +89,9 @@ public static class ConvertToExtensionMethodTool
         }
         else
         {
+            var duplicateDoc = await RefactoringHelpers.FindClassInSolution(document.Project.Solution, extClassName, document.FilePath);
+            if (duplicateDoc != null)
+                return RefactoringHelpers.ThrowMcpException($"Error: Class {extClassName} already exists in {duplicateDoc.FilePath}");
             var extensionClassDecl = SyntaxFactory.ClassDeclaration(extClassName)
                 .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.StaticKeyword))
                 .AddMembers(updatedMethod);
@@ -132,7 +110,9 @@ public static class ConvertToExtensionMethodTool
         var formatted = Formatter.Format(newRoot, document.Project.Solution.Workspace);
         var newDocument = document.WithSyntaxRoot(formatted);
         var newText = await newDocument.GetTextAsync();
-        await File.WriteAllTextAsync(document.FilePath!, newText.ToString());
+        var encoding = await RefactoringHelpers.GetFileEncodingAsync(document.FilePath!);
+        await File.WriteAllTextAsync(document.FilePath!, newText.ToString(), encoding);
+        RefactoringHelpers.UpdateSolutionCache(newDocument);
 
         return $"Successfully converted method '{methodName}' to extension method in {document.FilePath} (solution mode)";
     }
@@ -164,16 +144,6 @@ public static class ConvertToExtensionMethodTool
         var extClassName = extensionClass ?? className + "Extensions";
         var paramName = char.ToLower(className[0]) + className.Substring(1);
 
-        var thisParam = SyntaxFactory.Parameter(SyntaxFactory.Identifier(paramName))
-            .WithType(SyntaxFactory.ParseTypeName(className))
-            .AddModifiers(SyntaxFactory.Token(SyntaxKind.ThisKeyword));
-
-        var updatedMethod = method.WithParameterList(method.ParameterList.AddParameters(thisParam));
-
-        updatedMethod = updatedMethod.ReplaceNodes(
-            updatedMethod.DescendantNodes().OfType<ThisExpressionSyntax>(),
-            (_, _) => SyntaxFactory.IdentifierName(paramName));
-
         var instanceMembers = classDecl.Members
             .Where(m => m is FieldDeclarationSyntax or PropertyDeclarationSyntax)
             .Select(m => m switch
@@ -185,19 +155,8 @@ public static class ConvertToExtensionMethodTool
             .Where(n => !string.IsNullOrEmpty(n))
             .ToHashSet();
 
-        updatedMethod = updatedMethod.ReplaceNodes(
-            updatedMethod.DescendantNodes().OfType<IdentifierNameSyntax>().Where(id =>
-                instanceMembers.Contains(id.Identifier.ValueText) && id.Parent is not MemberAccessExpressionSyntax),
-            (old, _) => SyntaxFactory.MemberAccessExpression(
-                SyntaxKind.SimpleMemberAccessExpression,
-                SyntaxFactory.IdentifierName(paramName),
-                SyntaxFactory.IdentifierName(old.Identifier)));
-
-        var modifiers = updatedMethod.Modifiers;
-        if (!modifiers.Any(m => m.IsKind(SyntaxKind.StaticKeyword)))
-            modifiers = modifiers.Add(SyntaxFactory.Token(SyntaxKind.StaticKeyword));
-
-        updatedMethod = updatedMethod.WithModifiers(modifiers);
+        var rewriter = new ExtensionMethodRewriter(paramName, className, instanceMembers);
+        var updatedMethod = rewriter.Rewrite(method);
 
         // Replace the original method with a wrapper that calls the new extension
         var wrapperArgs = new List<ArgumentSyntax> { SyntaxFactory.Argument(SyntaxFactory.ThisExpression()) };

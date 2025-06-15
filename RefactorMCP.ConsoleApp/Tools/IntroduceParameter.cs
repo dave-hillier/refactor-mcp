@@ -26,6 +26,9 @@ public static class IntroduceParameterTool
         if (!RefactoringHelpers.TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
             return RefactoringHelpers.ThrowMcpException("Error: Invalid selection range format");
 
+        if (!RefactoringHelpers.ValidateRange(sourceText, startLine, startColumn, endLine, endColumn, out var error))
+            return RefactoringHelpers.ThrowMcpException(error);
+
         var startPosition = textLines[startLine - 1].Start + startColumn - 1;
         var endPosition = textLines[endLine - 1].Start + endColumn - 1;
         var span = TextSpan.FromBounds(startPosition, endPosition);
@@ -41,35 +44,16 @@ public static class IntroduceParameterTool
         var parameter = SyntaxFactory.Parameter(SyntaxFactory.Identifier(parameterName))
             .WithType(SyntaxFactory.ParseTypeName(typeName));
 
-        var invocations = syntaxRoot.DescendantNodes().OfType<InvocationExpressionSyntax>()
-            .Where(i =>
-                (i.Expression is IdentifierNameSyntax id && id.Identifier.ValueText == methodName) ||
-                (i.Expression is MemberAccessExpressionSyntax ma && ma.Name.Identifier.ValueText == methodName))
-            .ToList();
-
-        foreach (var invocation in invocations)
-        {
-            var newArgs = invocation.ArgumentList.AddArguments(SyntaxFactory.Argument(selectedExpression.WithoutTrivia()));
-            syntaxRoot = syntaxRoot.ReplaceNode(invocation, invocation.WithArgumentList(newArgs));
-        }
-
-        method = syntaxRoot.DescendantNodes().OfType<MethodDeclarationSyntax>()
-            .First(m => m.Identifier.ValueText == methodName);
-        selectedExpression = syntaxRoot.DescendantNodes()
-            .OfType<ExpressionSyntax>()
-            .Where(e => span.Contains(e.Span) || e.Span.Contains(span))
-            .OrderBy(e => Math.Abs(e.Span.Length - span.Length))
-            .ThenBy(e => e.Span.Length)
-            .First();
-
-        var newMethod = method.ReplaceNode(selectedExpression, SyntaxFactory.IdentifierName(parameterName))
-            .AddParameterListParameters(parameter);
-        SyntaxNode newRoot = syntaxRoot.ReplaceNode(method, newMethod);
+        var parameterReference = SyntaxFactory.IdentifierName(parameterName);
+        var rewriter = new ParameterIntroductionRewriter(selectedExpression, methodName, parameter, parameterReference);
+        var newRoot = rewriter.Visit(syntaxRoot);
 
         var formattedRoot = Formatter.Format(newRoot, document.Project.Solution.Workspace);
         var newDocument = document.WithSyntaxRoot(formattedRoot);
         var newText = await newDocument.GetTextAsync();
-        await File.WriteAllTextAsync(document.FilePath!, newText.ToString());
+        var encoding = await RefactoringHelpers.GetFileEncodingAsync(document.FilePath!);
+        await File.WriteAllTextAsync(document.FilePath!, newText.ToString(), encoding);
+        RefactoringHelpers.UpdateSolutionCache(newDocument);
 
         return $"Successfully introduced parameter '{parameterName}' from {selectionRange} in method '{methodName}' in {document.FilePath} (solution mode)";
     }
@@ -86,7 +70,8 @@ public static class IntroduceParameterTool
     {
         var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
         var syntaxRoot = syntaxTree.GetRoot();
-        var textLines = SourceText.From(sourceText).Lines;
+        var text = SourceText.From(sourceText);
+        var textLines = text.Lines;
 
         var method = syntaxRoot.DescendantNodes()
             .OfType<MethodDeclarationSyntax>()
@@ -96,6 +81,9 @@ public static class IntroduceParameterTool
 
         if (!RefactoringHelpers.TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
             return RefactoringHelpers.ThrowMcpException("Error: Invalid selection range format");
+
+        if (!RefactoringHelpers.ValidateRange(text, startLine, startColumn, endLine, endColumn, out var error))
+            return RefactoringHelpers.ThrowMcpException(error);
 
         var startPosition = textLines[startLine - 1].Start + startColumn - 1;
         var endPosition = textLines[endLine - 1].Start + endColumn - 1;
@@ -113,30 +101,9 @@ public static class IntroduceParameterTool
         var parameter = SyntaxFactory.Parameter(SyntaxFactory.Identifier(parameterName))
             .WithType(SyntaxFactory.ParseTypeName("object"));
 
-        var invocations = syntaxRoot.DescendantNodes().OfType<InvocationExpressionSyntax>()
-            .Where(i =>
-                (i.Expression is IdentifierNameSyntax id && id.Identifier.ValueText == methodName) ||
-                (i.Expression is MemberAccessExpressionSyntax ma && ma.Name.Identifier.ValueText == methodName))
-            .ToList();
-
-        foreach (var invocation in invocations)
-        {
-            var newArgs = invocation.ArgumentList.AddArguments(SyntaxFactory.Argument(selectedExpression.WithoutTrivia()));
-            syntaxRoot = syntaxRoot.ReplaceNode(invocation, invocation.WithArgumentList(newArgs));
-        }
-
-        method = syntaxRoot.DescendantNodes().OfType<MethodDeclarationSyntax>()
-            .First(m => m.Identifier.ValueText == methodName);
-        selectedExpression = syntaxRoot.DescendantNodes()
-            .OfType<ExpressionSyntax>()
-            .Where(e => span.Contains(e.Span) || e.Span.Contains(span))
-            .OrderBy(e => Math.Abs(e.Span.Length - span.Length))
-            .ThenBy(e => e.Span.Length)
-            .First();
-
-        var newMethod = method.ReplaceNode(selectedExpression, SyntaxFactory.IdentifierName(parameterName))
-            .AddParameterListParameters(parameter);
-        SyntaxNode newRoot = syntaxRoot.ReplaceNode(method, newMethod);
+        var parameterReference = SyntaxFactory.IdentifierName(parameterName);
+        var rewriter = new ParameterIntroductionRewriter(selectedExpression, methodName, parameter, parameterReference);
+        var newRoot = rewriter.Visit(syntaxRoot);
 
         var formattedRoot = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
         return formattedRoot.ToFullString();
@@ -151,12 +118,11 @@ public static class IntroduceParameterTool
     {
         try
         {
-            var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
-            var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
-            if (document != null)
-                return await IntroduceParameterWithSolution(document, methodName, selectionRange, parameterName);
-
-            return await IntroduceParameterSingleFile(filePath, methodName, selectionRange, parameterName);
+            return await RefactoringHelpers.RunWithSolutionOrFile(
+                solutionPath,
+                filePath,
+                doc => IntroduceParameterWithSolution(doc, methodName, selectionRange, parameterName),
+                path => IntroduceParameterSingleFile(path, methodName, selectionRange, parameterName));
         }
         catch (Exception ex)
         {

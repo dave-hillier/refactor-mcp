@@ -6,10 +6,13 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.CodeAnalysis.Editing;
+using System.Linq;
 
 [McpServerToolType]
 public static class IntroduceFieldTool
 {
+    [McpServerTool, Description("Introduce a new field from selected expression (preferred for large C# file refactoring)")]
     public static async Task<string> IntroduceField(
         [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
@@ -19,12 +22,11 @@ public static class IntroduceFieldTool
     {
         try
         {
-            var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
-            var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
-            if (document != null)
-                return await IntroduceFieldWithSolution(document, selectionRange, fieldName, accessModifier);
-
-            return await IntroduceFieldSingleFile(filePath, selectionRange, fieldName, accessModifier);
+            return await RefactoringHelpers.RunWithSolutionOrFile(
+                solutionPath,
+                filePath,
+                doc => IntroduceFieldWithSolution(doc, selectionRange, fieldName, accessModifier),
+                path => IntroduceFieldSingleFile(path, selectionRange, fieldName, accessModifier));
         }
         catch (Exception ex)
         {
@@ -39,6 +41,9 @@ public static class IntroduceFieldTool
 
         if (!RefactoringHelpers.TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
             return RefactoringHelpers.ThrowMcpException("Error: Invalid selection range format");
+
+        if (!RefactoringHelpers.ValidateRange(sourceText, startLine, startColumn, endLine, endColumn, out var error))
+            return RefactoringHelpers.ThrowMcpException(error);
 
         var startPosition = sourceText.Lines[startLine - 1].Start + startColumn - 1;
         var endPosition = sourceText.Lines[endLine - 1].Start + endColumn - 1;
@@ -73,49 +78,54 @@ public static class IntroduceFieldTool
                 .WithInitializer(SyntaxFactory.EqualsValueClause(selectedExpression)))))
             .WithModifiers(SyntaxFactory.TokenList(accessModifierToken));
 
-        // Replace the selected expression with the field reference
         var fieldReference = SyntaxFactory.IdentifierName(fieldName);
-        var newRoot = syntaxRoot.ReplaceNode(selectedExpression, fieldReference);
-
-        // Add the field to the class
         var containingClass = selectedExpression.Ancestors().OfType<ClassDeclarationSyntax>().FirstOrDefault();
         if (containingClass != null)
         {
-            var currentClass = newRoot.DescendantNodes()
-                .OfType<ClassDeclarationSyntax>()
-                .FirstOrDefault(c => c.Identifier.Text == containingClass.Identifier.Text);
-
-            if (currentClass != null)
-            {
-                var updatedClass = currentClass.WithMembers(currentClass.Members.Insert(0, fieldDeclaration));
-                newRoot = newRoot.ReplaceNode(currentClass, updatedClass);
-            }
+            var classSymbol = semanticModel.GetDeclaredSymbol(containingClass);
+            if (classSymbol?.GetMembers().OfType<IFieldSymbol>().Any(f => f.Name == fieldName) == true)
+                return RefactoringHelpers.ThrowMcpException($"Error: Field '{fieldName}' already exists");
         }
+        var rewriter = new FieldIntroductionRewriter(selectedExpression, fieldReference, fieldDeclaration, containingClass);
+        var newRoot = rewriter.Visit(syntaxRoot);
 
         var formattedRoot = Formatter.Format(newRoot, document.Project.Solution.Workspace);
-        var newDocument = document.WithSyntaxRoot(formattedRoot);
+        var editor = await DocumentEditor.CreateAsync(document);
+        editor.ReplaceNode(syntaxRoot, formattedRoot);
+        var newDocument = editor.GetChangedDocument();
         var newText = await newDocument.GetTextAsync();
-        await File.WriteAllTextAsync(document.FilePath!, newText.ToString());
+        var encoding = await RefactoringHelpers.GetFileEncodingAsync(document.FilePath!);
+        await File.WriteAllTextAsync(document.FilePath!, newText.ToString(), encoding);
+        RefactoringHelpers.UpdateSolutionCache(newDocument);
 
         return $"Successfully introduced {accessModifier} field '{fieldName}' from {selectionRange} in {document.FilePath} (solution mode)";
     }
 
-    private static Task<string> IntroduceFieldSingleFile(string filePath, string selectionRange, string fieldName, string accessModifier)
+    private static async Task<string> IntroduceFieldSingleFile(string filePath, string selectionRange, string fieldName, string accessModifier)
     {
-        return RefactoringHelpers.ApplySingleFileEdit(
-            filePath,
-            text => IntroduceFieldInSource(text, selectionRange, fieldName, accessModifier),
-            $"Successfully introduced {accessModifier} field '{fieldName}' from {selectionRange} in {filePath} (single file mode)");
+        if (!File.Exists(filePath))
+            return RefactoringHelpers.ThrowMcpException($"Error: File {filePath} not found");
+
+        var (sourceText, encoding) = await RefactoringHelpers.ReadFileWithEncodingAsync(filePath);
+        var model = await RefactoringHelpers.GetOrCreateSemanticModelAsync(filePath);
+        var newText = IntroduceFieldInSource(sourceText, selectionRange, fieldName, accessModifier, model);
+        await File.WriteAllTextAsync(filePath, newText, encoding);
+        RefactoringHelpers.UpdateFileCaches(filePath, newText);
+        return $"Successfully introduced {accessModifier} field '{fieldName}' from {selectionRange} in {filePath} (single file mode)";
     }
 
-    public static string IntroduceFieldInSource(string sourceText, string selectionRange, string fieldName, string accessModifier)
+    public static string IntroduceFieldInSource(string sourceText, string selectionRange, string fieldName, string accessModifier, SemanticModel? model = null)
     {
-        var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
+        var syntaxTree = model?.SyntaxTree ?? CSharpSyntaxTree.ParseText(sourceText);
         var syntaxRoot = syntaxTree.GetRoot();
-        var textLines = SourceText.From(sourceText).Lines;
+        var text = syntaxTree.GetText();
+        var textLines = text.Lines;
 
         if (!RefactoringHelpers.TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
             return RefactoringHelpers.ThrowMcpException("Error: Invalid selection range format");
+
+        if (!RefactoringHelpers.ValidateRange(text, startLine, startColumn, endLine, endColumn, out var error))
+            return RefactoringHelpers.ThrowMcpException(error);
 
         var startPosition = textLines[startLine - 1].Start + startColumn - 1;
         var endPosition = textLines[endLine - 1].Start + endColumn - 1;
@@ -128,8 +138,13 @@ public static class IntroduceFieldTool
         if (selectedExpression == null)
             return RefactoringHelpers.ThrowMcpException("Error: Selected code is not a valid expression");
 
-        // In single file mode, use 'var' for type since we don't have semantic analysis
         var typeName = "var";
+        if (model != null)
+        {
+            var typeInfo = model.GetTypeInfo(selectedExpression);
+            if (typeInfo.Type != null)
+                typeName = typeInfo.Type.ToDisplayString();
+        }
 
         // Create the field declaration
         var accessModifierToken = accessModifier.ToLower() switch
@@ -148,18 +163,19 @@ public static class IntroduceFieldTool
                 .WithInitializer(SyntaxFactory.EqualsValueClause(selectedExpression)))))
             .WithModifiers(SyntaxFactory.TokenList(accessModifierToken));
 
-        // Replace the selected expression with the field reference
         var fieldReference = SyntaxFactory.IdentifierName(fieldName);
-        var newRoot = syntaxRoot.ReplaceNode(selectedExpression, fieldReference);
-
-        // Add the field to the class
         var containingClass = selectedExpression.Ancestors().OfType<ClassDeclarationSyntax>().FirstOrDefault();
         if (containingClass != null)
         {
-            var updatedClass = containingClass.WithMembers(
-                containingClass.Members.Insert(0, fieldDeclaration));
-            newRoot = newRoot.ReplaceNode(containingClass, updatedClass);
+            var exists = containingClass.Members
+                .OfType<FieldDeclarationSyntax>()
+                .SelectMany(f => f.Declaration.Variables)
+                .Any(v => v.Identifier.ValueText == fieldName);
+            if (exists)
+                return RefactoringHelpers.ThrowMcpException($"Error: Field '{fieldName}' already exists");
         }
+        var rewriter = new FieldIntroductionRewriter(selectedExpression, fieldReference, fieldDeclaration, containingClass);
+        var newRoot = rewriter.Visit(syntaxRoot);
 
         var formattedRoot = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
         return formattedRoot.ToFullString();

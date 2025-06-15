@@ -10,6 +10,7 @@ using Microsoft.CodeAnalysis.Text;
 [McpServerToolType]
 public static class ExtractMethodTool
 {
+    [McpServerTool, Description("Extract a code block into a new method (preferred for large C# file refactoring)")]
     public static async Task<string> ExtractMethod(
         [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
@@ -18,12 +19,11 @@ public static class ExtractMethodTool
     {
         try
         {
-            var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
-            var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
-            if (document != null)
-                return await ExtractMethodWithSolution(document, selectionRange, methodName);
-
-            return await ExtractMethodSingleFile(filePath, selectionRange, methodName);
+            return await RefactoringHelpers.RunWithSolutionOrFile(
+                solutionPath,
+                filePath,
+                doc => ExtractMethodWithSolution(doc, selectionRange, methodName),
+                path => ExtractMethodSingleFile(path, selectionRange, methodName));
         }
         catch (Exception ex)
         {
@@ -38,6 +38,9 @@ public static class ExtractMethodTool
 
         if (!RefactoringHelpers.TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
             return RefactoringHelpers.ThrowMcpException("Error: Invalid selection range format. Use 'startLine:startColumn-endLine:endColumn'");
+
+        if (!RefactoringHelpers.ValidateRange(sourceText, startLine, startColumn, endLine, endColumn, out var error))
+            return RefactoringHelpers.ThrowMcpException(error);
 
         var startPosition = sourceText.Lines[startLine - 1].Start + startColumn - 1;
         var endPosition = sourceText.Lines[endLine - 1].Start + endColumn - 1;
@@ -61,39 +64,18 @@ public static class ExtractMethodTool
         if (!statementsToExtract.Any())
             return RefactoringHelpers.ThrowMcpException("Error: Selected code does not contain extractable statements");
 
-        // Create the new method
-        var newMethod = SyntaxFactory.MethodDeclaration(
-            SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.VoidKeyword)),
-            methodName)
-            .WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PrivateKeyword)))
-            .WithBody(SyntaxFactory.Block(statementsToExtract));
-
-        // Replace selected statements with method call
-        var methodCall = SyntaxFactory.ExpressionStatement(
-            SyntaxFactory.InvocationExpression(
-                SyntaxFactory.IdentifierName(methodName)));
-
-        var methodBody = containingMethod.Body!;
-        var updatedBody = methodBody.ReplaceNode(statementsToExtract.First(), methodCall);
-        foreach (var statement in statementsToExtract.Skip(1))
-            updatedBody = updatedBody.RemoveNode(statement, SyntaxRemoveOptions.KeepNoTrivia);
-        var updatedMethod = containingMethod.WithBody(updatedBody);
-
         var containingClass = containingMethod.Ancestors().OfType<ClassDeclarationSyntax>().FirstOrDefault();
-        SyntaxNode newRoot = syntaxRoot;
-        if (containingClass != null)
-        {
-            var classWithUpdatedMethod = containingClass.ReplaceNode(containingMethod, updatedMethod);
-            var updatedClass = classWithUpdatedMethod.AddMembers(newMethod);
-            newRoot = syntaxRoot.ReplaceNode(containingClass, updatedClass);
-        }
+        var rewriter = new ExtractMethodRewriter(containingMethod, containingClass, statementsToExtract, methodName);
+        var newRoot = rewriter.Visit(syntaxRoot);
 
         var formattedRoot = Formatter.Format(newRoot!, document.Project.Solution.Workspace);
         var newDocument = document.WithSyntaxRoot(formattedRoot);
 
         // Write the changes back to the file
         var newText = await newDocument.GetTextAsync();
-        await File.WriteAllTextAsync(document.FilePath!, newText.ToString());
+        var encoding = await RefactoringHelpers.GetFileEncodingAsync(document.FilePath!);
+        await File.WriteAllTextAsync(document.FilePath!, newText.ToString(), encoding);
+        RefactoringHelpers.UpdateSolutionCache(newDocument);
 
         return $"Successfully extracted method '{methodName}' from {selectionRange} in {document.FilePath} (solution mode)";
     }
@@ -110,10 +92,14 @@ public static class ExtractMethodTool
     {
         var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
         var syntaxRoot = syntaxTree.GetRoot();
-        var textLines = SourceText.From(sourceText).Lines;
+        var text = SourceText.From(sourceText);
+        var textLines = text.Lines;
 
         if (!RefactoringHelpers.TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
             return RefactoringHelpers.ThrowMcpException("Error: Invalid selection range format. Use 'startLine:startColumn-endLine:endColumn'");
+
+        if (!RefactoringHelpers.ValidateRange(text, startLine, startColumn, endLine, endColumn, out var error))
+            return RefactoringHelpers.ThrowMcpException(error);
 
         var startPosition = textLines[startLine - 1].Start + startColumn - 1;
         var endPosition = textLines[endLine - 1].Start + endColumn - 1;
@@ -137,32 +123,9 @@ public static class ExtractMethodTool
         if (!statementsToExtract.Any())
             return RefactoringHelpers.ThrowMcpException("Error: Selected code does not contain extractable statements");
 
-        // Create the new method
-        var newMethod = SyntaxFactory.MethodDeclaration(
-            SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.VoidKeyword)),
-            methodName)
-            .WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PrivateKeyword)))
-            .WithBody(SyntaxFactory.Block(statementsToExtract));
-
-        // Replace selected statements with method call
-        var methodCall = SyntaxFactory.ExpressionStatement(
-            SyntaxFactory.InvocationExpression(
-                SyntaxFactory.IdentifierName(methodName)));
-
-        var methodBody = containingMethod.Body!;
-        var updatedBody = methodBody.ReplaceNode(statementsToExtract.First(), methodCall);
-        foreach (var statement in statementsToExtract.Skip(1))
-            updatedBody = updatedBody.RemoveNode(statement, SyntaxRemoveOptions.KeepNoTrivia);
-        var updatedMethod = containingMethod.WithBody(updatedBody);
-
         var containingClass = containingMethod.Ancestors().OfType<ClassDeclarationSyntax>().FirstOrDefault();
-        SyntaxNode newRoot = syntaxRoot;
-        if (containingClass != null)
-        {
-            var classWithUpdatedMethod = containingClass.ReplaceNode(containingMethod, updatedMethod);
-            var updatedClass = classWithUpdatedMethod.AddMembers(newMethod);
-            newRoot = syntaxRoot.ReplaceNode(containingClass, updatedClass);
-        }
+        var rewriter = new ExtractMethodRewriter(containingMethod, containingClass, statementsToExtract, methodName);
+        var newRoot = rewriter.Visit(syntaxRoot);
 
         var formattedRoot = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
         return formattedRoot.ToFullString();

@@ -432,3 +432,4 @@ $RECYCLE.BIN/
 runtimes/
 BuildHost-net472/
 BuildHost-netcore/ 
+TestOutput/codeMetricsCache.json

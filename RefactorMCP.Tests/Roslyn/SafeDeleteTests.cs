@@ -1,4 +1,8 @@
 using Xunit;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Formatting;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace RefactorMCP.Tests;
 
@@ -77,4 +81,5 @@ public partial class RoslynTransformationTests
         var output = SafeDeleteTool.SafeDeleteVariableInSource(input, "5:9-5:30");
         Assert.Equal(expected, output.Trim());
     }
+
 }

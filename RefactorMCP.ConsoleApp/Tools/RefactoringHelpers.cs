@@ -2,20 +2,57 @@ using ModelContextProtocol.Server;
 using ModelContextProtocol;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.MSBuild;
+using Microsoft.Build.Locator;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.CodeAnalysis.CSharp;
 using System;
 using System.IO;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Linq;
+using Microsoft.CodeAnalysis.Text;
+using System.Text;
+using Microsoft.CodeAnalysis.Host.Mef;
+using System.Collections.Generic;
 
 
 
 internal static class RefactoringHelpers
 {
+    // MemoryCache is thread-safe and Solution objects from Roslyn are immutable.
+    // This allows us to store and access Solution instances across threads
+    // without additional locking or synchronization.
     internal static MemoryCache SolutionCache = new(new MemoryCacheOptions());
+    internal static MemoryCache SyntaxTreeCache = new(new MemoryCacheOptions());
+    internal static MemoryCache ModelCache = new(new MemoryCacheOptions());
 
     private static readonly Lazy<AdhocWorkspace> _workspace =
         new(() => new AdhocWorkspace());
 
+    private static bool _msbuildRegistered;
+    private static readonly object _msbuildLock = new();
+
     internal static AdhocWorkspace SharedWorkspace => _workspace.Value;
+
+    private static void EnsureMsBuildRegistered()
+    {
+        if (_msbuildRegistered) return;
+        lock (_msbuildLock)
+        {
+            if (_msbuildRegistered) return;
+            MSBuildLocator.RegisterDefaults();
+            _msbuildRegistered = true;
+        }
+    }
+
+    internal static MSBuildWorkspace CreateWorkspace()
+    {
+        EnsureMsBuildRegistered();
+        var host = MefHostServices.Create(MSBuildMefHostServices.DefaultAssemblies);
+        var workspace = MSBuildWorkspace.Create(host);
+        workspace.WorkspaceFailed += (_, e) =>
+            Console.Error.WriteLine(e.Diagnostic.Message);
+        return workspace;
+    }
 
     internal static async Task<Solution> GetOrLoadSolution(string solutionPath)
     {
@@ -25,11 +62,22 @@ internal static class RefactoringHelpers
             Directory.SetCurrentDirectory(Path.GetDirectoryName(solutionPath)!);
             return cachedSolution!;
         }
-        using var workspace = MSBuildWorkspace.Create();
+        using var workspace = CreateWorkspace();
         var solution = await workspace.OpenSolutionAsync(solutionPath);
         SolutionCache.Set(solutionPath, solution);
         Directory.SetCurrentDirectory(Path.GetDirectoryName(solutionPath)!);
         return solution;
+    }
+
+    // Solutions are immutable, so replacing the cached instance is safe even
+    // when accessed concurrently by multiple threads.
+    internal static void UpdateSolutionCache(Document updatedDocument)
+    {
+        var solutionPath = updatedDocument.Project.Solution.FilePath;
+        if (!string.IsNullOrEmpty(solutionPath))
+        {
+            SolutionCache.Set(solutionPath!, updatedDocument.Project.Solution);
+        }
     }
 
     internal static Document? GetDocumentByPath(Solution solution, string filePath)
@@ -54,6 +102,33 @@ internal static class RefactoringHelpers
                int.TryParse(endParts[1], out endColumn);
     }
 
+    internal static bool ValidateRange(
+        SourceText text,
+        int startLine,
+        int startColumn,
+        int endLine,
+        int endColumn,
+        out string error)
+    {
+        error = string.Empty;
+        if (startLine <= 0 || startColumn <= 0 || endLine <= 0 || endColumn <= 0)
+        {
+            error = "Error: Range values must be positive";
+            return false;
+        }
+        if (startLine > endLine || (startLine == endLine && startColumn >= endColumn))
+        {
+            error = "Error: Range start must precede end";
+            return false;
+        }
+        if (startLine > text.Lines.Count || endLine > text.Lines.Count)
+        {
+            error = "Error: Range exceeds file length";
+            return false;
+        }
+        return true;
+    }
+
     internal static string ThrowMcpException(string message)
     {
         throw new McpException(message);
@@ -67,9 +142,145 @@ internal static class RefactoringHelpers
         if (!File.Exists(filePath))
             return ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
 
-        var sourceText = await File.ReadAllTextAsync(filePath);
+        var (sourceText, encoding) = await ReadFileWithEncodingAsync(filePath);
         var newText = transform(sourceText);
-        await File.WriteAllTextAsync(filePath, newText);
+        await File.WriteAllTextAsync(filePath, newText, encoding);
+        UpdateFileCaches(filePath, newText);
         return successMessage;
+    }
+
+    internal static async Task<Document?> FindClassInSolution(
+        Solution solution,
+        string className,
+        params string[]? excludingFilePaths)
+    {
+        foreach (var doc in solution.Projects.SelectMany(p => p.Documents))
+        {
+            var docPath = doc.FilePath ?? string.Empty;
+            if (excludingFilePaths != null && excludingFilePaths.Any(p => Path.GetFullPath(docPath) == Path.GetFullPath(p)))
+                continue;
+
+            var root = await doc.GetSyntaxRootAsync();
+            if (root != null && root.DescendantNodes().OfType<ClassDeclarationSyntax>()
+                    .Any(c => c.Identifier.Text == className))
+            {
+                return doc;
+            }
+        }
+
+        return null;
+    }
+
+    internal static void AddDocumentToProject(Project project, string filePath)
+    {
+        if (project.Documents.Any(d =>
+                Path.GetFullPath(d.FilePath ?? "") == Path.GetFullPath(filePath)))
+            return;
+
+        var text = SourceText.From(File.ReadAllText(filePath));
+        var newDoc = project.AddDocument(Path.GetFileName(filePath), text, filePath: filePath);
+
+        var solutionPath = project.Solution.FilePath;
+        if (!string.IsNullOrEmpty(solutionPath))
+        {
+            SolutionCache.Set(solutionPath!, newDoc.Project.Solution);
+        }
+    }
+
+    private static CSharpCompilation CreateCompilation(SyntaxTree tree)
+    {
+        var refs = ((string?)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES")!)
+            .Split(Path.PathSeparator)
+            .Select(p => MetadataReference.CreateFromFile(p));
+        return CSharpCompilation.Create(
+            "SingleFile",
+            new[] { tree },
+            refs,
+            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+    }
+
+    internal static async Task<SyntaxTree> GetOrParseSyntaxTreeAsync(string filePath)
+    {
+        if (SyntaxTreeCache.TryGetValue(filePath, out SyntaxTree? cached))
+            return cached!;
+        var (text, _) = await ReadFileWithEncodingAsync(filePath);
+        var tree = CSharpSyntaxTree.ParseText(text);
+        SyntaxTreeCache.Set(filePath, tree);
+        return tree;
+    }
+
+    internal static async Task<SemanticModel> GetOrCreateSemanticModelAsync(string filePath)
+    {
+        if (ModelCache.TryGetValue(filePath, out SemanticModel? cached))
+            return cached!;
+        var tree = await GetOrParseSyntaxTreeAsync(filePath);
+        var compilation = CreateCompilation(tree);
+        var model = compilation.GetSemanticModel(tree);
+        ModelCache.Set(filePath, model);
+        return model;
+    }
+
+    internal static void UpdateFileCaches(string filePath, string newText)
+    {
+        var tree = CSharpSyntaxTree.ParseText(newText);
+        SyntaxTreeCache.Set(filePath, tree);
+        var compilation = CreateCompilation(tree);
+        var model = compilation.GetSemanticModel(tree);
+        ModelCache.Set(filePath, model);
+    }
+
+    internal static async Task<(string Text, Encoding Encoding)> ReadFileWithEncodingAsync(string filePath)
+    {
+        var bytes = await File.ReadAllBytesAsync(filePath);
+        var encoding = DetectEncoding(bytes);
+        var text = encoding.GetString(bytes);
+        return (text, encoding);
+    }
+
+    internal static async Task<Encoding> GetFileEncodingAsync(string filePath)
+    {
+        var bytes = await File.ReadAllBytesAsync(filePath);
+        return DetectEncoding(bytes);
+    }
+
+    private static Encoding DetectEncoding(byte[] bytes)
+    {
+        if (bytes.Length >= 4)
+        {
+            if (bytes[0] == 0x00 && bytes[1] == 0x00 && bytes[2] == 0xFE && bytes[3] == 0xFF)
+                return new UTF32Encoding(true, true);
+            if (bytes[0] == 0xFF && bytes[1] == 0xFE && bytes[2] == 0x00 && bytes[3] == 0x00)
+                return new UTF32Encoding(false, true);
+        }
+        if (bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF)
+            return Encoding.UTF8;
+        if (bytes.Length >= 2)
+        {
+            if (bytes[0] == 0xFE && bytes[1] == 0xFF)
+                return Encoding.BigEndianUnicode;
+            if (bytes[0] == 0xFF && bytes[1] == 0xFE)
+                return Encoding.Unicode;
+        }
+        return Encoding.UTF8;
+    }
+
+    internal static async Task WriteFileWithEncodingAsync(string filePath, string text, Encoding encoding)
+    {
+        await File.WriteAllTextAsync(filePath, text, encoding);
+        UpdateFileCaches(filePath, text);
+    }
+
+    internal static async Task<string> RunWithSolutionOrFile(
+        string solutionPath,
+        string filePath,
+        Func<Document, Task<string>> withSolution,
+        Func<string, Task<string>> singleFile)
+    {
+        var solution = await GetOrLoadSolution(solutionPath);
+        var document = GetDocumentByPath(solution, filePath);
+        if (document != null)
+            return await withSolution(document);
+
+        return await singleFile(filePath);
     }
 }
