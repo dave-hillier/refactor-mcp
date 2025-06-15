@@ -99,6 +99,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli introduce-field \
   "_averageValue" \
   "private"
 ```
+If a field named `_averageValue` already exists on the `Calculator` class, the command will fail with an error.
 
 **After**:
 ```csharp
@@ -336,6 +337,7 @@ public class MathUtilities
     }
 }
 ```
+The original method remains in `ExampleCode.cs` as a wrapper that forwards to `MathUtilities.FormatCurrency`.
 
 ## 10. Move Multiple Methods
 
@@ -358,7 +360,25 @@ class Target { }
 dotnet run --project RefactorMCP.ConsoleApp -- --cli move-multiple-methods \
   "./RefactorMCP.sln" \
   "./RefactorMCP.Tests/ExampleCode.cs" \
-  "[{\"sourceClass\":\"Helper\",\"method\":\"A\",\"targetClass\":\"Target\",\"accessMember\":\"t\",\"accessMemberType\":\"field\"},{\"sourceClass\":\"Helper\",\"method\":\"B\",\"targetClass\":\"Target\",\"accessMember\":\"t\",\"accessMemberType\":\"field\"}]"
+  Helper \
+  "A,B" \
+  Target \
+  t field \
+  "./Target.cs"
+```
+
+### Cross-file Example
+Move methods to a separate file using the `targetFile` property or by passing a default path:
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli move-multiple-methods \
+  "./RefactorMCP.sln" \
+  "./RefactorMCP.Tests/ExampleCode.cs" \
+  Helper \
+  A \
+  Target \
+  t field \
+  "./Target.cs"
 ```
 
 **After**:
@@ -391,8 +411,57 @@ class Target
     }
 }
 ```
+Each moved method in `Helper` now delegates to the corresponding method on `Target`, preserving the original public interface.
 
-## 11. Inline Method
+## 11. Batch Move Methods
+
+**Purpose**: Move several methods at once using a JSON description. This supersedes the older move commands.
+
+### Example
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli batch-move-methods \
+  "./RefactorMCP.sln" \
+  "./RefactorMCP.Tests/ExampleCode.cs" \
+  "[{\"SourceClass\":\"Helper\",\"Method\":\"A\",\"TargetClass\":\"Target\",\"AccessMember\":\"t\"}]"
+```
+
+## 12. Move Class to Separate File
+
+**Purpose**: Move a class into its own file named after the class.
+
+### Example
+**Before**:
+```csharp
+public class Logger
+{
+    public void Log(string message)
+    {
+        Console.WriteLine($"[LOG] {message}");
+    }
+}
+```
+
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli move-to-separate-file \
+  "./RefactorMCP.sln" \
+  "./RefactorMCP.Tests/ExampleCode.cs" \
+  Logger
+```
+
+**After**:
+```csharp
+// Logger.cs
+public class Logger
+{
+    public void Log(string message)
+    {
+        Console.WriteLine($"[LOG] {message}");
+    }
+}
+```
+
+## 12. Inline Method
 
 **Purpose**: Replace method calls with the method body and remove the original method.
 
@@ -457,6 +526,52 @@ public int Multiply(int x, int y)
 }
 ```
 
+## 12. Transform Setter to Init
+
+**Purpose**: Convert a property setter to an init-only setter.
+
+### Example
+**Before** (in `ExampleCode.cs` line 60):
+```csharp
+public string Name { get; set; } = "Default Calculator";
+```
+
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli transform-setter-to-init \
+  "./RefactorMCP.sln" \
+  "./RefactorMCP.Tests/ExampleCode.cs" \
+  Name
+```
+
+**After**:
+```csharp
+public string Name { get; init; } = "Default Calculator";
+```
+
+## 13. Safe Delete Field
+
+**Purpose**: Remove an unused field from a class.
+
+### Example
+**Before** (in `ExampleCode.cs` line 88):
+```csharp
+private int deprecatedCounter = 0; // Not used anywhere
+```
+
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli safe-delete-field \
+  "./RefactorMCP.sln" \
+  "./RefactorMCP.Tests/ExampleCode.cs" \
+  deprecatedCounter
+```
+
+**After**:
+```csharp
+// Field 'deprecatedCounter' removed from Calculator class
+```
+
 ## 12. Cleanup Usings
 
 **Purpose**: Remove unused using directives from a file.
@@ -476,7 +591,8 @@ public class CleanupSample
 **Command**:
 ```bash
 dotnet run --project RefactorMCP.ConsoleApp -- --cli cleanup-usings \
-  "./CleanupSample.cs" "./RefactorMCP.sln"
+  "./RefactorMCP.sln" \
+  "./CleanupSample.cs"
 ```
 
 **After**:
@@ -554,13 +670,13 @@ extract-method - Extract selected code into a new method
 introduce-field - Create a new field from selected code
 introduce-variable - Create a new variable from selected code
 make-field-readonly - Make a field readonly and move initialization to constructors
-introduce-parameter - Create a new parameter from selected code (TODO)
-convert-to-static-with-parameters - Transform instance method to static (TODO)
-convert-to-static-with-instance - Transform instance method to static with instance parameter (TODO)
+introduce-parameter - Create a new parameter from selected code
+convert-to-static-with-parameters - Transform instance method to static
+convert-to-static-with-instance - Transform instance method to static with instance parameter
 move-static-method - Move a static method to another class
 move-instance-method - Move an instance method to another class
-transform-setter-to-init - Convert property setter to init-only setter (TODO)
-safe-delete - Safely delete a field, parameter, or variable (TODO)
+transform-setter-to-init - Convert property setter to init-only setter
+safe-delete - Safely delete a field, parameter, or variable
 
 ```
 
@@ -594,6 +710,63 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli analyze-refactoring-opportu
 Suggestions:
 - Method 'UnusedHelper' appears unused -> safe-delete-method
 - Field 'deprecatedCounter' appears unused -> safe-delete-field
+```
+
+## 14. List Class Lengths
+
+**Purpose**: Display each class in the solution with its number of lines as a simple complexity metric.
+
+### Example
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli list-class-lengths "./RefactorMCP.sln"
+```
+
+**Expected Output**:
+```
+Class lengths:
+Calculator - 82 lines
+MathUtilities - 4 lines
+Logger - 8 lines
+```
+
+## 15. Extract Interface
+
+**Purpose**: Generate an interface from specific class members.
+
+### Example
+**Before**:
+```csharp
+public class Person
+{
+    public string Name { get; set; }
+    public void Greet() { Console.WriteLine(Name); }
+}
+```
+
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli extract-interface \
+  "./RefactorMCP.sln" \
+  "./RefactorMCP.Tests/ExampleCode.cs" \
+  Person \
+  "Name,Greet" \
+  "./IPerson.cs"
+```
+
+**After**:
+```csharp
+public interface IPerson
+{
+    string Name { get; set; }
+    void Greet();
+}
+
+public class Person : IPerson
+{
+    public string Name { get; set; }
+    public void Greet() { Console.WriteLine(Name); }
+}
 ```
 
 ## Range Format

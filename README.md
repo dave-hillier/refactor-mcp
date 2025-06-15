@@ -8,6 +8,7 @@ A Model Context Protocol (MCP) server providing automated refactoring tools for 
 - **Single File Helpers**: In-memory transformations used for unit tests
 - **Comprehensive Refactoring Tools**: Extract methods, introduce variables/fields, make fields readonly, convert methods to extension methods, and more
 - **Analysis Prompt**: Inspect code for long methods, large classes, long parameter lists, unused methods or fields
+- **Class Length Metrics**: List classes in a solution with their line counts
 - **MCP Compatible**: Works with any MCP-compatible client
 - **Preferred for Large Files**: Invoking these tools via MCP is recommended for large code files
 - **VS Code Extension**: Invoke refactoring tools directly from the editor
@@ -24,7 +25,8 @@ All CLI tools require an absolute path to a solution file. The working directory
 
 **Use solution mode for:**
 - Move Method operations
-- Convert to Static (requires dependency analysis)  
+- Move class to separate file
+- Convert to Static (requires dependency analysis)
 - Convert to Extension Method (for instance methods)
 - Safe Delete (requires usage analysis)
 - Any refactoring requiring cross-references
@@ -75,7 +77,7 @@ Add the following configuration to your `mcp.json` file:
       "args": [
         "run"
       ],
-      "cwd": "/Users/davidhillier/repos/RefactorMCP/RefactorMCP.ConsoleApp"
+      "cwd": "/path/to/RefactorMCP/RefactorMCP.ConsoleApp"
     }
   }
 }
@@ -93,9 +95,9 @@ Replace the paths with your actual installation directory:
       "args": [
         "run",
         "--project",
-        "/Users/username/repos/RefactorMCP/RefactorMCP.ConsoleApp"
+        "/path/to/RefactorMCP/RefactorMCP.ConsoleApp"
       ],
-      "cwd": "/Users/username/repos/RefactorMCP"
+      "cwd": "/path/to/RefactorMCP"
     }
   }
 }
@@ -129,9 +131,9 @@ After configuring, restart your MCP client. The RefactorMCP tools should be avai
 - `introduce_field` - Create fields from expressions
 - `introduce_variable` - Create variables from expressions
 - `make_field_readonly` - Convert fields to readonly
-- `convert_to_extension_method` - Transform instance methods into extension methods
+- `convert_to_extension_method` - Transform instance methods into extension methods while leaving a wrapper call in the original class
 - `convert_to_static` - Transform methods to static
-- `move_method` - Relocate methods between classes
+- `move_method` - Relocate methods between classes. A delegating wrapper remains so existing callers continue to compile
 - `safe_delete` - Remove unused code safely
 - `transform_property` - Convert setters to init-only
 
@@ -166,27 +168,31 @@ dotnet run --project RefactorMCP.ConsoleApp -- --json ToolName '{"param":"value"
 - `list-tools` - Show all available refactoring tools
 - `load-solution <solutionPath>` - Load a solution file and set the working directory
 - `extract-method <solutionPath> <filePath> <range> <methodName>` - Extract code into method
-- `introduce-field <solutionPath> <filePath> <range> <fieldName> [accessModifier]` - Create field from expression
+- `introduce-field <solutionPath> <filePath> <range> <fieldName> [accessModifier]` - Create field from expression. Fails if a field with the same name already exists
 - `introduce-variable <solutionPath> <filePath> <range> <variableName>` - Create variable from expression
-- `make-field-readonly <solutionPath> <filePath> <fieldName>` - Make field readonly
-- `unload-solution <solutionPath>` - Remove a solution from cache
-- `clear-solution-cache` - Clear all cached solutions
-- `convert-to-extension-method <solutionPath> <filePath> <methodName>` - Convert instance method to extension method
-- `convert-to-static-with-parameters <solutionPath> <filePath> <methodName>` - Convert instance method to static with parameters
-- `convert-to-static-with-instance <solutionPath> <filePath> <methodName> [instanceName]` - Convert instance method to static with explicit instance
-- `introduce-parameter <solutionPath> <filePath> <methodName> <range> <parameterName>` - Create parameter from expression
-- `move-static-method <solutionPath> <filePath> <methodName> <targetClass> [targetFile]` - Move a static method to another class
-- `inline-method <solutionPath> <filePath> <methodName>` - Inline a method
-- `move-instance-method <solutionPath> <filePath> <sourceClass> <methodName> <targetClass> <accessMember> [memberType] [targetFile]` - Move an instance method to another class
-- `transform-setter-to-init <solutionPath> <filePath> <propertyName>` - Convert property setter to init-only
-- `safe-delete-field <solutionPath> <filePath> <fieldName>` - Remove unused field
-- `safe-delete-method <solutionPath> <filePath> <methodName>` - Remove unused method
-- `safe-delete-parameter <solutionPath> <filePath> <methodName> <parameterName>` - Remove unused parameter
-- `safe-delete-variable <solutionPath> <filePath> <range>` - Remove unused variable
-- `move-multiple-methods <solutionPath> <filePath> <operationsJson>` - Move multiple methods described by JSON
-- `cleanup-usings <solutionPath> <filePath>` - Remove unused using directives
-- `analyze-refactoring-opportunities <solutionPath> <filePath>` - Prompt for refactoring suggestions
+- `make-field-readonly <solutionPath> <filePath> <fieldLine>` - Make field readonly
+- `introduce-parameter <solutionPath> <filePath> <methodLine> <range> <parameterName>` - Create parameter from expression
+- `convert-to-static-with-parameters <solutionPath> <filePath> <methodLine>` - Convert instance method to static with parameters
+- `convert-to-static-with-instance <solutionPath> <filePath> <methodLine> [instanceName]` - Convert instance method to static with explicit instance
+- `move-static-method <solutionPath> <filePath> <methodName> <targetClass> [targetFilePath]` - Move a static method to another class
+- `move-instance-method <solutionPath> <filePath> <sourceClass> <methodNames> <targetClass> <accessMember> [memberType] [targetFilePath]` - Move one or more instance methods (comma separated names) to another class. Newly created access fields are marked `readonly` and won't duplicate existing members
+- `move-multiple-methods <solutionPath> <filePath> <sourceClass> <methodNames> <targetClass> <accessMember> [memberType] [targetFilePath]` - Move multiple methods from one class to another. Accepts comma separated `methodNames`. The older JSON form is still supported for backward compatibility
+- `batch-move-methods <solutionPath> <filePath> <operationsJson> [defaultTargetFile]` - Move many methods in a single batch using JSON operations
+- `move-multiple-methods <solutionPath> <filePath> <sourceClass> <methodNames> <targetClass> <accessMember> [memberType] [targetFilePath]` - Move multiple methods from one class to another. Accepts comma separated `methodNames`.
+- Each method move is described by a `MoveOperation` object with these properties:
+  `SourceClass`, `Method`, `TargetClass`, `AccessMember`, `AccessMemberType`,
+  `IsStatic`, and an optional `TargetFile`.
+- `cleanup-usings [solutionPath] <filePath>` - Remove unused using directives
+- `move-static-method <solutionPath> <filePath> <methodName> <targetClass> [targetFilePath]` - Move a static method to another class. A placeholder wrapper is left behind to delegate to the new location
+- `move-instance-method <solutionPath> <filePath> <sourceClass> <methodNames> <targetClass> <accessMember> [memberType] [targetFilePath]` - Move one or more instance methods to another class. Wrapper methods remain in the original class so existing callers continue to work
+- `move-multiple-methods <solutionPath> <filePath> <sourceClass> <methodNames> <targetClass> <accessMember> [memberType] [targetFilePath]` - Move multiple methods from one class to another. Each method leaves a delegating wrapper behind. Accepts comma separated `methodNames`. The older JSON form is still supported for backward compatibility
+- `cleanup-usings [solutionPath] <filePath>` - Remove unused using directives
+- `rename-symbol <solutionPath> <filePath> <oldName> <newName> [line] [column]` - Rename a symbol across the solution
+- `extract-interface <solutionPath> <filePath> <className> <memberNames> <interfacePath>` - Generate an interface from specified members
 - `version` - Show build version and timestamp
+- `analyze-refactoring-opportunities <solutionPath> <filePath>` - Prompt for refactoring suggestions (long methods, long parameter lists, unused code)
+- `list-class-lengths <solutionPath>` - Prompt for class names and line counts
+- `code-metrics <solutionPath> <filePath>` - Output metrics for classes and methods (results cached to disk)
 
 #### Quick Start Example
 
@@ -216,6 +222,11 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli convert-to-extension-method
 The original instance method remains in the class as a thin wrapper that
 invokes the generated extension method, ensuring existing call sites keep
 working.
+
+### Metrics Cache
+
+`code-metrics` stores results in `codeMetricsCache.json` under the current working directory. Repeated calls with the same
+solution and file paths return the cached JSON without recomputing. Delete this file to reset the cache.
 
 ## Range Format
 
@@ -285,6 +296,8 @@ public double GetAverage()
 dotnet run --project RefactorMCP.ConsoleApp -- --cli introduce-field \
   "./RefactorMCP.sln" "./MyFile.cs" "3:12-3:54" "_averageValue" "private"
 ```
+The specified field name must be unique within the class. If a field with the
+same name already exists, the tool returns an error.
 
 **After**:
 ```csharp
@@ -381,7 +394,10 @@ public int Multiply(int x, int y, int unusedParam)
 **Command**:
 ```bash
 dotnet run --project RefactorMCP.ConsoleApp -- --cli safe-delete-parameter \
-  "./RefactorMCP.Tests/ExampleCode.cs" "Multiply" "unusedParam" "./RefactorMCP.sln"
+  "./RefactorMCP.sln" \
+  "./RefactorMCP.Tests/ExampleCode.cs" \
+  "Multiply" \
+  "unusedParam"
 ```
 
 **After**:
@@ -421,6 +437,7 @@ public class MathUtilities
     }
 }
 ```
+The original `FormatCurrency` method remains in the source file as a wrapper that calls `MathUtilities.FormatCurrency`.
 
 ### 8. Inline Method
 
@@ -469,7 +486,8 @@ public class Sample
 **Command**:
 ```bash
 dotnet run --project RefactorMCP.ConsoleApp -- --cli cleanup-usings \
-  "./RefactorMCP.Tests/ExampleCode.cs" "./RefactorMCP.sln"
+  "./RefactorMCP.sln" \
+  "./RefactorMCP.Tests/ExampleCode.cs"
 ```
 
 **After**:
@@ -480,6 +498,50 @@ public class Sample
 {
     public void Say() => Console.WriteLine("Hi");
 }
+```
+
+### 10. Move Class to Separate File
+
+**Before**:
+```csharp
+public class Logger
+{
+    public void Log(string message)
+    {
+        Console.WriteLine($"[LOG] {message}");
+    }
+}
+```
+
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli move-to-separate-file \
+  "./RefactorMCP.sln" \
+  "./RefactorMCP.Tests/ExampleCode.cs" \
+  Logger
+```
+
+**After**:
+```csharp
+// Logger.cs
+public class Logger
+{
+    public void Log(string message)
+    {
+        Console.WriteLine($"[LOG] {message}");
+    }
+}
+```
+
+### 11. Rename Symbol
+
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli rename-symbol \
+  "./RefactorMCP.sln" \
+  "./RefactorMCP.Tests/ExampleCode.cs" \
+  numbers \
+  values
 ```
 
 ## Complete Examples

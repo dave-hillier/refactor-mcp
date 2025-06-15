@@ -43,9 +43,10 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli introduce-field \
   "./RefactorMCP.sln" \
   "./path/to/file.cs" \
   "startLine:startCol-endLine:endCol" \
-  "fieldName" \
-  "private"
+"fieldName" \
+"private"
 ```
+The field name must not already exist on the target type.
 
 ### Introduce Variable
 ```bash
@@ -71,6 +72,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli convert-to-extension-method
   "./path/to/file.cs" \
   methodName
 ```
+The original method remains and calls the extension method so the interface stays the same.
 
 ### Analyze Refactoring Opportunities
 ```bash
@@ -79,6 +81,13 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli analyze-refactoring-opportu
   "./RefactorMCP.sln"
 ```
 Prompt the server to analyze the file and suggest possible refactorings such as extract-method or safe-delete-method.
+
+### List Class Lengths
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli list-class-lengths \
+  "./RefactorMCP.sln"
+```
+Show each class in the solution with its line count for complexity insight.
 
 ### Safe Delete Parameter
 ```bash
@@ -125,6 +134,17 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli move-static-method \
   TargetClass \
   "./optional/target.cs"
 ```
+Leaves a delegating method in the original class so existing calls still work.
+
+### Extract Interface
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli extract-interface \
+  "./RefactorMCP.sln" \
+  "./path/to/file.cs" \
+  ClassName \
+  "Foo,Bar" \
+  "./IClassName.cs"
+```
 
 ### Inline Method
 ```bash
@@ -137,8 +157,19 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli inline-method \
 ### Cleanup Usings
 ```bash
 dotnet run --project RefactorMCP.ConsoleApp -- --cli cleanup-usings \
+  "./RefactorMCP.sln" \
+  "./path/to/file.cs"
+```
+
+### Rename Symbol
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli rename-symbol \
+  "./RefactorMCP.sln" \
   "./path/to/file.cs" \
-  "./RefactorMCP.sln"
+  OldName \
+  NewName \
+  10 \
+  5
 ```
 
 ### Move Instance Method
@@ -154,13 +185,35 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli move-instance-method \
   "./optional/target.cs"
 ```
 Newly added access fields are readonly and existing members are reused if present.
+Each moved method leaves a wrapper that calls the new implementation.
 
 ### Move Multiple Methods
 ```bash
 dotnet run --project RefactorMCP.ConsoleApp -- --cli move-multiple-methods \
   "./RefactorMCP.sln" \
   "./path/to/file.cs" \
-  "[{'sourceClass':'A','method':'Foo','targetClass':'B','accessMember':'b','accessMemberType':'field','isStatic':false}]"
+  SourceClass \
+  "Foo,Bar" \
+  TargetClass \
+  memberName field \
+  "./optional/Target.cs"
+```
+Wrapper methods remain in the source class, delegating to their moved versions.
+
+### Batch Move Methods
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli batch-move-methods \
+  "./RefactorMCP.sln" \
+  "./path/to/file.cs" \
+  "[{\"SourceClass\":\"Foo\",\"Method\":\"Bar\",\"TargetClass\":\"Target\"}]"
+```
+
+### Move To Separate File
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli move-to-separate-file \
+  "./RefactorMCP.sln" \
+  "./path/to/file.cs" \
+  ClassName
 ```
 
 ### Convert To Extension Method
@@ -240,6 +293,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli convert-to-static-with-inst
 # Move static method to MathUtilities
 dotnet run --project RefactorMCP.ConsoleApp -- --cli move-static-method \
   "./RefactorMCP.sln" "./RefactorMCP.Tests/ExampleCode.cs" FormatCurrency MathUtilities
+# The original method stays as a wrapper
 # Convert method to extension
 dotnet run --project RefactorMCP.ConsoleApp -- --cli convert-to-extension-method \
   "./RefactorMCP.sln" "./RefactorMCP.Tests/ExampleCode.cs" GetFormattedNumber

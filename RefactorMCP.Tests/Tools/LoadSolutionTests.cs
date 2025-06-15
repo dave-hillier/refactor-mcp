@@ -37,4 +37,15 @@ public class LoadSolutionTests : TestBase
         Assert.Contains("Version:", result);
         Assert.Contains("Build", result);
     }
+
+    [Fact]
+    public async Task ClearSolutionCache_RemovesAllCachedSolutions()
+    {
+        await LoadSolutionTool.LoadSolution(SolutionPath);
+        var clearResult = UnloadSolutionTool.ClearSolutionCache();
+        Assert.Contains("Cleared all cached solutions", clearResult);
+
+        var unloadResult = UnloadSolutionTool.UnloadSolution(SolutionPath);
+        Assert.Contains("was not loaded", unloadResult);
+    }
 }

@@ -8,53 +8,35 @@ using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.FindSymbols;
 using System.Linq;
 using System.IO;
-using System.Collections.Generic;
 
 [McpServerToolType]
 public static class InlineMethodTool
 {
 
-    private static SyntaxNode InlineInvocation(MethodDeclarationSyntax method, InvocationExpressionSyntax invocation)
-    {
-        var argMap = method.ParameterList.Parameters
-            .Zip(invocation.ArgumentList.Arguments, (p, a) => new { p, a })
-            .ToDictionary(x => x.p.Identifier.ValueText, x => x.a.Expression);
-
-        var rewriter = new ParameterRewriter(argMap);
-        var statements = method.Body!.Statements.Select(s => (StatementSyntax)rewriter.Visit(s)!);
-        var stmt = invocation.FirstAncestorOrSelf<ExpressionStatementSyntax>();
-        if (stmt != null && method.ReturnType is PredefinedTypeSyntax pts && pts.Keyword.IsKind(SyntaxKind.VoidKeyword))
-        {
-            return SyntaxFactory.Block(statements);
-        }
-        return invocation;
-    }
-
     private static async Task InlineReferences(MethodDeclarationSyntax method, Solution solution, ISymbol methodSymbol)
     {
         var refs = await SymbolFinder.FindReferencesAsync(methodSymbol, solution);
-        foreach (var loc in refs.SelectMany(r => r.Locations))
+        var documents = refs.SelectMany(r => r.Locations)
+            .Where(l => l.Location.IsInSource)
+            .Select(l => solution.GetDocument(l.Location.SourceTree)!)
+            .Distinct();
+
+        foreach (var refDoc in documents)
         {
-            if (!loc.Location.IsInSource) continue;
-            var refDoc = solution.GetDocument(loc.Location.SourceTree)!;
             var refRoot = await refDoc.GetSyntaxRootAsync();
-            var node = refRoot!.FindNode(loc.Location.SourceSpan);
-            var invocation = node.FirstAncestorOrSelf<InvocationExpressionSyntax>();
-            if (invocation == null) continue;
-            var inlineBlock = InlineInvocation(method, invocation);
-            SyntaxNode newRefRoot;
-            if (inlineBlock is BlockSyntax block && invocation.Parent is ExpressionStatementSyntax stmt)
+            var semanticModel = await refDoc.GetSemanticModelAsync();
+            var rewriter = new InlineInvocationRewriter(method, semanticModel!, (IMethodSymbol)methodSymbol);
+            var newRoot = rewriter.Visit(refRoot!);
+
+            if (!ReferenceEquals(refRoot, newRoot))
             {
-                newRefRoot = refRoot.ReplaceNode(stmt, block.Statements);
+                var formatted = Formatter.Format(newRoot!, refDoc.Project.Solution.Workspace);
+                var newDoc = refDoc.WithSyntaxRoot(formatted);
+                var text = await newDoc.GetTextAsync();
+                var encoding = await RefactoringHelpers.GetFileEncodingAsync(refDoc.FilePath!);
+                await File.WriteAllTextAsync(refDoc.FilePath!, text.ToString(), encoding);
+                RefactoringHelpers.UpdateSolutionCache(newDoc);
             }
-            else
-            {
-                continue;
-            }
-            var formatted = Formatter.Format(newRefRoot, refDoc.Project.Solution.Workspace);
-            var newDoc = refDoc.WithSyntaxRoot(formatted);
-            var text = await newDoc.GetTextAsync();
-            await File.WriteAllTextAsync(refDoc.FilePath!, text.ToString());
         }
     }
 
@@ -71,11 +53,17 @@ public static class InlineMethodTool
         var symbol = semanticModel!.GetDeclaredSymbol(method)!;
         await InlineReferences(method, document.Project.Solution, symbol);
 
-        var newRoot = (await document.GetSyntaxRootAsync())!.RemoveNode(method, SyntaxRemoveOptions.KeepNoTrivia);
+        var newRoot = await document.GetSyntaxRootAsync();
+        var updatedMethod = newRoot!.DescendantNodes()
+            .OfType<MethodDeclarationSyntax>()
+            .First(m => m.Identifier.ValueText == methodName);
+        newRoot = newRoot.RemoveNode(updatedMethod, SyntaxRemoveOptions.KeepNoTrivia);
         var formattedRoot = Formatter.Format(newRoot, document.Project.Solution.Workspace);
         var newDocument = document.WithSyntaxRoot(formattedRoot);
         var newText = await newDocument.GetTextAsync();
-        await File.WriteAllTextAsync(document.FilePath!, newText.ToString());
+        var encoding = await RefactoringHelpers.GetFileEncodingAsync(document.FilePath!);
+        await File.WriteAllTextAsync(document.FilePath!, newText.ToString(), encoding);
+        RefactoringHelpers.UpdateSolutionCache(newDocument);
 
         return $"Successfully inlined method '{methodName}' in {document.FilePath} (solution mode)";
     }
@@ -97,24 +85,13 @@ public static class InlineMethodTool
         if (method == null)
             return RefactoringHelpers.ThrowMcpException($"Error: Method '{methodName}' not found or has parameters");
 
-        var bodyText = string.Join("\n", method.Body!.Statements.Select(s => s.ToFullString()));
-
-        var invocationNodes = root.DescendantNodes().OfType<InvocationExpressionSyntax>()
-            .Where(i => i.Expression is IdentifierNameSyntax id && id.Identifier.ValueText == methodName)
-            .ToList();
-
-        foreach (var inv in invocationNodes)
-        {
-            var stmt = inv.FirstAncestorOrSelf<ExpressionStatementSyntax>();
-            if (stmt != null)
-            {
-                var newStmt = SyntaxFactory.ParseStatement(bodyText);
-                root = root.ReplaceNode(stmt, newStmt);
-            }
-        }
-
-        root = root.RemoveNode(method, SyntaxRemoveOptions.KeepNoTrivia);
-        var formatted = Formatter.Format(root, RefactoringHelpers.SharedWorkspace);
+        var rewriter = new InlineInvocationRewriter(method);
+        var newRoot = rewriter.Visit(root)!;
+        var updatedMethod = newRoot.DescendantNodes()
+            .OfType<MethodDeclarationSyntax>()
+            .First(m => m.Identifier.ValueText == methodName && m.ParameterList.Parameters.Count == 0);
+        newRoot = newRoot.RemoveNode(updatedMethod, SyntaxRemoveOptions.KeepNoTrivia);
+        var formatted = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
         return formatted.ToFullString();
     }
 
@@ -126,12 +103,11 @@ public static class InlineMethodTool
     {
         try
         {
-            var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
-            var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
-            if (document != null)
-                return await InlineMethodWithSolution(document, methodName);
-
-            return await InlineMethodSingleFile(filePath, methodName);
+            return await RefactoringHelpers.RunWithSolutionOrFile(
+                solutionPath,
+                filePath,
+                doc => InlineMethodWithSolution(doc, methodName),
+                path => InlineMethodSingleFile(path, methodName));
         }
         catch (Exception ex)
         {

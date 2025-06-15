@@ -6,10 +6,12 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.CodeAnalysis.Editing;
 
 [McpServerToolType]
 public static class IntroduceVariableTool
 {
+    [McpServerTool, Description("Introduce a new variable from selected expression (preferred for large C# file refactoring)")]
     public static async Task<string> IntroduceVariable(
         [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
@@ -18,12 +20,11 @@ public static class IntroduceVariableTool
     {
         try
         {
-            var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
-            var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
-            if (document != null)
-                return await IntroduceVariableWithSolution(document, selectionRange, variableName);
-
-            return await IntroduceVariableSingleFile(filePath, selectionRange, variableName);
+            return await RefactoringHelpers.RunWithSolutionOrFile(
+                solutionPath,
+                filePath,
+                doc => IntroduceVariableWithSolution(doc, selectionRange, variableName),
+                path => IntroduceVariableSingleFile(path, selectionRange, variableName));
         }
         catch (Exception ex)
         {
@@ -38,6 +39,9 @@ public static class IntroduceVariableTool
 
         if (!RefactoringHelpers.TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
             return RefactoringHelpers.ThrowMcpException("Error: Invalid selection range format");
+
+        if (!RefactoringHelpers.ValidateRange(sourceText, startLine, startColumn, endLine, endColumn, out var error))
+            return RefactoringHelpers.ThrowMcpException(error);
 
         var startPosition = sourceText.Lines[startLine - 1].Start + startColumn - 1;
         var endPosition = sourceText.Lines[endLine - 1].Start + endColumn - 1;
@@ -70,54 +74,53 @@ public static class IntroduceVariableTool
 
         var variableReference = SyntaxFactory.IdentifierName(variableName);
 
-        var nodesToReplace = syntaxRoot.DescendantNodes()
-            .OfType<ExpressionSyntax>()
-            .Where(e => SyntaxFactory.AreEquivalent(e, selectedExpression))
-            .ToList();
-
         var containingStatement = selectedExpression.Ancestors().OfType<StatementSyntax>().FirstOrDefault();
-        SyntaxNode newRoot;
-        if (containingStatement != null && containingStatement.Parent is BlockSyntax containingBlock)
-        {
-            var nodesToTrack = nodesToReplace.Cast<SyntaxNode>().Append(containingBlock).Append(containingStatement);
-            var trackedRoot = syntaxRoot.TrackNodes(nodesToTrack);
-            var replacedRoot = trackedRoot.ReplaceNodes(nodesToReplace.Select(n => trackedRoot.GetCurrentNode(n)!), (_1, _2) => variableReference);
-            var currentBlock = replacedRoot.GetCurrentNode(containingBlock)!;
-            var currentStatement = replacedRoot.GetCurrentNode(containingStatement)!;
-            var statementIndex = currentBlock.Statements.IndexOf(currentStatement);
-            var newStatements = currentBlock.Statements.Insert(statementIndex, variableDeclaration);
-            var newBlock = currentBlock.WithStatements(newStatements);
-            newRoot = replacedRoot.ReplaceNode(currentBlock, newBlock);
-        }
-        else
-        {
-            newRoot = syntaxRoot.ReplaceNodes(nodesToReplace, (_1, _2) => variableReference);
-        }
+        var containingBlock = containingStatement?.Parent as BlockSyntax;
+        var rewriter = new VariableIntroductionRewriter(
+            selectedExpression,
+            variableReference,
+            variableDeclaration,
+            containingStatement,
+            containingBlock);
+        var newRoot = rewriter.Visit(syntaxRoot);
 
         var formattedRoot = Formatter.Format(newRoot, document.Project.Solution.Workspace);
-        var newDocument = document.WithSyntaxRoot(formattedRoot);
+        var editor = await DocumentEditor.CreateAsync(document);
+        editor.ReplaceNode(syntaxRoot, formattedRoot);
+        var newDocument = editor.GetChangedDocument();
         var newText = await newDocument.GetTextAsync();
-        await File.WriteAllTextAsync(document.FilePath!, newText.ToString());
+        var encoding = await RefactoringHelpers.GetFileEncodingAsync(document.FilePath!);
+        await File.WriteAllTextAsync(document.FilePath!, newText.ToString(), encoding);
+        RefactoringHelpers.UpdateSolutionCache(newDocument);
 
         return $"Successfully introduced variable '{variableName}' from {selectionRange} in {document.FilePath} (solution mode)";
     }
 
-    private static Task<string> IntroduceVariableSingleFile(string filePath, string selectionRange, string variableName)
+    private static async Task<string> IntroduceVariableSingleFile(string filePath, string selectionRange, string variableName)
     {
-        return RefactoringHelpers.ApplySingleFileEdit(
-            filePath,
-            text => IntroduceVariableInSource(text, selectionRange, variableName),
-            $"Successfully introduced variable '{variableName}' from {selectionRange} in {filePath} (single file mode)");
+        if (!File.Exists(filePath))
+            return RefactoringHelpers.ThrowMcpException($"Error: File {filePath} not found");
+
+        var (sourceText, encoding) = await RefactoringHelpers.ReadFileWithEncodingAsync(filePath);
+        var model = await RefactoringHelpers.GetOrCreateSemanticModelAsync(filePath);
+        var newText = IntroduceVariableInSource(sourceText, selectionRange, variableName, model);
+        await File.WriteAllTextAsync(filePath, newText, encoding);
+        RefactoringHelpers.UpdateFileCaches(filePath, newText);
+        return $"Successfully introduced variable '{variableName}' from {selectionRange} in {filePath} (single file mode)";
     }
 
-    public static string IntroduceVariableInSource(string sourceText, string selectionRange, string variableName)
+    public static string IntroduceVariableInSource(string sourceText, string selectionRange, string variableName, SemanticModel? model = null)
     {
-        var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
+        var syntaxTree = model?.SyntaxTree ?? CSharpSyntaxTree.ParseText(sourceText);
         var syntaxRoot = syntaxTree.GetRoot();
-        var textLines = SourceText.From(sourceText).Lines;
+        var text = syntaxTree.GetText();
+        var textLines = text.Lines;
 
         if (!RefactoringHelpers.TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
             return RefactoringHelpers.ThrowMcpException("Error: Invalid selection range format");
+
+        if (!RefactoringHelpers.ValidateRange(text, startLine, startColumn, endLine, endColumn, out var error))
+            return RefactoringHelpers.ThrowMcpException(error);
 
         var startPosition = textLines[startLine - 1].Start + startColumn - 1;
         var endPosition = textLines[endLine - 1].Start + endColumn - 1;
@@ -137,6 +140,12 @@ public static class IntroduceVariableTool
             return RefactoringHelpers.ThrowMcpException("Error: Selected code is not a valid expression");
 
         var typeName = "var";
+        if (model != null)
+        {
+            var typeInfo = model.GetTypeInfo(initializerExpression ?? selectedExpression!);
+            if (typeInfo.Type != null)
+                typeName = typeInfo.Type.ToDisplayString();
+        }
 
         var variableDeclaration = SyntaxFactory.LocalDeclarationStatement(
             SyntaxFactory.VariableDeclaration(SyntaxFactory.IdentifierName(typeName))
@@ -145,28 +154,15 @@ public static class IntroduceVariableTool
                         .WithInitializer(SyntaxFactory.EqualsValueClause(initializerExpression)))));
 
         var variableReference = SyntaxFactory.IdentifierName(variableName);
-        var nodesToReplace = syntaxRoot.DescendantNodes()
-            .OfType<ExpressionSyntax>()
-            .Where(e => SyntaxFactory.AreEquivalent(e, selectedExpression))
-            .ToList();
         var containingStatement = selectedExpression.Ancestors().OfType<StatementSyntax>().FirstOrDefault();
-        SyntaxNode newRoot;
-        if (containingStatement != null && containingStatement.Parent is BlockSyntax containingBlock)
-        {
-            var nodesToTrack = nodesToReplace.Cast<SyntaxNode>().Append(containingBlock).Append(containingStatement);
-            var trackedRoot = syntaxRoot.TrackNodes(nodesToTrack);
-            var replacedRoot = trackedRoot.ReplaceNodes(nodesToReplace.Select(n => trackedRoot.GetCurrentNode(n)!), (_1, _2) => variableReference);
-            var currentBlock = replacedRoot.GetCurrentNode(containingBlock)!;
-            var currentStatement = replacedRoot.GetCurrentNode(containingStatement)!;
-            var statementIndex = currentBlock.Statements.IndexOf(currentStatement);
-            var newStatements = currentBlock.Statements.Insert(statementIndex, variableDeclaration);
-            var newBlock = currentBlock.WithStatements(newStatements);
-            newRoot = replacedRoot.ReplaceNode(currentBlock, newBlock);
-        }
-        else
-        {
-            newRoot = syntaxRoot.ReplaceNodes(nodesToReplace, (_1, _2) => variableReference);
-        }
+        var containingBlock = containingStatement?.Parent as BlockSyntax;
+        var rewriter = new VariableIntroductionRewriter(
+            selectedExpression,
+            variableReference,
+            variableDeclaration,
+            containingStatement,
+            containingBlock);
+        var newRoot = rewriter.Visit(syntaxRoot);
 
         var formattedRoot = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
         return formattedRoot.ToFullString();
