@@ -339,6 +339,57 @@ public class MathUtilities
 ```
 The original method remains in `ExampleCode.cs` as a wrapper that forwards to `MathUtilities.FormatCurrency`.
 
+## 10. Move Instance Method
+
+**Purpose**: Move an instance method to another class while leaving a wrapper behind.
+
+### Example
+**Before** (in `ExampleCode.cs` line 69):
+```csharp
+public void LogOperation(string operation)
+{
+    Console.WriteLine($"[{DateTime.Now}] {operation}");
+}
+```
+
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli move-instance-method \
+  "./RefactorMCP.sln" \
+  "./RefactorMCP.Tests/ExampleCode.cs" \
+  Calculator \
+  LogOperation \
+  Logger \
+  _logger field
+```
+
+**After**:
+```csharp
+public class Calculator
+{
+    private readonly Logger _logger = new Logger();
+
+    public void LogOperation(string operation)
+    {
+        _logger.LogOperation(operation);
+    }
+}
+
+public class Logger
+{
+    public void Log(string message)
+    {
+        Console.WriteLine($"[LOG] {message}");
+    }
+
+    public void LogOperation(string operation)
+    {
+        Console.WriteLine($"[{DateTime.Now}] {operation}");
+    }
+}
+```
+The original method in `Calculator` now delegates to `Logger.LogOperation`, preserving existing call sites.
+
 ## 10. Move Multiple Methods
 
 **Purpose**: Move several methods at once, ordered by dependencies.
