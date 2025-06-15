@@ -11,6 +11,8 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Linq;
 using Microsoft.CodeAnalysis.Text;
 using System.Text;
+using Microsoft.CodeAnalysis.Host.Mef;
+using System.Collections.Generic;
 
 
 
@@ -45,7 +47,8 @@ internal static class RefactoringHelpers
     internal static MSBuildWorkspace CreateWorkspace()
     {
         EnsureMsBuildRegistered();
-        var workspace = MSBuildWorkspace.Create();
+        var host = MefHostServices.Create(MSBuildMefHostServices.DefaultAssemblies);
+        var workspace = MSBuildWorkspace.Create(host);
         workspace.WorkspaceFailed += (_, e) =>
             Console.Error.WriteLine(e.Diagnostic.Message);
         return workspace;

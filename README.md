@@ -187,6 +187,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --json ToolName '{"param":"value"
 - `move-multiple-methods <solutionPath> <filePath> <sourceClass> <methodNames> <targetClass> <accessMember> [memberType] [targetFilePath]` - Move multiple methods from one class to another. Each method leaves a delegating wrapper behind. Accepts comma separated `methodNames`. The older JSON form is still supported for backward compatibility
 - `cleanup-usings [solutionPath] <filePath>` - Remove unused using directives
 - `rename-symbol <solutionPath> <filePath> <oldName> <newName> [line] [column]` - Rename a symbol across the solution
+- `extract-interface <solutionPath> <filePath> <className> <memberNames> <interfacePath>` - Generate an interface from specified members
 - `version` - Show build version and timestamp
 - `analyze-refactoring-opportunities <solutionPath> <filePath>` - Prompt for refactoring suggestions (long methods, long parameter lists, unused code)
 - `list-class-lengths <solutionPath>` - Prompt for class names and line counts
