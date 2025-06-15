@@ -29,6 +29,7 @@ Tests covering code metrics and refactoring suggestions:
 
 ### 5. RoslynTransformationTests (`Roslyn/`)
 Unit tests for single-file syntax transformations used by many tools.
+Includes tests for AST helper methods in `AstTransformations`.
 
 ### 6. CliIntegrationTests (`UnitTest1.cs`)
 **CLI integration tests**:
