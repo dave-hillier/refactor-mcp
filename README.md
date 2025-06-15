@@ -10,6 +10,7 @@ A Model Context Protocol (MCP) server providing automated refactoring tools for 
 - **Analysis Prompt**: Inspect code for long methods, large classes, long parameter lists, unused methods or fields
 - **MCP Compatible**: Works with any MCP-compatible client
 - **Preferred for Large Files**: Invoking these tools via MCP is recommended for large code files
+- **VS Code Extension**: Invoke refactoring tools directly from the editor
 
 ## Solution Mode
 
@@ -167,16 +168,25 @@ dotnet run --project RefactorMCP.ConsoleApp -- --json ToolName '{"param":"value"
 - `extract-method <solutionPath> <filePath> <range> <methodName>` - Extract code into method
 - `introduce-field <solutionPath> <filePath> <range> <fieldName> [accessModifier]` - Create field from expression
 - `introduce-variable <solutionPath> <filePath> <range> <variableName>` - Create variable from expression
-- `make-field-readonly <solutionPath> <filePath> <fieldLine>` - Make field readonly
-- `introduce-parameter <solutionPath> <filePath> <methodLine> <range> <parameterName>` - Create parameter from expression
-- `convert-to-static-with-parameters <solutionPath> <filePath> <methodLine>` - Convert instance method to static with parameters
-- `convert-to-static-with-instance <solutionPath> <filePath> <methodLine> [instanceName]` - Convert instance method to static with explicit instance
- - `move-static-method <solutionPath> <filePath> <methodName> <targetClass> [targetFile]` - Move a static method to another class
- - `move-instance-method <solutionPath> <filePath> <sourceClass> <methodNames> <targetClass> <accessMember> [memberType] [targetFile]` - Move one or more instance methods (comma separated names) to another class. Newly created access fields are marked `readonly` and won't duplicate existing members
- - `move-multiple-methods <solutionPath> <filePath> <operationsJson>` - Move multiple static or instance methods described by a JSON array
-- `cleanup-usings <filePath> [solutionPath]` - Remove unused using directives
+- `make-field-readonly <solutionPath> <filePath> <fieldName>` - Make field readonly
+- `unload-solution <solutionPath>` - Remove a solution from cache
+- `clear-solution-cache` - Clear all cached solutions
+- `convert-to-extension-method <solutionPath> <filePath> <methodName>` - Convert instance method to extension method
+- `convert-to-static-with-parameters <solutionPath> <filePath> <methodName>` - Convert instance method to static with parameters
+- `convert-to-static-with-instance <solutionPath> <filePath> <methodName> [instanceName]` - Convert instance method to static with explicit instance
+- `introduce-parameter <solutionPath> <filePath> <methodName> <range> <parameterName>` - Create parameter from expression
+- `move-static-method <solutionPath> <filePath> <methodName> <targetClass> [targetFile]` - Move a static method to another class
+- `inline-method <solutionPath> <filePath> <methodName>` - Inline a method
+- `move-instance-method <solutionPath> <filePath> <sourceClass> <methodName> <targetClass> <accessMember> [memberType] [targetFile]` - Move an instance method to another class
+- `transform-setter-to-init <solutionPath> <filePath> <propertyName>` - Convert property setter to init-only
+- `safe-delete-field <solutionPath> <filePath> <fieldName>` - Remove unused field
+- `safe-delete-method <solutionPath> <filePath> <methodName>` - Remove unused method
+- `safe-delete-parameter <solutionPath> <filePath> <methodName> <parameterName>` - Remove unused parameter
+- `safe-delete-variable <solutionPath> <filePath> <range>` - Remove unused variable
+- `move-multiple-methods <solutionPath> <filePath> <operationsJson>` - Move multiple methods described by JSON
+- `cleanup-usings <solutionPath> <filePath>` - Remove unused using directives
+- `analyze-refactoring-opportunities <solutionPath> <filePath>` - Prompt for refactoring suggestions
 - `version` - Show build version and timestamp
-- `analyze-refactoring-opportunities <solutionPath> <filePath>` - Prompt for refactoring suggestions (long methods, long parameter lists, unused code)
 
 #### Quick Start Example
 
