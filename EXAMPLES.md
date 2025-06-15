@@ -769,6 +769,51 @@ public class Person : IPerson
 }
 ```
 
+
+## 16. Rename Symbol
+
+**Purpose**: Rename a field or method across the entire file.
+
+### Example
+**Before** (excerpt from `ExampleCode.cs`):
+```csharp
+private List<int> numbers = new List<int>();
+
+// ...
+numbers.Add(result);
+return numbers.Sum() / (double)numbers.Count;
+```
+
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli rename-symbol \
+  "./RefactorMCP.sln" \
+  "./RefactorMCP.Tests/ExampleCode.cs" \
+  numbers \
+  values
+```
+
+**File Diff**:
+```diff
+-    private List<int> numbers = new List<int>();
++    private List<int> values = new List<int>();
+@@
+-    numbers.Add(result);
++    values.Add(result);
+@@
+-    return numbers.Sum() / (double)numbers.Count;
++    return values.Sum() / (double)values.Count;
+```
+
+**After**:
+```csharp
+private List<int> values = new List<int>();
+
+// ...
+values.Add(result);
+return values.Sum() / (double)values.Count;
+```
+
 ## Range Format
 
 All refactoring commands that require selecting code use the range format:
