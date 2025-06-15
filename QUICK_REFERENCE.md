@@ -136,6 +136,16 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli move-static-method \
 ```
 Leaves a delegating method in the original class so existing calls still work.
 
+### Extract Interface
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli extract-interface \
+  "./RefactorMCP.sln" \
+  "./path/to/file.cs" \
+  ClassName \
+  "Foo,Bar" \
+  "./IClassName.cs"
+```
+
 ### Inline Method
 ```bash
 dotnet run --project RefactorMCP.ConsoleApp -- --cli inline-method \
