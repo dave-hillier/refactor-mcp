@@ -21,7 +21,7 @@ public class MethodAndMemberVisitor : CSharpSyntaxWalker
 
     public class MemberInfo
     {
-        public string Type { get; set; } // "field" or "property"
+        public string Type { get; set; } = string.Empty; // "field" or "property"
     }
 
     public Dictionary<string, MethodInfo> Methods { get; } = new();
@@ -95,7 +95,7 @@ public static partial class MoveMultipleMethodsTool
         var newRoot = await CSharpSyntaxTree.ParseText(newText).GetRootAsync();
         var solution = document.Project.Solution.WithDocumentSyntaxRoot(document.Id, newRoot);
 
-        var project = solution.GetProject(document.Project.Id);
+        var project = solution.GetProject(document.Project.Id)!;
         var targetDocument = project.Documents.FirstOrDefault(d => d.FilePath == targetPath);
         if (targetDocument == null)
         {
