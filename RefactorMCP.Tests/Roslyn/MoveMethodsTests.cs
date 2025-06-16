@@ -212,6 +212,37 @@ public class TargetClass
         }
 
         [Fact]
+        public void MoveInstanceMethod_InsertsDependenciesBeforeOptionalParam()
+        {
+            var source = @"public class SourceClass
+{
+    private int _value = 1;
+    public int GetValue(int n = 5) { return _value + n; }
+}
+
+public class TargetClass
+{
+}";
+
+            var tree = CSharpSyntaxTree.ParseText(source);
+            var root = tree.GetRoot();
+
+            var result = MoveMethodsTool.MoveInstanceMethodAst(
+                root,
+                "SourceClass",
+                "GetValue",
+                "TargetClass",
+                "_target",
+                "field");
+
+            var finalRoot = MoveMethodsTool.AddMethodToTargetClass(result.NewSourceRoot, "TargetClass", result.MovedMethod, result.Namespace);
+            var formatted = Formatter.Format(finalRoot, new AdhocWorkspace()).ToFullString();
+
+            Assert.Contains("public int GetValue(int _value, int n = 5)", formatted);
+            Assert.Contains("_target.GetValue(_value, n)", formatted);
+        }
+
+        [Fact]
         public void MoveInstanceMethod_OmitsUnusedThisParameter()
         {
             var source = @"public class SourceClass
