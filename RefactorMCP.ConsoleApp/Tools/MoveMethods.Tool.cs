@@ -41,7 +41,7 @@ public static partial class MoveMethodsTool
             var updatedSources = await UpdateSourceAndTargetForStaticMove(moveContext, method);
             await WriteStaticMethodMoveResults(moveContext, updatedSources);
 
-            return $"Successfully moved static method '{methodName}' to {targetClass} in {moveContext.TargetPath}";
+            return $"Successfully moved static method '{methodName}' to {targetClass} in {moveContext.TargetPath}. A delegate method remains in the original class to preserve the interface.";
         }
         catch (Exception ex)
         {
@@ -267,7 +267,7 @@ public static partial class MoveMethodsTool
 
             var formatted = Formatter.Format(root, RefactoringHelpers.SharedWorkspace);
             await File.WriteAllTextAsync(filePath, formatted.ToFullString(), sourceEncoding);
-            return $"Successfully moved {methodNames.Length} methods from {sourceClass} to {targetClass} in {filePath}";
+            return $"Successfully moved {methodNames.Length} methods from {sourceClass} to {targetClass} in {filePath}. Delegate methods remain in the original class to preserve the interface.";
         }
         else
         {
@@ -295,7 +295,7 @@ public static partial class MoveMethodsTool
                 : sourceEncoding;
             await File.WriteAllTextAsync(targetPath, formattedTarget.ToFullString(), targetEncoding);
 
-            return $"Successfully moved {methodNames.Length} methods from {sourceClass} to {targetClass} in {targetPath}";
+            return $"Successfully moved {methodNames.Length} methods from {sourceClass} to {targetClass} in {targetPath}. Delegate methods remain in the original class to preserve the interface.";
         }
     }
 
