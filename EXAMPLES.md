@@ -863,4 +863,15 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli extract-method "./RefactorM
 
 # For a file in the test project  
 dotnet run --project RefactorMCP.ConsoleApp -- --cli extract-method "./RefactorMCP.sln" "./RefactorMCP.Tests/TestFile.cs" "5:1-8:10" "TestMethod"
-``` 
+```
+
+## Metrics Resource
+
+Metrics can be queried using the resource scheme:
+
+```
+metrics://RefactorMCP.Tests/ExampleCode.cs/Calculator.Calculate
+```
+This URI returns metrics for the `Calculate` method. Omitting the method name
+returns metrics for the whole class, and specifying only the file gives all
+classes and methods.

@@ -4,17 +4,16 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.Extensions.Caching.Memory;
-using System.ComponentModel;
 using System.Text.Json;
 using System.IO;
 
-[McpServerToolType, McpServerPromptType]
-public static class CodeMetricsTool
+[System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1052:Static holder types should be Static or NotInheritable", Justification = "Utility class")]
+public static class MetricsProvider
 {
     private static readonly MemoryCache _cache = new(new MemoryCacheOptions());
     private static string CacheFilePath => Path.Combine(Directory.GetCurrentDirectory(), "codeMetricsCache.json");
 
-    static CodeMetricsTool()
+    static MetricsProvider()
     {
         if (File.Exists(CacheFilePath))
         {
@@ -32,10 +31,9 @@ public static class CodeMetricsTool
         }
     }
 
-    [McpServerPrompt, Description("Get code metrics for a C# file including classes and methods")]
     public static async Task<string> GetFileMetrics(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
-        [Description("Path to the C# file")] string filePath)
+        string solutionPath,
+        string filePath)
     {
         try
         {
