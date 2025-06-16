@@ -336,15 +336,6 @@ public static partial class MoveMethodsTool
     {
         var transformedMethod = method;
 
-        if (injectedParameters.Count > 0)
-        {
-            var newParams = transformedMethod.ParameterList.Parameters.AddRange(injectedParameters);
-            transformedMethod = transformedMethod.WithParameterList(transformedMethod.ParameterList.WithParameters(newParams));
-            var map = injectedNames.ToDictionary(n => n, n => (ExpressionSyntax)SyntaxFactory.IdentifierName(n));
-            var rewriter = new ParameterRewriter(map);
-            transformedMethod = (MethodDeclarationSyntax)rewriter.Visit(transformedMethod)!;
-        }
-
         if (needsThisParameter)
         {
             transformedMethod = AddThisParameterToMethod(transformedMethod, sourceClassName);
@@ -356,6 +347,17 @@ public static partial class MoveMethodsTool
                 isRecursive,
                 instanceMembers,
                 otherMethodNames);
+        }
+
+        if (injectedParameters.Count > 0)
+        {
+            var parameters = transformedMethod.ParameterList.Parameters;
+            var insertIndex = needsThisParameter ? 1 : 0;
+            parameters = parameters.InsertRange(insertIndex, injectedParameters);
+            transformedMethod = transformedMethod.WithParameterList(transformedMethod.ParameterList.WithParameters(parameters));
+            var map = injectedNames.ToDictionary(n => n, n => (ExpressionSyntax)SyntaxFactory.IdentifierName(n));
+            var rewriter = new ParameterRewriter(map);
+            transformedMethod = (MethodDeclarationSyntax)rewriter.Visit(transformedMethod)!;
         }
 
         return EnsureMethodIsPublic(transformedMethod);
@@ -453,21 +455,25 @@ public static partial class MoveMethodsTool
         TypeParameterListSyntax? typeParameters,
         IEnumerable<string> fieldArguments)
     {
-        var originalParameters = method.ParameterList.Parameters
-            .Select(p => SyntaxFactory.Argument(SyntaxFactory.IdentifierName(p.Identifier))).ToList();
+        var methodArgs = method.ParameterList.Parameters
+            .Select(p => SyntaxFactory.Argument(SyntaxFactory.IdentifierName(p.Identifier)))
+            .ToList();
+
+        var invocationArgs = new List<ArgumentSyntax>();
 
         if (needsThisParameter)
         {
-            originalParameters.Insert(0, SyntaxFactory.Argument(SyntaxFactory.ThisExpression()));
+            invocationArgs.Add(SyntaxFactory.Argument(SyntaxFactory.ThisExpression()));
         }
 
         foreach (var fieldName in fieldArguments)
         {
-            originalParameters.Add(SyntaxFactory.Argument(
-                SyntaxFactory.IdentifierName(fieldName)));
+            invocationArgs.Add(SyntaxFactory.Argument(SyntaxFactory.IdentifierName(fieldName)));
         }
 
-        var argumentList = SyntaxFactory.ArgumentList(SyntaxFactory.SeparatedList(originalParameters));
+        invocationArgs.AddRange(methodArgs);
+
+        var argumentList = SyntaxFactory.ArgumentList(SyntaxFactory.SeparatedList(invocationArgs));
 
         ExpressionSyntax accessExpression = SyntaxFactory.IdentifierName(accessMemberName);
 
