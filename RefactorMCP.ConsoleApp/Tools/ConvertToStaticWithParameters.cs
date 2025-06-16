@@ -19,86 +19,80 @@ public static class ConvertToStaticWithParametersTool
     {
         var classDecl = method.Ancestors().OfType<ClassDeclarationSyntax>().First();
 
-        Dictionary<string, string> instanceMembers;
-        Dictionary<ISymbol, string>? semanticMap = null;
-
-        if (semanticModel != null)
-        {
-            var typeSymbol = (INamedTypeSymbol)semanticModel.GetDeclaredSymbol(classDecl)!;
-            semanticMap = new(SymbolEqualityComparer.Default);
-            instanceMembers = new();
-            foreach (var id in method.DescendantNodes().OfType<IdentifierNameSyntax>())
-            {
-                var symbol = semanticModel.GetSymbolInfo(id).Symbol;
-                if (symbol is IFieldSymbol or IPropertySymbol &&
-                    SymbolEqualityComparer.Default.Equals(symbol.ContainingType, typeSymbol) &&
-                    !symbol.IsStatic)
-                {
-                    if (!semanticMap.ContainsKey(symbol))
-                    {
-                        var name = symbol.Name.TrimStart('_');
-                        if (method.ParameterList.Parameters.Any(p => p.Identifier.ValueText == name))
-                            name += "Param";
-                        semanticMap[symbol] = name;
-                        var typeName = symbol switch
-                        {
-                            IFieldSymbol f => f.Type.ToDisplayString(),
-                            IPropertySymbol p => p.Type.ToDisplayString(),
-                            _ => "object"
-                        };
-                        instanceMembers[name] = typeName;
-                    }
-                }
-            }
-        }
-        else
-        {
-            instanceMembers = new();
-            foreach (var field in classDecl.Members.OfType<FieldDeclarationSyntax>())
-            {
-                if (field.Modifiers.Any(SyntaxKind.StaticKeyword)) continue;
-                var typeName = field.Declaration.Type.ToString();
-                foreach (var variable in field.Declaration.Variables)
-                    instanceMembers[variable.Identifier.ValueText] = typeName;
-            }
-
-            foreach (var prop in classDecl.Members.OfType<PropertyDeclarationSyntax>())
-            {
-                if (prop.Modifiers.Any(SyntaxKind.StaticKeyword)) continue;
-                instanceMembers[prop.Identifier.ValueText] = prop.Type.ToString();
-            }
-        }
-
         var parameters = new List<(string Name, string Type)>();
         Dictionary<string, string>? renameMap = null;
         Dictionary<ISymbol, string>? symbolMap = null;
 
-        if (semanticMap != null)
+        if (semanticModel != null)
         {
-            symbolMap = semanticMap;
-            foreach (var kvp in semanticMap)
+            var typeSymbol = (INamedTypeSymbol)semanticModel.GetDeclaredSymbol(classDecl)!;
+            symbolMap = new(SymbolEqualityComparer.Default);
+
+            foreach (var member in typeSymbol.GetMembers())
             {
-                var typeName = instanceMembers[kvp.Value];
-                parameters.Add((kvp.Value, typeName));
+                if (member is not IFieldSymbol && member is not IPropertySymbol)
+                    continue;
+
+                if (member is IFieldSymbol f && f.IsStatic)
+                    continue;
+                if (member is IPropertySymbol p && p.IsStatic)
+                    continue;
+
+                string memberName = member.Name;
+                var checker = new InstanceMemberUsageChecker(new HashSet<string> { memberName });
+                checker.Visit(method);
+                if (!checker.HasInstanceMemberUsage)
+                    continue;
+
+                var paramName = memberName.TrimStart('_');
+                if (method.ParameterList.Parameters.Any(p => p.Identifier.ValueText == paramName))
+                    paramName += "Param";
+
+                symbolMap[member] = paramName;
+
+                var typeName = member switch
+                {
+                    IFieldSymbol f => f.Type.ToDisplayString(),
+                    IPropertySymbol p => p.Type.ToDisplayString(),
+                    _ => "object"
+                };
+
+                parameters.Add((paramName, typeName));
             }
         }
         else
         {
             renameMap = new();
-            var usedMembers = method.DescendantNodes()
-                .OfType<IdentifierNameSyntax>()
-                .Where(id => instanceMembers.ContainsKey(id.Identifier.ValueText))
-                .Select(id => id.Identifier.ValueText)
-                .Distinct()
-                .ToList();
+            var classMembers = new Dictionary<string, string>();
 
-            foreach (var name in usedMembers)
+            foreach (var field in classDecl.Members.OfType<FieldDeclarationSyntax>())
             {
-                var paramName = name.TrimStart('_');
+                if (field.Modifiers.Any(SyntaxKind.StaticKeyword))
+                    continue;
+                var typeName = field.Declaration.Type.ToString();
+                foreach (var variable in field.Declaration.Variables)
+                    classMembers[variable.Identifier.ValueText] = typeName;
+            }
+
+            foreach (var prop in classDecl.Members.OfType<PropertyDeclarationSyntax>())
+            {
+                if (prop.Modifiers.Any(SyntaxKind.StaticKeyword))
+                    continue;
+                classMembers[prop.Identifier.ValueText] = prop.Type.ToString();
+            }
+
+            foreach (var kvp in classMembers)
+            {
+                var checker = new InstanceMemberUsageChecker(new HashSet<string> { kvp.Key });
+                checker.Visit(method);
+                if (!checker.HasInstanceMemberUsage)
+                    continue;
+
+                var paramName = kvp.Key.TrimStart('_');
                 if (method.ParameterList.Parameters.Any(p => p.Identifier.ValueText == paramName))
                     paramName += "Param";
-                renameMap[name] = paramName;
-                parameters.Add((paramName, instanceMembers[name]));
+                renameMap[kvp.Key] = paramName;
+                parameters.Add((paramName, kvp.Value));
             }
         }
 
