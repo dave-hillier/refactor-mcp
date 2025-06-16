@@ -187,6 +187,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli move-instance-method \
 Newly added access fields are readonly and existing members are reused if present.
 Each moved method leaves a wrapper that calls the new implementation.
 Private field values referenced by the moved method are supplied as extra parameters.
+Running the tool again on the wrapper now triggers an error. Use `inline-method` if you want to remove the wrapper.
 
 ### Move Multiple Methods
 ```bash
@@ -296,6 +297,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli convert-to-static-with-inst
 dotnet run --project RefactorMCP.ConsoleApp -- --cli move-static-method \
   "./RefactorMCP.sln" "./RefactorMCP.Tests/ExampleCode.cs" FormatCurrency MathUtilities
 # The original method stays as a wrapper
+# Re-running move-static-method on this wrapper will now produce an error. Use `inline-method` to remove it.
 # Convert method to extension
 dotnet run --project RefactorMCP.ConsoleApp -- --cli convert-to-extension-method \
   "./RefactorMCP.sln" "./RefactorMCP.Tests/ExampleCode.cs" GetFormattedNumber
