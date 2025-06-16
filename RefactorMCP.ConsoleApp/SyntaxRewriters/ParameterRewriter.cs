@@ -12,6 +12,18 @@ internal class ParameterRewriter : CSharpSyntaxRewriter
     {
         _map = map;
     }
+
+    public override SyntaxNode VisitMemberAccessExpression(MemberAccessExpressionSyntax node)
+    {
+        if (node.Expression is ThisExpressionSyntax && node.Name is IdentifierNameSyntax id &&
+            _map.TryGetValue(id.Identifier.ValueText, out var expr))
+        {
+            return expr;
+        }
+
+        return base.VisitMemberAccessExpression(node);
+    }
+
     public override SyntaxNode? VisitIdentifierName(IdentifierNameSyntax node)
     {
         if (_map.TryGetValue(node.Identifier.ValueText, out var expr))
