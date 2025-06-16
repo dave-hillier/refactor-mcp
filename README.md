@@ -249,7 +249,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --json ToolName '{"param":"value"
   `IsStatic`, and an optional `TargetFile`.
 - `cleanup-usings [solutionPath] <filePath>` - Remove unused using directives
 - `move-static-method <solutionPath> <filePath> <methodName> <targetClass> [targetFilePath]` - Move a static method to another class. A placeholder wrapper is left behind to delegate to the new location
-- `move-instance-method <solutionPath> <filePath> <sourceClass> <methodNames> <targetClass> <accessMember> [memberType] [targetFilePath]` - Move one or more instance methods to another class. Wrapper methods remain in the original class so existing callers continue to work
+- `move-instance-method <solutionPath> <filePath> <sourceClass> <methodNames> <targetClass> <accessMember> [memberType] [targetFilePath]` - Move one or more instance methods to another class. Wrapper methods remain in the original class so existing callers continue to work. Private field values used by the method are passed as additional parameters
 - `move-multiple-methods <solutionPath> <filePath> <sourceClass> <methodNames> <targetClass> <accessMember> [memberType] [targetFilePath]` - Move multiple methods from one class to another. Each method leaves a delegating wrapper behind. Accepts comma separated `methodNames`. The older JSON form is still supported for backward compatibility
 - `cleanup-usings [solutionPath] <filePath>` - Remove unused using directives
 - `rename-symbol <solutionPath> <filePath> <oldName> <newName> [line] [column]` - Rename a symbol across the solution

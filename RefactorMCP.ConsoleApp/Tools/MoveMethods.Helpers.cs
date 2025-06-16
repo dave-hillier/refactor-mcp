@@ -128,6 +128,29 @@ public static partial class MoveMethodsTool
         return staticFieldNames;
     }
 
+    private static Dictionary<string, TypeSyntax> GetPrivateFieldInfos(ClassDeclarationSyntax originClass)
+    {
+        var infos = new Dictionary<string, TypeSyntax>();
+        foreach (var member in originClass.Members.OfType<FieldDeclarationSyntax>())
+        {
+            if (member.Modifiers.Any(SyntaxKind.PrivateKeyword))
+            {
+                foreach (var variable in member.Declaration.Variables)
+                {
+                    infos[variable.Identifier.ValueText] = member.Declaration.Type;
+                }
+            }
+        }
+        return infos;
+    }
+
+    private static HashSet<string> GetUsedPrivateFields(MethodDeclarationSyntax method, HashSet<string> privateFieldNames)
+    {
+        var walker = new PrivateFieldUsageWalker(privateFieldNames);
+        walker.Visit(method);
+        return walker.UsedFields;
+    }
+
     private static bool MemberExists(ClassDeclarationSyntax classDecl, string memberName)
     {
         return classDecl.Members.OfType<FieldDeclarationSyntax>()

@@ -186,6 +186,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli move-instance-method \
 ```
 Newly added access fields are readonly and existing members are reused if present.
 Each moved method leaves a wrapper that calls the new implementation.
+Private field values referenced by the moved method are supplied as extra parameters.
 
 ### Move Multiple Methods
 ```bash
