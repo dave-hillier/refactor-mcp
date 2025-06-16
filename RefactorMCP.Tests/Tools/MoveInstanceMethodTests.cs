@@ -23,9 +23,7 @@ public class MoveInstanceMethodTests : TestBase
             testFile,
             "A",
             "Do",
-            "B",
-            "_b",
-            "field");
+            "B");
 
         Assert.Contains("Successfully moved", result);
         Assert.Contains("A.Do", result);
@@ -46,9 +44,7 @@ public class MoveInstanceMethodTests : TestBase
                 testFile,
                 "A",
                 "Do",
-                "B",
-                "_b",
-                "field"));
+                "B"));
     }
 
     [Fact]
@@ -64,9 +60,7 @@ public class MoveInstanceMethodTests : TestBase
             testFile,
             "A",
             "Do",
-            "B",
-            "_b",
-            "field");
+            "B");
         Assert.Contains("Successfully moved", result);
 
         await Assert.ThrowsAsync<McpException>(() =>
@@ -75,8 +69,6 @@ public class MoveInstanceMethodTests : TestBase
                 testFile,
                 "A",
                 "Do",
-                "B",
-                "_b",
-                "field"));
+                "B"));
     }
 }

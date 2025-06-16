@@ -22,8 +22,6 @@ public class MoveMethodNamespaceTests : TestBase
             "A",
             "Foo",
             "B",
-            "_b",
-            "field",
             targetFile);
 
         Assert.Contains("Successfully moved", result);
@@ -46,8 +44,6 @@ public class MoveMethodNamespaceTests : TestBase
             "A",
             "Foo",
             "C",
-            "_c",
-            "field",
             targetFile);
 
         Assert.Contains("Successfully moved", result);

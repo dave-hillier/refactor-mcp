@@ -211,8 +211,6 @@ public static partial class MoveMethodsTool
         [Description("Name of the source class containing the method")] string sourceClass,
         [Description("Comma separated names of the methods to move")] string methodNames,
         [Description("Name of the target class")] string targetClass,
-        [Description("Name for the access member")] string accessMemberName,
-        [Description("Type of access member (field, property, variable)")] string accessMemberType = "field",
         [Description("Path to the target file (optional, will create if doesn't exist)")] string? targetFilePath = null)
     {
         try
@@ -234,6 +232,25 @@ public static partial class MoveMethodsTool
                 targetFilePath ?? Path.Combine(Path.GetDirectoryName(filePath)!, $"{targetClass}.cs"));
             if (duplicateDoc != null)
                 throw new McpException($"Error: Class {targetClass} already exists in {duplicateDoc.FilePath}");
+
+            if (document == null && !File.Exists(filePath))
+                throw new McpException($"Error: File {filePath} not found");
+
+            SyntaxNode? rootNode = document != null
+                ? await document.GetSyntaxRootAsync()
+                : (await CSharpSyntaxTree.ParseText((await RefactoringHelpers.ReadFileWithEncodingAsync(filePath)).Item1).GetRootAsync());
+            var sourceClassNode = rootNode!.DescendantNodes().OfType<ClassDeclarationSyntax>()
+                .FirstOrDefault(c => c.Identifier.ValueText == sourceClass);
+            if (sourceClassNode == null)
+                throw new McpException($"Error: Source class '{sourceClass}' not found");
+
+            var visitor = new MethodAndMemberVisitor();
+            visitor.Visit(sourceClassNode);
+
+            var accessMemberName = GenerateAccessMemberName(visitor.Members.Keys, targetClass);
+            var accessMemberType = visitor.Members.TryGetValue(accessMemberName, out var info)
+                ? info.Type
+                : "field";
 
             string message;
             if (document != null)
