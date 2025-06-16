@@ -20,6 +20,7 @@ public static partial class MoveMethodsTool
         public SyntaxNode NewSourceRoot { get; set; }
         public MethodDeclarationSyntax MovedMethod { get; set; }
         public MethodDeclarationSyntax StubMethod { get; set; }
+        public string? Namespace { get; set; }
     }
 
     public class MoveInstanceMethodResult
@@ -29,6 +30,7 @@ public static partial class MoveMethodsTool
         public MethodDeclarationSyntax StubMethod { get; set; }
         public MemberDeclarationSyntax? AccessMember { get; set; }
         public bool NeedsThisParameter { get; set; }
+        public string? Namespace { get; set; }
     }
 
     public static MoveStaticMethodResult MoveStaticMethodAst(
@@ -57,11 +59,15 @@ public static partial class MoveMethodsTool
             typeParameters);
         var updatedSourceRoot = UpdateSourceRootWithStub(sourceRoot, method, stubMethod);
 
+        var ns = (sourceClass.Parent as NamespaceDeclarationSyntax)?.Name.ToString()
+                 ?? (sourceClass.Parent as FileScopedNamespaceDeclarationSyntax)?.Name.ToString();
+
         return new MoveStaticMethodResult
         {
             NewSourceRoot = updatedSourceRoot,
             MovedMethod = transformedMethod,
-            StubMethod = stubMethod
+            StubMethod = stubMethod,
+            Namespace = ns
         };
     }
 
@@ -231,13 +237,17 @@ public static partial class MoveMethodsTool
 
         var updatedSourceRoot = UpdateSourceClassWithStub(originClass, method, stubMethod, accessMember);
 
+        var ns = (originClass.Parent as NamespaceDeclarationSyntax)?.Name.ToString()
+                 ?? (originClass.Parent as FileScopedNamespaceDeclarationSyntax)?.Name.ToString();
+
         return new MoveInstanceMethodResult
         {
             NewSourceRoot = updatedSourceRoot,
             MovedMethod = transformedMethod,
             StubMethod = stubMethod,
             AccessMember = accessMember,
-            NeedsThisParameter = needsThisParameter
+            NeedsThisParameter = needsThisParameter,
+            Namespace = ns
         };
     }
 
@@ -485,7 +495,11 @@ public static partial class MoveMethodsTool
         return fieldIndex >= 0 ? fieldIndex + 1 : 0;
     }
 
-    public static SyntaxNode AddMethodToTargetClass(SyntaxNode targetRoot, string targetClass, MethodDeclarationSyntax method)
+    public static SyntaxNode AddMethodToTargetClass(
+        SyntaxNode targetRoot,
+        string targetClass,
+        MethodDeclarationSyntax method,
+        string? namespaceName = null)
     {
         var targetClassDecl = targetRoot.DescendantNodes()
             .OfType<ClassDeclarationSyntax>()
@@ -496,7 +510,24 @@ public static partial class MoveMethodsTool
             var newClass = SyntaxFactory.ClassDeclaration(targetClass)
                 .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
                 .AddMembers(method.WithLeadingTrivia());
-            return ((CompilationUnitSyntax)targetRoot).AddMembers(newClass);
+            var compilationUnit = (CompilationUnitSyntax)targetRoot;
+
+            var nsDecl = compilationUnit.Members.OfType<BaseNamespaceDeclarationSyntax>().FirstOrDefault();
+            if (nsDecl != null)
+            {
+                var updatedNs = nsDecl.AddMembers(newClass);
+                return compilationUnit.ReplaceNode(nsDecl, updatedNs);
+            }
+            else if (!string.IsNullOrEmpty(namespaceName))
+            {
+                var ns = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName(namespaceName))
+                    .AddMembers(newClass);
+                return compilationUnit.AddMembers(ns);
+            }
+            else
+            {
+                return compilationUnit.AddMembers(newClass);
+            }
         }
         else
         {
