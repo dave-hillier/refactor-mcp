@@ -24,7 +24,6 @@ public class MoveInstanceMethodTests : TestBase
             "A",
             "Do",
             "B",
-            "_b",
             "field");
 
         Assert.Contains("Successfully moved", result);
@@ -47,7 +46,6 @@ public class MoveInstanceMethodTests : TestBase
                 "A",
                 "Do",
                 "B",
-                "_b",
                 "field"));
     }
 
@@ -65,7 +63,6 @@ public class MoveInstanceMethodTests : TestBase
             "A",
             "Do",
             "B",
-            "_b",
             "field");
         Assert.Contains("Successfully moved", result);
 
@@ -76,7 +73,6 @@ public class MoveInstanceMethodTests : TestBase
                 "A",
                 "Do",
                 "B",
-                "_b",
                 "field"));
     }
 }

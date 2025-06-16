@@ -12,7 +12,6 @@ public class MoveMultipleMethodsTests
         string[] sourceClasses,
         string[] methodNames,
         string[] targetClasses,
-        string[] accessMembers,
         string[] accessMemberTypes,
         bool[] isStatic)
     {
@@ -30,7 +29,7 @@ public class MoveMultipleMethodsTests
             }
             else
             {
-                var moveResult = MoveMethodsTool.MoveInstanceMethodAst(root, sourceClasses[i], methodNames[i], targetClasses[i], accessMembers[i], accessMemberTypes[i]);
+                var moveResult = MoveMethodsTool.MoveInstanceMethodAst(root, sourceClasses[i], methodNames[i], targetClasses[i], accessMemberTypes[i]);
                 root = MoveMethodsTool.AddMethodToTargetClass(moveResult.NewSourceRoot, targetClasses[i], moveResult.MovedMethod, moveResult.Namespace);
             }
         }
@@ -59,12 +58,11 @@ public class TargetClass
         var sourceClasses = new[] { "SourceClass", "SourceClass" };
         var methodNames = new[] { "Method1", "Method2" };
         var targetClasses = new[] { "TargetClass", "TargetClass" };
-        var accessMembers = new[] { "", "" };
         var accessMemberTypes = new[] { "", "" };
         var isStatic = new[] { true, true };
 
         var result = MoveMultipleMethodsInSource(
-            source, sourceClasses, methodNames, targetClasses, accessMembers, accessMemberTypes, isStatic);
+            source, sourceClasses, methodNames, targetClasses, accessMemberTypes, isStatic);
 
         var targetClassCode = result.Split(new[] { "public class TargetClass" }, StringSplitOptions.None)[1];
         var sourceClassCode = result.Split(new[] { "public class SourceClass" }, StringSplitOptions.None)[1].Split(new[] { "public class TargetClass" }, StringSplitOptions.None)[0];
@@ -98,12 +96,11 @@ public class TargetClass
         var sourceClasses = new[] { "SourceClass", "SourceClass" };
         var methodNames = new[] { "Method1", "Method2" };
         var targetClasses = new[] { "TargetClass", "TargetClass" };
-        var accessMembers = new[] { "field1", "field1" };
         var accessMemberTypes = new[] { "field", "field" };
         var isStatic = new[] { false, false };
 
         var result = MoveMultipleMethodsInSource(
-            source, sourceClasses, methodNames, targetClasses, accessMembers, accessMemberTypes, isStatic);
+            source, sourceClasses, methodNames, targetClasses, accessMemberTypes, isStatic);
 
         var targetClassCode = result.Split(new[] { "public class TargetClass" }, StringSplitOptions.None)[1];
         var sourceClassCode = result.Split(new[] { "public class SourceClass" }, StringSplitOptions.None)[1].Split(new[] { "public class TargetClass" }, StringSplitOptions.None)[0];
@@ -137,12 +134,11 @@ public class TargetClass
         var sourceClasses = new[] { "SourceClass", "SourceClass" };
         var methodNames = new[] { "Method1", "Method2" };
         var targetClasses = new[] { "TargetClass", "TargetClass" };
-        var accessMembers = new[] { "", "field1" };
         var accessMemberTypes = new[] { "", "field" };
         var isStatic = new[] { true, false };
 
         var result = MoveMultipleMethodsInSource(
-            source, sourceClasses, methodNames, targetClasses, accessMembers, accessMemberTypes, isStatic);
+            source, sourceClasses, methodNames, targetClasses, accessMemberTypes, isStatic);
 
         var targetClassCode = result.Split(new[] { "public class TargetClass" }, StringSplitOptions.None)[1];
         var sourceClassCode = result.Split(new[] { "public class SourceClass" }, StringSplitOptions.None)[1].Split(new[] { "public class TargetClass" }, StringSplitOptions.None)[0];

@@ -50,26 +50,26 @@ public static partial class MoveMethodsTool
         return formatted.ToFullString();
     }
 
-    public static string MoveInstanceMethodInSource(string sourceText, string sourceClass, string methodName, string targetClass, string accessMemberName, string accessMemberType)
+    public static string MoveInstanceMethodInSource(string sourceText, string sourceClass, string methodName, string targetClass, string accessMemberType)
     {
         var tree = CSharpSyntaxTree.ParseText(sourceText);
         var root = tree.GetRoot();
 
-        var moveResult = MoveInstanceMethodAst(root, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
+        var moveResult = MoveInstanceMethodAst(root, sourceClass, methodName, targetClass, accessMemberType);
         var finalRoot = AddMethodToTargetClass(moveResult.NewSourceRoot, targetClass, moveResult.MovedMethod, moveResult.Namespace);
 
         var formatted = Formatter.Format(finalRoot, RefactoringHelpers.SharedWorkspace);
         return formatted.ToFullString();
     }
 
-    public static string MoveMultipleInstanceMethodsInSource(string sourceText, string sourceClass, string[] methodNames, string targetClass, string accessMemberName, string accessMemberType)
+    public static string MoveMultipleInstanceMethodsInSource(string sourceText, string sourceClass, string[] methodNames, string targetClass, string accessMemberType)
     {
         var tree = CSharpSyntaxTree.ParseText(sourceText);
         var root = tree.GetRoot();
 
         foreach (var methodName in methodNames)
         {
-            var moveResult = MoveInstanceMethodAst(root, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
+            var moveResult = MoveInstanceMethodAst(root, sourceClass, methodName, targetClass, accessMemberType);
             root = AddMethodToTargetClass(moveResult.NewSourceRoot, targetClass, moveResult.MovedMethod, moveResult.Namespace);
         }
 
@@ -157,6 +157,18 @@ public static partial class MoveMethodsTool
                    .Any(f => f.Declaration.Variables.Any(v => v.Identifier.ValueText == memberName))
                || classDecl.Members.OfType<PropertyDeclarationSyntax>()
                    .Any(p => p.Identifier.ValueText == memberName);
+    }
+
+    private static string GenerateAccessMemberName(ClassDeclarationSyntax classDecl, string targetClass)
+    {
+        var baseName = "_" + char.ToLowerInvariant(targetClass[0]) + targetClass.Substring(1);
+        var name = baseName;
+        var counter = 1;
+        while (MemberExists(classDecl, name))
+        {
+            name = baseName + counter++;
+        }
+        return name;
     }
 
     private static MemberDeclarationSyntax CreateAccessMember(string accessMemberType, string accessMemberName, string targetClass)

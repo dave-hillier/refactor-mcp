@@ -209,13 +209,14 @@ public static partial class MoveMethodsTool
         string sourceClass,
         string methodName,
         string targetClass,
-        string accessMemberName,
-        string accessMemberType)
+        string accessMemberType,
+        string? accessMemberName = null)
     {
         var originClass = FindSourceClass(sourceRoot, sourceClass);
         var method = FindMethodInClass(originClass, methodName);
 
         var instanceMembers = GetInstanceMemberNames(originClass);
+        accessMemberName ??= GenerateAccessMemberName(originClass, targetClass);
         var methodNames = GetMethodNames(originClass);
         var privateFieldInfos = GetPrivateFieldInfos(originClass);
         var usedPrivateFields = GetUsedPrivateFields(method, new HashSet<string>(privateFieldInfos.Keys));

@@ -22,7 +22,6 @@ public class MoveMethodNamespaceTests : TestBase
             "A",
             "Foo",
             "B",
-            "_b",
             "field",
             targetFile);
 

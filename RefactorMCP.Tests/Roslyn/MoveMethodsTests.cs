@@ -32,7 +32,7 @@ namespace RefactorMCP.Tests.Roslyn
                 }
                 else
                 {
-                    var moveResult = MoveMethodsTool.MoveInstanceMethodAst(root, sourceClasses[i], methodNames[i], targetClasses[i], accessMembers[i], accessMemberTypes[i]);
+                    var moveResult = MoveMethodsTool.MoveInstanceMethodAst(root, sourceClasses[i], methodNames[i], targetClasses[i], accessMemberTypes[i]);
                     root = MoveMethodsTool.AddMethodToTargetClass(moveResult.NewSourceRoot, targetClasses[i], moveResult.MovedMethod, moveResult.Namespace);
                 }
             }
@@ -200,7 +200,6 @@ public class TargetClass
                 "SourceClass",
                 "GetValue",
                 "TargetClass",
-                "_target",
                 "field");
 
             var finalRoot = MoveMethodsTool.AddMethodToTargetClass(result.NewSourceRoot, "TargetClass", result.MovedMethod, result.Namespace);
@@ -232,7 +231,6 @@ public class TargetClass
                 "SourceClass",
                 "GetValue",
                 "TargetClass",
-                "_target",
                 "field");
 
             var finalRoot = MoveMethodsTool.AddMethodToTargetClass(result.NewSourceRoot, "TargetClass", result.MovedMethod, result.Namespace);
@@ -262,7 +260,6 @@ public class TargetClass
                 "SourceClass",
                 "Say",
                 "TargetClass",
-                "_target",
                 "field");
 
             var finalRoot = MoveMethodsTool.AddMethodToTargetClass(result.NewSourceRoot, "TargetClass", result.MovedMethod, result.Namespace);

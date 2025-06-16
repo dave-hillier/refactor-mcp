@@ -180,7 +180,6 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli move-instance-method \
   "SourceClass" \
   "MethodA,MethodB" \
   "TargetClass" \
-  "memberName" \
   "field" \
   "./optional/target.cs"
 ```
@@ -197,7 +196,6 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli move-multiple-methods \
   SourceClass \
   "Foo,Bar" \
   TargetClass \
-  memberName \
   "./optional/Target.cs"
 ```
 Wrapper methods remain in the source class, delegating to their moved versions.

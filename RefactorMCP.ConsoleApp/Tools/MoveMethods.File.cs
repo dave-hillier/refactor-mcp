@@ -90,9 +90,9 @@ public static partial class MoveMethodsTool
         string sourceClass,
         string methodName,
         string targetClass,
-        string accessMemberName,
         string accessMemberType,
-        string? targetFilePath = null)
+        string? targetFilePath = null,
+        string? accessMemberName = null)
     {
         EnsureNotAlreadyMoved(filePath, methodName);
         ValidateFileExists(filePath);
@@ -104,7 +104,7 @@ public static partial class MoveMethodsTool
         var sourceRoot = (await CSharpSyntaxTree.ParseText(sourceText).GetRootAsync());
 
         var moveResult = MoveInstanceMethodAst(
-            sourceRoot, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
+            sourceRoot, sourceClass, methodName, targetClass, accessMemberType, accessMemberName);
 
         if (sameFile)
         {

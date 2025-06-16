@@ -363,7 +363,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli move-instance-method \
   Calculator \
   LogOperation \
   Logger \
-  _logger field
+  field
 ```
 
 **After**:

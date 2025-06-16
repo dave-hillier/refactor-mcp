@@ -210,7 +210,6 @@ public static partial class MoveMethodsTool
         [Description("Name of the source class containing the method")] string sourceClass,
         [Description("Comma separated names of the methods to move")] string methodNames,
         [Description("Name of the target class")] string targetClass,
-        [Description("Name for the access member")] string accessMemberName,
         [Description("Type of access member (field, property, variable)")] string accessMemberType = "field",
         [Description("Path to the target file (optional, will create if doesn't exist)")] string? targetFilePath = null)
     {
@@ -242,7 +241,6 @@ public static partial class MoveMethodsTool
                     sourceClass,
                     methodList,
                     targetClass,
-                    accessMemberName,
                     accessMemberType,
                     targetFilePath);
                 message = msg;
@@ -252,11 +250,11 @@ public static partial class MoveMethodsTool
                 // For single-file operations, use the bulk move method for better efficiency
                 if (methodList.Length == 1)
                 {
-                    message = await MoveInstanceMethodInFile(filePath, sourceClass, methodList[0], targetClass, accessMemberName, accessMemberType, targetFilePath);
+                    message = await MoveInstanceMethodInFile(filePath, sourceClass, methodList[0], targetClass, accessMemberType, targetFilePath);
                 }
                 else
                 {
-                    message = await MoveBulkInstanceMethodsInFile(filePath, sourceClass, methodList, targetClass, accessMemberName, accessMemberType, targetFilePath);
+                    message = await MoveBulkInstanceMethodsInFile(filePath, sourceClass, methodList, targetClass, accessMemberType, targetFilePath);
                 }
             }
 
@@ -271,7 +269,7 @@ public static partial class MoveMethodsTool
         }
     }
 
-    private static async Task<string> MoveBulkInstanceMethodsInFile(string filePath, string sourceClass, string[] methodNames, string targetClass, string accessMemberName, string accessMemberType, string? targetFilePath)
+    private static async Task<string> MoveBulkInstanceMethodsInFile(string filePath, string sourceClass, string[] methodNames, string targetClass, string accessMemberType, string? targetFilePath)
     {
         if (!File.Exists(filePath))
             throw new McpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
@@ -286,10 +284,12 @@ public static partial class MoveMethodsTool
             // Same file operation - use multiple individual AST transformations
             var tree = CSharpSyntaxTree.ParseText(sourceText);
             var root = await tree.GetRootAsync();
+            var classNode = root.DescendantNodes().OfType<ClassDeclarationSyntax>().First(c => c.Identifier.ValueText == sourceClass);
+            var accessMemberName = GenerateAccessMemberName(classNode, targetClass);
 
             foreach (var methodName in methodNames)
             {
-                var moveResult = MoveInstanceMethodAst(root, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
+                var moveResult = MoveInstanceMethodAst(root, sourceClass, methodName, targetClass, accessMemberType, accessMemberName);
                 root = AddMethodToTargetClass(moveResult.NewSourceRoot, targetClass, moveResult.MovedMethod, moveResult.Namespace);
             }
 
@@ -302,13 +302,15 @@ public static partial class MoveMethodsTool
             // Cross-file operation - update both files in memory and write once
             var sourceTree = CSharpSyntaxTree.ParseText(sourceText);
             var sourceRoot = await sourceTree.GetRootAsync();
+            var classNode2 = sourceRoot.DescendantNodes().OfType<ClassDeclarationSyntax>().First(c => c.Identifier.ValueText == sourceClass);
+            var accessMemberName2 = GenerateAccessMemberName(classNode2, targetClass);
 
             var targetRoot = await LoadOrCreateTargetRoot(targetPath);
             targetRoot = PropagateUsings(sourceRoot, targetRoot);
 
             foreach (var methodName in methodNames)
             {
-                var moveResult = MoveInstanceMethodAst(sourceRoot, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
+                var moveResult = MoveInstanceMethodAst(sourceRoot, sourceClass, methodName, targetClass, accessMemberType, accessMemberName2);
                 sourceRoot = moveResult.NewSourceRoot;
                 targetRoot = AddMethodToTargetClass(targetRoot, targetClass, moveResult.MovedMethod, moveResult.Namespace);
             }
@@ -332,12 +334,14 @@ public static partial class MoveMethodsTool
         string sourceClassName,
         string[] methodNames,
         string targetClassName,
-        string accessMemberName,
         string accessMemberType,
         string? targetFilePath = null)
     {
         var messages = new List<string>();
         var currentDocument = document;
+        var root = await document.GetSyntaxRootAsync() ?? throw new McpException("Error: Could not get syntax root");
+        var classNode = root.DescendantNodes().OfType<ClassDeclarationSyntax>().First(c => c.Identifier.ValueText == sourceClassName);
+        var accessMemberName = GenerateAccessMemberName(classNode, targetClassName);
 
         foreach (var methodName in methodNames)
         {
@@ -350,9 +354,9 @@ public static partial class MoveMethodsTool
                 sourceClassName,
                 methodName,
                 targetClassName,
-                accessMemberName,
                 accessMemberType,
-                targetFilePath);
+                targetFilePath,
+                accessMemberName);
 
             if (sameFile)
             {
