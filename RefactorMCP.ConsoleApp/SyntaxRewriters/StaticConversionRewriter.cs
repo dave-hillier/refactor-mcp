@@ -45,6 +45,16 @@ internal class StaticConversionRewriter : CSharpSyntaxRewriter
             visited = visited.WithParameterList(method.ParameterList.WithParameters(newParameters));
         }
         visited = AstTransformations.EnsureStaticModifier(visited);
+
+        // If the original method was an explicit interface implementation, drop
+        // the interface specifier so the transformed static method compiles in
+        // the new location.
+        if (visited.ExplicitInterfaceSpecifier != null)
+        {
+            visited = visited.WithExplicitInterfaceSpecifier(null)
+                             .WithIdentifier(SyntaxFactory.Identifier(visited.Identifier.ValueText));
+        }
+
         return visited;
     }
 

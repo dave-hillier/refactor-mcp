@@ -129,6 +129,14 @@ public static partial class MoveMethodsTool
     {
         var transformedMethod = method;
 
+        // Remove explicit interface specifier from the moved method. The stub
+        // method left behind retains the interface implementation.
+        if (transformedMethod.ExplicitInterfaceSpecifier != null)
+        {
+            transformedMethod = transformedMethod.WithExplicitInterfaceSpecifier(null)
+                                                 .WithIdentifier(SyntaxFactory.Identifier(transformedMethod.Identifier.ValueText));
+        }
+
         if (needsStaticFieldQualification)
         {
             var staticFieldRewriter = new StaticFieldRewriter(staticFieldNames, sourceClassName);

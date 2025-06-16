@@ -42,6 +42,15 @@ internal class ExtensionMethodRewriter : CSharpSyntaxRewriter
         var parameters = node.ParameterList.Parameters.Insert(0, thisParam);
         var updated = node.WithParameterList(node.ParameterList.WithParameters(parameters));
         updated = AstTransformations.EnsureStaticModifier(updated);
+
+        // Remove explicit interface specifier when generating the extension
+        // method. The wrapper method in the original class retains it so the
+        // interface implementation remains intact.
+        if (updated.ExplicitInterfaceSpecifier != null)
+        {
+            updated = updated.WithExplicitInterfaceSpecifier(null)
+                             .WithIdentifier(SyntaxFactory.Identifier(updated.Identifier.ValueText));
+        }
         return base.VisitMethodDeclaration(updated);
     }
 

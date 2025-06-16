@@ -11,7 +11,7 @@ public class MoveMethodNamespaceTests : TestBase
     public async Task MoveInstanceMethod_PreservesNamespaceInNewFile()
     {
         UnloadSolutionTool.ClearSolutionCache();
-        var testFile = Path.Combine(TestOutputPath, "NamespaceSample.cs");
+        var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "NamespaceSample.cs"));
         await TestUtilities.CreateTestFile(testFile, "namespace Sample.Namespace { public class A { public void Foo() {} } }");
         await LoadSolutionTool.LoadSolution(SolutionPath);
 
