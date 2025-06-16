@@ -114,4 +114,28 @@ public static class StringProcessorExtensions
         var output = ConvertToStaticWithParametersTool.ConvertToStaticWithParametersInSource(input, "MultiplyValue");
         Assert.Equal(expected, output.Trim());
     }
+
+    [Fact]
+    public void ConvertToStaticWithParametersInSource_TrimsUnderscorePrefix()
+    {
+        var input = @"class Calculator
+{
+    int _multiplier;
+    int MultiplyValue()
+    {
+        return _multiplier;
+    }
+}";
+        var expected = @"class Calculator
+{
+    int _multiplier;
+
+    static int MultiplyValue(int multiplier)
+    {
+        return multiplier;
+    }
+}";
+        var output = ConvertToStaticWithParametersTool.ConvertToStaticWithParametersInSource(input, "MultiplyValue");
+        Assert.Equal(expected, output.Trim());
+    }
 }
