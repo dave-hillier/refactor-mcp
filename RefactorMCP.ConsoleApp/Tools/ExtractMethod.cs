@@ -37,10 +37,10 @@ public static class ExtractMethodTool
         var syntaxRoot = await document.GetSyntaxRootAsync();
 
         if (!RefactoringHelpers.TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
-            return RefactoringHelpers.ThrowMcpException("Error: Invalid selection range format. Use 'startLine:startColumn-endLine:endColumn'");
+            throw new McpException("Error: Invalid selection range format. Use 'startLine:startColumn-endLine:endColumn'");
 
         if (!RefactoringHelpers.ValidateRange(sourceText, startLine, startColumn, endLine, endColumn, out var error))
-            return RefactoringHelpers.ThrowMcpException(error);
+            throw new McpException(error);
 
         var startPosition = sourceText.Lines[startLine - 1].Start + startColumn - 1;
         var endPosition = sourceText.Lines[endLine - 1].Start + endColumn - 1;
@@ -51,18 +51,18 @@ public static class ExtractMethodTool
             .ToList();
 
         if (!selectedNodes.Any())
-            return RefactoringHelpers.ThrowMcpException("Error: No valid code selected");
+            throw new McpException("Error: No valid code selected");
 
         var containingMethod = selectedNodes.First().Ancestors().OfType<MethodDeclarationSyntax>().FirstOrDefault();
         if (containingMethod == null)
-            return RefactoringHelpers.ThrowMcpException("Error: Selected code is not within a method");
+            throw new McpException("Error: Selected code is not within a method");
 
         var statementsToExtract = containingMethod.Body!.Statements
             .Where(s => span.IntersectsWith(s.FullSpan))
             .ToList();
 
         if (!statementsToExtract.Any())
-            return RefactoringHelpers.ThrowMcpException("Error: Selected code does not contain extractable statements");
+            throw new McpException("Error: Selected code does not contain extractable statements");
 
         var containingClass = containingMethod.Ancestors().OfType<ClassDeclarationSyntax>().FirstOrDefault();
         var rewriter = new ExtractMethodRewriter(containingMethod, containingClass, statementsToExtract, methodName);
@@ -96,10 +96,10 @@ public static class ExtractMethodTool
         var textLines = text.Lines;
 
         if (!RefactoringHelpers.TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
-            return RefactoringHelpers.ThrowMcpException("Error: Invalid selection range format. Use 'startLine:startColumn-endLine:endColumn'");
+            throw new McpException("Error: Invalid selection range format. Use 'startLine:startColumn-endLine:endColumn'");
 
         if (!RefactoringHelpers.ValidateRange(text, startLine, startColumn, endLine, endColumn, out var error))
-            return RefactoringHelpers.ThrowMcpException(error);
+            throw new McpException(error);
 
         var startPosition = textLines[startLine - 1].Start + startColumn - 1;
         var endPosition = textLines[endLine - 1].Start + endColumn - 1;
@@ -110,18 +110,18 @@ public static class ExtractMethodTool
             .ToList();
 
         if (!selectedNodes.Any())
-            return RefactoringHelpers.ThrowMcpException("Error: No valid code selected");
+            throw new McpException("Error: No valid code selected");
 
         var containingMethod = selectedNodes.First().Ancestors().OfType<MethodDeclarationSyntax>().FirstOrDefault();
         if (containingMethod == null)
-            return RefactoringHelpers.ThrowMcpException("Error: Selected code is not within a method");
+            throw new McpException("Error: Selected code is not within a method");
 
         var statementsToExtract = containingMethod.Body!.Statements
             .Where(s => span.IntersectsWith(s.FullSpan))
             .ToList();
 
         if (!statementsToExtract.Any())
-            return RefactoringHelpers.ThrowMcpException("Error: Selected code does not contain extractable statements");
+            throw new McpException("Error: Selected code does not contain extractable statements");
 
         var containingClass = containingMethod.Ancestors().OfType<ClassDeclarationSyntax>().FirstOrDefault();
         var rewriter = new ExtractMethodRewriter(containingMethod, containingClass, statementsToExtract, methodName);

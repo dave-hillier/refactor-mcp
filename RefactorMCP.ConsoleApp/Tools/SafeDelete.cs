@@ -99,7 +99,7 @@ public static class SafeDeleteTool
             .OfType<FieldDeclarationSyntax>()
             .FirstOrDefault(f => f.Declaration.Variables.Any(v => v.Identifier.ValueText == fieldName));
         if (field == null)
-            return RefactoringHelpers.ThrowMcpException($"Error: Field '{fieldName}' not found");
+            throw new McpException($"Error: Field '{fieldName}' not found");
 
         var variable = field.Declaration.Variables.First(v => v.Identifier.ValueText == fieldName);
         var semanticModel = await document.GetSemanticModelAsync();
@@ -107,7 +107,7 @@ public static class SafeDeleteTool
         var refs = await SymbolFinder.FindReferencesAsync(symbol!, document.Project.Solution);
         var count = refs.SelectMany(r => r.Locations).Count() - 1;
         if (count > 0)
-            return RefactoringHelpers.ThrowMcpException($"Error: Field '{fieldName}' is referenced {count} time(s)");
+            throw new McpException($"Error: Field '{fieldName}' is referenced {count} time(s)");
 
         var rewriter = new FieldRemovalRewriter(fieldName);
         var newRoot = rewriter.Visit(root)!;
@@ -137,11 +137,11 @@ public static class SafeDeleteTool
             .OfType<FieldDeclarationSyntax>()
             .FirstOrDefault(f => f.Declaration.Variables.Any(v => v.Identifier.ValueText == fieldName));
         if (field == null)
-            return RefactoringHelpers.ThrowMcpException($"Error: Field '{fieldName}' not found");
+            throw new McpException($"Error: Field '{fieldName}' not found");
 
         var references = root.DescendantNodes().OfType<IdentifierNameSyntax>().Count(id => id.Identifier.ValueText == fieldName);
         if (references > 1)
-            return RefactoringHelpers.ThrowMcpException($"Error: Field '{fieldName}' is referenced");
+            throw new McpException($"Error: Field '{fieldName}' is referenced");
 
         SyntaxNode newRoot;
         if (field.Declaration.Variables.Count == 1)
@@ -161,14 +161,14 @@ public static class SafeDeleteTool
         var root = await document.GetSyntaxRootAsync();
         var method = root!.DescendantNodes().OfType<MethodDeclarationSyntax>().FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            return RefactoringHelpers.ThrowMcpException($"Error: Method '{methodName}' not found");
+            throw new McpException($"Error: Method '{methodName}' not found");
 
         var semanticModel = await document.GetSemanticModelAsync();
         var symbol = semanticModel!.GetDeclaredSymbol(method)!;
         var refs = await SymbolFinder.FindReferencesAsync(symbol, document.Project.Solution);
         var count = refs.SelectMany(r => r.Locations).Count() - 1;
         if (count > 0)
-            return RefactoringHelpers.ThrowMcpException($"Error: Method '{methodName}' is referenced {count} time(s)");
+            throw new McpException($"Error: Method '{methodName}' is referenced {count} time(s)");
 
         var rewriter = new MethodRemovalRewriter(methodName);
         var newRoot = rewriter.Visit(root)!;
@@ -195,12 +195,12 @@ public static class SafeDeleteTool
         var root = tree.GetRoot();
         var method = root.DescendantNodes().OfType<MethodDeclarationSyntax>().FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            return RefactoringHelpers.ThrowMcpException($"Error: Method '{methodName}' not found");
+            throw new McpException($"Error: Method '{methodName}' not found");
 
         var references = root.DescendantNodes().OfType<InvocationExpressionSyntax>()
             .Count(inv => inv.Expression is IdentifierNameSyntax id && id.Identifier.ValueText == methodName);
         if (references > 0)
-            return RefactoringHelpers.ThrowMcpException($"Error: Method '{methodName}' is referenced");
+            throw new McpException($"Error: Method '{methodName}' is referenced");
 
         var rewriter = new MethodRemovalRewriter(methodName);
         var newRoot = rewriter.Visit(root)!;
@@ -213,11 +213,11 @@ public static class SafeDeleteTool
         var root = await document.GetSyntaxRootAsync();
         var method = root!.DescendantNodes().OfType<MethodDeclarationSyntax>().FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            return RefactoringHelpers.ThrowMcpException($"Error: Method '{methodName}' not found");
+            throw new McpException($"Error: Method '{methodName}' not found");
 
         var parameter = method.ParameterList.Parameters.FirstOrDefault(p => p.Identifier.ValueText == parameterName);
         if (parameter == null)
-            return RefactoringHelpers.ThrowMcpException($"Error: Parameter '{parameterName}' not found");
+            throw new McpException($"Error: Parameter '{parameterName}' not found");
 
         var semanticModel = await document.GetSemanticModelAsync();
         var methodSymbol = semanticModel!.GetDeclaredSymbol(method)!;
@@ -264,11 +264,11 @@ public static class SafeDeleteTool
         var root = tree.GetRoot();
         var method = root.DescendantNodes().OfType<MethodDeclarationSyntax>().FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            return RefactoringHelpers.ThrowMcpException($"Error: Method '{methodName}' not found");
+            throw new McpException($"Error: Method '{methodName}' not found");
 
         var parameter = method.ParameterList.Parameters.FirstOrDefault(p => p.Identifier.ValueText == parameterName);
         if (parameter == null)
-            return RefactoringHelpers.ThrowMcpException($"Error: Parameter '{parameterName}' not found");
+            throw new McpException($"Error: Parameter '{parameterName}' not found");
 
         var paramIndex = method.ParameterList.Parameters.IndexOf(parameter);
         var rewriter = new ParameterRemovalRewriter(methodName, paramIndex);
@@ -282,24 +282,24 @@ public static class SafeDeleteTool
         var text = await document.GetTextAsync();
         var root = await document.GetSyntaxRootAsync();
         if (!RefactoringHelpers.TryParseRange(selectionRange, out var sl, out var sc, out var el, out var ec))
-            return RefactoringHelpers.ThrowMcpException("Error: Invalid selection range format");
+            throw new McpException("Error: Invalid selection range format");
 
         if (!RefactoringHelpers.ValidateRange(text, sl, sc, el, ec, out var error))
-            return RefactoringHelpers.ThrowMcpException(error);
+            throw new McpException(error);
 
         var start = text.Lines[sl - 1].Start + sc - 1;
         var end = text.Lines[el - 1].Start + ec - 1;
         var span = TextSpan.FromBounds(start, end);
         var variable = root!.DescendantNodes(span).OfType<VariableDeclaratorSyntax>().FirstOrDefault();
         if (variable == null)
-            return RefactoringHelpers.ThrowMcpException("Error: No variable declaration found in range");
+            throw new McpException("Error: No variable declaration found in range");
 
         var semanticModel = await document.GetSemanticModelAsync();
         var symbol = semanticModel!.GetDeclaredSymbol(variable)!;
         var refs = await SymbolFinder.FindReferencesAsync(symbol, document.Project.Solution);
         var count = refs.SelectMany(r => r.Locations).Count() - 1;
         if (count > 0)
-            return RefactoringHelpers.ThrowMcpException($"Error: Variable '{variable.Identifier.ValueText}' is referenced {count} time(s)");
+            throw new McpException($"Error: Variable '{variable.Identifier.ValueText}' is referenced {count} time(s)");
 
         var rewriter = new VariableRemovalRewriter(variable.Identifier.ValueText, variable.Span);
         var newRoot = rewriter.Visit(root)!;
@@ -328,22 +328,22 @@ public static class SafeDeleteTool
         var text = SourceText.From(sourceText);
         var lines = text.Lines;
         if (!RefactoringHelpers.TryParseRange(selectionRange, out var sl, out var sc, out var el, out var ec))
-            return RefactoringHelpers.ThrowMcpException("Error: Invalid selection range format");
+            throw new McpException("Error: Invalid selection range format");
 
         if (!RefactoringHelpers.ValidateRange(text, sl, sc, el, ec, out var error))
-            return RefactoringHelpers.ThrowMcpException(error);
+            throw new McpException(error);
 
         var start = lines[sl - 1].Start + sc - 1;
         var end = lines[el - 1].Start + ec - 1;
         var span = TextSpan.FromBounds(start, end);
         var variable = root.DescendantNodes(span).OfType<VariableDeclaratorSyntax>().FirstOrDefault();
         if (variable == null)
-            return RefactoringHelpers.ThrowMcpException("Error: No variable declaration found in range");
+            throw new McpException("Error: No variable declaration found in range");
 
         var name = variable.Identifier.ValueText;
         var references = root.DescendantNodes().OfType<IdentifierNameSyntax>().Count(id => id.Identifier.ValueText == name);
         if (references > 1)
-            return RefactoringHelpers.ThrowMcpException($"Error: Variable '{name}' is referenced");
+            throw new McpException($"Error: Variable '{name}' is referenced");
 
         var rewriter = new VariableRemovalRewriter(name, variable.Span);
         var newRoot = rewriter.Visit(root)!;

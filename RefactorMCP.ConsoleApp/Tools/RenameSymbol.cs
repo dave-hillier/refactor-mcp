@@ -25,11 +25,11 @@ public static class RenameSymbolTool
             var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
             var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
             if (document == null)
-                return RefactoringHelpers.ThrowMcpException($"Error: File {filePath} not found in solution");
+                throw new McpException($"Error: File {filePath} not found in solution");
 
             var symbol = await FindSymbol(document, oldName, line, column);
             if (symbol == null)
-                return RefactoringHelpers.ThrowMcpException($"Error: Symbol '{oldName}' not found");
+                throw new McpException($"Error: Symbol '{oldName}' not found");
 
             var renamed = await Renamer.RenameSymbolAsync(solution, symbol, newName, solution.Workspace.Options);
             var changes = renamed.GetChanges(solution);
