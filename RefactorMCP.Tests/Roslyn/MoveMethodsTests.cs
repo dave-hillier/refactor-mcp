@@ -174,9 +174,9 @@ public class TargetClass
             Assert.DoesNotContain("public int Method2() { return Method1() + 1; }", sourceClassCode);
             Assert.DoesNotContain("public int Method3() { return Method2() + 1; }", sourceClassCode);
 
-            Assert.Contains("return this.field1.Method1(this.field1)", sourceClassCode);
-            Assert.Contains("return this.field1.Method2(this)", sourceClassCode);
-            Assert.Contains("return this.field1.Method3(this)", sourceClassCode);
+            Assert.Contains("return field1.Method1(field1)", sourceClassCode);
+            Assert.Contains("return field1.Method2(this)", sourceClassCode);
+            Assert.Contains("return field1.Method3(this)", sourceClassCode);
         }
 
         [Fact]
@@ -208,7 +208,7 @@ public class TargetClass
 
             Assert.Contains("public int GetValue(int _value)", formatted);
             Assert.Contains("return _value + 2", formatted);
-            Assert.Contains("return this._target.GetValue(this._value)", formatted);
+            Assert.Contains("return _target.GetValue(_value)", formatted);
         }
     }
 }

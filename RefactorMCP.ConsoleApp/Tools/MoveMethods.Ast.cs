@@ -434,27 +434,12 @@ public static partial class MoveMethodsTool
         foreach (var fieldName in fieldArguments)
         {
             originalParameters.Add(SyntaxFactory.Argument(
-                SyntaxFactory.MemberAccessExpression(
-                    SyntaxKind.SimpleMemberAccessExpression,
-                    SyntaxFactory.ThisExpression(),
-                    SyntaxFactory.IdentifierName(fieldName))));
+                SyntaxFactory.IdentifierName(fieldName)));
         }
 
         var argumentList = SyntaxFactory.ArgumentList(SyntaxFactory.SeparatedList(originalParameters));
 
-        ExpressionSyntax accessExpression;
-        if (string.Equals(accessMemberType, "field", StringComparison.OrdinalIgnoreCase) ||
-            string.Equals(accessMemberType, "property", StringComparison.OrdinalIgnoreCase))
-        {
-            accessExpression = SyntaxFactory.MemberAccessExpression(
-                SyntaxKind.SimpleMemberAccessExpression,
-                SyntaxFactory.ThisExpression(),
-                SyntaxFactory.IdentifierName(accessMemberName));
-        }
-        else
-        {
-            accessExpression = SyntaxFactory.IdentifierName(accessMemberName);
-        }
+        ExpressionSyntax accessExpression = SyntaxFactory.IdentifierName(accessMemberName);
 
         var methodExpression = CreateMethodExpression(methodName, typeParameters, needsThisParameter);
 
