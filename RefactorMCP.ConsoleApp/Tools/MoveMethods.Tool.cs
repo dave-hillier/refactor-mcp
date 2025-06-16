@@ -172,6 +172,7 @@ public static partial class MoveMethodsTool
 
         var missingUsings = context.SourceUsings
             .Where(u => !targetUsingNames.Contains(u.Name.ToString()))
+            .Where(u => context.Namespace == null || u.Name.ToString() != context.Namespace)
             .ToArray();
 
         if (missingUsings.Length > 0)
@@ -304,7 +305,10 @@ public static partial class MoveMethodsTool
             var sourceRoot = await sourceTree.GetRootAsync();
 
             var targetRoot = await LoadOrCreateTargetRoot(targetPath);
-            targetRoot = PropagateUsings(sourceRoot, targetRoot);
+            var nsName = sourceRoot.DescendantNodes()
+                .OfType<BaseNamespaceDeclarationSyntax>()
+                .FirstOrDefault()?.Name.ToString();
+            targetRoot = PropagateUsings(sourceRoot, targetRoot, nsName);
 
             foreach (var methodName in methodNames)
             {
