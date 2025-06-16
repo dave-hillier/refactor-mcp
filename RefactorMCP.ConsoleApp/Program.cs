@@ -40,6 +40,7 @@ builder.Services
     .AddMcpServer()
     .WithStdioServerTransport()
     .WithToolsFromAssembly()
+    .WithResourcesFromAssembly()
     .WithPromptsFromAssembly();
 
 await builder.Build().RunAsync();
