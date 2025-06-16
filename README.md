@@ -48,8 +48,9 @@ Below is a quick reference of all tool classes provided by RefactorMCP. Each too
   Make a field readonly if assigned only during initialization (preferred for large C# file refactoring).
 - **MoveClassToFileTool** `[McpServerToolType]`  
   Move a class to a separate file with the same name.
-- **MoveMethodsTool** `[McpServerToolType]`  
-  Move a static method to another class (preferred for large C# file refactoring).
+- **MoveMethodsTool** `[McpServerToolType]`
+  Move a static or instance method to another class (preferred for large C# file refactoring).
+  If the same method is moved again in one run, an error is raised. Use `InlineMethodTool` to remove the wrapper.
 - **MoveMultipleMethodsTool** `[McpServerToolType]`  
   Move multiple methods from a source class to a target class, automatically ordering by dependencies.
 - **RenameSymbolTool** `[McpServerToolType]`  
@@ -248,8 +249,8 @@ dotnet run --project RefactorMCP.ConsoleApp -- --json ToolName '{"param":"value"
   `SourceClass`, `Method`, `TargetClass`, `AccessMember`, `AccessMemberType`,
   `IsStatic`, and an optional `TargetFile`.
 - `cleanup-usings [solutionPath] <filePath>` - Remove unused using directives
-- `move-static-method <solutionPath> <filePath> <methodName> <targetClass> [targetFilePath]` - Move a static method to another class. A placeholder wrapper is left behind to delegate to the new location
- - `move-instance-method <solutionPath> <filePath> <sourceClass> <methodNames> <targetClass> <accessMember> [targetFilePath]` - Move one or more instance methods to another class. Wrapper methods remain in the original class so existing callers continue to work. Private field values used by the method are passed as additional parameters
+ - `move-static-method <solutionPath> <filePath> <methodName> <targetClass> [targetFilePath]` - Move a static method to another class. A placeholder wrapper is left behind to delegate to the new location. Moving the same method again in one run results in an error; use `inline-method` to remove the wrapper.
+ - `move-instance-method <solutionPath> <filePath> <sourceClass> <methodNames> <targetClass> <accessMember> [targetFilePath]` - Move one or more instance methods to another class. Wrapper methods remain in the original class so existing callers continue to work. Repeating the command on the wrapper now errors; run `inline-method` if you no longer need it. Private field values used by the method are passed as additional parameters
  - `move-multiple-methods <solutionPath> <filePath> <sourceClass> <methodNames> <targetClass> <accessMember> [targetFilePath]` - Move multiple methods from one class to another. Each method leaves a delegating wrapper behind. Accepts comma separated `methodNames`. If the access member doesn't exist, a private readonly field is added. The older JSON form is still supported for backward compatibility
 - `cleanup-usings [solutionPath] <filePath>` - Remove unused using directives
 - `rename-symbol <solutionPath> <filePath> <oldName> <newName> [line] [column]` - Rename a symbol across the solution

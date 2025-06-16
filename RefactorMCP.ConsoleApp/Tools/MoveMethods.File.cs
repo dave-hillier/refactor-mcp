@@ -22,6 +22,7 @@ public static partial class MoveMethodsTool
         string targetClass,
         string? targetFilePath = null)
     {
+        EnsureNotAlreadyMoved(filePath, methodName);
         ValidateFileExists(filePath);
 
         var targetPath = targetFilePath ?? Path.Combine(Path.GetDirectoryName(filePath)!, $"{targetClass}.cs");
@@ -58,6 +59,7 @@ public static partial class MoveMethodsTool
             await File.WriteAllTextAsync(filePath, formattedSource.ToFullString(), sourceEncoding);
         }
 
+        MarkMoved(filePath, methodName);
         return $"Successfully moved static method '{methodName}' to {targetClass} in {targetPath}. A delegate method remains in the original class to preserve the interface.";
     }
 
@@ -92,6 +94,7 @@ public static partial class MoveMethodsTool
         string accessMemberType,
         string? targetFilePath = null)
     {
+        EnsureNotAlreadyMoved(filePath, methodName);
         ValidateFileExists(filePath);
 
         var targetPath = targetFilePath ?? filePath;
@@ -130,6 +133,7 @@ public static partial class MoveMethodsTool
         }
 
         var locationInfo = targetFilePath != null ? $" in {targetPath}" : string.Empty;
+        MarkMoved(filePath, methodName);
         return $"Successfully moved instance method {sourceClass}.{methodName} to {targetClass}{locationInfo}. A delegate method remains in the original class to preserve the interface.";
     }
 
