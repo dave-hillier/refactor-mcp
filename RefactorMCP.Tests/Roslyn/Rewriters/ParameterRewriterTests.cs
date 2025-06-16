@@ -21,4 +21,17 @@ public partial class RoslynTransformationTests
         var result = rewriter.Visit(expr)!.NormalizeWhitespace().ToFullString();
         Assert.Equal("1 + 2", result);
     }
+
+    [Fact]
+    public void ParameterRewriter_ReplacesMemberAccess()
+    {
+        var expr = SyntaxFactory.ParseExpression("this.a + a");
+        var map = new Dictionary<string, ExpressionSyntax>
+        {
+            ["a"] = SyntaxFactory.IdentifierName("p")
+        };
+        var rewriter = new ParameterRewriter(map);
+        var result = rewriter.Visit(expr)!.NormalizeWhitespace().ToFullString();
+        Assert.Equal("p + p", result);
+    }
 }
