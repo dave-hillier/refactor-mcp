@@ -16,4 +16,15 @@ public partial class RoslynTransformationTests
         var result = rewriter.Visit(method!)!.NormalizeWhitespace().ToFullString();
         Assert.Contains("inst.Value", result);
     }
+
+    [Fact]
+    public void InstanceMemberRewriter_RewritesThisPropertyAccess()
+    {
+        var method = SyntaxFactory.ParseMemberDeclaration("void Test(){ var x = this.Value; }") as MethodDeclarationSyntax;
+        var rewriter = new InstanceMemberRewriter("inst", new HashSet<string> { "Value" });
+        var result = rewriter.Visit(method!)!.NormalizeWhitespace().ToFullString();
+
+        Assert.Contains("inst.Value", result);
+        Assert.DoesNotContain("this.Value", result);
+    }
 }

@@ -16,6 +16,19 @@ internal class InstanceMemberRewriter : CSharpSyntaxRewriter
         _knownInstanceMembers = knownInstanceMembers;
     }
 
+    public override SyntaxNode? VisitMemberAccessExpression(MemberAccessExpressionSyntax node)
+    {
+        if (node.Expression is ThisExpressionSyntax &&
+            node.Name is IdentifierNameSyntax id &&
+            _knownInstanceMembers.Contains(id.Identifier.ValueText))
+        {
+            var updated = node.WithExpression(SyntaxFactory.IdentifierName(_parameterName));
+            return base.VisitMemberAccessExpression(updated);
+        }
+
+        return base.VisitMemberAccessExpression(node);
+    }
+
     public override SyntaxNode? VisitIdentifierName(IdentifierNameSyntax node)
     {
         var parent = node.Parent;
