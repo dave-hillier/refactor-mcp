@@ -37,11 +37,11 @@ public static class TransformSetterToInitTool
             .OfType<PropertyDeclarationSyntax>()
             .FirstOrDefault(p => p.Identifier.ValueText == propertyName);
         if (property == null)
-            return RefactoringHelpers.ThrowMcpException($"Error: No property named '{propertyName}' found");
+            throw new McpException($"Error: No property named '{propertyName}' found");
 
         var setter = property.AccessorList?.Accessors.FirstOrDefault(a => a.IsKind(SyntaxKind.SetAccessorDeclaration));
         if (setter == null)
-            return RefactoringHelpers.ThrowMcpException($"Error: Property '{propertyName}' has no setter");
+            throw new McpException($"Error: Property '{propertyName}' has no setter");
 
         var rewriter = new SetterToInitRewriter(propertyName);
         var newRoot = rewriter.Visit(syntaxRoot);
@@ -72,11 +72,11 @@ public static class TransformSetterToInitTool
             .OfType<PropertyDeclarationSyntax>()
             .FirstOrDefault(p => p.Identifier.ValueText == propertyName);
         if (property == null)
-            return RefactoringHelpers.ThrowMcpException($"Error: No property named '{propertyName}' found");
+            throw new McpException($"Error: No property named '{propertyName}' found");
 
         var setter = property.AccessorList?.Accessors.FirstOrDefault(a => a.IsKind(SyntaxKind.SetAccessorDeclaration));
         if (setter == null)
-            return RefactoringHelpers.ThrowMcpException($"Error: Property '{propertyName}' has no setter");
+            throw new McpException($"Error: Property '{propertyName}' has no setter");
 
         var rewriter = new SetterToInitRewriter(propertyName);
         var newRoot = rewriter.Visit(syntaxRoot);

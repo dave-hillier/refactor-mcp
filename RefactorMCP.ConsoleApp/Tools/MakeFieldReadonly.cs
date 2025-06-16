@@ -39,7 +39,7 @@ public static class MakeFieldReadonlyTool
             .FirstOrDefault(f => f.Declaration.Variables.Any(v => v.Identifier.ValueText == fieldName));
 
         if (fieldDeclaration == null)
-            return RefactoringHelpers.ThrowMcpException($"Error: No field named '{fieldName}' found");
+            throw new McpException($"Error: No field named '{fieldName}' found");
 
         var variable = fieldDeclaration.Declaration.Variables.First(v => v.Identifier.ValueText == fieldName);
         var initializer = variable.Initializer?.Value;
@@ -78,7 +78,7 @@ public static class MakeFieldReadonlyTool
             .FirstOrDefault(f => f.Declaration.Variables.Any(v => v.Identifier.ValueText == fieldName));
 
         if (fieldDeclaration == null)
-            return RefactoringHelpers.ThrowMcpException($"Error: No field named '{fieldName}' found");
+            throw new McpException($"Error: No field named '{fieldName}' found");
 
         var variable = fieldDeclaration.Declaration.Variables.First(v => v.Identifier.ValueText == fieldName);
         var initializer = variable.Initializer?.Value;

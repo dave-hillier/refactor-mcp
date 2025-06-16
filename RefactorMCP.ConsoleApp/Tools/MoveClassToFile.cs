@@ -31,7 +31,7 @@ public static class MoveClassToFileTool
             else
             {
                 if (!File.Exists(filePath))
-                    return RefactoringHelpers.ThrowMcpException($"Error: File {filePath} not found");
+                    throw new McpException($"Error: File {filePath} not found");
 
                 var (text, _) = await RefactoringHelpers.ReadFileWithEncodingAsync(filePath);
                 root = (CompilationUnitSyntax)CSharpSyntaxTree.ParseText(text).GetRoot();
@@ -39,11 +39,11 @@ public static class MoveClassToFileTool
             var classNode = root.DescendantNodes().OfType<ClassDeclarationSyntax>()
                 .FirstOrDefault(c => c.Identifier.Text == className);
             if (classNode == null)
-                return RefactoringHelpers.ThrowMcpException($"Error: Class {className} not found");
+                throw new McpException($"Error: Class {className} not found");
 
             var duplicateDoc = await RefactoringHelpers.FindClassInSolution(solution, className, filePath, newFilePath);
             if (duplicateDoc != null)
-                return RefactoringHelpers.ThrowMcpException($"Error: Class {className} already exists in {duplicateDoc.FilePath}");
+                throw new McpException($"Error: Class {className} already exists in {duplicateDoc.FilePath}");
 
             var rootWithoutClass = (CompilationUnitSyntax)root.RemoveNode(classNode, SyntaxRemoveOptions.KeepNoTrivia);
             rootWithoutClass = (CompilationUnitSyntax)Formatter.Format(rootWithoutClass, RefactoringHelpers.SharedWorkspace);
@@ -70,7 +70,7 @@ public static class MoveClassToFileTool
 
             newRoot = (CompilationUnitSyntax)Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
             if (File.Exists(newFilePath))
-                return RefactoringHelpers.ThrowMcpException($"Error: File {newFilePath} already exists");
+                throw new McpException($"Error: File {newFilePath} already exists");
             var newFileEncoding = await RefactoringHelpers.GetFileEncodingAsync(filePath);
             await File.WriteAllTextAsync(newFilePath, newRoot.ToFullString(), newFileEncoding);
 
