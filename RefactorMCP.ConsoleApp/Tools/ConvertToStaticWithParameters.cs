@@ -36,7 +36,7 @@ public static class ConvertToStaticWithParametersTool
                 {
                     if (!semanticMap.ContainsKey(symbol))
                     {
-                        var name = symbol.Name;
+                        var name = symbol.Name.TrimStart('_');
                         if (method.ParameterList.Parameters.Any(p => p.Identifier.ValueText == name))
                             name += "Param";
                         semanticMap[symbol] = name;
@@ -94,7 +94,7 @@ public static class ConvertToStaticWithParametersTool
 
             foreach (var name in usedMembers)
             {
-                var paramName = name;
+                var paramName = name.TrimStart('_');
                 if (method.ParameterList.Parameters.Any(p => p.Identifier.ValueText == paramName))
                     paramName += "Param";
                 renameMap[name] = paramName;
