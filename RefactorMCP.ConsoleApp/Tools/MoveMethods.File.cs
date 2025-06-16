@@ -43,7 +43,7 @@ public static partial class MoveMethodsTool
             targetRoot = PropagateUsings(sourceRoot, targetRoot);
         }
 
-        targetRoot = AddMethodToTargetClass(targetRoot, targetClass, moveResult.MovedMethod);
+        targetRoot = AddMethodToTargetClass(targetRoot, targetClass, moveResult.MovedMethod, moveResult.Namespace);
 
         var formattedTarget = Formatter.Format(targetRoot, RefactoringHelpers.SharedWorkspace);
         Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
@@ -105,7 +105,7 @@ public static partial class MoveMethodsTool
 
         if (sameFile)
         {
-            var targetRoot = AddMethodToTargetClass(moveResult.NewSourceRoot, targetClass, moveResult.MovedMethod);
+            var targetRoot = AddMethodToTargetClass(moveResult.NewSourceRoot, targetClass, moveResult.MovedMethod, moveResult.Namespace);
             var formatted = Formatter.Format(targetRoot, RefactoringHelpers.SharedWorkspace);
             var targetEncoding = File.Exists(targetPath)
                 ? await RefactoringHelpers.GetFileEncodingAsync(targetPath)
@@ -119,7 +119,7 @@ public static partial class MoveMethodsTool
 
             var targetRoot = await LoadOrCreateTargetRoot(targetPath);
             targetRoot = PropagateUsings(sourceRoot, targetRoot);
-            targetRoot = AddMethodToTargetClass(targetRoot, targetClass, moveResult.MovedMethod);
+            targetRoot = AddMethodToTargetClass(targetRoot, targetClass, moveResult.MovedMethod, moveResult.Namespace);
 
             var formattedTarget = Formatter.Format(targetRoot, RefactoringHelpers.SharedWorkspace);
             Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
