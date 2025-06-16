@@ -31,4 +31,23 @@ public class MoveInstanceMethodTests : TestBase
         Assert.Contains("A.Do", result);
         Assert.Contains("B", result);
     }
+
+    [Fact]
+    public async Task MoveInstanceMethod_FailsWhenTargetClassIsStatic()
+    {
+        UnloadSolutionTool.ClearSolutionCache();
+        var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "MoveInstanceMethodStatic.cs"));
+        await TestUtilities.CreateTestFile(testFile, "public class A { public void Do(){} } public static class B { }");
+        await LoadSolutionTool.LoadSolution(SolutionPath);
+
+        await Assert.ThrowsAsync<McpException>(() =>
+            MoveMethodsTool.MoveInstanceMethod(
+                SolutionPath,
+                testFile,
+                "A",
+                "Do",
+                "B",
+                "_b",
+                "field"));
+    }
 }
