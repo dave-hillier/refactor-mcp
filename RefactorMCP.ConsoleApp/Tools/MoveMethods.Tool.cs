@@ -58,6 +58,7 @@ public static partial class MoveMethodsTool
         public List<UsingDirectiveSyntax> SourceUsings { get; set; }
         public string TargetClassName { get; set; }
         public Encoding SourceEncoding { get; set; }
+        public string? Namespace { get; set; }
     }
 
     private class SourceAndTargetRoots
@@ -77,6 +78,9 @@ public static partial class MoveMethodsTool
         var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
         var syntaxRoot = await syntaxTree.GetRootAsync();
         var sourceUsings = syntaxRoot.DescendantNodes().OfType<UsingDirectiveSyntax>().ToList();
+        var ns = syntaxRoot.DescendantNodes()
+            .OfType<BaseNamespaceDeclarationSyntax>()
+            .FirstOrDefault()?.Name.ToString();
 
         return new StaticMethodMoveContext
         {
@@ -86,7 +90,8 @@ public static partial class MoveMethodsTool
             SourceRoot = syntaxRoot,
             SourceUsings = sourceUsings,
             TargetClassName = targetClass,
-            SourceEncoding = sourceEncoding
+            SourceEncoding = sourceEncoding,
+            Namespace = ns
         };
     }
 
@@ -109,7 +114,7 @@ public static partial class MoveMethodsTool
     {
         var newSourceRoot = context.SourceRoot.RemoveNode(method, SyntaxRemoveOptions.KeepNoTrivia);
         var targetRoot = await PrepareTargetRootForStaticMove(context);
-        var updatedTargetRoot = AddMethodToTargetClass(targetRoot, context.TargetClassName, method);
+        var updatedTargetRoot = AddMethodToTargetClass(targetRoot, context.TargetClassName, method, context.Namespace);
 
         return new SourceAndTargetRoots
         {
@@ -257,7 +262,7 @@ public static partial class MoveMethodsTool
             foreach (var methodName in methodNames)
             {
                 var moveResult = MoveInstanceMethodAst(root, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
-                root = AddMethodToTargetClass(moveResult.NewSourceRoot, targetClass, moveResult.MovedMethod);
+                root = AddMethodToTargetClass(moveResult.NewSourceRoot, targetClass, moveResult.MovedMethod, moveResult.Namespace);
             }
 
             var formatted = Formatter.Format(root, RefactoringHelpers.SharedWorkspace);
@@ -277,7 +282,7 @@ public static partial class MoveMethodsTool
             {
                 var moveResult = MoveInstanceMethodAst(sourceRoot, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
                 sourceRoot = moveResult.NewSourceRoot;
-                targetRoot = AddMethodToTargetClass(targetRoot, targetClass, moveResult.MovedMethod);
+                targetRoot = AddMethodToTargetClass(targetRoot, targetClass, moveResult.MovedMethod, moveResult.Namespace);
             }
 
             var formattedSource = Formatter.Format(sourceRoot, RefactoringHelpers.SharedWorkspace);

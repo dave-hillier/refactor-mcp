@@ -44,7 +44,7 @@ public static partial class MoveMethodsTool
         var root = tree.GetRoot();
 
         var moveResult = MoveStaticMethodAst(root, methodName, targetClass);
-        var finalRoot = AddMethodToTargetClass(moveResult.NewSourceRoot, targetClass, moveResult.MovedMethod);
+        var finalRoot = AddMethodToTargetClass(moveResult.NewSourceRoot, targetClass, moveResult.MovedMethod, moveResult.Namespace);
 
         var formatted = Formatter.Format(finalRoot, RefactoringHelpers.SharedWorkspace);
         return formatted.ToFullString();
@@ -56,7 +56,7 @@ public static partial class MoveMethodsTool
         var root = tree.GetRoot();
 
         var moveResult = MoveInstanceMethodAst(root, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
-        var finalRoot = AddMethodToTargetClass(moveResult.NewSourceRoot, targetClass, moveResult.MovedMethod);
+        var finalRoot = AddMethodToTargetClass(moveResult.NewSourceRoot, targetClass, moveResult.MovedMethod, moveResult.Namespace);
 
         var formatted = Formatter.Format(finalRoot, RefactoringHelpers.SharedWorkspace);
         return formatted.ToFullString();
@@ -70,7 +70,7 @@ public static partial class MoveMethodsTool
         foreach (var methodName in methodNames)
         {
             var moveResult = MoveInstanceMethodAst(root, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
-            root = AddMethodToTargetClass(moveResult.NewSourceRoot, targetClass, moveResult.MovedMethod);
+            root = AddMethodToTargetClass(moveResult.NewSourceRoot, targetClass, moveResult.MovedMethod, moveResult.Namespace);
         }
 
         var formatted = Formatter.Format(root, RefactoringHelpers.SharedWorkspace);
