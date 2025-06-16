@@ -30,4 +30,28 @@ public class MoveMethodNamespaceTests : TestBase
         var newContent = await File.ReadAllTextAsync(targetFile);
         Assert.Contains("namespace Sample.Namespace", newContent);
     }
+
+    [Fact]
+    public async Task MoveInstanceMethod_DoesNotAddNamespaceUsing()
+    {
+        UnloadSolutionTool.ClearSolutionCache();
+        var testFile = Path.Combine(TestOutputPath, "NamespaceUsingSample.cs");
+        await TestUtilities.CreateTestFile(testFile, "namespace Sample.Namespace { public class A { public void Foo() {} } }");
+        await LoadSolutionTool.LoadSolution(SolutionPath);
+
+        var targetFile = Path.Combine(Path.GetDirectoryName(testFile)!, "C.cs");
+        var result = await MoveMethodsTool.MoveInstanceMethod(
+            SolutionPath,
+            testFile,
+            "A",
+            "Foo",
+            "C",
+            "_c",
+            "field",
+            targetFile);
+
+        Assert.Contains("Successfully moved", result);
+        var newContent = await File.ReadAllTextAsync(targetFile);
+        Assert.DoesNotContain("using Sample.Namespace;", newContent);
+    }
 }
