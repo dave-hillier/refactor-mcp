@@ -11,6 +11,7 @@ using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Text;
 using System.IO;
 using System.Text;
+using RefactorMCP.ConsoleApp.SyntaxRewriters;
 
 [McpServerToolType]
 public static partial class MoveMethodsTool
