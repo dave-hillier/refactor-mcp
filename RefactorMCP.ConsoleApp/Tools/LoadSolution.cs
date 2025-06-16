@@ -18,7 +18,7 @@ public static class LoadSolutionTool
         {
             if (!File.Exists(solutionPath))
             {
-                return RefactoringHelpers.ThrowMcpException($"Error: Solution file not found at {solutionPath}");
+                throw new McpException($"Error: Solution file not found at {solutionPath}");
             }
             Directory.SetCurrentDirectory(Path.GetDirectoryName(solutionPath)!);
 

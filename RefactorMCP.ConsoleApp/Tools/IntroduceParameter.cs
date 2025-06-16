@@ -21,13 +21,13 @@ public static class IntroduceParameterTool
             .OfType<MethodDeclarationSyntax>()
             .FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            return RefactoringHelpers.ThrowMcpException($"Error: No method named '{methodName}' found");
+            throw new McpException($"Error: No method named '{methodName}' found");
 
         if (!RefactoringHelpers.TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
-            return RefactoringHelpers.ThrowMcpException("Error: Invalid selection range format");
+            throw new McpException("Error: Invalid selection range format");
 
         if (!RefactoringHelpers.ValidateRange(sourceText, startLine, startColumn, endLine, endColumn, out var error))
-            return RefactoringHelpers.ThrowMcpException(error);
+            throw new McpException(error);
 
         var startPosition = textLines[startLine - 1].Start + startColumn - 1;
         var endPosition = textLines[endLine - 1].Start + endColumn - 1;
@@ -35,7 +35,7 @@ public static class IntroduceParameterTool
 
         var selectedExpression = syntaxRoot.DescendantNodes(span).OfType<ExpressionSyntax>().FirstOrDefault();
         if (selectedExpression == null)
-            return RefactoringHelpers.ThrowMcpException("Error: Selected code is not a valid expression");
+            throw new McpException("Error: Selected code is not a valid expression");
 
         var semanticModel = await document.GetSemanticModelAsync();
         var typeInfo = semanticModel!.GetTypeInfo(selectedExpression);
@@ -77,13 +77,13 @@ public static class IntroduceParameterTool
             .OfType<MethodDeclarationSyntax>()
             .FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            return RefactoringHelpers.ThrowMcpException($"Error: No method named '{methodName}' found");
+            throw new McpException($"Error: No method named '{methodName}' found");
 
         if (!RefactoringHelpers.TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
-            return RefactoringHelpers.ThrowMcpException("Error: Invalid selection range format");
+            throw new McpException("Error: Invalid selection range format");
 
         if (!RefactoringHelpers.ValidateRange(text, startLine, startColumn, endLine, endColumn, out var error))
-            return RefactoringHelpers.ThrowMcpException(error);
+            throw new McpException(error);
 
         var startPosition = textLines[startLine - 1].Start + startColumn - 1;
         var endPosition = textLines[endLine - 1].Start + endColumn - 1;
@@ -96,7 +96,7 @@ public static class IntroduceParameterTool
             .ThenBy(e => e.Span.Length)
             .FirstOrDefault();
         if (selectedExpression == null)
-            return RefactoringHelpers.ThrowMcpException("Error: Selected code is not a valid expression");
+            throw new McpException("Error: Selected code is not a valid expression");
 
         var parameter = SyntaxFactory.Parameter(SyntaxFactory.Identifier(parameterName))
             .WithType(SyntaxFactory.ParseTypeName("object"));

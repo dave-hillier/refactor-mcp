@@ -36,7 +36,7 @@ public static partial class MoveMethodsTool
                 filePath,
                 moveContext.TargetPath);
             if (duplicateDoc != null)
-                return RefactoringHelpers.ThrowMcpException($"Error: Class {targetClass} already exists in {duplicateDoc.FilePath}");
+                throw new McpException($"Error: Class {targetClass} already exists in {duplicateDoc.FilePath}");
             var method = ExtractStaticMethodFromSource(moveContext.SourceRoot, methodName);
             var updatedSources = await UpdateSourceAndTargetForStaticMove(moveContext, method);
             await WriteStaticMethodMoveResults(moveContext, updatedSources);
@@ -199,7 +199,7 @@ public static partial class MoveMethodsTool
         {
             var methodList = methodNames.Split(',').Select(m => m.Trim()).Where(m => m.Length > 0).ToArray();
             if (methodList.Length == 0)
-                return RefactoringHelpers.ThrowMcpException("Error: No method names provided");
+                throw new McpException("Error: No method names provided");
 
             var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
             var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
@@ -210,7 +210,7 @@ public static partial class MoveMethodsTool
                 filePath,
                 targetFilePath ?? Path.Combine(Path.GetDirectoryName(filePath)!, $"{targetClass}.cs"));
             if (duplicateDoc != null)
-                return RefactoringHelpers.ThrowMcpException($"Error: Class {targetClass} already exists in {duplicateDoc.FilePath}");
+                throw new McpException($"Error: Class {targetClass} already exists in {duplicateDoc.FilePath}");
 
             if (document != null)
             {
@@ -246,7 +246,7 @@ public static partial class MoveMethodsTool
     private static async Task<string> MoveBulkInstanceMethodsInFile(string filePath, string sourceClass, string[] methodNames, string targetClass, string accessMemberName, string accessMemberType, string? targetFilePath)
     {
         if (!File.Exists(filePath))
-            return RefactoringHelpers.ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
+            throw new McpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
 
         var targetPath = targetFilePath ?? filePath;
         var sameFile = targetPath == filePath;

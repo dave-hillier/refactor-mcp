@@ -40,10 +40,10 @@ public static class IntroduceFieldTool
         var syntaxRoot = await document.GetSyntaxRootAsync();
 
         if (!RefactoringHelpers.TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
-            return RefactoringHelpers.ThrowMcpException("Error: Invalid selection range format");
+            throw new McpException("Error: Invalid selection range format");
 
         if (!RefactoringHelpers.ValidateRange(sourceText, startLine, startColumn, endLine, endColumn, out var error))
-            return RefactoringHelpers.ThrowMcpException(error);
+            throw new McpException(error);
 
         var startPosition = sourceText.Lines[startLine - 1].Start + startColumn - 1;
         var endPosition = sourceText.Lines[endLine - 1].Start + endColumn - 1;
@@ -54,7 +54,7 @@ public static class IntroduceFieldTool
             .FirstOrDefault(e => span.Contains(e.Span) || e.Span.Contains(span));
 
         if (selectedExpression == null)
-            return RefactoringHelpers.ThrowMcpException("Error: Selected code is not a valid expression");
+            throw new McpException("Error: Selected code is not a valid expression");
 
         // Get the semantic model to determine the type
         var semanticModel = await document.GetSemanticModelAsync();
@@ -84,7 +84,7 @@ public static class IntroduceFieldTool
         {
             var classSymbol = semanticModel.GetDeclaredSymbol(containingClass);
             if (classSymbol?.GetMembers().OfType<IFieldSymbol>().Any(f => f.Name == fieldName) == true)
-                return RefactoringHelpers.ThrowMcpException($"Error: Field '{fieldName}' already exists");
+                throw new McpException($"Error: Field '{fieldName}' already exists");
         }
         var rewriter = new FieldIntroductionRewriter(selectedExpression, fieldReference, fieldDeclaration, containingClass);
         var newRoot = rewriter.Visit(syntaxRoot);
@@ -104,7 +104,7 @@ public static class IntroduceFieldTool
     private static async Task<string> IntroduceFieldSingleFile(string filePath, string selectionRange, string fieldName, string accessModifier)
     {
         if (!File.Exists(filePath))
-            return RefactoringHelpers.ThrowMcpException($"Error: File {filePath} not found");
+            throw new McpException($"Error: File {filePath} not found");
 
         var (sourceText, encoding) = await RefactoringHelpers.ReadFileWithEncodingAsync(filePath);
         var model = await RefactoringHelpers.GetOrCreateSemanticModelAsync(filePath);
@@ -122,10 +122,10 @@ public static class IntroduceFieldTool
         var textLines = text.Lines;
 
         if (!RefactoringHelpers.TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
-            return RefactoringHelpers.ThrowMcpException("Error: Invalid selection range format");
+            throw new McpException("Error: Invalid selection range format");
 
         if (!RefactoringHelpers.ValidateRange(text, startLine, startColumn, endLine, endColumn, out var error))
-            return RefactoringHelpers.ThrowMcpException(error);
+            throw new McpException(error);
 
         var startPosition = textLines[startLine - 1].Start + startColumn - 1;
         var endPosition = textLines[endLine - 1].Start + endColumn - 1;
@@ -136,7 +136,7 @@ public static class IntroduceFieldTool
             .FirstOrDefault(e => span.Contains(e.Span) || e.Span.Contains(span));
 
         if (selectedExpression == null)
-            return RefactoringHelpers.ThrowMcpException("Error: Selected code is not a valid expression");
+            throw new McpException("Error: Selected code is not a valid expression");
 
         var typeName = "var";
         if (model != null)
@@ -172,7 +172,7 @@ public static class IntroduceFieldTool
                 .SelectMany(f => f.Declaration.Variables)
                 .Any(v => v.Identifier.ValueText == fieldName);
             if (exists)
-                return RefactoringHelpers.ThrowMcpException($"Error: Field '{fieldName}' already exists");
+                throw new McpException($"Error: Field '{fieldName}' already exists");
         }
         var rewriter = new FieldIntroductionRewriter(selectedExpression, fieldReference, fieldDeclaration, containingClass);
         var newRoot = rewriter.Visit(syntaxRoot);

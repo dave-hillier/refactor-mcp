@@ -86,7 +86,7 @@ public static class ConvertToStaticWithInstanceTool
             .OfType<MethodDeclarationSyntax>()
             .FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            return RefactoringHelpers.ThrowMcpException($"Error: No method named '{methodName}' found");
+            throw new McpException($"Error: No method named '{methodName}' found");
 
         var semanticModel = await document.GetSemanticModelAsync();
         var newRoot = ConvertToStaticWithInstanceAst(syntaxRoot!, method, instanceParameterName, semanticModel);
@@ -117,11 +117,11 @@ public static class ConvertToStaticWithInstanceTool
             .OfType<MethodDeclarationSyntax>()
             .FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            return RefactoringHelpers.ThrowMcpException($"Error: No method named '{methodName}' found");
+            throw new McpException($"Error: No method named '{methodName}' found");
 
         var classDecl = method.Ancestors().OfType<ClassDeclarationSyntax>().FirstOrDefault();
         if (classDecl == null)
-            return RefactoringHelpers.ThrowMcpException($"Error: Method '{methodName}' is not inside a class");
+            throw new McpException($"Error: Method '{methodName}' is not inside a class");
 
         var newRoot = ConvertToStaticWithInstanceAst(syntaxRoot, method, instanceParameterName);
         var formatted = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);

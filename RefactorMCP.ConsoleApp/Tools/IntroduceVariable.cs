@@ -38,10 +38,10 @@ public static class IntroduceVariableTool
         var syntaxRoot = await document.GetSyntaxRootAsync();
 
         if (!RefactoringHelpers.TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
-            return RefactoringHelpers.ThrowMcpException("Error: Invalid selection range format");
+            throw new McpException("Error: Invalid selection range format");
 
         if (!RefactoringHelpers.ValidateRange(sourceText, startLine, startColumn, endLine, endColumn, out var error))
-            return RefactoringHelpers.ThrowMcpException(error);
+            throw new McpException(error);
 
         var startPosition = sourceText.Lines[startLine - 1].Start + startColumn - 1;
         var endPosition = sourceText.Lines[endLine - 1].Start + endColumn - 1;
@@ -58,7 +58,7 @@ public static class IntroduceVariableTool
             selectedExpression = paren;
 
         if (selectedExpression == null)
-            return RefactoringHelpers.ThrowMcpException("Error: Selected code is not a valid expression");
+            throw new McpException("Error: Selected code is not a valid expression");
 
         // Get the semantic model to determine the type
         var semanticModel = await document.GetSemanticModelAsync();
@@ -99,7 +99,7 @@ public static class IntroduceVariableTool
     private static async Task<string> IntroduceVariableSingleFile(string filePath, string selectionRange, string variableName)
     {
         if (!File.Exists(filePath))
-            return RefactoringHelpers.ThrowMcpException($"Error: File {filePath} not found");
+            throw new McpException($"Error: File {filePath} not found");
 
         var (sourceText, encoding) = await RefactoringHelpers.ReadFileWithEncodingAsync(filePath);
         var model = await RefactoringHelpers.GetOrCreateSemanticModelAsync(filePath);
@@ -117,10 +117,10 @@ public static class IntroduceVariableTool
         var textLines = text.Lines;
 
         if (!RefactoringHelpers.TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
-            return RefactoringHelpers.ThrowMcpException("Error: Invalid selection range format");
+            throw new McpException("Error: Invalid selection range format");
 
         if (!RefactoringHelpers.ValidateRange(text, startLine, startColumn, endLine, endColumn, out var error))
-            return RefactoringHelpers.ThrowMcpException(error);
+            throw new McpException(error);
 
         var startPosition = textLines[startLine - 1].Start + startColumn - 1;
         var endPosition = textLines[endLine - 1].Start + endColumn - 1;
@@ -137,7 +137,7 @@ public static class IntroduceVariableTool
             selectedExpression = paren;
 
         if (selectedExpression == null)
-            return RefactoringHelpers.ThrowMcpException("Error: Selected code is not a valid expression");
+            throw new McpException("Error: Selected code is not a valid expression");
 
         var typeName = "var";
         if (model != null)
