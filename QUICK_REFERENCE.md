@@ -299,6 +299,14 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli convert-to-extension-method
   "./RefactorMCP.sln" "./RefactorMCP.Tests/ExampleCode.cs" GetFormattedNumber
 ```
 
+### Metrics Resource
+
+```bash
+metrics://RefactorMCP.Tests/ExampleCode.cs/Calculator.Calculate
+```
+Use the metrics scheme to inspect directories, files, classes or specific
+methods.
+
 ## Common Errors
 
 | Error | Solution |
