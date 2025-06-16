@@ -77,8 +77,9 @@ internal class StaticConversionRewriter : CSharpSyntaxRewriter
             {
                 var s = _semanticModel.GetSymbolInfo(node).Symbol;
                 if (s is IFieldSymbol or IPropertySymbol or IMethodSymbol &&
-                    SymbolEqualityComparer.Default.Equals(s.ContainingType, _typeSymbol) &&
-                    !s.IsStatic && node.Parent is not MemberAccessExpressionSyntax)
+                    !s.IsStatic && node.Parent is not MemberAccessExpressionSyntax &&
+                    s.ContainingType is INamedTypeSymbol ct &&
+                    IsInTypeHierarchy(ct))
                 {
                     qualify = true;
                 }
@@ -101,6 +102,28 @@ internal class StaticConversionRewriter : CSharpSyntaxRewriter
         }
 
         return base.VisitIdentifierName(node);
+    }
+
+    private bool IsInTypeHierarchy(INamedTypeSymbol containing)
+    {
+        if (_typeSymbol == null)
+            return false;
+
+        var current = _typeSymbol;
+        while (current != null)
+        {
+            if (SymbolEqualityComparer.Default.Equals(current, containing))
+                return true;
+            current = current.BaseType;
+        }
+
+        foreach (var iface in _typeSymbol.AllInterfaces)
+        {
+            if (SymbolEqualityComparer.Default.Equals(iface, containing))
+                return true;
+        }
+
+        return false;
     }
 }
 
