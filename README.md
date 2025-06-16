@@ -409,9 +409,11 @@ public string FormatResult(int value, int processedValue)
 
 **Before**:
 ```csharp
+private string _operatorSymbol;
+
 public string GetFormattedNumber(int number)
 {
-    return $"{operatorSymbol}: {number}";
+    return $"{_operatorSymbol}: {number}";
 }
 ```
 

@@ -244,9 +244,10 @@ public static partial class MoveMethodsTool
                        pts.Keyword.IsKind(SyntaxKind.VoidKeyword);
         var typeParameters = method.TypeParameterList;
 
-        var injectedParameters = usedPrivateFields
-            .Select(n => SyntaxFactory.Parameter(SyntaxFactory.Identifier(n))
-                .WithType(privateFieldInfos[n]))
+        var paramMap = usedPrivateFields.ToDictionary(n => n, n => n.TrimStart('_'));
+        var injectedParameters = paramMap
+            .Select(kvp => SyntaxFactory.Parameter(SyntaxFactory.Identifier(kvp.Value))
+                .WithType(privateFieldInfos[kvp.Key]))
             .ToList();
 
         var transformedMethod = TransformMethodForMove(
@@ -260,7 +261,7 @@ public static partial class MoveMethodsTool
             membersForAnalysis,
             otherMethodNames,
             injectedParameters,
-            usedPrivateFields);
+            paramMap);
 
         if (needsThisParameter && !HasParameterUsage(transformedMethod, "@this"))
         {
@@ -277,7 +278,7 @@ public static partial class MoveMethodsTool
             isVoid,
             isAsync,
             typeParameters,
-            usedPrivateFields);
+            paramMap.Values);
 
         var updatedSourceRoot = UpdateSourceClassWithStub(originClass, method, stubMethod, accessMember);
 
@@ -332,7 +333,7 @@ public static partial class MoveMethodsTool
         HashSet<string> instanceMembers,
         HashSet<string> otherMethodNames,
         List<ParameterSyntax> injectedParameters,
-        HashSet<string> injectedNames)
+        Dictionary<string, string> injectedParameterMap)
     {
         var transformedMethod = method;
 
@@ -355,7 +356,7 @@ public static partial class MoveMethodsTool
             var insertIndex = needsThisParameter ? 1 : 0;
             parameters = parameters.InsertRange(insertIndex, injectedParameters);
             transformedMethod = transformedMethod.WithParameterList(transformedMethod.ParameterList.WithParameters(parameters));
-            var map = injectedNames.ToDictionary(n => n, n => (ExpressionSyntax)SyntaxFactory.IdentifierName(n));
+            var map = injectedParameterMap.ToDictionary(kvp => kvp.Key, kvp => (ExpressionSyntax)SyntaxFactory.IdentifierName(kvp.Value));
             var rewriter = new ParameterRewriter(map);
             transformedMethod = (MethodDeclarationSyntax)rewriter.Visit(transformedMethod)!;
         }

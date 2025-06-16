@@ -206,9 +206,9 @@ public class TargetClass
             var finalRoot = MoveMethodsTool.AddMethodToTargetClass(result.NewSourceRoot, "TargetClass", result.MovedMethod, result.Namespace);
             var formatted = Formatter.Format(finalRoot, new AdhocWorkspace()).ToFullString();
 
-            Assert.Contains("public int GetValue(int _value)", formatted);
-            Assert.Contains("return _value + 2", formatted);
-            Assert.Contains("return _target.GetValue(_value)", formatted);
+            Assert.Contains("public int GetValue(int value)", formatted);
+            Assert.Contains("return value + 2", formatted);
+            Assert.Contains("return _target.GetValue(value)", formatted);
         }
 
         [Fact]
@@ -238,8 +238,8 @@ public class TargetClass
             var finalRoot = MoveMethodsTool.AddMethodToTargetClass(result.NewSourceRoot, "TargetClass", result.MovedMethod, result.Namespace);
             var formatted = Formatter.Format(finalRoot, new AdhocWorkspace()).ToFullString();
 
-            Assert.Contains("public int GetValue(int _value, int n = 5)", formatted);
-            Assert.Contains("_target.GetValue(_value, n)", formatted);
+            Assert.Contains("public int GetValue(int value, int n = 5)", formatted);
+            Assert.Contains("_target.GetValue(value, n)", formatted);
         }
 
         [Fact]
