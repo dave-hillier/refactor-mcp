@@ -262,7 +262,7 @@ public static partial class MoveMethodsTool
             foreach (var methodName in methodNames)
             {
                 var moveResult = MoveInstanceMethodAst(root, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
-                root = AddMethodToTargetClass(moveResult.NewSourceRoot, targetClass, moveResult.MovedMethod, moveResult.Namespace);
+                root = AddMethodToTargetClass(moveResult.NewSourceRoot, targetClass, moveResult.MovedMethod, moveResult.Namespace, failIfStatic: true);
             }
 
             var formatted = Formatter.Format(root, RefactoringHelpers.SharedWorkspace);
@@ -282,7 +282,7 @@ public static partial class MoveMethodsTool
             {
                 var moveResult = MoveInstanceMethodAst(sourceRoot, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
                 sourceRoot = moveResult.NewSourceRoot;
-                targetRoot = AddMethodToTargetClass(targetRoot, targetClass, moveResult.MovedMethod, moveResult.Namespace);
+                targetRoot = AddMethodToTargetClass(targetRoot, targetClass, moveResult.MovedMethod, moveResult.Namespace, failIfStatic: true);
             }
 
             var formattedSource = Formatter.Format(sourceRoot, RefactoringHelpers.SharedWorkspace);

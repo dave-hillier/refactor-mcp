@@ -105,7 +105,7 @@ public static partial class MoveMethodsTool
 
         if (sameFile)
         {
-            var targetRoot = AddMethodToTargetClass(moveResult.NewSourceRoot, targetClass, moveResult.MovedMethod, moveResult.Namespace);
+            var targetRoot = AddMethodToTargetClass(moveResult.NewSourceRoot, targetClass, moveResult.MovedMethod, moveResult.Namespace, failIfStatic: true);
             var formatted = Formatter.Format(targetRoot, RefactoringHelpers.SharedWorkspace);
             var targetEncoding = File.Exists(targetPath)
                 ? await RefactoringHelpers.GetFileEncodingAsync(targetPath)
@@ -119,7 +119,7 @@ public static partial class MoveMethodsTool
 
             var targetRoot = await LoadOrCreateTargetRoot(targetPath);
             targetRoot = PropagateUsings(sourceRoot, targetRoot);
-            targetRoot = AddMethodToTargetClass(targetRoot, targetClass, moveResult.MovedMethod, moveResult.Namespace);
+            targetRoot = AddMethodToTargetClass(targetRoot, targetClass, moveResult.MovedMethod, moveResult.Namespace, failIfStatic: true);
 
             var formattedTarget = Formatter.Format(targetRoot, RefactoringHelpers.SharedWorkspace);
             Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);

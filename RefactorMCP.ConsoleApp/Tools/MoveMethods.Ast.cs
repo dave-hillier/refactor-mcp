@@ -521,7 +521,8 @@ public static partial class MoveMethodsTool
         SyntaxNode targetRoot,
         string targetClass,
         MethodDeclarationSyntax method,
-        string? namespaceName = null)
+        string? namespaceName = null,
+        bool failIfStatic = false)
     {
         var targetClassDecl = targetRoot.DescendantNodes()
             .OfType<ClassDeclarationSyntax>()
@@ -553,6 +554,9 @@ public static partial class MoveMethodsTool
         }
         else
         {
+            if (failIfStatic && targetClassDecl.Modifiers.Any(SyntaxKind.StaticKeyword))
+                throw new McpException($"Error: Cannot move instance method to static class '{targetClass}'");
+
             var updatedClass = targetClassDecl.AddMembers(method.WithLeadingTrivia());
             return targetRoot.ReplaceNode(targetClassDecl, updatedClass);
         }
