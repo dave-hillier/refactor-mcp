@@ -30,6 +30,14 @@ internal class MethodCallRewriter : CSharpSyntaxRewriter
                 return node.WithExpression(memberAccess);
             }
         }
+        else if (node.Expression is MemberAccessExpressionSyntax member &&
+                 member.Expression is ThisExpressionSyntax &&
+                 member.Name is IdentifierNameSyntax id &&
+                 _classMethodNames.Contains(id.Identifier.ValueText))
+        {
+            var updatedMember = member.WithExpression(SyntaxFactory.IdentifierName(_parameterName));
+            return node.WithExpression(updatedMember);
+        }
 
         return base.VisitInvocationExpression(node);
     }
