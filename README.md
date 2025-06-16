@@ -694,7 +694,8 @@ Common error scenarios and solutions:
 
 ## License
 
-[Add your license information here]
+This project is licensed under the [Mozilla Public License 2.0](https://www.mozilla.org/MPL/2.0/).
+See the [LICENSE](./LICENSE) file for full license text.
 
 ## Support
 
