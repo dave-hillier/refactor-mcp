@@ -129,7 +129,7 @@ public static partial class MoveMultipleMethodsTool
         [Description("Name of the source class containing the methods")] string sourceClass,
         [Description("Names of the methods to move")] string[] methodNames,
         [Description("Name of the target class")] string targetClass,
-        [Description("Name for the access member")] string accessMember,
+        [Description("Existing field or property to call the target. If missing, a private readonly field with this name is created")] string accessMember,
         [Description("Path to the target file (optional)")] string? targetFilePath = null)
     {
         try

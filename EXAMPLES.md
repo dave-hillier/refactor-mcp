@@ -415,7 +415,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli move-multiple-methods \
   Helper \
   "A,B" \
   Target \
-  t field \
+  t \
   "./Target.cs"
 ```
 
@@ -429,7 +429,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli move-multiple-methods \
   Helper \
   A \
   Target \
-  t field \
+  t \
   "./Target.cs"
 ```
 
@@ -464,6 +464,7 @@ class Target
 }
 ```
 Each moved method in `Helper` now delegates to the corresponding method on `Target`, preserving the original public interface.
+Because `t` did not exist on `Helper`, the refactoring introduced a private readonly field with that name.
 
 ## 11. Batch Move Methods
 
