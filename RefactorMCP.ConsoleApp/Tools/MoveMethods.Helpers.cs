@@ -159,6 +159,20 @@ public static partial class MoveMethodsTool
                    .Any(p => p.Identifier.ValueText == memberName);
     }
 
+    internal static string GenerateAccessMemberName(IEnumerable<string> existingNames, string targetClass)
+    {
+        var baseName = "_" + char.ToLower(targetClass[0]) + targetClass.Substring(1);
+        var name = baseName;
+        var counter = 1;
+        var nameSet = new HashSet<string>(existingNames);
+        while (nameSet.Contains(name))
+        {
+            name = baseName + counter;
+            counter++;
+        }
+        return name;
+    }
+
     private static MemberDeclarationSyntax CreateAccessMember(string accessMemberType, string accessMemberName, string targetClass)
     {
         if (accessMemberType == "property")

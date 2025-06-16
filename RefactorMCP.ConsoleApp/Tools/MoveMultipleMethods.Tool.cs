@@ -129,7 +129,6 @@ public static partial class MoveMultipleMethodsTool
         [Description("Name of the source class containing the methods")] string sourceClass,
         [Description("Names of the methods to move")] string[] methodNames,
         [Description("Name of the target class")] string targetClass,
-        [Description("Existing field or property to call the target. If missing, a private readonly field with this name is created")] string accessMember,
         [Description("Path to the target file (optional)")] string? targetFilePath = null)
     {
         try
@@ -154,6 +153,8 @@ public static partial class MoveMultipleMethodsTool
                 var visitor = new MethodAndMemberVisitor();
                 visitor.Visit(sourceClassNode);
 
+                var accessMemberName = MoveMethodsTool.GenerateAccessMemberName(visitor.Members.Keys, targetClass);
+
                 var isStatic = new bool[methodNames.Length];
                 var accessMemberTypes = new string[methodNames.Length];
 
@@ -167,7 +168,7 @@ public static partial class MoveMultipleMethodsTool
 
                     if (!isStatic[i])
                     {
-                        if (visitor.Members.TryGetValue(accessMember, out var memberInfo))
+                        if (visitor.Members.TryGetValue(accessMemberName, out var memberInfo))
                         {
                             accessMemberTypes[i] = memberInfo.Type;
                         }
@@ -191,17 +192,17 @@ public static partial class MoveMultipleMethodsTool
 
                 foreach (var idx in orderedIndices)
                 {
-                    var (msg, updatedDoc) = await MoveSingleMethod(
+                    var result = await MoveSingleMethod(
                         currentDoc,
                         sourceClass,
                         methodNames[idx],
                         isStatic[idx],
                         targetClass,
-                        accessMember,
+                        accessMemberName,
                         accessMemberTypes[idx],
                         targetPath);
-                    currentDoc = updatedDoc;
-                    results.Add(msg);
+                    currentDoc = result.updatedDocument;
+                    results.Add(result.message);
                 }
 
                 return string.Join("\n", results);
