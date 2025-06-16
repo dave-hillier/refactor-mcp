@@ -50,4 +50,33 @@ public class MoveInstanceMethodTests : TestBase
                 "_b",
                 "field"));
     }
+
+    [Fact]
+    public async Task MoveInstanceMethod_FailsOnSecondMove()
+    {
+        UnloadSolutionTool.ClearSolutionCache();
+        var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "MoveInstanceMethodTwice.cs"));
+        await TestUtilities.CreateTestFile(testFile, "public class A { public void Do(){} } public class B { }");
+        await LoadSolutionTool.LoadSolution(SolutionPath);
+
+        var result = await MoveMethodsTool.MoveInstanceMethod(
+            SolutionPath,
+            testFile,
+            "A",
+            "Do",
+            "B",
+            "_b",
+            "field");
+        Assert.Contains("Successfully moved", result);
+
+        await Assert.ThrowsAsync<McpException>(() =>
+            MoveMethodsTool.MoveInstanceMethod(
+                SolutionPath,
+                testFile,
+                "A",
+                "Do",
+                "B",
+                "_b",
+                "field"));
+    }
 }
