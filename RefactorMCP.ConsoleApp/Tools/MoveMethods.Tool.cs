@@ -32,6 +32,39 @@ public static partial class MoveMethodsTool
 
     private static void MarkMoved(string filePath, string methodName)
         => _movedMethods.Add(GetKey(filePath, methodName));
+
+    private static string GenerateAccessMemberName(ClassDeclarationSyntax classNode, string targetClass)
+    {
+        var baseName = "_" + char.ToLowerInvariant(targetClass[0]) + targetClass.Substring(1);
+        var existing = classNode.Members
+            .SelectMany(m => m switch
+            {
+                FieldDeclarationSyntax f => f.Declaration.Variables.Select(v => v.Identifier.ValueText),
+                PropertyDeclarationSyntax p => new[] { p.Identifier.ValueText },
+                _ => Array.Empty<string>()
+            })
+            .ToHashSet();
+
+        var name = baseName;
+        var suffix = 1;
+        while (existing.Contains(name))
+        {
+            name = $"{baseName}{suffix}";
+            suffix++;
+        }
+
+        return name;
+    }
+
+    private static async Task<string> GenerateAccessMemberNameAsync(string filePath, string sourceClass, string targetClass)
+    {
+        var (text, _) = await RefactoringHelpers.ReadFileWithEncodingAsync(filePath);
+        var root = await CSharpSyntaxTree.ParseText(text).GetRootAsync();
+        var classNode = root.DescendantNodes().OfType<ClassDeclarationSyntax>()
+            .FirstOrDefault(c => c.Identifier.ValueText == sourceClass);
+        return classNode != null ? GenerateAccessMemberName(classNode, targetClass)
+                                 : "_" + char.ToLowerInvariant(targetClass[0]) + targetClass.Substring(1);
+    }
     [McpServerTool, Description("Move a static method to another class (preferred for large C# file refactoring). " +
         "Leaves a delegating method in the original class to preserve the interface.")]
     public static async Task<string> MoveStaticMethod(
@@ -210,8 +243,6 @@ public static partial class MoveMethodsTool
         [Description("Name of the source class containing the method")] string sourceClass,
         [Description("Comma separated names of the methods to move")] string methodNames,
         [Description("Name of the target class")] string targetClass,
-        [Description("Name for the access member")] string accessMemberName,
-        [Description("Type of access member (field, property, variable)")] string accessMemberType = "field",
         [Description("Path to the target file (optional, will create if doesn't exist)")] string? targetFilePath = null)
     {
         try
@@ -233,6 +264,9 @@ public static partial class MoveMethodsTool
                 targetFilePath ?? Path.Combine(Path.GetDirectoryName(filePath)!, $"{targetClass}.cs"));
             if (duplicateDoc != null)
                 throw new McpException($"Error: Class {targetClass} already exists in {duplicateDoc.FilePath}");
+
+            var accessMemberName = await GenerateAccessMemberNameAsync(filePath, sourceClass, targetClass);
+            const string accessMemberType = "field";
 
             string message;
             if (document != null)

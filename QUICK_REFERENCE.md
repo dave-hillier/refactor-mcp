@@ -180,11 +180,9 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli move-instance-method \
   "SourceClass" \
   "MethodA,MethodB" \
   "TargetClass" \
-  "memberName" \
-  "field" \
   "./optional/target.cs"
 ```
-Newly added access fields are readonly and existing members are reused if present.
+The tool automatically creates a private field named after the target class if needed.
 Each moved method leaves a wrapper that calls the new implementation.
 Private field values referenced by the moved method are supplied as extra parameters.
 Running the tool again on the wrapper now triggers an error. Use `inline-method` if you want to remove the wrapper.
@@ -197,11 +195,9 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli move-multiple-methods \
   SourceClass \
   "Foo,Bar" \
   TargetClass \
-  memberName \
   "./optional/Target.cs"
 ```
-Wrapper methods remain in the source class, delegating to their moved versions.
-If `memberName` doesn't exist, a private readonly field with that name is added to reference the target instance.
+Wrapper methods remain in the source class, delegating to their moved versions. A private field name is generated automatically if needed.
 
 ### Batch Move Methods
 ```bash
