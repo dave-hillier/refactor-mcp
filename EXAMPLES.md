@@ -340,6 +340,7 @@ public class MathUtilities
 }
 ```
 The original method remains in `ExampleCode.cs` as a wrapper that forwards to `MathUtilities.FormatCurrency`.
+Running `move-static-method` again on this wrapper will now fail. Use `inline-method` if you want to remove it.
 
 ## 10. Move Instance Method
 
@@ -391,6 +392,7 @@ public class Logger
 }
 ```
 The original method in `Calculator` now delegates to `Logger.LogOperation`, preserving existing call sites.
+If you run `move-instance-method` again on this wrapper, an error will be reported. Use `inline-method` to remove the wrapper if desired.
 When a moved method references private fields from its original class, those values are passed as additional parameters.
 
 ## 10. Move Multiple Methods

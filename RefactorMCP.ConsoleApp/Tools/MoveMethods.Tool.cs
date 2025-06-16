@@ -15,6 +15,23 @@ using System.Text;
 [McpServerToolType]
 public static partial class MoveMethodsTool
 {
+    private static readonly HashSet<string> _movedMethods = new();
+
+    private static string GetKey(string filePath, string methodName) =>
+        $"{Path.GetFullPath(filePath)}::{methodName}";
+
+    private static void EnsureNotAlreadyMoved(string filePath, string methodName)
+    {
+        if (_movedMethods.Contains(GetKey(filePath, methodName)))
+        {
+            throw new McpException(
+                $"Error: Method '{methodName}' appears to have been moved already during this session. " +
+                "Consider using inline-method if you want to remove the wrapper.");
+        }
+    }
+
+    private static void MarkMoved(string filePath, string methodName)
+        => _movedMethods.Add(GetKey(filePath, methodName));
     [McpServerTool, Description("Move a static method to another class (preferred for large C# file refactoring). " +
         "Leaves a delegating method in the original class to preserve the interface.")]
     public static async Task<string> MoveStaticMethod(
@@ -26,6 +43,7 @@ public static partial class MoveMethodsTool
     {
         try
         {
+            EnsureNotAlreadyMoved(filePath, methodName);
             ValidateFileExists(filePath);
 
             var moveContext = await PrepareStaticMethodMove(filePath, targetFilePath, targetClass);
@@ -40,6 +58,7 @@ public static partial class MoveMethodsTool
             var method = ExtractStaticMethodFromSource(moveContext.SourceRoot, methodName);
             var updatedSources = await UpdateSourceAndTargetForStaticMove(moveContext, method);
             await WriteStaticMethodMoveResults(moveContext, updatedSources);
+            MarkMoved(filePath, methodName);
 
             return $"Successfully moved static method '{methodName}' to {targetClass} in {moveContext.TargetPath}. A delegate method remains in the original class to preserve the interface.";
         }
@@ -201,6 +220,9 @@ public static partial class MoveMethodsTool
             if (methodList.Length == 0)
                 throw new McpException("Error: No method names provided");
 
+            foreach (var m in methodList)
+                EnsureNotAlreadyMoved(filePath, m);
+
             var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
             var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
 
@@ -212,6 +234,7 @@ public static partial class MoveMethodsTool
             if (duplicateDoc != null)
                 throw new McpException($"Error: Class {targetClass} already exists in {duplicateDoc.FilePath}");
 
+            string message;
             if (document != null)
             {
                 var (msg, _) = await MoveInstanceMethodWithSolution(
@@ -222,20 +245,25 @@ public static partial class MoveMethodsTool
                     accessMemberName,
                     accessMemberType,
                     targetFilePath);
-                return msg;
+                message = msg;
             }
             else
             {
                 // For single-file operations, use the bulk move method for better efficiency
                 if (methodList.Length == 1)
                 {
-                    return await MoveInstanceMethodInFile(filePath, sourceClass, methodList[0], targetClass, accessMemberName, accessMemberType, targetFilePath);
+                    message = await MoveInstanceMethodInFile(filePath, sourceClass, methodList[0], targetClass, accessMemberName, accessMemberType, targetFilePath);
                 }
                 else
                 {
-                    return await MoveBulkInstanceMethodsInFile(filePath, sourceClass, methodList, targetClass, accessMemberName, accessMemberType, targetFilePath);
+                    message = await MoveBulkInstanceMethodsInFile(filePath, sourceClass, methodList, targetClass, accessMemberName, accessMemberType, targetFilePath);
                 }
             }
+
+            foreach (var m in methodList)
+                MarkMoved(filePath, m);
+
+            return message;
         }
         catch (Exception ex)
         {
