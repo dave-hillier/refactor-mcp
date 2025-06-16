@@ -199,7 +199,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli move-multiple-methods \
   "./optional/Target.cs"
 ```
 Wrapper methods remain in the source class, delegating to their moved versions.
-If `memberName` doesn't exist, a private readonly field with that name is added to reference the target instance.
+If needed, a private readonly field is created automatically to hold the target instance.
 
 ### Batch Move Methods
 ```bash
