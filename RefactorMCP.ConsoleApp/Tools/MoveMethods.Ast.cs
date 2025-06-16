@@ -602,7 +602,10 @@ public static partial class MoveMethodsTool
         }
     }
 
-    public static SyntaxNode PropagateUsings(SyntaxNode sourceRoot, SyntaxNode targetRoot)
+    public static SyntaxNode PropagateUsings(
+        SyntaxNode sourceRoot,
+        SyntaxNode targetRoot,
+        string? namespaceName = null)
     {
         var sourceCompilationUnit = (CompilationUnitSyntax)sourceRoot;
         var sourceUsings = sourceCompilationUnit.Usings.ToList();
@@ -613,6 +616,7 @@ public static partial class MoveMethodsTool
             .ToHashSet();
         var missingUsings = sourceUsings
             .Where(u => !targetUsingNames.Contains(u.Name.ToString()))
+            .Where(u => namespaceName == null || u.Name.ToString() != namespaceName)
             .ToArray();
 
         if (missingUsings.Length > 0)

@@ -41,7 +41,10 @@ public static partial class MoveMethodsTool
         else
         {
             targetRoot = await LoadOrCreateTargetRoot(targetPath);
-            targetRoot = PropagateUsings(sourceRoot, targetRoot);
+            var nsName = sourceRoot.DescendantNodes()
+                .OfType<BaseNamespaceDeclarationSyntax>()
+                .FirstOrDefault()?.Name.ToString();
+            targetRoot = PropagateUsings(sourceRoot, targetRoot, nsName);
         }
 
         targetRoot = AddMethodToTargetClass(targetRoot, targetClass, moveResult.MovedMethod, moveResult.Namespace);
@@ -121,7 +124,10 @@ public static partial class MoveMethodsTool
             await File.WriteAllTextAsync(filePath, formattedSource.ToFullString(), sourceEncoding);
 
             var targetRoot = await LoadOrCreateTargetRoot(targetPath);
-            targetRoot = PropagateUsings(sourceRoot, targetRoot);
+            var nsName = sourceRoot.DescendantNodes()
+                .OfType<BaseNamespaceDeclarationSyntax>()
+                .FirstOrDefault()?.Name.ToString();
+            targetRoot = PropagateUsings(sourceRoot, targetRoot, nsName);
             targetRoot = AddMethodToTargetClass(targetRoot, targetClass, moveResult.MovedMethod, moveResult.Namespace);
 
             var formattedTarget = Formatter.Format(targetRoot, RefactoringHelpers.SharedWorkspace);
