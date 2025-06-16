@@ -22,8 +22,8 @@ Unit tests for each refactoring tool in the `Tools` folder covering solution loa
 - 🚧 `MemoryUsage_MultipleOperations_DoesNotLeak`
 
 ### 4. Metrics and Analysis
-Tests covering code metrics and refactoring suggestions:
-- ✅ `CodeMetricsTests` - JSON metrics output
+Tests covering metrics and refactoring suggestions:
+- ✅ `MetricsResourceTests` - Metrics resource returns JSON
 - ✅ `ClassLengthMetricsTests` - Class length listings
 - ✅ `AnalyzeRefactoringOpportunitiesTests` - Suggests safe deletions
 
@@ -93,7 +93,7 @@ RefactorMCP.Tests/
 ├── Roslyn/                  # Syntax tree transformation tests
 ├── ExampleValidationTests.cs # Documentation validation
 ├── PerformanceTests.cs       # Performance tests
-├── CodeMetricsTests.cs       # Code metrics validation
+├── MetricsResourceTests.cs   # Metrics resource validation
 ├── ClassLengthMetricsTests.cs # Class size metrics
 ├── AnalyzeRefactoringOpportunitiesTests.cs
 ├── ExampleCode.cs            # Sample code for testing

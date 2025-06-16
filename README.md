@@ -22,8 +22,8 @@ Below is a quick reference of all tool classes provided by RefactorMCP. Each too
   List all classes in the solution with their line counts.
 - **CleanupUsingsTool** `[McpServerToolType]`  
   Remove unused using directives from a C# file (preferred for large C# file refactoring).
-- **CodeMetricsTool** `[McpServerToolType, McpServerPromptType]`  
-  Get code metrics for a C# file including classes and methods.
+- **MetricsResource** `[McpServerResourceType]`
+  Read metrics using `metrics://` URIs for directories, files, classes or methods.
 - **ConvertToExtensionMethodTool** `[McpServerToolType]`  
   Convert an instance method to an extension method in a static class.
 - **ConvertToStaticWithInstanceTool** `[McpServerToolType]`  
@@ -257,7 +257,6 @@ dotnet run --project RefactorMCP.ConsoleApp -- --json ToolName '{"param":"value"
 - `version` - Show build version and timestamp
 - `analyze-refactoring-opportunities <solutionPath> <filePath>` - Prompt for refactoring suggestions (long methods, long parameter lists, unused code)
 - `list-class-lengths <solutionPath>` - Prompt for class names and line counts
-- `code-metrics <solutionPath> <filePath>` - Output metrics for classes and methods (results cached to disk)
 
 #### Quick Start Example
 
@@ -290,8 +289,16 @@ working.
 
 ### Metrics Cache
 
-`code-metrics` stores results in `codeMetricsCache.json` under the current working directory. Repeated calls with the same
+Metrics results are cached in `codeMetricsCache.json` under the current working directory. Repeated requests with the same
 solution and file paths return the cached JSON without recomputing. Delete this file to reset the cache.
+
+### Metrics Resource
+
+Metrics can also be accessed via the `metrics://` resource scheme. Use a URI like
+`metrics://<file path>/[ClassName].[MethodName]` to retrieve metrics for a
+specific scope. Supplying only a directory lists all classes. Specifying a file
+returns metrics for all classes and methods, adding a class name narrows to that
+class, and appending a method name yields metrics just for that method.
 
 ## Range Format
 
