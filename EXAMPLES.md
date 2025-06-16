@@ -362,8 +362,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli move-instance-method \
   "./RefactorMCP.Tests/ExampleCode.cs" \
   Calculator \
   LogOperation \
-  Logger \
-  _logger field
+  Logger
 ```
 
 **After**:
@@ -419,7 +418,6 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli move-multiple-methods \
   Helper \
   "A,B" \
   Target \
-  t \
   "./Target.cs"
 ```
 
@@ -433,7 +431,6 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli move-multiple-methods \
   Helper \
   A \
   Target \
-  t \
   "./Target.cs"
 ```
 
@@ -441,16 +438,16 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli move-multiple-methods \
 ```csharp
 class Helper
 {
-    private readonly Target t = new Target();
+    private readonly Target _target = new Target();
 
     public void A()
     {
-        t.A();
+        _target.A();
     }
 
     public void B()
     {
-        t.B();
+        _target.B();
     }
 }
 
@@ -468,7 +465,7 @@ class Target
 }
 ```
 Each moved method in `Helper` now delegates to the corresponding method on `Target`, preserving the original public interface.
-Because `t` did not exist on `Helper`, the refactoring introduced a private readonly field with that name.
+Because an access field didn't exist, the refactoring introduced a private readonly field named `_target` automatically.
 
 ## 11. Batch Move Methods
 
