@@ -117,6 +117,19 @@ public static partial class MoveMultipleMethodsTool
         return (message, updatedDoc);
     }
 
+    private static string GenerateAccessMemberName(ClassDeclarationSyntax classDecl, string targetClass)
+    {
+        var baseName = "_" + char.ToLowerInvariant(targetClass[0]) + targetClass.Substring(1);
+        var name = baseName;
+        var counter = 1;
+        while (classDecl.Members.OfType<FieldDeclarationSyntax>().Any(f => f.Declaration.Variables.Any(v => v.Identifier.ValueText == name)) ||
+               classDecl.Members.OfType<PropertyDeclarationSyntax>().Any(p => p.Identifier.ValueText == name))
+        {
+            name = baseName + counter++;
+        }
+        return name;
+    }
+
 
 
     // Solution/Document operations that use the AST layer
