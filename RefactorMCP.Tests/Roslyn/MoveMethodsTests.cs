@@ -210,6 +210,36 @@ public class TargetClass
             Assert.Contains("return _value + 2", formatted);
             Assert.Contains("return _target.GetValue(_value)", formatted);
         }
+
+        [Fact]
+        public void MoveInstanceMethod_OmitsUnusedThisParameter()
+        {
+            var source = @"public class SourceClass
+{
+    public void Say() { System.Console.WriteLine(1); }
+}
+
+public class TargetClass
+{
+}";
+
+            var tree = CSharpSyntaxTree.ParseText(source);
+            var root = tree.GetRoot();
+
+            var result = MoveMethodsTool.MoveInstanceMethodAst(
+                root,
+                "SourceClass",
+                "Say",
+                "TargetClass",
+                "_target",
+                "field");
+
+            var finalRoot = MoveMethodsTool.AddMethodToTargetClass(result.NewSourceRoot, "TargetClass", result.MovedMethod, result.Namespace);
+            var formatted = Formatter.Format(finalRoot, new AdhocWorkspace()).ToFullString();
+
+            Assert.Contains("public void Say()", formatted);
+            Assert.DoesNotContain("@this", formatted);
+        }
     }
 }
 

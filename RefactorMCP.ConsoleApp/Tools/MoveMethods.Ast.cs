@@ -85,6 +85,30 @@ public static partial class MoveMethodsTool
         return method;
     }
 
+    private static bool HasParameterUsage(MethodDeclarationSyntax method, string parameterName)
+    {
+        var nodes = new List<SyntaxNode>();
+        if (method.Body != null)
+            nodes.Add(method.Body);
+        if (method.ExpressionBody != null)
+            nodes.Add(method.ExpressionBody);
+        return nodes.SelectMany(n => n.DescendantNodes())
+            .OfType<IdentifierNameSyntax>()
+            .Any(id => id.Identifier.ValueText == parameterName);
+    }
+
+    private static MethodDeclarationSyntax RemoveParameter(MethodDeclarationSyntax method, string parameterName)
+    {
+        var parameters = method.ParameterList.Parameters;
+        var index = parameters.ToList().FindIndex(p => p.Identifier.ValueText == parameterName);
+        if (index >= 0)
+        {
+            parameters = parameters.RemoveAt(index);
+            method = method.WithParameterList(method.ParameterList.WithParameters(parameters));
+        }
+        return method;
+    }
+
     private static ClassDeclarationSyntax FindSourceClassForMethod(SyntaxNode sourceRoot, MethodDeclarationSyntax method)
     {
         var sourceClass = sourceRoot.DescendantNodes()
@@ -237,6 +261,12 @@ public static partial class MoveMethodsTool
             otherMethodNames,
             injectedParameters,
             usedPrivateFields);
+
+        if (needsThisParameter && !HasParameterUsage(transformedMethod, "@this"))
+        {
+            transformedMethod = RemoveParameter(transformedMethod, "@this");
+            needsThisParameter = false;
+        }
 
         var stubMethod = CreateStubMethod(
             method,
