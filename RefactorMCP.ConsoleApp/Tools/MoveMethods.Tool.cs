@@ -51,20 +51,20 @@ public static partial class MoveMethodsTool
 
     private class StaticMethodMoveContext
     {
-        public string SourcePath { get; set; }
-        public string TargetPath { get; set; }
+        public string SourcePath { get; set; } = string.Empty;
+        public string TargetPath { get; set; } = string.Empty;
         public bool SameFile { get; set; }
-        public SyntaxNode SourceRoot { get; set; }
-        public List<UsingDirectiveSyntax> SourceUsings { get; set; }
-        public string TargetClassName { get; set; }
-        public Encoding SourceEncoding { get; set; }
+        public SyntaxNode SourceRoot { get; set; } = null!;
+        public List<UsingDirectiveSyntax> SourceUsings { get; set; } = new();
+        public string TargetClassName { get; set; } = string.Empty;
+        public Encoding SourceEncoding { get; set; } = Encoding.UTF8;
         public string? Namespace { get; set; }
     }
 
     private class SourceAndTargetRoots
     {
-        public SyntaxNode UpdatedSourceRoot { get; set; }
-        public SyntaxNode UpdatedTargetRoot { get; set; }
+        public SyntaxNode UpdatedSourceRoot { get; set; } = null!;
+        public SyntaxNode UpdatedTargetRoot { get; set; } = null!;
     }
 
     private static async Task<StaticMethodMoveContext> PrepareStaticMethodMove(

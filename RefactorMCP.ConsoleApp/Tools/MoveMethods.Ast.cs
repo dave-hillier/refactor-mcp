@@ -17,17 +17,17 @@ public static partial class MoveMethodsTool
 
     public class MoveStaticMethodResult
     {
-        public SyntaxNode NewSourceRoot { get; set; }
-        public MethodDeclarationSyntax MovedMethod { get; set; }
-        public MethodDeclarationSyntax StubMethod { get; set; }
+        public SyntaxNode NewSourceRoot { get; set; } = null!;
+        public MethodDeclarationSyntax MovedMethod { get; set; } = null!;
+        public MethodDeclarationSyntax StubMethod { get; set; } = null!;
         public string? Namespace { get; set; }
     }
 
     public class MoveInstanceMethodResult
     {
-        public SyntaxNode NewSourceRoot { get; set; }
-        public MethodDeclarationSyntax MovedMethod { get; set; }
-        public MethodDeclarationSyntax StubMethod { get; set; }
+        public SyntaxNode NewSourceRoot { get; set; } = null!;
+        public MethodDeclarationSyntax MovedMethod { get; set; } = null!;
+        public MethodDeclarationSyntax StubMethod { get; set; } = null!;
         public MemberDeclarationSyntax? AccessMember { get; set; }
         public bool NeedsThisParameter { get; set; }
         public string? Namespace { get; set; }
