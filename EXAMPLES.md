@@ -389,6 +389,7 @@ public class Logger
 }
 ```
 The original method in `Calculator` now delegates to `Logger.LogOperation`, preserving existing call sites.
+When a moved method references private fields from its original class, those values are passed as additional parameters.
 
 ## 10. Move Multiple Methods
 

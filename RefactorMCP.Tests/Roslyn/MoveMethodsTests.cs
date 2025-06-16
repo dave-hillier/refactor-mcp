@@ -164,7 +164,7 @@ public class TargetClass
             var targetClassCode = result.Split(new[] { "public class TargetClass" }, StringSplitOptions.None)[1];
             var sourceClassCode = result.Split(new[] { "public class SourceClass" }, StringSplitOptions.None)[1].Split(new[] { "public class TargetClass" }, StringSplitOptions.None)[0];
 
-            Assert.Contains("public int Method1(SourceClass @this)", targetClassCode);
+            Assert.Contains("public int Method1(int field1)", targetClassCode);
             Assert.Contains("public int Method2(SourceClass @this)", targetClassCode);
             Assert.Contains("public int Method3(SourceClass @this)", targetClassCode);
             Assert.Contains("return @this.Method1() + 1", targetClassCode);
@@ -174,9 +174,41 @@ public class TargetClass
             Assert.DoesNotContain("public int Method2() { return Method1() + 1; }", sourceClassCode);
             Assert.DoesNotContain("public int Method3() { return Method2() + 1; }", sourceClassCode);
 
-            Assert.Contains("return this.field1.Method1(this)", sourceClassCode);
+            Assert.Contains("return this.field1.Method1(this.field1)", sourceClassCode);
             Assert.Contains("return this.field1.Method2(this)", sourceClassCode);
             Assert.Contains("return this.field1.Method3(this)", sourceClassCode);
+        }
+
+        [Fact]
+        public void MoveInstanceMethod_PrivateFieldInjectedAsParameter()
+        {
+            var source = @"public class SourceClass
+{
+    private int _value = 1;
+    public int GetValue() { return _value + 2; }
+}
+
+public class TargetClass
+{
+}";
+
+            var tree = CSharpSyntaxTree.ParseText(source);
+            var root = tree.GetRoot();
+
+            var result = MoveMethodsTool.MoveInstanceMethodAst(
+                root,
+                "SourceClass",
+                "GetValue",
+                "TargetClass",
+                "_target",
+                "field");
+
+            var finalRoot = MoveMethodsTool.AddMethodToTargetClass(result.NewSourceRoot, "TargetClass", result.MovedMethod, result.Namespace);
+            var formatted = Formatter.Format(finalRoot, new AdhocWorkspace()).ToFullString();
+
+            Assert.Contains("public int GetValue(int _value)", formatted);
+            Assert.Contains("return _value + 2", formatted);
+            Assert.Contains("return this._target.GetValue(this._value)", formatted);
         }
     }
 }

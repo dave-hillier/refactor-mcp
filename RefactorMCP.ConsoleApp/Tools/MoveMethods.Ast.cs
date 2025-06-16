@@ -193,8 +193,14 @@ public static partial class MoveMethodsTool
 
         var instanceMembers = GetInstanceMemberNames(originClass);
         var methodNames = GetMethodNames(originClass);
+        var privateFieldInfos = GetPrivateFieldInfos(originClass);
+        var usedPrivateFields = GetUsedPrivateFields(method, new HashSet<string>(privateFieldInfos.Keys));
 
-        var analysis = new MethodAnalysisWalker(instanceMembers, methodNames, methodName);
+        var membersForAnalysis = new HashSet<string>(instanceMembers);
+        foreach (var f in usedPrivateFields)
+            membersForAnalysis.Remove(f);
+
+        var analysis = new MethodAnalysisWalker(membersForAnalysis, methodNames, methodName);
         analysis.Visit(method);
 
         bool usesInstanceMembers = analysis.UsesInstanceMembers;
@@ -214,6 +220,11 @@ public static partial class MoveMethodsTool
                        pts.Keyword.IsKind(SyntaxKind.VoidKeyword);
         var typeParameters = method.TypeParameterList;
 
+        var injectedParameters = usedPrivateFields
+            .Select(n => SyntaxFactory.Parameter(SyntaxFactory.Identifier(n))
+                .WithType(privateFieldInfos[n]))
+            .ToList();
+
         var transformedMethod = TransformMethodForMove(
             method,
             sourceClass,
@@ -222,8 +233,10 @@ public static partial class MoveMethodsTool
             usesInstanceMembers,
             callsOtherMethods,
             isRecursive,
-            instanceMembers,
-            otherMethodNames);
+            membersForAnalysis,
+            otherMethodNames,
+            injectedParameters,
+            usedPrivateFields);
 
         var stubMethod = CreateStubMethod(
             method,
@@ -233,7 +246,8 @@ public static partial class MoveMethodsTool
             needsThisParameter,
             isVoid,
             isAsync,
-            typeParameters);
+            typeParameters,
+            usedPrivateFields);
 
         var updatedSourceRoot = UpdateSourceClassWithStub(originClass, method, stubMethod, accessMember);
 
@@ -286,9 +300,20 @@ public static partial class MoveMethodsTool
         bool callsOtherMethods,
         bool isRecursive,
         HashSet<string> instanceMembers,
-        HashSet<string> otherMethodNames)
+        HashSet<string> otherMethodNames,
+        List<ParameterSyntax> injectedParameters,
+        HashSet<string> injectedNames)
     {
         var transformedMethod = method;
+
+        if (injectedParameters.Count > 0)
+        {
+            var newParams = transformedMethod.ParameterList.Parameters.AddRange(injectedParameters);
+            transformedMethod = transformedMethod.WithParameterList(transformedMethod.ParameterList.WithParameters(newParams));
+            var map = injectedNames.ToDictionary(n => n, n => (ExpressionSyntax)SyntaxFactory.IdentifierName(n));
+            var rewriter = new ParameterRewriter(map);
+            transformedMethod = (MethodDeclarationSyntax)rewriter.Visit(transformedMethod)!;
+        }
 
         if (needsThisParameter)
         {
@@ -371,7 +396,8 @@ public static partial class MoveMethodsTool
         bool needsThisParameter,
         bool isVoid,
         bool isAsync,
-        TypeParameterListSyntax? typeParameters)
+        TypeParameterListSyntax? typeParameters,
+        IEnumerable<string> fieldArguments)
     {
         var invocation = BuildDelegationInvocation(
             method,
@@ -379,7 +405,8 @@ public static partial class MoveMethodsTool
             accessMemberName,
             accessMemberType,
             needsThisParameter,
-            typeParameters);
+            typeParameters,
+            fieldArguments);
         var callStatement = CreateDelegationStatement(isVoid, isAsync, invocation);
 
         return method.WithBody(SyntaxFactory.Block(callStatement))
@@ -393,7 +420,8 @@ public static partial class MoveMethodsTool
         string accessMemberName,
         string accessMemberType,
         bool needsThisParameter,
-        TypeParameterListSyntax? typeParameters)
+        TypeParameterListSyntax? typeParameters,
+        IEnumerable<string> fieldArguments)
     {
         var originalParameters = method.ParameterList.Parameters
             .Select(p => SyntaxFactory.Argument(SyntaxFactory.IdentifierName(p.Identifier))).ToList();
@@ -401,6 +429,15 @@ public static partial class MoveMethodsTool
         if (needsThisParameter)
         {
             originalParameters.Insert(0, SyntaxFactory.Argument(SyntaxFactory.ThisExpression()));
+        }
+
+        foreach (var fieldName in fieldArguments)
+        {
+            originalParameters.Add(SyntaxFactory.Argument(
+                SyntaxFactory.MemberAccessExpression(
+                    SyntaxKind.SimpleMemberAccessExpression,
+                    SyntaxFactory.ThisExpression(),
+                    SyntaxFactory.IdentifierName(fieldName))));
         }
 
         var argumentList = SyntaxFactory.ArgumentList(SyntaxFactory.SeparatedList(originalParameters));
