@@ -182,7 +182,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli move-instance-method \
   "TargetClass" \
   "./optional/target.cs"
 ```
-An access field named after the target class is created automatically if needed.
+An access field named after the target class is created automatically if needed. If the name is taken, a numeric suffix is appended.
 Each moved method leaves a wrapper that calls the new implementation.
 Private field values referenced by the moved method are supplied as extra parameters.
 Running the tool again on the wrapper now triggers an error. Use `inline-method` if you want to remove the wrapper.

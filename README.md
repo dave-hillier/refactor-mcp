@@ -241,8 +241,8 @@ dotnet run --project RefactorMCP.ConsoleApp -- --json ToolName '{"param":"value"
 - `convert-to-static-with-parameters <solutionPath> <filePath> <methodLine>` - Convert instance method to static with parameters
 - `convert-to-static-with-instance <solutionPath> <filePath> <methodLine> [instanceName]` - Convert instance method to static with explicit instance
 - `move-static-method <solutionPath> <filePath> <methodName> <targetClass> [targetFilePath]` - Move a static method to another class
- - `move-instance-method <solutionPath> <filePath> <sourceClass> <methodNames> <targetClass> [targetFilePath]` - Move one or more instance methods (comma separated names) to another class. A private readonly field named after the target is created if needed
- - `move-multiple-methods <solutionPath> <filePath> <sourceClass> <methodNames> <targetClass> [targetFilePath]` - Move multiple methods from one class to another. Access fields are automatically created when required
+ - `move-instance-method <solutionPath> <filePath> <sourceClass> <methodNames> <targetClass> [targetFilePath]` - Move one or more instance methods (comma separated names) to another class. A private readonly field named after the target is created if needed. If that field name already exists, a numeric suffix is appended
+ - `move-multiple-methods <solutionPath> <filePath> <sourceClass> <methodNames> <targetClass> [targetFilePath]` - Move multiple methods from one class to another. Access fields are automatically created when required. If the generated name conflicts, a numeric suffix is appended
 - `batch-move-methods <solutionPath> <filePath> <operationsJson> [defaultTargetFile]` - Move many methods in a single batch using JSON operations
 - `move-multiple-methods <solutionPath> <filePath> <sourceClass> <methodNames> <targetClass> <accessMember> [targetFilePath]` - Move multiple methods from one class to another. Accepts comma separated `methodNames`.
 - Each method move is described by a `MoveOperation` object with these properties:
