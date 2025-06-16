@@ -58,7 +58,7 @@ public static partial class MoveMethodsTool
             await File.WriteAllTextAsync(filePath, formattedSource.ToFullString(), sourceEncoding);
         }
 
-        return $"Successfully moved static method '{methodName}' to {targetClass} in {targetPath}";
+        return $"Successfully moved static method '{methodName}' to {targetClass} in {targetPath}. A delegate method remains in the original class to preserve the interface.";
     }
 
 
@@ -130,7 +130,7 @@ public static partial class MoveMethodsTool
         }
 
         var locationInfo = targetFilePath != null ? $" in {targetPath}" : string.Empty;
-        return $"Successfully moved instance method {sourceClass}.{methodName} to {targetClass}{locationInfo}";
+        return $"Successfully moved instance method {sourceClass}.{methodName} to {targetClass}{locationInfo}. A delegate method remains in the original class to preserve the interface.";
     }
 
 
