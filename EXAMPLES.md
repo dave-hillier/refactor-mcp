@@ -221,9 +221,11 @@ public string FormatResult(int value, int processedValue)
 ### Example
 **Before** (in `ExampleCode.cs` line 46):
 ```csharp
+private string _operatorSymbol;
+
 public string GetFormattedNumber(int number)
 {
-    return $"{operatorSymbol}: {number}";
+    return $"{_operatorSymbol}: {number}";
 }
 ```
 
