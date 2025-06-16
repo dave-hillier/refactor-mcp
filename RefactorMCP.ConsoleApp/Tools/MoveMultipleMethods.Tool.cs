@@ -132,81 +132,88 @@ public static partial class MoveMultipleMethodsTool
         [Description("Name for the access member")] string accessMember,
         [Description("Path to the target file (optional)")] string? targetFilePath = null)
     {
-        if (methodNames.Length == 0)
-            return RefactoringHelpers.ThrowMcpException("Error: No method names provided");
-
-        var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
-        var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
-
-        if (document != null)
+        try
         {
-            var root = await document.GetSyntaxRootAsync();
-            if (root == null)
-                return RefactoringHelpers.ThrowMcpException("Error: Could not get syntax root");
+            if (methodNames.Length == 0)
+                return RefactoringHelpers.ThrowMcpException("Error: No method names provided");
 
-            var classNodes = root.DescendantNodes().OfType<ClassDeclarationSyntax>().ToDictionary(c => c.Identifier.ValueText);
+            var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
+            var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
 
-            if (!classNodes.TryGetValue(sourceClass, out var sourceClassNode))
-                return RefactoringHelpers.ThrowMcpException($"Error: Source class '{sourceClass}' not found");
-
-            var visitor = new MethodAndMemberVisitor();
-            visitor.Visit(sourceClassNode);
-
-            var isStatic = new bool[methodNames.Length];
-            var accessMemberTypes = new string[methodNames.Length];
-
-            for (int i = 0; i < methodNames.Length; i++)
+            if (document != null)
             {
-                var methodName = methodNames[i];
-                if (!visitor.Methods.TryGetValue(methodName, out var methodInfo))
-                    return RefactoringHelpers.ThrowMcpException($"Error: No method named '{methodName}' in class '{sourceClass}'");
+                var root = await document.GetSyntaxRootAsync();
+                if (root == null)
+                    return RefactoringHelpers.ThrowMcpException("Error: Could not get syntax root");
 
-                isStatic[i] = methodInfo.IsStatic;
+                var classNodes = root.DescendantNodes().OfType<ClassDeclarationSyntax>().ToDictionary(c => c.Identifier.ValueText);
 
-                if (!isStatic[i])
+                if (!classNodes.TryGetValue(sourceClass, out var sourceClassNode))
+                    return RefactoringHelpers.ThrowMcpException($"Error: Source class '{sourceClass}' not found");
+
+                var visitor = new MethodAndMemberVisitor();
+                visitor.Visit(sourceClassNode);
+
+                var isStatic = new bool[methodNames.Length];
+                var accessMemberTypes = new string[methodNames.Length];
+
+                for (int i = 0; i < methodNames.Length; i++)
                 {
-                    if (visitor.Members.TryGetValue(accessMember, out var memberInfo))
+                    var methodName = methodNames[i];
+                    if (!visitor.Methods.TryGetValue(methodName, out var methodInfo))
+                        return RefactoringHelpers.ThrowMcpException($"Error: No method named '{methodName}' in class '{sourceClass}'");
+
+                    isStatic[i] = methodInfo.IsStatic;
+
+                    if (!isStatic[i])
                     {
-                        accessMemberTypes[i] = memberInfo.Type;
+                        if (visitor.Members.TryGetValue(accessMember, out var memberInfo))
+                        {
+                            accessMemberTypes[i] = memberInfo.Type;
+                        }
+                        else
+                        {
+                            accessMemberTypes[i] = "field"; // Default to field if not found
+                        }
                     }
                     else
                     {
-                        accessMemberTypes[i] = "field"; // Default to field if not found
+                        accessMemberTypes[i] = string.Empty; // Not used for static methods
                     }
                 }
-                else
+
+                var sourceClasses = Enumerable.Repeat(sourceClass, methodNames.Length).ToArray();
+                var orderedIndices = OrderOperations(root, sourceClasses, methodNames);
+
+                var results = new List<string>();
+                var currentDoc = document;
+                var targetPath = targetFilePath ?? Path.Combine(Path.GetDirectoryName(document.FilePath!)!, $"{targetClass}.cs");
+
+                foreach (var idx in orderedIndices)
                 {
-                    accessMemberTypes[i] = string.Empty; // Not used for static methods
+                    var (msg, updatedDoc) = await MoveSingleMethod(
+                        currentDoc,
+                        sourceClass,
+                        methodNames[idx],
+                        isStatic[idx],
+                        targetClass,
+                        accessMember,
+                        accessMemberTypes[idx],
+                        targetPath);
+                    currentDoc = updatedDoc;
+                    results.Add(msg);
                 }
+
+                return string.Join("\n", results);
             }
 
-            var sourceClasses = Enumerable.Repeat(sourceClass, methodNames.Length).ToArray();
-            var orderedIndices = OrderOperations(root, sourceClasses, methodNames);
-
-            var results = new List<string>();
-            var currentDoc = document;
-            var targetPath = targetFilePath ?? Path.Combine(Path.GetDirectoryName(document.FilePath!)!, $"{targetClass}.cs");
-
-            foreach (var idx in orderedIndices)
-            {
-                var (msg, updatedDoc) = await MoveSingleMethod(
-                    currentDoc,
-                    sourceClass,
-                    methodNames[idx],
-                    isStatic[idx],
-                    targetClass,
-                    accessMember,
-                    accessMemberTypes[idx],
-                    targetPath);
-                currentDoc = updatedDoc;
-                results.Add(msg);
-            }
-
-            return string.Join("\n", results);
+            // Fallback to AST-based approach for single-file mode or cross-file operations
+            // This path is no longer needed after unification
+            return RefactoringHelpers.ThrowMcpException("Error: Could not find document in solution and AST fallback is disabled.");
         }
-
-        // Fallback to AST-based approach for single-file mode or cross-file operations
-        // This path is no longer needed after unification
-        return RefactoringHelpers.ThrowMcpException("Error: Could not find document in solution and AST fallback is disabled.");
+        catch (Exception ex)
+        {
+            throw new McpException($"Error moving multiple methods: {ex.Message}", ex);
+        }
     }
 }
