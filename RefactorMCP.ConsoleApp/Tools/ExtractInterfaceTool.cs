@@ -22,13 +22,13 @@ public static class ExtractInterfaceTool
             var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
             var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
             if (document == null)
-                return RefactoringHelpers.ThrowMcpException($"Error: File {filePath} not found in solution");
+                throw new McpException($"Error: File {filePath} not found in solution");
 
             var root = (CompilationUnitSyntax)await document.GetSyntaxRootAsync();
             var classNode = root.DescendantNodes().OfType<ClassDeclarationSyntax>()
                 .FirstOrDefault(c => c.Identifier.ValueText == className);
             if (classNode == null)
-                return RefactoringHelpers.ThrowMcpException($"Error: Class {className} not found");
+                throw new McpException($"Error: Class {className} not found");
 
             var chosen = memberList.Split(',', StringSplitOptions.RemoveEmptyEntries)
                 .Select(m => m.Trim()).ToHashSet(StringComparer.Ordinal);
@@ -63,7 +63,7 @@ public static class ExtractInterfaceTool
             }
 
             if (members.Count == 0)
-                return RefactoringHelpers.ThrowMcpException("Error: No matching members found");
+                throw new McpException("Error: No matching members found");
 
             var interfaceName = Path.GetFileNameWithoutExtension(interfaceFilePath);
             var iface = SyntaxFactory.InterfaceDeclaration(interfaceName)

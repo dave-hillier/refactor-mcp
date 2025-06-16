@@ -48,7 +48,7 @@ public static class InlineMethodTool
         var method = root!.DescendantNodes().OfType<MethodDeclarationSyntax>()
             .FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            return RefactoringHelpers.ThrowMcpException($"Error: Method '{methodName}' not found");
+            throw new McpException($"Error: Method '{methodName}' not found");
 
         var symbol = semanticModel!.GetDeclaredSymbol(method)!;
         await InlineReferences(method, document.Project.Solution, symbol);
@@ -83,7 +83,7 @@ public static class InlineMethodTool
         var method = root.DescendantNodes().OfType<MethodDeclarationSyntax>()
             .FirstOrDefault(m => m.Identifier.ValueText == methodName && m.ParameterList.Parameters.Count == 0);
         if (method == null)
-            return RefactoringHelpers.ThrowMcpException($"Error: Method '{methodName}' not found or has parameters");
+            throw new McpException($"Error: Method '{methodName}' not found or has parameters");
 
         var rewriter = new InlineInvocationRewriter(method);
         var newRoot = rewriter.Visit(root)!;

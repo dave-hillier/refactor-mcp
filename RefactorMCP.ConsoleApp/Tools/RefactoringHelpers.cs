@@ -129,10 +129,6 @@ internal static class RefactoringHelpers
         return true;
     }
 
-    internal static string ThrowMcpException(string message)
-    {
-        throw new McpException(message);
-    }
 
     internal static async Task<string> ApplySingleFileEdit(
         string filePath,
@@ -140,7 +136,7 @@ internal static class RefactoringHelpers
         string successMessage)
     {
         if (!File.Exists(filePath))
-            return ThrowMcpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
+            throw new McpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
 
         var (sourceText, encoding) = await ReadFileWithEncodingAsync(filePath);
         var newText = transform(sourceText);

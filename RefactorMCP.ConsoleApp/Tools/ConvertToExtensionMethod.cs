@@ -42,12 +42,12 @@ public static class ConvertToExtensionMethodTool
             .OfType<MethodDeclarationSyntax>()
             .FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            return RefactoringHelpers.ThrowMcpException($"Error: No method named '{methodName}' found");
+            throw new McpException($"Error: No method named '{methodName}' found");
 
         var semanticModel = await document.GetSemanticModelAsync();
         var classDecl = method.Ancestors().OfType<ClassDeclarationSyntax>().FirstOrDefault();
         if (classDecl == null)
-            return RefactoringHelpers.ThrowMcpException($"Error: Method '{methodName}' is not inside a class");
+            throw new McpException($"Error: Method '{methodName}' is not inside a class");
 
         var className = classDecl.Identifier.ValueText;
         var extClassName = extensionClass ?? className + "Extensions";
@@ -91,7 +91,7 @@ public static class ConvertToExtensionMethodTool
         {
             var duplicateDoc = await RefactoringHelpers.FindClassInSolution(document.Project.Solution, extClassName, document.FilePath);
             if (duplicateDoc != null)
-                return RefactoringHelpers.ThrowMcpException($"Error: Class {extClassName} already exists in {duplicateDoc.FilePath}");
+                throw new McpException($"Error: Class {extClassName} already exists in {duplicateDoc.FilePath}");
             var extensionClassDecl = SyntaxFactory.ClassDeclaration(extClassName)
                 .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.StaticKeyword))
                 .AddMembers(updatedMethod);
@@ -134,11 +134,11 @@ public static class ConvertToExtensionMethodTool
             .OfType<MethodDeclarationSyntax>()
             .FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            return RefactoringHelpers.ThrowMcpException($"Error: No method named '{methodName}' found");
+            throw new McpException($"Error: No method named '{methodName}' found");
 
         var classDecl = method.Ancestors().OfType<ClassDeclarationSyntax>().FirstOrDefault();
         if (classDecl == null)
-            return RefactoringHelpers.ThrowMcpException($"Error: Method '{methodName}' is not inside a class");
+            throw new McpException($"Error: Method '{methodName}' is not inside a class");
 
         var className = classDecl.Identifier.ValueText;
         var extClassName = extensionClass ?? className + "Extensions";

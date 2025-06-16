@@ -135,7 +135,7 @@ public static partial class MoveMultipleMethodsTool
         try
         {
             if (methodNames.Length == 0)
-                return RefactoringHelpers.ThrowMcpException("Error: No method names provided");
+                throw new McpException("Error: No method names provided");
 
             var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
             var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
@@ -144,12 +144,12 @@ public static partial class MoveMultipleMethodsTool
             {
                 var root = await document.GetSyntaxRootAsync();
                 if (root == null)
-                    return RefactoringHelpers.ThrowMcpException("Error: Could not get syntax root");
+                    throw new McpException("Error: Could not get syntax root");
 
                 var classNodes = root.DescendantNodes().OfType<ClassDeclarationSyntax>().ToDictionary(c => c.Identifier.ValueText);
 
                 if (!classNodes.TryGetValue(sourceClass, out var sourceClassNode))
-                    return RefactoringHelpers.ThrowMcpException($"Error: Source class '{sourceClass}' not found");
+                    throw new McpException($"Error: Source class '{sourceClass}' not found");
 
                 var visitor = new MethodAndMemberVisitor();
                 visitor.Visit(sourceClassNode);
@@ -161,7 +161,7 @@ public static partial class MoveMultipleMethodsTool
                 {
                     var methodName = methodNames[i];
                     if (!visitor.Methods.TryGetValue(methodName, out var methodInfo))
-                        return RefactoringHelpers.ThrowMcpException($"Error: No method named '{methodName}' in class '{sourceClass}'");
+                        throw new McpException($"Error: No method named '{methodName}' in class '{sourceClass}'");
 
                     isStatic[i] = methodInfo.IsStatic;
 
@@ -209,7 +209,7 @@ public static partial class MoveMultipleMethodsTool
 
             // Fallback to AST-based approach for single-file mode or cross-file operations
             // This path is no longer needed after unification
-            return RefactoringHelpers.ThrowMcpException("Error: Could not find document in solution and AST fallback is disabled.");
+            throw new McpException("Error: Could not find document in solution and AST fallback is disabled.");
         }
         catch (Exception ex)
         {
