@@ -17,6 +17,7 @@ This repository implements a Model Context Protocol (MCP) server that exposes **
 
 ## Formatting and Testing
 
+- Ensure you run a full build with `dotnet build` from the root with no extra parameters. 
 - Run `dotnet format` to ensure consistent C# style.
 - Run `dotnet test` before committing your changes.
 
