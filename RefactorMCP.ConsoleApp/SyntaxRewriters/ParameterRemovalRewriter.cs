@@ -2,6 +2,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.CodeAnalysis.Editing;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -9,11 +10,13 @@ public class ParameterRemovalRewriter : CSharpSyntaxRewriter
 {
     private readonly string _methodName;
     private readonly int _parameterIndex;
+    private readonly SyntaxGenerator _generator;
 
-    public ParameterRemovalRewriter(string methodName, int parameterIndex)
+    public ParameterRemovalRewriter(string methodName, int parameterIndex, SyntaxGenerator generator)
     {
         _methodName = methodName;
         _parameterIndex = parameterIndex;
+        _generator = generator;
     }
 
     public override SyntaxNode VisitMethodDeclaration(MethodDeclarationSyntax node)
@@ -38,8 +41,7 @@ public class ParameterRemovalRewriter : CSharpSyntaxRewriter
 
         if (isTarget && _parameterIndex < visited.ArgumentList.Arguments.Count)
         {
-            var newArgs = visited.ArgumentList.Arguments.RemoveAt(_parameterIndex);
-            visited = visited.WithArgumentList(visited.ArgumentList.WithArguments(newArgs));
+            visited = AstTransformations.RemoveArgument(visited, _parameterIndex);
         }
 
         return visited;
