@@ -1,17 +1,11 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
-using System.Collections.Generic;
-using System.Linq;
 
-internal class VariableIntroductionRewriter : CSharpSyntaxRewriter
+internal class VariableIntroductionRewriter : ExpressionIntroductionRewriter<BlockSyntax>
 {
-    private readonly ExpressionSyntax _targetExpression;
-    private readonly IdentifierNameSyntax _variableReference;
-    private readonly LocalDeclarationStatementSyntax _variableDeclaration;
     private readonly StatementSyntax? _containingStatement;
-    private readonly BlockSyntax? _containingBlock;
+    private readonly int _insertIndex;
 
     public VariableIntroductionRewriter(
         ExpressionSyntax targetExpression,
@@ -19,36 +13,33 @@ internal class VariableIntroductionRewriter : CSharpSyntaxRewriter
         LocalDeclarationStatementSyntax variableDeclaration,
         StatementSyntax? containingStatement,
         BlockSyntax? containingBlock)
+        : base(targetExpression, variableReference, variableDeclaration, containingBlock)
     {
-        _targetExpression = targetExpression;
-        _variableReference = variableReference;
-        _variableDeclaration = variableDeclaration;
         _containingStatement = containingStatement;
-        _containingBlock = containingBlock;
+        _insertIndex = containingBlock != null && containingStatement != null
+            ? containingBlock.Statements.IndexOf(containingStatement)
+            : -1;
+    }
+
+    protected override BlockSyntax InsertDeclaration(BlockSyntax node, SyntaxNode declaration)
+    {
+        if (_insertIndex >= 0)
+            return node.WithStatements(node.Statements.Insert(_insertIndex, (StatementSyntax)declaration));
+        return node;
     }
 
     public override SyntaxNode Visit(SyntaxNode? node)
     {
-        if (node is ExpressionSyntax expr && SyntaxFactory.AreEquivalent(expr, _targetExpression))
-            return _variableReference;
+        if (node is ExpressionSyntax expr && SyntaxFactory.AreEquivalent(expr, TargetExpression))
+            return Replacement;
 
         return base.Visit(node)!;
     }
 
     public override SyntaxNode VisitBlock(BlockSyntax node)
     {
-        int insertIndex = -1;
-        if (_containingBlock != null && node == _containingBlock && _containingStatement != null)
-            insertIndex = node.Statements.IndexOf(_containingStatement);
-
         var rewritten = (BlockSyntax)base.VisitBlock(node)!;
-
-        if (_containingBlock != null && node == _containingBlock && _containingStatement != null && insertIndex >= 0)
-        {
-            rewritten = rewritten.WithStatements(rewritten.Statements.Insert(insertIndex, _variableDeclaration));
-        }
-
-        return rewritten;
+        return MaybeInsertDeclaration(node, rewritten);
     }
 }
 
