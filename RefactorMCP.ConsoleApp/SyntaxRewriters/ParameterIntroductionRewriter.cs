@@ -29,12 +29,12 @@ internal class ParameterIntroductionRewriter : CSharpSyntaxRewriter
         if (node is ExpressionSyntax expr && SyntaxFactory.AreEquivalent(expr, _targetExpression))
             return _parameterReference;
 
-        return base.Visit(node);
+        return base.Visit(node)!;
     }
 
     public override SyntaxNode VisitInvocationExpression(InvocationExpressionSyntax node)
     {
-        var visited = (InvocationExpressionSyntax)base.VisitInvocationExpression(node);
+        var visited = (InvocationExpressionSyntax)base.VisitInvocationExpression(node)!;
         var isTarget =
             (visited.Expression is IdentifierNameSyntax id && id.Identifier.ValueText == _methodName) ||
             (visited.Expression is MemberAccessExpressionSyntax ma && ma.Name.Identifier.ValueText == _methodName);
@@ -50,7 +50,7 @@ internal class ParameterIntroductionRewriter : CSharpSyntaxRewriter
 
     public override SyntaxNode VisitMethodDeclaration(MethodDeclarationSyntax node)
     {
-        var visited = (MethodDeclarationSyntax)base.VisitMethodDeclaration(node);
+        var visited = (MethodDeclarationSyntax)base.VisitMethodDeclaration(node)!;
         if (node.Identifier.ValueText == _methodName)
             visited = visited.AddParameterListParameters(_parameter);
 

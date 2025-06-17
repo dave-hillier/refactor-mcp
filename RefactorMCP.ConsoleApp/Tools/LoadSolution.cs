@@ -28,7 +28,7 @@ public static class LoadSolutionTool
 
             if (RefactoringHelpers.SolutionCache.TryGetValue(solutionPath, out Solution? cached))
             {
-                var cachedProjects = cached.Projects.Select(p => p.Name).ToList();
+                var cachedProjects = cached!.Projects.Select(p => p.Name).ToList();
                 return $"Successfully loaded solution '{Path.GetFileName(solutionPath)}' with {cachedProjects.Count} projects: {string.Join(", ", cachedProjects)}";
             }
 

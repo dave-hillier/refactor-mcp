@@ -32,7 +32,7 @@ internal class VariableIntroductionRewriter : CSharpSyntaxRewriter
         if (node is ExpressionSyntax expr && SyntaxFactory.AreEquivalent(expr, _targetExpression))
             return _variableReference;
 
-        return base.Visit(node);
+        return base.Visit(node)!;
     }
 
     public override SyntaxNode VisitBlock(BlockSyntax node)
@@ -41,7 +41,7 @@ internal class VariableIntroductionRewriter : CSharpSyntaxRewriter
         if (_containingBlock != null && node == _containingBlock && _containingStatement != null)
             insertIndex = node.Statements.IndexOf(_containingStatement);
 
-        var rewritten = (BlockSyntax)base.VisitBlock(node);
+        var rewritten = (BlockSyntax)base.VisitBlock(node)!;
 
         if (_containingBlock != null && node == _containingBlock && _containingStatement != null && insertIndex >= 0)
         {

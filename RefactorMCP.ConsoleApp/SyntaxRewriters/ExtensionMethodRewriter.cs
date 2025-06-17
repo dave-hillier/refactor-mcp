@@ -51,7 +51,7 @@ internal class ExtensionMethodRewriter : CSharpSyntaxRewriter
                 .WithTriviaFrom(updated);
         }
 
-        return base.VisitMethodDeclaration(updated);
+        return base.VisitMethodDeclaration(updated)!;
     }
 
     public override SyntaxNode VisitThisExpression(ThisExpressionSyntax node)
