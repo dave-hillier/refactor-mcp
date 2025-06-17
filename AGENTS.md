@@ -68,7 +68,8 @@ Keep messages actionable: *what happened*, *how to fix*.
 ## 6. Documentation & Quality Checklist
 
 * **Docs** – add a short entry to `README.md` and a runnable JSON example to `EXAMPLES.md`.
-* **Tests** – `dotnet test` must pass green.
+* **Build** - `dotnet build` you'll need this if you're not running tests 
+* **Tests** – run `dotnet test` from the root with no further parameters must pass green before commit. 
 * **Formatting** – run `dotnet format` before pushing; zero warnings.
 * **Dependencies** – stick to the main MCP and Roslyn packages; no extra NuGets unless justified.
 
