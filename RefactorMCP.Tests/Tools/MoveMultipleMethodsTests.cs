@@ -154,4 +154,26 @@ public class TargetClass
         Assert.Contains("return TargetClass.Method1()", sourceClassCode);
         Assert.Contains("return field1.Method2(field1)", sourceClassCode);
     }
+
+    [Fact]
+    public void OrderOperations_WithOverloadedMethods_ShouldHandleDuplicates()
+    {
+        var source = @"
+class SourceClass
+{
+    public void Foo() { }
+    public void Foo(int x) { }
+}
+";
+
+        var tree = CSharpSyntaxTree.ParseText(source);
+        var root = tree.GetRoot();
+
+        var indices = MoveMultipleMethodsTool.OrderOperations(
+            root,
+            new[] { "SourceClass", "SourceClass" },
+            new[] { "Foo", "Foo" });
+
+        Assert.Equal(2, indices.Count);
+    }
 }

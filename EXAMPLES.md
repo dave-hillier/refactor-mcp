@@ -986,6 +986,13 @@ When a tool needs to create a new file, the namespace uses the file-scoped style
 {"tool":"move-static-method","solutionPath":"./RefactorMCP.sln","filePath":"./RefactorMCP.Tests/ExampleCode.cs","methodName":"Add","targetClass":"MathHelpers","targetFilePath":"./RefactorMCP.Tests/MathHelpers.cs"}
 ```
 
+### Overloaded Methods Example
+`move-multiple-methods` now works when the source class contains overloaded methods:
+
+```json
+{"tool":"move-multiple-methods","solutionPath":"./RefactorMCP.sln","filePath":"./RefactorMCP.Tests/ExampleCode.cs","sourceClass":"Helper","methodNames":["A","A"],"targetClass":"Target","targetFilePath":"./Target.cs"}
+```
+
 ## Metrics Resource
 
 Metrics can be queried using the resource scheme:
