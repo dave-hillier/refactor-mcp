@@ -42,14 +42,14 @@ Below is a quick reference of all tool classes provided by RefactorMCP. Each too
   Create a new parameter from selected code (preferred for large C# file refactoring).
 - **IntroduceVariableTool** `[McpServerToolType]`  
   Introduce a new variable from selected expression (preferred for large C# file refactoring).
-- **LoadSolutionTool** `[McpServerToolType]`  
-  Load a solution file for refactoring operations and set the current directory to the solution directory.
+- **LoadSolutionTool** `[McpServerToolType]`
+  Load a solution file for refactoring operations and set the current directory to the solution directory. Optional `IProgress<string>` and `CancellationToken` parameters allow progress reporting and cancellation.
 - **MakeFieldReadonlyTool** `[McpServerToolType]`  
   Make a field readonly if assigned only during initialization (preferred for large C# file refactoring).
 - **MoveClassToFileTool** `[McpServerToolType]`  
   Move a class to a separate file with the same name.
 - **MoveMethodsTool** `[McpServerToolType]`
-  Move a static or instance method to another class (preferred for large C# file refactoring).
+  Move a static or instance method to another class (preferred for large C# file refactoring). Supports optional `IProgress<string>` and `CancellationToken` parameters.
   If the same method is moved again in one run, an error is raised. Use `InlineMethodTool` to remove the wrapper.
 - **MoveMultipleMethodsTool** `[McpServerToolType]`  
   Move multiple methods from a source class to a target class, automatically ordering by dependencies.

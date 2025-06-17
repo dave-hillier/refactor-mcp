@@ -11,7 +11,7 @@ public class ExtractInterfaceTests : TestBase
     public async Task ExtractInterface_CreatesInterfaceFile()
     {
         UnloadSolutionTool.ClearSolutionCache();
-        await LoadSolutionTool.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
         var testFile = Path.Combine(TestOutputPath, "ExtractInterface.cs");
         await TestUtilities.CreateTestFile(testFile, TestUtilities.GetSampleCodeForExtractInterface());
         var solution = await RefactoringHelpers.GetOrLoadSolution(SolutionPath);

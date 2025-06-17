@@ -10,7 +10,7 @@ public class ExtractMethodTests : TestBase
     [Fact]
     public async Task ExtractMethod_ValidSelection_ReturnsSuccess()
     {
-        await LoadSolutionTool.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
         var testFile = Path.Combine(TestOutputPath, "ExtractMethodTest.cs");
         await TestUtilities.CreateTestFile(testFile, TestUtilities.GetSampleCodeForExtractMethod());
 
@@ -28,7 +28,7 @@ public class ExtractMethodTests : TestBase
     [Fact]
     public async Task ExtractMethod_CreatesPrivateMethod()
     {
-        await LoadSolutionTool.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
         var testFile = Path.Combine(TestOutputPath, "ExtractPrivate.cs");
         await TestUtilities.CreateTestFile(testFile, TestUtilities.GetSampleCodeForExtractMethod());
 
@@ -45,7 +45,7 @@ public class ExtractMethodTests : TestBase
     [Fact]
     public async Task ExtractMethod_InvalidRange_ReturnsError()
     {
-        await LoadSolutionTool.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
         await Assert.ThrowsAsync<McpException>(async () =>
             await ExtractMethodTool.ExtractMethod(
                 SolutionPath,
@@ -57,7 +57,7 @@ public class ExtractMethodTests : TestBase
     [Fact]
     public async Task RefactoringTools_FileNotInSolution_ReturnsError()
     {
-        await LoadSolutionTool.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
         await Assert.ThrowsAsync<McpException>(async () =>
             await ExtractMethodTool.ExtractMethod(
                 SolutionPath,
@@ -73,7 +73,7 @@ public class ExtractMethodTests : TestBase
     [InlineData("1:1-2", "TestMethod")]
     public async Task ExtractMethod_InvalidRangeFormats_ReturnsError(string range, string methodName)
     {
-        await LoadSolutionTool.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
         await Assert.ThrowsAsync<McpException>(async () =>
             await ExtractMethodTool.ExtractMethod(
                 SolutionPath,
@@ -87,7 +87,7 @@ public class ExtractMethodTests : TestBase
     [InlineData("5:5-3:1", "TestMethod")]
     public async Task ExtractMethod_InvalidRangeValues_ReturnsError(string range, string methodName)
     {
-        await LoadSolutionTool.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
         await Assert.ThrowsAsync<McpException>(async () =>
             await ExtractMethodTool.ExtractMethod(
                 SolutionPath,

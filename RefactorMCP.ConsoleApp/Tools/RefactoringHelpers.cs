@@ -54,7 +54,9 @@ internal static class RefactoringHelpers
         return workspace;
     }
 
-    internal static async Task<Solution> GetOrLoadSolution(string solutionPath)
+    internal static async Task<Solution> GetOrLoadSolution(
+        string solutionPath,
+        CancellationToken cancellationToken = default)
     {
 
         if (SolutionCache.TryGetValue(solutionPath, out Solution? cachedSolution))
@@ -63,7 +65,7 @@ internal static class RefactoringHelpers
             return cachedSolution!;
         }
         using var workspace = CreateWorkspace();
-        var solution = await workspace.OpenSolutionAsync(solutionPath);
+        var solution = await workspace.OpenSolutionAsync(solutionPath, progress: null, cancellationToken);
         SolutionCache.Set(solutionPath, solution);
         Directory.SetCurrentDirectory(Path.GetDirectoryName(solutionPath)!);
         return solution;
@@ -225,17 +227,21 @@ internal static class RefactoringHelpers
         ModelCache.Set(filePath, model);
     }
 
-    internal static async Task<(string Text, Encoding Encoding)> ReadFileWithEncodingAsync(string filePath)
+    internal static async Task<(string Text, Encoding Encoding)> ReadFileWithEncodingAsync(
+        string filePath,
+        CancellationToken cancellationToken = default)
     {
-        var bytes = await File.ReadAllBytesAsync(filePath);
+        var bytes = await File.ReadAllBytesAsync(filePath, cancellationToken);
         var encoding = DetectEncoding(bytes);
         var text = encoding.GetString(bytes);
         return (text, encoding);
     }
 
-    internal static async Task<Encoding> GetFileEncodingAsync(string filePath)
+    internal static async Task<Encoding> GetFileEncodingAsync(
+        string filePath,
+        CancellationToken cancellationToken = default)
     {
-        var bytes = await File.ReadAllBytesAsync(filePath);
+        var bytes = await File.ReadAllBytesAsync(filePath, cancellationToken);
         return DetectEncoding(bytes);
     }
 
@@ -260,9 +266,13 @@ internal static class RefactoringHelpers
         return Encoding.UTF8;
     }
 
-    internal static async Task WriteFileWithEncodingAsync(string filePath, string text, Encoding encoding)
+    internal static async Task WriteFileWithEncodingAsync(
+        string filePath,
+        string text,
+        Encoding encoding,
+        CancellationToken cancellationToken = default)
     {
-        await File.WriteAllTextAsync(filePath, text, encoding);
+        await File.WriteAllTextAsync(filePath, text, encoding, cancellationToken);
         UpdateFileCaches(filePath, text);
     }
 
