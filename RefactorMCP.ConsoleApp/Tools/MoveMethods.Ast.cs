@@ -398,12 +398,16 @@ public static partial class MoveMethodsTool
         {
             var methodCallRewriter = new MethodCallRewriter(otherMethodNames, parameterName);
             method = (MethodDeclarationSyntax)methodCallRewriter.Visit(method)!;
+            var methodRefRewriter = new MethodReferenceRewriter(otherMethodNames, parameterName);
+            method = (MethodDeclarationSyntax)methodRefRewriter.Visit(method)!;
         }
 
         if (isRecursive)
         {
             var recursiveCallRewriter = new MethodCallRewriter(new HashSet<string> { methodName }, parameterName);
             method = (MethodDeclarationSyntax)recursiveCallRewriter.Visit(method)!;
+            var recursiveRefRewriter = new MethodReferenceRewriter(new HashSet<string> { methodName }, parameterName);
+            method = (MethodDeclarationSyntax)recursiveRefRewriter.Visit(method)!;
         }
 
         return method;
