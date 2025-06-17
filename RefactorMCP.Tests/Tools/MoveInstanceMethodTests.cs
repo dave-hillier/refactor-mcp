@@ -16,14 +16,17 @@ public class MoveInstanceMethodTests : TestBase
         UnloadSolutionTool.ClearSolutionCache();
         var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "MoveInstanceMethod.cs"));
         await TestUtilities.CreateTestFile(testFile, "public class A { public void Do(){} } public class B { }");
-        await LoadSolutionTool.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
 
         var result = await MoveMethodsTool.MoveInstanceMethod(
             SolutionPath,
             testFile,
             "A",
             "Do",
-            "B");
+            "B",
+            null,
+            null,
+            CancellationToken.None);
 
         Assert.Contains("Successfully moved", result);
         Assert.Contains("A.Do", result);
@@ -36,7 +39,7 @@ public class MoveInstanceMethodTests : TestBase
         UnloadSolutionTool.ClearSolutionCache();
         var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "MoveInstanceMethodStatic.cs"));
         await TestUtilities.CreateTestFile(testFile, "public class A { public void Do(){} } public static class B { }");
-        await LoadSolutionTool.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
 
         await Assert.ThrowsAsync<McpException>(() =>
             MoveMethodsTool.MoveInstanceMethod(
@@ -44,7 +47,10 @@ public class MoveInstanceMethodTests : TestBase
                 testFile,
                 "A",
                 "Do",
-                "B"));
+                "B",
+                null,
+                null,
+                CancellationToken.None));
     }
 
     [Fact]
@@ -53,14 +59,17 @@ public class MoveInstanceMethodTests : TestBase
         UnloadSolutionTool.ClearSolutionCache();
         var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "MoveInstanceMethodTwice.cs"));
         await TestUtilities.CreateTestFile(testFile, "public class A { public void Do(){} } public class B { }");
-        await LoadSolutionTool.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
 
         var result = await MoveMethodsTool.MoveInstanceMethod(
             SolutionPath,
             testFile,
             "A",
             "Do",
-            "B");
+            "B",
+            null,
+            null,
+            CancellationToken.None);
         Assert.Contains("Successfully moved", result);
 
         await Assert.ThrowsAsync<McpException>(() =>
@@ -69,7 +78,10 @@ public class MoveInstanceMethodTests : TestBase
                 testFile,
                 "A",
                 "Do",
-                "B"));
+                "B",
+                null,
+                null,
+                CancellationToken.None));
     }
 
     [Fact]

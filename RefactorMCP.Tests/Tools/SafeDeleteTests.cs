@@ -10,7 +10,7 @@ public class SafeDeleteTests : TestBase
     [Fact]
     public async Task SafeDeleteField_UnusedField_ReturnsSuccess()
     {
-        await LoadSolutionTool.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
         var testFile = Path.Combine(TestOutputPath, "SafeDeleteField.cs");
         await TestUtilities.CreateTestFile(testFile, TestUtilities.GetSampleCodeForSafeDelete());
 
@@ -27,7 +27,7 @@ public class SafeDeleteTests : TestBase
     [Fact]
     public async Task SafeDeleteMethod_UnusedMethod_ReturnsSuccess()
     {
-        await LoadSolutionTool.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
         var testFile = Path.Combine(TestOutputPath, "SafeDeleteMethod.cs");
         await TestUtilities.CreateTestFile(testFile, TestUtilities.GetSampleCodeForSafeDelete());
 
@@ -44,7 +44,7 @@ public class SafeDeleteTests : TestBase
     [Fact]
     public async Task SafeDeleteVariable_UnusedLocal_ReturnsSuccess()
     {
-        await LoadSolutionTool.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
         var testFile = Path.Combine(TestOutputPath, "SafeDeleteVariable.cs");
         await TestUtilities.CreateTestFile(testFile, TestUtilities.GetSampleCodeForSafeDelete());
 

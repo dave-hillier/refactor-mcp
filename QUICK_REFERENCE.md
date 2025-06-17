@@ -1,3 +1,15 @@
+<<<<<<< codex/add-cancellationtoken-and-iprogress-parameters
+# Tool Quick Reference
+
+This document provides a terse overview of the available MCP tools.
+
+- **LoadSolutionTool** – `LoadSolution(string solutionPath, IProgress<string>? progress = null, CancellationToken cancellationToken = default)`
+- **MoveMethodsTool.MoveStaticMethod** – `MoveStaticMethod(string solutionPath, string filePath, string methodName, string targetClass, string? targetFilePath = null, IProgress<string>? progress = null, CancellationToken cancellationToken = default)`
+- **MoveMethodsTool.MoveInstanceMethod** – `MoveInstanceMethod(string solutionPath, string filePath, string sourceClass, string methodNames, string targetClass, string? targetFilePath = null, IProgress<string>? progress = null, CancellationToken cancellationToken = default)`
+
+All other tools continue to operate as before.
+
+=======
 # RefactorMCP Quick Reference
 
 <<<<<<< codex/update-documentation-and-add-unit-test-for-summary-resource
@@ -36,3 +48,4 @@ Clears the internal record of moved methods so a method can be moved again witho
 dotnet run --project RefactorMCP.ConsoleApp -- --cli reset-move-history
 >>>>>>> main
 ```
+>>>>>>> main

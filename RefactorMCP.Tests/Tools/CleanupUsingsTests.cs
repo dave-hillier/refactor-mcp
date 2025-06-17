@@ -10,7 +10,7 @@ public class CleanupUsingsTests : TestBase
     [Fact]
     public async Task CleanupUsings_RemovesUnusedUsings()
     {
-        await LoadSolutionTool.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
         var testFile = Path.Combine(TestOutputPath, "CleanupSample.cs");
         await TestUtilities.CreateTestFile(testFile, TestUtilities.GetSampleCodeForCleanupUsings());
 

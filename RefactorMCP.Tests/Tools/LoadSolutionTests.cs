@@ -9,7 +9,7 @@ public class LoadSolutionTests : TestBase
     [Fact]
     public async Task LoadSolution_ValidPath_ReturnsSuccess()
     {
-        var result = await LoadSolutionTool.LoadSolution(SolutionPath);
+        var result = await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
         Assert.Contains("Successfully loaded solution", result);
         Assert.Contains("RefactorMCP.ConsoleApp", result);
         Assert.Contains("RefactorMCP.Tests", result);
@@ -18,7 +18,7 @@ public class LoadSolutionTests : TestBase
     [Fact]
     public async Task UnloadSolution_RemovesCachedSolution()
     {
-        await LoadSolutionTool.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
         var result = UnloadSolutionTool.UnloadSolution(SolutionPath);
         Assert.Contains("Unloaded solution", result);
     }
@@ -27,7 +27,7 @@ public class LoadSolutionTests : TestBase
     public async Task LoadSolution_InvalidPath_ReturnsError()
     {
         await Assert.ThrowsAsync<McpException>(async () =>
-            await LoadSolutionTool.LoadSolution("./NonExistent.sln"));
+            await LoadSolutionTool.LoadSolution("./NonExistent.sln", null, CancellationToken.None));
     }
 
     [Fact]
@@ -41,7 +41,7 @@ public class LoadSolutionTests : TestBase
     [Fact]
     public async Task ClearSolutionCache_RemovesAllCachedSolutions()
     {
-        await LoadSolutionTool.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
         var clearResult = UnloadSolutionTool.ClearSolutionCache();
         Assert.Contains("Cleared all cached solutions", clearResult);
 
