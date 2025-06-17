@@ -2,10 +2,22 @@ import * as vscode from 'vscode';
 import { execFile } from 'child_process';
 import * as path from 'path';
 
+function getWorkspaceFolder(): string | undefined {
+    const folder = vscode.workspace.workspaceFolders?.[0];
+    if (!folder) {
+        vscode.window.showErrorMessage('RefactorMCP requires an open workspace containing RefactorMCP.ConsoleApp');
+        return undefined;
+    }
+    return folder.uri.fsPath;
+}
+
 function runCli(command: string, args: string[]): Thenable<string> {
     const config = vscode.workspace.getConfiguration();
     const dotnetPath = config.get<string>('refactorMcp.dotnetPath', 'dotnet');
-    const workspaceFolder = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? '';
+    const workspaceFolder = getWorkspaceFolder();
+    if (!workspaceFolder) {
+        return Promise.reject('No workspace');
+    }
     const projectPath = path.join(workspaceFolder, 'RefactorMCP.ConsoleApp');
     const commandArgs = ['run', '--project', projectPath, '--', '--cli', command, ...args];
     return new Promise((resolve, reject) => {
@@ -22,7 +34,10 @@ function runCli(command: string, args: string[]): Thenable<string> {
 function runJson(toolName: string, json: string): Thenable<string> {
     const config = vscode.workspace.getConfiguration();
     const dotnetPath = config.get<string>('refactorMcp.dotnetPath', 'dotnet');
-    const workspaceFolder = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? '';
+    const workspaceFolder = getWorkspaceFolder();
+    if (!workspaceFolder) {
+        return Promise.reject('No workspace');
+    }
     const projectPath = path.join(workspaceFolder, 'RefactorMCP.ConsoleApp');
     const commandArgs = ['run', '--project', projectPath, '--', '--json', toolName, json];
     return new Promise((resolve, reject) => {

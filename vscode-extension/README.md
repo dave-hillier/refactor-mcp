@@ -34,7 +34,7 @@ version
 
 ## Requirements
 
-The workspace must contain the `RefactorMCP.ConsoleApp` project and `dotnet` must be available on your PATH. Use the setting `refactorMcp.dotnetPath` to override the path if necessary.
+The extension requires that you open a workspace containing the `RefactorMCP.ConsoleApp` project. `dotnet` must also be available on your PATH. Use the setting `refactorMcp.dotnetPath` to override the path if necessary.
 
 ## Development
 
