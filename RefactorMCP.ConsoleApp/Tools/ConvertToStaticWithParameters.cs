@@ -138,7 +138,7 @@ public static class ConvertToStaticWithParametersTool
             .OfType<MethodDeclarationSyntax>()
             .FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            throw new McpException($"Error: No method named '{methodName}' found");
+            return $"Error: No method named '{methodName}' found";
 
         var semanticModel = await document.GetSemanticModelAsync();
         var newRoot = ConvertToStaticWithParametersAst(syntaxRoot!, method, semanticModel);
@@ -169,7 +169,7 @@ public static class ConvertToStaticWithParametersTool
             .OfType<MethodDeclarationSyntax>()
             .FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            throw new McpException($"Error: No method named '{methodName}' found");
+            return $"Error: No method named '{methodName}' found";
 
         var classDecl = method.Ancestors().OfType<ClassDeclarationSyntax>().FirstOrDefault();
         if (classDecl == null)
