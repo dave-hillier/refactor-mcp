@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Editing;
 using Xunit;
 
 namespace RefactorMCP.Tests;
@@ -52,5 +53,25 @@ public partial class RoslynTransformationTests
         var updated = AstTransformations.EnsureStaticModifier(method!);
 
         Assert.Contains("static", updated.Modifiers.ToFullString());
+    }
+
+    [Fact]
+    public void AddArgument_AddsArgumentToInvocation()
+    {
+        var invocation = SyntaxFactory.ParseExpression("M()") as InvocationExpressionSyntax;
+        var expr = SyntaxFactory.IdentifierName("x");
+        var generator = SyntaxGenerator.GetGenerator(new AdhocWorkspace(), LanguageNames.CSharp);
+        var updated = AstTransformations.AddArgument(invocation!, expr, generator);
+
+        Assert.Equal("M(x)", updated.NormalizeWhitespace().ToFullString());
+    }
+
+    [Fact]
+    public void RemoveArgument_RemovesArgumentFromInvocation()
+    {
+        var invocation = SyntaxFactory.ParseExpression("M(a, b)") as InvocationExpressionSyntax;
+        var updated = AstTransformations.RemoveArgument(invocation!, 0);
+
+        Assert.Equal("M(b)", updated.NormalizeWhitespace().ToFullString());
     }
 }

@@ -3,6 +3,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
+using Microsoft.CodeAnalysis.Editing;
 using Xunit;
 
 namespace RefactorMCP.Tests;
@@ -18,7 +19,8 @@ public partial class RoslynTransformationTests
         var expr = SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(1));
         var parameter = SyntaxFactory.Parameter(SyntaxFactory.Identifier("p")).WithType(SyntaxFactory.ParseTypeName("int"));
         var paramRef = SyntaxFactory.IdentifierName("p");
-        var rewriter = new ParameterIntroductionRewriter(expr, "M", parameter, paramRef);
+        var generator = SyntaxGenerator.GetGenerator(new AdhocWorkspace(), LanguageNames.CSharp);
+        var rewriter = new ParameterIntroductionRewriter(expr, "M", parameter, paramRef, generator);
         var newRoot = Formatter.Format(rewriter.Visit(root)!, new AdhocWorkspace());
         var text = newRoot.ToFullString();
         Assert.Contains("void M(int p)", text);

@@ -1,6 +1,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Editing;
 using System.Linq;
 
 internal static class AstTransformations
@@ -52,5 +53,22 @@ internal static class AstTransformations
         if (!modifiers.Any(m => m.IsKind(SyntaxKind.StaticKeyword)))
             modifiers = modifiers.Add(SyntaxFactory.Token(SyntaxKind.StaticKeyword));
         return method.WithModifiers(modifiers);
+    }
+
+    internal static InvocationExpressionSyntax AddArgument(
+        InvocationExpressionSyntax invocation,
+        ExpressionSyntax argumentExpression,
+        SyntaxGenerator generator)
+    {
+        var argument = (ArgumentSyntax)generator.Argument(argumentExpression);
+        return invocation.WithArgumentList(invocation.ArgumentList.AddArguments(argument));
+    }
+
+    internal static InvocationExpressionSyntax RemoveArgument(
+        InvocationExpressionSyntax invocation,
+        int argumentIndex)
+    {
+        var newArgs = invocation.ArgumentList.Arguments.RemoveAt(argumentIndex);
+        return invocation.WithArgumentList(invocation.ArgumentList.WithArguments(newArgs));
     }
 }
