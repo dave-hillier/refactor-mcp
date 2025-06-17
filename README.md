@@ -14,6 +14,7 @@ A Model Context Protocol (MCP) server providing automated refactoring tools for 
 - **VS Code Extension**: Invoke refactoring tools directly from the editor
 - **File-Scoped Namespaces**: When a tool adds a namespace to a file, it uses
   the modern file-scoped syntax
+- **Playback Mode**: Tool calls are logged to `tool-call-log.jsonl` and can be replayed for debugging
 ## Refactoring Tools
 
 Below is a quick reference of all tool classes provided by RefactorMCP. Each tool is decorated with `[McpServerToolType]` and some also include `[McpServerPromptType]` for prompt-based actions.
@@ -237,6 +238,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --json ToolName '{"param":"value"
 #### Available Test Commands
 
 - `list-tools` - Show all available refactoring tools
+- `play-log <logFile>` - Replay tool calls from a log file
 - `load-solution <solutionPath>` - Load a solution file and set the working directory
 - `extract-method <solutionPath> <filePath> <range> <methodName>` - Extract code into method
 - `introduce-field <solutionPath> <filePath> <range> <fieldName> [accessModifier]` - Create field from expression. Fails if a field with the same name already exists
@@ -316,6 +318,14 @@ Example MCP request:
 
 ```json
 {"role":"tool","name":"summary://RefactorMCP.Tests/ExampleCode.cs"}
+```
+
+### Playback Log
+
+Every tool invocation is recorded to `tool-call-log.jsonl` in the current working directory. Replay the log with:
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli play-log ./tool-call-log.jsonl
 ```
 
 ## Range Format

@@ -95,12 +95,15 @@ static RootCommand BuildCliRoot()
         command.SetHandler(async ctx =>
         {
             var values = new object?[parameterSymbols.Count];
+            var rawValues = new Dictionary<string, string?>();
             for (int i = 0; i < parameterSymbols.Count; i++)
             {
                 var (param, arg, opt) = parameterSymbols[i];
                 string? input = arg != null
                     ? ctx.ParseResult.GetValueForArgument(arg)
                     : ctx.ParseResult.GetValueForOption(opt!);
+
+                rawValues[param.Name!] = input;
 
                 if (string.IsNullOrEmpty(input))
                 {
@@ -111,6 +114,8 @@ static RootCommand BuildCliRoot()
                     values[i] = ConvertInput(input, param.ParameterType);
                 }
             }
+
+            ToolCallLogger.Log(method.Name, rawValues);
 
             var result = method.Invoke(null, values);
             if (result is Task<string> taskStr)
@@ -132,6 +137,12 @@ static RootCommand BuildCliRoot()
     var listTools = new Command("list-tools", "List all available refactoring tools");
     listTools.SetHandler(() => Console.WriteLine(ListAvailableTools()));
     root.AddCommand(listTools);
+
+    var playLog = new Command("play-log", "Replay tool calls from a log file");
+    var logArg = new Argument<string>("log-file", "Path to the log file");
+    playLog.AddArgument(logArg);
+    playLog.SetHandler(async (string file) => await ToolCallLogger.Playback(file), logArg);
+    root.AddCommand(playLog);
 
     return root;
 }
@@ -199,15 +210,18 @@ static async Task RunJsonMode(string[] args)
 
     var parameters = method.GetParameters();
     var invokeArgs = new object?[parameters.Length];
+    var rawValues = new Dictionary<string, string?>();
     for (int i = 0; i < parameters.Length; i++)
     {
         var p = parameters[i];
         if (paramDict.TryGetValue(p.Name!, out var value))
         {
+            rawValues[p.Name!] = value;
             invokeArgs[i] = value;
         }
         else if (p.HasDefaultValue)
         {
+            rawValues[p.Name!] = null;
             invokeArgs[i] = p.DefaultValue;
         }
         else
@@ -216,6 +230,8 @@ static async Task RunJsonMode(string[] args)
             return;
         }
     }
+
+    ToolCallLogger.Log(method.Name, rawValues);
 
     try
     {
