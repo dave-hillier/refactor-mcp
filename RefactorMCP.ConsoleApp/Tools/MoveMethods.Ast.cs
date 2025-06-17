@@ -40,6 +40,10 @@ public static partial class MoveMethodsTool
     {
         var method = FindStaticMethod(sourceRoot, methodName);
         var sourceClass = FindSourceClassForMethod(sourceRoot, method);
+        var methodNames = GetMethodNames(sourceClass);
+        var collector = new CalledMethodCollector(methodNames);
+        collector.Visit(method);
+        var calledMethods = collector.CalledMethods;
         var staticFieldNames = GetStaticFieldNames(sourceClass);
         var nestedClassNames = GetNestedClassNames(sourceClass);
         var needsQualification = HasStaticFieldReferences(method, staticFieldNames);
@@ -53,13 +57,23 @@ public static partial class MoveMethodsTool
             staticFieldNames,
             nestedClassNames,
             sourceClass.Identifier.ValueText);
+        transformedMethod = EnsureMethodIsInternal(transformedMethod);
         var stubMethod = CreateStaticStubMethod(
             method,
             methodName,
             targetClass,
             isVoid,
             typeParameters);
-        var updatedSourceRoot = UpdateSourceRootWithStub(sourceRoot, method, stubMethod);
+        var dependencyUpdates = new Dictionary<string, MethodDeclarationSyntax>();
+        foreach (var m in sourceClass.Members.OfType<MethodDeclarationSyntax>())
+        {
+            if (calledMethods.Contains(m.Identifier.ValueText) &&
+                !m.Modifiers.Any(t => t.IsKind(SyntaxKind.PublicKeyword) || t.IsKind(SyntaxKind.InternalKeyword)))
+            {
+                dependencyUpdates[m.Identifier.ValueText] = EnsureMethodIsInternal(m);
+            }
+        }
+        var updatedSourceRoot = UpdateSourceRootWithStub(sourceRoot, method, stubMethod, dependencyUpdates);
 
         var ns = (sourceClass.Parent as NamespaceDeclarationSyntax)?.Name.ToString()
                  ?? (sourceClass.Parent as FileScopedNamespaceDeclarationSyntax)?.Name.ToString();
@@ -208,9 +222,27 @@ public static partial class MoveMethodsTool
             : SyntaxFactory.ReturnStatement(invocation);
     }
 
-    private static SyntaxNode UpdateSourceRootWithStub(SyntaxNode sourceRoot, MethodDeclarationSyntax originalMethod, MethodDeclarationSyntax stubMethod)
+    private static SyntaxNode UpdateSourceRootWithStub(
+        SyntaxNode sourceRoot,
+        MethodDeclarationSyntax originalMethod,
+        MethodDeclarationSyntax stubMethod,
+        Dictionary<string, MethodDeclarationSyntax>? dependencyUpdates = null)
     {
-        return sourceRoot.ReplaceNode(originalMethod, stubMethod);
+        var newRoot = sourceRoot.ReplaceNode(originalMethod, stubMethod);
+
+        if (dependencyUpdates != null)
+        {
+            foreach (var kvp in dependencyUpdates)
+            {
+                var dep = newRoot.DescendantNodes()
+                    .OfType<MethodDeclarationSyntax>()
+                    .FirstOrDefault(m => m.Identifier.ValueText == kvp.Key);
+                if (dep != null)
+                    newRoot = newRoot.ReplaceNode(dep, kvp.Value);
+            }
+        }
+
+        return newRoot;
     }
 
     public static MoveInstanceMethodResult MoveInstanceMethodAst(
@@ -277,6 +309,11 @@ public static partial class MoveMethodsTool
             nestedClassNames,
             injectedParameters,
             paramMap);
+        transformedMethod = EnsureMethodIsInternal(transformedMethod);
+
+        var collector = new CalledMethodCollector(methodNames);
+        collector.Visit(method);
+        var calledMethods = collector.CalledMethods;
 
         if (needsThisParameter && !HasParameterUsage(transformedMethod, "@this"))
         {
@@ -295,7 +332,17 @@ public static partial class MoveMethodsTool
             typeParameters,
             paramMap.Values);
 
-        var updatedSourceRoot = UpdateSourceClassWithStub(originClass, method, stubMethod, accessMember);
+        var dependencyUpdates = new Dictionary<string, MethodDeclarationSyntax>();
+        foreach (var m in originClass.Members.OfType<MethodDeclarationSyntax>())
+        {
+            if (calledMethods.Contains(m.Identifier.ValueText) &&
+                !m.Modifiers.Any(t => t.IsKind(SyntaxKind.PublicKeyword) || t.IsKind(SyntaxKind.InternalKeyword)))
+            {
+                dependencyUpdates[m.Identifier.ValueText] = EnsureMethodIsInternal(m);
+            }
+        }
+
+        var updatedSourceRoot = UpdateSourceClassWithStub(originClass, method, stubMethod, accessMember, dependencyUpdates);
 
         var ns = (originClass.Parent as NamespaceDeclarationSyntax)?.Name.ToString()
                  ?? (originClass.Parent as FileScopedNamespaceDeclarationSyntax)?.Name.ToString();
@@ -383,7 +430,7 @@ public static partial class MoveMethodsTool
             transformedMethod = (MethodDeclarationSyntax)nestedRewriter.Visit(transformedMethod)!;
         }
 
-        return EnsureMethodIsPublic(transformedMethod);
+        return EnsureMethodIsInternal(transformedMethod);
     }
 
     private static MethodDeclarationSyntax AddThisParameterToMethod(
@@ -437,16 +484,15 @@ public static partial class MoveMethodsTool
         return method;
     }
 
-    private static MethodDeclarationSyntax EnsureMethodIsPublic(MethodDeclarationSyntax method)
+    private static MethodDeclarationSyntax EnsureMethodIsInternal(MethodDeclarationSyntax method)
     {
-        if (!method.Modifiers.Any(m => m.IsKind(SyntaxKind.PublicKeyword)))
-        {
-            var mods = method.Modifiers.Where(m => !m.IsKind(SyntaxKind.PrivateKeyword) &&
-                                                  !m.IsKind(SyntaxKind.ProtectedKeyword) &&
-                                                  !m.IsKind(SyntaxKind.InternalKeyword));
-            return method.WithModifiers(SyntaxFactory.TokenList(mods).Add(SyntaxFactory.Token(SyntaxKind.PublicKeyword)));
-        }
-        return method;
+        if (method.Modifiers.Any(m => m.IsKind(SyntaxKind.PublicKeyword) || m.IsKind(SyntaxKind.InternalKeyword)))
+            return method;
+
+        var mods = method.Modifiers.Where(m => !m.IsKind(SyntaxKind.PrivateKeyword) &&
+                                              !m.IsKind(SyntaxKind.ProtectedKeyword));
+
+        return method.WithModifiers(SyntaxFactory.TokenList(mods).Add(SyntaxFactory.Token(SyntaxKind.InternalKeyword)));
     }
 
     private static MethodDeclarationSyntax CreateStubMethod(
@@ -556,7 +602,8 @@ public static partial class MoveMethodsTool
         ClassDeclarationSyntax sourceClass,
         MethodDeclarationSyntax originalMethod,
         MethodDeclarationSyntax stubMethod,
-        MemberDeclarationSyntax? accessMember)
+        MemberDeclarationSyntax? accessMember,
+        Dictionary<string, MethodDeclarationSyntax>? dependencyUpdates = null)
     {
         var originMembers = sourceClass.Members.ToList();
 
@@ -570,6 +617,18 @@ public static partial class MoveMethodsTool
         if (methodIndex >= 0)
         {
             originMembers[methodIndex] = stubMethod;
+        }
+
+        if (dependencyUpdates != null)
+        {
+            for (int i = 0; i < originMembers.Count; i++)
+            {
+                if (originMembers[i] is MethodDeclarationSyntax m &&
+                    dependencyUpdates.TryGetValue(m.Identifier.ValueText, out var updated))
+                {
+                    originMembers[i] = updated;
+                }
+            }
         }
 
         var newOriginClass = sourceClass.WithMembers(SyntaxFactory.List(originMembers));

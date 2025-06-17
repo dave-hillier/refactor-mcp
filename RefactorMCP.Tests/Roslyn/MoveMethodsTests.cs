@@ -363,6 +363,34 @@ public class Target { }";
 
             Assert.Contains("Outer.Helper", formatted);
         }
+
+        [Fact]
+        public void MoveInstanceMethod_UpdatesPrivateDependencyAccess()
+        {
+            var source = @"public class A
+{ 
+    private void Helper() { }
+    public void Do() { Helper(); }
+}
+
+public class Target { }";
+
+            var tree = CSharpSyntaxTree.ParseText(source);
+            var root = tree.GetRoot();
+
+            var result = MoveMethodsTool.MoveInstanceMethodAst(
+                root,
+                "A",
+                "Do",
+                "Target",
+                "_t",
+                "field");
+
+            var finalRoot = MoveMethodsTool.AddMethodToTargetClass(result.NewSourceRoot, "Target", result.MovedMethod, result.Namespace);
+            var formatted = Formatter.Format(finalRoot, new AdhocWorkspace()).ToFullString();
+
+            Assert.Contains("internal void Helper()", formatted);
+        }
     }
 }
 
