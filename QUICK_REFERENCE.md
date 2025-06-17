@@ -1,5 +1,18 @@
 # RefactorMCP Quick Reference
 
+<<<<<<< codex/update-documentation-and-add-unit-test-for-summary-resource
+## Resources
+
+- `metrics://<file path>/[ClassName].[MethodName]` - retrieve metrics for a scope.
+- `summary://<file path>` - get the file with method bodies replaced by `// ...`.
+
+### Example
+
+Request a summary of `ExampleCode.cs`:
+
+```json
+{"role":"tool","name":"summary://RefactorMCP.Tests/ExampleCode.cs"}
+=======
 Using these tools through the MCP interface is the preferred approach for refactoring **C# code**.
 
 ## Basic Commands
@@ -21,4 +34,5 @@ Clears the internal record of moved methods so a method can be moved again witho
 
 ```bash
 dotnet run --project RefactorMCP.ConsoleApp -- --cli reset-move-history
+>>>>>>> main
 ```
