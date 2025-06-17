@@ -37,7 +37,7 @@ public class MoveClassToFileTests : TestBase
 
         try
         {
-            await LoadSolutionTool.LoadSolution(SolutionPath);
+            await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
             var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "MoveClassToFile_Duplicate.cs"));
             await TestUtilities.CreateTestFile(testFile, "public class TempClass { }");
 

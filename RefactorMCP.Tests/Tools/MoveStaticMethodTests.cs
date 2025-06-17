@@ -21,7 +21,10 @@ public class MoveStaticMethodTests : TestBase
             SolutionPath,
             testFile,
             "Foo",
-            "TargetClass");
+            "TargetClass",
+            null,
+            null,
+            CancellationToken.None);
 
         Assert.Contains("Successfully moved static method", result);
         var fileContent = await File.ReadAllTextAsync(testFile);
@@ -32,7 +35,7 @@ public class MoveStaticMethodTests : TestBase
     [Fact]
     public async Task MoveStaticMethod_AddsUsingsAndCompiles()
     {
-        await LoadSolutionTool.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
         var testFile = Path.Combine(TestOutputPath, "MoveStaticWithUsings.cs");
         await TestUtilities.CreateTestFile(testFile, TestUtilities.GetSampleCodeForMoveStaticMethodWithUsings());
 
@@ -40,7 +43,10 @@ public class MoveStaticMethodTests : TestBase
             SolutionPath,
             testFile,
             "PrintList",
-            "UtilClass");
+            "UtilClass",
+            null,
+            null,
+            CancellationToken.None);
 
         Assert.Contains("Successfully moved static method", result);
         var targetFile = Path.Combine(Path.GetDirectoryName(testFile)!, "UtilClass.cs");

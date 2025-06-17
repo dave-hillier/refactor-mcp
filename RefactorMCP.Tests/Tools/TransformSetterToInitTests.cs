@@ -10,7 +10,7 @@ public class TransformSetterToInitTests : TestBase
     [Fact]
     public async Task TransformSetterToInit_PropertyWithSetter_ReturnsSuccess()
     {
-        await LoadSolutionTool.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
         var testFile = Path.Combine(TestOutputPath, "TransformSetterToInit.cs");
         await TestUtilities.CreateTestFile(testFile, TestUtilities.GetSampleCodeForTransformSetter());
 
@@ -27,7 +27,7 @@ public class TransformSetterToInitTests : TestBase
     [Fact]
     public async Task TransformSetterToInit_InvalidProperty_ReturnsError()
     {
-        await LoadSolutionTool.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
         await Assert.ThrowsAsync<McpException>(async () =>
             await TransformSetterToInitTool.TransformSetterToInit(
                 SolutionPath,

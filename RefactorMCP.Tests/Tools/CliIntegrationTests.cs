@@ -15,7 +15,7 @@ public class CliIntegrationTests
     [Fact]
     public async Task CliTestMode_LoadSolution_WorksCorrectly()
     {
-        var result = await LoadSolutionTool.LoadSolution(GetSolutionPath());
+        var result = await LoadSolutionTool.LoadSolution(GetSolutionPath(), null, CancellationToken.None);
         Assert.Contains("Successfully loaded solution", result);
     }
 
