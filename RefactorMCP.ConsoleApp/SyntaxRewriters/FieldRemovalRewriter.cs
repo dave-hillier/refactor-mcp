@@ -1,30 +1,24 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
-using System.Collections.Generic;
 using System.Linq;
 
-public class FieldRemovalRewriter : CSharpSyntaxRewriter
+namespace RefactorMCP.ConsoleApp.SyntaxRewriters;
+
+internal class FieldRemovalRewriter : DeclarationRemovalRewriter<FieldDeclarationSyntax>
 {
-    private readonly string _fieldName;
-
     public FieldRemovalRewriter(string fieldName)
+        : base(fieldName)
     {
-        _fieldName = fieldName;
     }
 
-    public override SyntaxNode? VisitFieldDeclaration(FieldDeclarationSyntax node)
-    {
-        var variable = node.Declaration.Variables.FirstOrDefault(v => v.Identifier.ValueText == _fieldName);
-        if (variable == null)
-            return base.VisitFieldDeclaration(node);
+    protected override bool IsTarget(FieldDeclarationSyntax node)
+        => node.Declaration.Variables.Any(v => v.Identifier.ValueText == Name);
 
-        if (node.Declaration.Variables.Count == 1)
-            return null;
+    protected override SeparatedSyntaxList<VariableDeclaratorSyntax>? GetDeclarators(FieldDeclarationSyntax node)
+        => node.Declaration.Variables;
 
-        var newDecl = node.Declaration.WithVariables(SyntaxFactory.SeparatedList(node.Declaration.Variables.Where(v => v != variable)));
-        return node.WithDeclaration(newDecl);
-    }
+    protected override FieldDeclarationSyntax WithDeclarators(FieldDeclarationSyntax node, SeparatedSyntaxList<VariableDeclaratorSyntax> declarators)
+        => node.WithDeclaration(node.Declaration.WithVariables(declarators));
 }
 
