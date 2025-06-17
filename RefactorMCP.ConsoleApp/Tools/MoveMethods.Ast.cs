@@ -579,7 +579,8 @@ public static partial class MoveMethodsTool
             }
             else if (!string.IsNullOrEmpty(namespaceName))
             {
-                var ns = SyntaxFactory.NamespaceDeclaration(SyntaxFactory.ParseName(namespaceName))
+                var ns = SyntaxFactory.FileScopedNamespaceDeclaration(
+                        SyntaxFactory.ParseName(namespaceName))
                     .AddMembers(newClass);
                 return compilationUnit.AddMembers(ns);
             }
