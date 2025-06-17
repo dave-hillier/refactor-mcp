@@ -128,6 +128,14 @@ public static partial class MoveMethodsTool
         return staticFieldNames;
     }
 
+    private static HashSet<string> GetNestedClassNames(ClassDeclarationSyntax originClass)
+    {
+        return originClass.Members
+            .OfType<ClassDeclarationSyntax>()
+            .Select(c => c.Identifier.ValueText)
+            .ToHashSet();
+    }
+
     private static Dictionary<string, TypeSyntax> GetPrivateFieldInfos(ClassDeclarationSyntax originClass)
     {
         var infos = new Dictionary<string, TypeSyntax>();
