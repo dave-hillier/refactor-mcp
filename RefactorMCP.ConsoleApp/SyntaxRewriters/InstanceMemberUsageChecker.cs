@@ -45,5 +45,11 @@ internal class InstanceMemberUsageChecker : CSharpSyntaxWalker
         }
         base.VisitMemberAccessExpression(node);
     }
+
+    public override void VisitThisExpression(ThisExpressionSyntax node)
+    {
+        HasInstanceMemberUsage = true;
+        base.VisitThisExpression(node);
+    }
 }
 

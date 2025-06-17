@@ -246,9 +246,9 @@ public class TargetClass
         public void MoveInstanceMethod_OmitsUnusedThisParameter()
         {
             var source = @"public class SourceClass
-{
-    public void Say() { System.Console.WriteLine(1); }
-}
+    {
+        public void Say() { System.Console.WriteLine(1); }
+    }
 
 public class TargetClass
 {
@@ -270,6 +270,36 @@ public class TargetClass
 
             Assert.Contains("public void Say()", formatted);
             Assert.DoesNotContain("@this", formatted);
+        }
+
+        [Fact]
+        public void MoveInstanceMethod_RewritesThisArgument()
+        {
+            var source = @"public class A
+    {
+        void MethodBefore() { var m = new T(this); }
+    }
+
+public class T { public T(A a) { } }
+
+public class Extracted { }";
+
+            var tree = CSharpSyntaxTree.ParseText(source);
+            var root = tree.GetRoot();
+
+            var result = MoveMethodsTool.MoveInstanceMethodAst(
+                root,
+                "A",
+                "MethodBefore",
+                "Extracted",
+                "_extracted",
+                "field");
+
+            var finalRoot = MoveMethodsTool.AddMethodToTargetClass(result.NewSourceRoot, "Extracted", result.MovedMethod, result.Namespace);
+            var formatted = Formatter.Format(finalRoot, new AdhocWorkspace()).ToFullString();
+
+            Assert.Contains("_extracted.MethodBefore(this)", formatted);
+            Assert.Contains("new T(@this)", formatted);
         }
     }
 }

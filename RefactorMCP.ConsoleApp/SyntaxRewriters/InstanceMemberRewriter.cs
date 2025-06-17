@@ -29,6 +29,11 @@ internal class InstanceMemberRewriter : CSharpSyntaxRewriter
         return base.VisitMemberAccessExpression(node);
     }
 
+    public override SyntaxNode VisitThisExpression(ThisExpressionSyntax node)
+    {
+        return SyntaxFactory.IdentifierName(_parameterName).WithTriviaFrom(node);
+    }
+
     public override SyntaxNode? VisitIdentifierName(IdentifierNameSyntax node)
     {
         var parent = node.Parent;

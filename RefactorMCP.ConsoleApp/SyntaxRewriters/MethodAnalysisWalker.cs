@@ -49,4 +49,10 @@ internal class MethodAnalysisWalker : CSharpSyntaxWalker
         }
         base.VisitInvocationExpression(node);
     }
+
+    public override void VisitThisExpression(ThisExpressionSyntax node)
+    {
+        UsesInstanceMembers = true;
+        base.VisitThisExpression(node);
+    }
 }
