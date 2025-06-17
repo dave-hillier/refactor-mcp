@@ -54,7 +54,7 @@ Below is a quick reference of all tool classes provided by RefactorMCP. Each too
 - **MoveClassToFileTool** `[McpServerToolType]`  
   Move a class to a separate file with the same name.
 - **MoveMethodsTool** `[McpServerToolType]`
-  Move a static or instance method to another class (preferred for large C# file refactoring). Supports optional `IProgress<string>` and `CancellationToken` parameters.
+  Move a static or instance method to another class (preferred for large C# file refactoring). Provide the required `methodNames` (comma-separated) when moving instance methods. Supports optional `IProgress<string>` and `CancellationToken` parameters.
   If the same method is moved again in one run, an error is raised. Use `InlineMethodTool` to remove the wrapper.
   Failed move attempts do not add to the session history, and `ResetMoveHistory` clears the record when needed.
   When a moved method has no instance dependencies the result suggests it can be made static.
@@ -249,7 +249,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --json ToolName '{"param":"value"
 - `convert-to-static-with-parameters <solutionPath> <filePath> <methodLine>` - Convert instance method to static with parameters
 - `convert-to-static-with-instance <solutionPath> <filePath> <methodLine> [instanceName]` - Convert instance method to static with explicit instance
 - `move-static-method <solutionPath> <filePath> <methodName> <targetClass> [targetFilePath]` - Move a static method to another class
- - `move-instance-method <solutionPath> <filePath> <sourceClass> <methodNames> <targetClass> [targetFilePath]` - Move one or more instance methods (comma separated names) to another class. A private readonly field named after the target is created if needed. If that field name already exists, a numeric suffix is appended
+ - `move-instance-method <solutionPath> <filePath> <sourceClass> <methodNames> <targetClass> [targetFilePath]` - Move one or more instance methods (comma separated names) to another class. **The `methodNames` parameter is required.** A private readonly field named after the target is created if needed. If that field name already exists, a numeric suffix is appended
  - `move-multiple-methods <solutionPath> <filePath> <sourceClass> <methodNames> <targetClass> [targetFilePath]` - Move multiple methods from one class to another. Access fields are automatically created when required. If the generated name conflicts, a numeric suffix is appended
 - `batch-move-methods <solutionPath> <filePath> <operationsJson> [defaultTargetFile]` - Move many methods in a single batch using JSON operations
 - `move-multiple-methods <solutionPath> <filePath> <sourceClass> <methodNames> <targetClass> <accessMember> [targetFilePath]` - Move multiple methods from one class to another. Accepts comma separated `methodNames`.
@@ -258,7 +258,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --json ToolName '{"param":"value"
   `IsStatic`, and an optional `TargetFile`.
 - `cleanup-usings [solutionPath] <filePath>` - Remove unused using directives
  - `move-static-method <solutionPath> <filePath> <methodName> <targetClass> [targetFilePath]` - Move a static method to another class. A placeholder wrapper is left behind to delegate to the new location. Moving the same method again in one run results in an error; use `inline-method` to remove the wrapper.
- - `move-instance-method <solutionPath> <filePath> <sourceClass> <methodNames> <targetClass> [targetFilePath]` - Move one or more instance methods to another class. Wrapper methods remain in the original class so existing callers continue to work. Private field values used by the method are passed as additional parameters
+ - `move-instance-method <solutionPath> <filePath> <sourceClass> <methodNames> <targetClass> [targetFilePath]` - Move one or more instance methods to another class. **The `methodNames` parameter is required.** Wrapper methods remain in the original class so existing callers continue to work. Private field values used by the method are passed as additional parameters
  - `move-multiple-methods <solutionPath> <filePath> <sourceClass> <methodNames> <targetClass> [targetFilePath]` - Move multiple methods from one class to another. Each method leaves a delegating wrapper behind. Access fields are automatically created if they don't exist
 - `cleanup-usings [solutionPath] <filePath>` - Remove unused using directives
 - `rename-symbol <solutionPath> <filePath> <oldName> <newName> [line] [column]` - Rename a symbol across the solution
