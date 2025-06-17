@@ -61,6 +61,9 @@ internal class NestedClassRewriter : CSharpSyntaxRewriter
     private static bool IsTypeContext(IdentifierNameSyntax node)
     {
         var parent = node.Parent;
+        if (parent is TypeArgumentListSyntax tal && tal.Parent is TypeSyntax)
+            return true;
+
         return (parent is VariableDeclarationSyntax v && v.Type == node)
             || (parent is ParameterSyntax p && p.Type == node)
             || (parent is ObjectCreationExpressionSyntax o && o.Type == node)

@@ -9,11 +9,11 @@ namespace RefactorMCP.Tests;
 
 public class MoveMultipleMethodsBugTests : TestBase
 {
-    [Fact(Skip = "Demonstrates bug: MoveMultipleMethods fails with nested class generics")]
-    public async Task MoveMultipleMethods_NestedClassGenerics_Fails()
+    [Fact]
+    public async Task MoveMultipleMethods_NestedClassGenerics_Succeeds()
     {
         UnloadSolutionTool.ClearSolutionCache();
-        var testFile = Path.Combine(TestOutputPath, "NestedGeneric.cs");
+        var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "NestedGeneric.cs"));
         var code = @"using System.Collections.Generic;
 public class Outer
 {
