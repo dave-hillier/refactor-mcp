@@ -66,7 +66,6 @@ public static partial class MoveMultipleMethodsTool
         var updatedDoc = solution.GetDocument(document.Id)!;
         RefactoringHelpers.UpdateSolutionCache(updatedDoc);
 
-        MoveMethodsTool.MarkMoved(document.FilePath!, methodName);
         return (message, updatedDoc);
     }
 
@@ -135,6 +134,7 @@ public static partial class MoveMultipleMethodsTool
                 var orderedIndices = OrderOperations(root, sourceClasses, methodNames);
 
                 var results = new List<string>();
+                var moved = new List<(string file, string method)>();
                 var currentDoc = document;
                 var targetPath = targetFilePath ?? Path.Combine(Path.GetDirectoryName(document.FilePath!)!, $"{targetClass}.cs");
 
@@ -150,8 +150,12 @@ public static partial class MoveMultipleMethodsTool
                         accessMemberTypes[idx],
                         targetPath);
                     currentDoc = result.updatedDocument;
+                    moved.Add((document.FilePath!, methodNames[idx]));
                     results.Add(result.message);
                 }
+
+                foreach (var (file, method) in moved)
+                    MoveMethodsTool.MarkMoved(file, method);
 
                 return string.Join("\n", results);
             }
