@@ -29,12 +29,12 @@ internal class FieldIntroductionRewriter : CSharpSyntaxRewriter
         if (node is ExpressionSyntax expr && SyntaxFactory.AreEquivalent(expr, _targetExpression))
             return _fieldReference;
 
-        return base.Visit(node);
+        return base.Visit(node)!;
     }
 
     public override SyntaxNode VisitClassDeclaration(ClassDeclarationSyntax node)
     {
-        var rewritten = (ClassDeclarationSyntax)base.VisitClassDeclaration(node);
+        var rewritten = (ClassDeclarationSyntax)base.VisitClassDeclaration(node)!;
 
         if (_containingClass != null && node == _containingClass)
         {

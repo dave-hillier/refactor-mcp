@@ -21,7 +21,7 @@ internal class ParameterRewriter : CSharpSyntaxRewriter
             return expr;
         }
 
-        return base.VisitMemberAccessExpression(node);
+        return base.VisitMemberAccessExpression(node)!;
     }
 
     public override SyntaxNode? VisitIdentifierName(IdentifierNameSyntax node)
