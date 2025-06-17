@@ -1,16 +1,11 @@
 using System.Collections.Generic;
 
-internal class InstanceMemberUsageChecker : IdentifierUsageWalker
+internal class InstanceMemberUsageChecker : TrackedNameWalker
 {
-    public bool HasInstanceMemberUsage { get; private set; }
+    public bool HasInstanceMemberUsage => Matches.Count > 0;
 
     public InstanceMemberUsageChecker(HashSet<string> knownInstanceMembers)
         : base(knownInstanceMembers)
     {
-    }
-
-    protected override void RecordUsage(string name)
-    {
-        HasInstanceMemberUsage = true;
     }
 }
