@@ -77,12 +77,12 @@ public class IntroduceFieldTests : TestBase
         var testFile = Path.Combine(TestOutputPath, "IntroduceFieldDuplicate.cs");
         await TestUtilities.CreateTestFile(testFile, TestUtilities.GetSampleCodeForIntroduceField());
 
-        await Assert.ThrowsAsync<McpException>(async () =>
-            await IntroduceFieldTool.IntroduceField(
-                SolutionPath,
-                testFile,
-                "36:20-36:56",
-                "numbers",
-                "private"));
+        var result = await IntroduceFieldTool.IntroduceField(
+            SolutionPath,
+            testFile,
+            "36:20-36:56",
+            "numbers",
+            "private");
+        Assert.Equal("Error: Field 'numbers' already exists", result);
     }
 }

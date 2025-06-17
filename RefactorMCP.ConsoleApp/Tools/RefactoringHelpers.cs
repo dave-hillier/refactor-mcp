@@ -140,6 +140,10 @@ internal static class RefactoringHelpers
 
         var (sourceText, encoding) = await ReadFileWithEncodingAsync(filePath);
         var newText = transform(sourceText);
+
+        if (newText.StartsWith("Error:"))
+            return newText;
+
         await File.WriteAllTextAsync(filePath, newText, encoding);
         UpdateFileCaches(filePath, newText);
         return successMessage;
