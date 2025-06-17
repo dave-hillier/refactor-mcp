@@ -8,6 +8,7 @@ using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Editing;
+using RefactorMCP.ConsoleApp.SyntaxRewriters;
 
 [McpServerToolType]
 public static class SafeDeleteTool
