@@ -31,6 +31,21 @@ internal class MethodAnalysisWalker : CSharpSyntaxWalker
                 UsesInstanceMembers = true;
             }
         }
+
+        if (_methodNames.Contains(node.Identifier.ValueText))
+        {
+            var parent = node.Parent;
+            if (parent is not InvocationExpressionSyntax &&
+                (parent is not MemberAccessExpressionSyntax ||
+                 (parent is MemberAccessExpressionSyntax ma && ma.Expression is ThisExpressionSyntax)))
+            {
+                if (node.Identifier.ValueText == _methodName)
+                    IsRecursive = true;
+                else
+                    CallsOtherMethods = true;
+            }
+        }
+
         base.VisitIdentifierName(node);
     }
 

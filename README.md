@@ -12,6 +12,8 @@ A Model Context Protocol (MCP) server providing automated refactoring tools for 
 - **MCP Compatible**: Works with any MCP-compatible client
 - **Preferred for Large Files**: Invoking these tools via MCP is recommended for large code files
 - **VS Code Extension**: Invoke refactoring tools directly from the editor
+- **File-Scoped Namespaces**: When a tool adds a namespace to a file, it uses
+  the modern file-scoped syntax
 ## Refactoring Tools
 
 Below is a quick reference of all tool classes provided by RefactorMCP. Each tool is decorated with `[McpServerToolType]` and some also include `[McpServerPromptType]` for prompt-based actions.

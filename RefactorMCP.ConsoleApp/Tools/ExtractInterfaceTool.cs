@@ -71,10 +71,12 @@ public static class ExtractInterfaceTool
                 .WithMembers(SyntaxFactory.List(members));
 
             MemberDeclarationSyntax interfaceNode = iface;
-            if (classNode.Parent is NamespaceDeclarationSyntax ns)
+            string? nsName = (classNode.Parent as BaseNamespaceDeclarationSyntax)?.Name.ToString();
+            if (!string.IsNullOrEmpty(nsName))
             {
-                interfaceNode = SyntaxFactory.NamespaceDeclaration(ns.Name)
-                    .WithMembers(SyntaxFactory.SingletonList(interfaceNode));
+                interfaceNode = SyntaxFactory.FileScopedNamespaceDeclaration(
+                        SyntaxFactory.ParseName(nsName))
+                    .AddMembers(interfaceNode);
             }
 
             var ifaceUnit = SyntaxFactory.CompilationUnit()

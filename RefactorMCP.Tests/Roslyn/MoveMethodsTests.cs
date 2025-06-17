@@ -271,18 +271,11 @@ public class TargetClass
             Assert.Contains("public void Say()", formatted);
             Assert.DoesNotContain("@this", formatted);
         }
-
+      
         [Fact]
-        public void MoveInstanceMethod_RewritesThisArgument()
+        public void MoveInstanceMethod_RewritesThisExpressions()
         {
-            var source = @"public class A
-    {
-        void MethodBefore() { var m = new T(this); }
-    }
-
-public class T { public T(A a) { } }
-
-public class Extracted { }";
+            var source = @"public class A { void MethodBefore() { var m = new T(this); } }\npublic class Extracted { }";
 
             var tree = CSharpSyntaxTree.ParseText(source);
             var root = tree.GetRoot();
@@ -298,8 +291,47 @@ public class Extracted { }";
             var finalRoot = MoveMethodsTool.AddMethodToTargetClass(result.NewSourceRoot, "Extracted", result.MovedMethod, result.Namespace);
             var formatted = Formatter.Format(finalRoot, new AdhocWorkspace()).ToFullString();
 
-            Assert.Contains("_extracted.MethodBefore(this)", formatted);
             Assert.Contains("new T(@this)", formatted);
+            Assert.Contains("_extracted.MethodBefore(this)", formatted);
+        }
+      
+        [Fact]
+        public void MoveInstanceMethod_PrefixesEventHandlerWithThis()
+        {
+            var source = @"using System;
+public class ResProduct { public event EventHandler? Modified; }
+public class SourceClass
+{
+    public void AddResProduct(ResProduct resProduct)
+    {
+        resProduct.Modified += Child_Modified;
+    }
+
+    private void Child_Modified(object? sender, EventArgs e) { }
+}
+
+public class TargetClass
+{
+}";
+
+
+            var tree = CSharpSyntaxTree.ParseText(source);
+            var root = tree.GetRoot();
+
+            var result = MoveMethodsTool.MoveInstanceMethodAst(
+                root,
+
+                "SourceClass",
+                "AddResProduct",
+                "TargetClass",
+                "_target",
+                "field");
+
+            var finalRoot = MoveMethodsTool.AddMethodToTargetClass(result.NewSourceRoot, "TargetClass", result.MovedMethod, result.Namespace);
+            var formatted = Formatter.Format(finalRoot, new AdhocWorkspace()).ToFullString();
+
+            Assert.Contains("resProduct.Modified += @this.Child_Modified", formatted);
+
         }
     }
 }
