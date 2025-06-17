@@ -33,6 +33,13 @@ public static partial class MoveMethodsTool
 
     private static void MarkMoved(string filePath, string methodName)
         => _movedMethods.Add(GetKey(filePath, methodName));
+
+    [McpServerTool, Description("Clear the record of moved methods so they can be moved again")]
+    public static string ResetMoveHistory()
+    {
+        _movedMethods.Clear();
+        return "Cleared move history";
+    }
     [McpServerTool, Description("Move a static method to another class (preferred for large C# file refactoring). " +
         "Leaves a delegating method in the original class to preserve the interface.")]
     public static async Task<string> MoveStaticMethod(
