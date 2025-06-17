@@ -41,6 +41,7 @@ public static partial class MoveMethodsTool
         var method = FindStaticMethod(sourceRoot, methodName);
         var sourceClass = FindSourceClassForMethod(sourceRoot, method);
         var staticFieldNames = GetStaticFieldNames(sourceClass);
+        var nestedClassNames = GetNestedClassNames(sourceClass);
         var needsQualification = HasStaticFieldReferences(method, staticFieldNames);
         var typeParameters = method.TypeParameterList;
         var isVoid = method.ReturnType is PredefinedTypeSyntax pts &&
@@ -50,6 +51,7 @@ public static partial class MoveMethodsTool
             method,
             needsQualification,
             staticFieldNames,
+            nestedClassNames,
             sourceClass.Identifier.ValueText);
         var stubMethod = CreateStaticStubMethod(
             method,
@@ -125,6 +127,7 @@ public static partial class MoveMethodsTool
         MethodDeclarationSyntax method,
         bool needsStaticFieldQualification,
         HashSet<string> staticFieldNames,
+        HashSet<string> nestedClassNames,
         string sourceClassName)
     {
         var transformedMethod = method;
@@ -133,6 +136,12 @@ public static partial class MoveMethodsTool
         {
             var staticFieldRewriter = new StaticFieldRewriter(staticFieldNames, sourceClassName);
             transformedMethod = (MethodDeclarationSyntax)staticFieldRewriter.Visit(transformedMethod)!;
+        }
+
+        if (nestedClassNames.Count > 0)
+        {
+            var nestedRewriter = new NestedClassRewriter(nestedClassNames, sourceClassName);
+            transformedMethod = (MethodDeclarationSyntax)nestedRewriter.Visit(transformedMethod)!;
         }
 
         return transformedMethod;
@@ -215,6 +224,8 @@ public static partial class MoveMethodsTool
         var originClass = FindSourceClass(sourceRoot, sourceClass);
         var method = FindMethodInClass(originClass, methodName);
 
+        var nestedClassNames = GetNestedClassNames(originClass);
+
         var instanceMembers = GetInstanceMemberNames(originClass);
         var methodNames = GetMethodNames(originClass);
         var privateFieldInfos = GetPrivateFieldInfos(originClass);
@@ -263,6 +274,7 @@ public static partial class MoveMethodsTool
             isRecursive,
             membersForAnalysis,
             otherMethodNames,
+            nestedClassNames,
             injectedParameters,
             paramMap);
 
@@ -335,6 +347,7 @@ public static partial class MoveMethodsTool
         bool isRecursive,
         HashSet<string> instanceMembers,
         HashSet<string> otherMethodNames,
+        HashSet<string> nestedClassNames,
         List<ParameterSyntax> injectedParameters,
         Dictionary<string, string> injectedParameterMap)
     {
@@ -362,6 +375,12 @@ public static partial class MoveMethodsTool
             var map = injectedParameterMap.ToDictionary(kvp => kvp.Key, kvp => (ExpressionSyntax)SyntaxFactory.IdentifierName(kvp.Value));
             var rewriter = new ParameterRewriter(map);
             transformedMethod = (MethodDeclarationSyntax)rewriter.Visit(transformedMethod)!;
+        }
+
+        if (nestedClassNames.Count > 0)
+        {
+            var nestedRewriter = new NestedClassRewriter(nestedClassNames, sourceClassName);
+            transformedMethod = (MethodDeclarationSyntax)nestedRewriter.Visit(transformedMethod)!;
         }
 
         return EnsureMethodIsPublic(transformedMethod);

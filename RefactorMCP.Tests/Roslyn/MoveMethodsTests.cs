@@ -335,6 +335,34 @@ public class Extracted { }";
             Assert.Contains("_extracted.MethodBefore(this)", formatted);
             Assert.Contains("new T(@this)", formatted);
         }
+
+        [Fact]
+        public void MoveInstanceMethod_QualifiesNestedClass()
+        {
+            var source = @"public class Outer
+{
+    internal class Helper { }
+    public void Do() { Helper h = new Helper(); }
+}
+
+public class Target { }";
+
+            var tree = CSharpSyntaxTree.ParseText(source);
+            var root = tree.GetRoot();
+
+            var result = MoveMethodsTool.MoveInstanceMethodAst(
+                root,
+                "Outer",
+                "Do",
+                "Target",
+                "_t",
+                "field");
+
+            var finalRoot = MoveMethodsTool.AddMethodToTargetClass(result.NewSourceRoot, "Target", result.MovedMethod, result.Namespace);
+            var formatted = Formatter.Format(finalRoot, new AdhocWorkspace()).ToFullString();
+
+            Assert.Contains("Outer.Helper", formatted);
+        }
     }
 }
 
