@@ -1,11 +1,10 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
 using System.Collections.Generic;
 using System.Linq;
 
-internal class StaticConversionRewriter : CSharpSyntaxRewriter
+internal class StaticConversionRewriter
 {
     private readonly List<ParameterSyntax> _parameters;
     private readonly string? _instanceParameterName;
@@ -38,92 +37,35 @@ internal class StaticConversionRewriter : CSharpSyntaxRewriter
 
     public MethodDeclarationSyntax Rewrite(MethodDeclarationSyntax method)
     {
-        var visited = (MethodDeclarationSyntax)Visit(method)!;
+        SyntaxNode node = method;
+
+        if (_instanceParameterName != null)
+        {
+            var qualifier = new InstanceMemberQualifierRewriter(
+                _instanceParameterName,
+                _semanticModel,
+                _typeSymbol,
+                _knownInstanceMembers);
+            node = qualifier.Visit(node)!;
+        }
+
+        if ((_symbolRenameMap != null && _symbolRenameMap.Count > 0) ||
+            (_nameRenameMap != null && _nameRenameMap.Count > 0))
+        {
+            var renamer = new IdentifierRenameRewriter(
+                _semanticModel,
+                _symbolRenameMap,
+                _nameRenameMap);
+            node = renamer.Visit(node)!;
+        }
+
+        var result = (MethodDeclarationSyntax)node;
         if (_parameters.Count > 0)
         {
             var newParameters = method.ParameterList.Parameters.InsertRange(0, _parameters);
-            visited = visited.WithParameterList(method.ParameterList.WithParameters(newParameters));
-        }
-        visited = AstTransformations.EnsureStaticModifier(visited);
-        return visited;
-    }
-
-    public override SyntaxNode VisitThisExpression(ThisExpressionSyntax node)
-    {
-        if (_instanceParameterName != null)
-            return SyntaxFactory.IdentifierName(_instanceParameterName).WithTriviaFrom(node);
-        return base.VisitThisExpression(node)!;
-    }
-
-    public override SyntaxNode? VisitIdentifierName(IdentifierNameSyntax node)
-    {
-        if (_semanticModel != null && _symbolRenameMap != null &&
-            _semanticModel.GetSymbolInfo(node).Symbol is ISymbol sym &&
-            _symbolRenameMap.TryGetValue(sym, out var newName))
-        {
-            return SyntaxFactory.IdentifierName(newName).WithTriviaFrom(node);
+            result = result.WithParameterList(method.ParameterList.WithParameters(newParameters));
         }
 
-        if (_nameRenameMap != null &&
-            _nameRenameMap.TryGetValue(node.Identifier.ValueText, out var n))
-        {
-            return SyntaxFactory.IdentifierName(n).WithTriviaFrom(node);
-        }
-
-        bool qualify = false;
-        if (_instanceParameterName != null)
-        {
-            if (_semanticModel != null && _typeSymbol != null)
-            {
-                var s = _semanticModel.GetSymbolInfo(node).Symbol;
-                if (s is IFieldSymbol or IPropertySymbol or IMethodSymbol &&
-                    !s.IsStatic && node.Parent is not MemberAccessExpressionSyntax &&
-                    s.ContainingType is INamedTypeSymbol ct &&
-                    IsInTypeHierarchy(ct))
-                {
-                    qualify = true;
-                }
-            }
-            else if (_knownInstanceMembers != null &&
-                     _knownInstanceMembers.Contains(node.Identifier.ValueText) &&
-                     node.Parent is not MemberAccessExpressionSyntax)
-            {
-                qualify = true;
-            }
-        }
-
-        if (qualify)
-        {
-            return SyntaxFactory.MemberAccessExpression(
-                    SyntaxKind.SimpleMemberAccessExpression,
-                    SyntaxFactory.IdentifierName(_instanceParameterName!),
-                    node.WithoutTrivia())
-                .WithTriviaFrom(node);
-        }
-
-        return base.VisitIdentifierName(node)!;
-    }
-
-    private bool IsInTypeHierarchy(INamedTypeSymbol containing)
-    {
-        if (_typeSymbol == null)
-            return false;
-
-        var current = _typeSymbol;
-        while (current != null)
-        {
-            if (SymbolEqualityComparer.Default.Equals(current, containing))
-                return true;
-            current = current.BaseType;
-        }
-
-        foreach (var iface in _typeSymbol.AllInterfaces)
-        {
-            if (SymbolEqualityComparer.Default.Equals(iface, containing))
-                return true;
-        }
-
-        return false;
+        return AstTransformations.EnsureStaticModifier(result);
     }
 }
-
