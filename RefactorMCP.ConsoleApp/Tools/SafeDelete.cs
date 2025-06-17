@@ -99,7 +99,7 @@ public static class SafeDeleteTool
             .OfType<FieldDeclarationSyntax>()
             .FirstOrDefault(f => f.Declaration.Variables.Any(v => v.Identifier.ValueText == fieldName));
         if (field == null)
-            throw new McpException($"Error: Field '{fieldName}' not found");
+            throw new McpException($"Error: Field '{fieldName}' not found. Verify the field name and ensure the file is part of the loaded solution.");
 
         var variable = field.Declaration.Variables.First(v => v.Identifier.ValueText == fieldName);
         var semanticModel = await document.GetSemanticModelAsync();
@@ -137,7 +137,7 @@ public static class SafeDeleteTool
             .OfType<FieldDeclarationSyntax>()
             .FirstOrDefault(f => f.Declaration.Variables.Any(v => v.Identifier.ValueText == fieldName));
         if (field == null)
-            throw new McpException($"Error: Field '{fieldName}' not found");
+            throw new McpException($"Error: Field '{fieldName}' not found. Verify the field name and ensure the file is part of the loaded solution.");
 
         var references = root.DescendantNodes().OfType<IdentifierNameSyntax>().Count(id => id.Identifier.ValueText == fieldName);
         if (references > 1)
@@ -161,7 +161,7 @@ public static class SafeDeleteTool
         var root = await document.GetSyntaxRootAsync();
         var method = root!.DescendantNodes().OfType<MethodDeclarationSyntax>().FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            throw new McpException($"Error: Method '{methodName}' not found");
+            throw new McpException($"Error: Method '{methodName}' not found. Verify the method name and ensure the file is part of the loaded solution.");
 
         var semanticModel = await document.GetSemanticModelAsync();
         var symbol = semanticModel!.GetDeclaredSymbol(method)!;
@@ -195,7 +195,7 @@ public static class SafeDeleteTool
         var root = tree.GetRoot();
         var method = root.DescendantNodes().OfType<MethodDeclarationSyntax>().FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            throw new McpException($"Error: Method '{methodName}' not found");
+            throw new McpException($"Error: Method '{methodName}' not found. Verify the method name and ensure the file is part of the loaded solution.");
 
         var references = root.DescendantNodes().OfType<InvocationExpressionSyntax>()
             .Count(inv => inv.Expression is IdentifierNameSyntax id && id.Identifier.ValueText == methodName);
@@ -213,11 +213,11 @@ public static class SafeDeleteTool
         var root = await document.GetSyntaxRootAsync();
         var method = root!.DescendantNodes().OfType<MethodDeclarationSyntax>().FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            throw new McpException($"Error: Method '{methodName}' not found");
+            throw new McpException($"Error: Method '{methodName}' not found. Verify the method name and ensure the file is part of the loaded solution.");
 
         var parameter = method.ParameterList.Parameters.FirstOrDefault(p => p.Identifier.ValueText == parameterName);
         if (parameter == null)
-            throw new McpException($"Error: Parameter '{parameterName}' not found");
+            throw new McpException($"Error: Parameter '{parameterName}' not found. Verify the parameter name and ensure the file is part of the loaded solution.");
 
         var semanticModel = await document.GetSemanticModelAsync();
         var methodSymbol = semanticModel!.GetDeclaredSymbol(method)!;
@@ -264,11 +264,11 @@ public static class SafeDeleteTool
         var root = tree.GetRoot();
         var method = root.DescendantNodes().OfType<MethodDeclarationSyntax>().FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            throw new McpException($"Error: Method '{methodName}' not found");
+            throw new McpException($"Error: Method '{methodName}' not found. Verify the method name and ensure the file is part of the loaded solution.");
 
         var parameter = method.ParameterList.Parameters.FirstOrDefault(p => p.Identifier.ValueText == parameterName);
         if (parameter == null)
-            throw new McpException($"Error: Parameter '{parameterName}' not found");
+            throw new McpException($"Error: Parameter '{parameterName}' not found. Verify the parameter name and ensure the file is part of the loaded solution.");
 
         var paramIndex = method.ParameterList.Parameters.IndexOf(parameter);
         var rewriter = new ParameterRemovalRewriter(methodName, paramIndex);
