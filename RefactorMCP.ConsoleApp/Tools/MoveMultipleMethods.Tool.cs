@@ -99,10 +99,9 @@ public static partial class MoveMultipleMethodsTool
                 if (root == null)
                     throw new McpException("Error: Could not get syntax root");
 
-                var classNodes = root.DescendantNodes()
-                    .OfType<ClassDeclarationSyntax>()
-                    .GroupBy(c => c.Identifier.ValueText)
-                    .ToDictionary(g => g.Key, g => g.First());
+                var collector = new ClassCollectorWalker();
+                collector.Visit(root);
+                var classNodes = collector.Classes;
 
                 if (!classNodes.TryGetValue(sourceClass, out var sourceClassNode))
                     throw new McpException($"Error: Source class '{sourceClass}' not found");
