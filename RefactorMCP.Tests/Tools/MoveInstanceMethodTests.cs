@@ -31,6 +31,7 @@ public class MoveInstanceMethodTests : TestBase
         Assert.Contains("Successfully moved", result);
         Assert.Contains("A.Do", result);
         Assert.Contains("B", result);
+        Assert.Contains("made static", result);
     }
 
     [Fact]
