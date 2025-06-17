@@ -112,32 +112,24 @@ public static partial class MoveMultipleMethodsTool
 
                 var accessMemberName = MoveMethodsTool.GenerateAccessMemberName(visitor.Members.Keys, targetClass);
 
+                var staticWalker = new MethodStaticWalker(methodNames);
+                staticWalker.Visit(sourceClassNode);
+
+                var memberWalker = new AccessMemberTypeWalker(accessMemberName);
+                memberWalker.Visit(sourceClassNode);
+                var instanceMemberType = memberWalker.MemberType ?? "field";
+
                 var isStatic = new bool[methodNames.Length];
                 var accessMemberTypes = new string[methodNames.Length];
 
                 for (int i = 0; i < methodNames.Length; i++)
                 {
                     var methodName = methodNames[i];
-                    if (!visitor.Methods.TryGetValue(methodName, out var methodInfo))
+                    if (!staticWalker.IsStaticMap.TryGetValue(methodName, out var isStaticMethod))
                         return $"Error: No method named '{methodName}' in class '{sourceClass}'";
 
-                    isStatic[i] = methodInfo.IsStatic;
-
-                    if (!isStatic[i])
-                    {
-                        if (visitor.Members.TryGetValue(accessMemberName, out var memberInfo))
-                        {
-                            accessMemberTypes[i] = memberInfo.Type;
-                        }
-                        else
-                        {
-                            accessMemberTypes[i] = "field"; // Default to field if not found
-                        }
-                    }
-                    else
-                    {
-                        accessMemberTypes[i] = string.Empty; // Not used for static methods
-                    }
+                    isStatic[i] = isStaticMethod;
+                    accessMemberTypes[i] = isStaticMethod ? string.Empty : instanceMemberType;
                 }
 
                 var sourceClasses = Enumerable.Repeat(sourceClass, methodNames.Length).ToArray();
