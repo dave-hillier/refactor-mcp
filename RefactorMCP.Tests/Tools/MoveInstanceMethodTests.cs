@@ -112,4 +112,36 @@ public class MoveInstanceMethodTests : TestBase
 
         Assert.Contains("Successfully moved", result2);
     }
+
+    [Fact]
+    public async Task MoveInstanceMethod_FailureDoesNotRecordHistory()
+    {
+        UnloadSolutionTool.ClearSolutionCache();
+        var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "MoveFailHistory.cs"));
+        await TestUtilities.CreateTestFile(testFile, "public class A { public void Do(){} } public class B { }");
+        await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
+
+        await Assert.ThrowsAsync<McpException>(() =>
+            MoveMethodsTool.MoveInstanceMethod(
+                SolutionPath,
+                testFile,
+                "Wrong",
+                "Do",
+                "B",
+                null,
+                null,
+                CancellationToken.None));
+
+        var result = await MoveMethodsTool.MoveInstanceMethod(
+            SolutionPath,
+            testFile,
+            "A",
+            "Do",
+            "B",
+            null,
+            null,
+            CancellationToken.None);
+
+        Assert.Contains("Successfully moved", result);
+    }
 }
