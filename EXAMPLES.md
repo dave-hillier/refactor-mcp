@@ -979,6 +979,13 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli extract-method "./RefactorM
 dotnet run --project RefactorMCP.ConsoleApp -- --cli extract-method "./RefactorMCP.sln" "./RefactorMCP.Tests/TestFile.cs" "5:1-8:10" "TestMethod"
 ```
 
+### File-Scoped Namespace Example
+When a tool needs to create a new file, the namespace uses the file-scoped style:
+
+```json
+{"tool":"move-static-method","solutionPath":"./RefactorMCP.sln","filePath":"./RefactorMCP.Tests/ExampleCode.cs","methodName":"Add","targetClass":"MathHelpers","targetFilePath":"./RefactorMCP.Tests/MathHelpers.cs"}
+```
+
 ## Metrics Resource
 
 Metrics can be queried using the resource scheme:
