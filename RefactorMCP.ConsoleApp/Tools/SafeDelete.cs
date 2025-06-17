@@ -145,14 +145,14 @@ public static class SafeDeleteTool
 
         SyntaxNode newRoot;
         if (field.Declaration.Variables.Count == 1)
-            newRoot = root.RemoveNode(field, SyntaxRemoveOptions.KeepNoTrivia);
+            newRoot = root.RemoveNode(field, SyntaxRemoveOptions.KeepNoTrivia)!;
         else
         {
             var newDecl = field.Declaration.WithVariables(SyntaxFactory.SeparatedList(field.Declaration.Variables.Where(v => v.Identifier.ValueText != fieldName)));
             newRoot = root.ReplaceNode(field, field.WithDeclaration(newDecl));
         }
 
-        var formatted = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
+        var formatted = Formatter.Format(newRoot!, RefactoringHelpers.SharedWorkspace);
         return formatted.ToFullString();
     }
 

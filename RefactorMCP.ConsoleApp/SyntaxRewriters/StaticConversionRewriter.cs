@@ -52,7 +52,7 @@ internal class StaticConversionRewriter : CSharpSyntaxRewriter
     {
         if (_instanceParameterName != null)
             return SyntaxFactory.IdentifierName(_instanceParameterName).WithTriviaFrom(node);
-        return base.VisitThisExpression(node);
+        return base.VisitThisExpression(node)!;
     }
 
     public override SyntaxNode? VisitIdentifierName(IdentifierNameSyntax node)
@@ -101,7 +101,7 @@ internal class StaticConversionRewriter : CSharpSyntaxRewriter
                 .WithTriviaFrom(node);
         }
 
-        return base.VisitIdentifierName(node);
+        return base.VisitIdentifierName(node)!;
     }
 
     private bool IsInTypeHierarchy(INamedTypeSymbol containing)

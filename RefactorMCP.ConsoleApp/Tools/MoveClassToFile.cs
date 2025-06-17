@@ -45,7 +45,7 @@ public static class MoveClassToFileTool
             if (duplicateDoc != null)
                 throw new McpException($"Error: Class {className} already exists in {duplicateDoc.FilePath}");
 
-            var rootWithoutClass = (CompilationUnitSyntax)root.RemoveNode(classNode, SyntaxRemoveOptions.KeepNoTrivia);
+            var rootWithoutClass = (CompilationUnitSyntax)root.RemoveNode(classNode, SyntaxRemoveOptions.KeepNoTrivia)!;
             rootWithoutClass = (CompilationUnitSyntax)Formatter.Format(rootWithoutClass, RefactoringHelpers.SharedWorkspace);
             var sourceEncoding = await RefactoringHelpers.GetFileEncodingAsync(filePath);
             await File.WriteAllTextAsync(filePath, rootWithoutClass.ToFullString(), sourceEncoding);

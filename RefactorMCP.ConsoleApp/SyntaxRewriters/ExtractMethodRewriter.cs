@@ -36,9 +36,9 @@ internal class ExtractMethodRewriter : CSharpSyntaxRewriter
                 SyntaxFactory.IdentifierName(methodName)));
 
         var body = containingMethod.Body!;
-        var updated = body.ReplaceNode(statements.First(), methodCall);
+        var updated = body.ReplaceNode(statements.First(), methodCall)!;
         foreach (var stmt in statements.Skip(1))
-            updated = updated.RemoveNode(stmt, SyntaxRemoveOptions.KeepNoTrivia);
+            updated = updated.RemoveNode(stmt, SyntaxRemoveOptions.KeepNoTrivia)!;
 
         _updatedMethod = containingMethod.WithBody(updated);
     }
@@ -47,12 +47,12 @@ internal class ExtractMethodRewriter : CSharpSyntaxRewriter
     {
         if (node == _containingMethod)
             return _updatedMethod;
-        return base.VisitMethodDeclaration(node);
+        return base.VisitMethodDeclaration(node)!;
     }
 
     public override SyntaxNode VisitClassDeclaration(ClassDeclarationSyntax node)
     {
-        var visited = (ClassDeclarationSyntax)base.VisitClassDeclaration(node);
+        var visited = (ClassDeclarationSyntax)base.VisitClassDeclaration(node)!;
         if (_containingClass != null && node == _containingClass)
         {
             visited = visited.AddMembers(_newMethod);

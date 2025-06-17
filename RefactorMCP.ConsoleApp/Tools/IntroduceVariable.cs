@@ -69,8 +69,8 @@ public static class IntroduceVariableTool
         var variableDeclaration = SyntaxFactory.LocalDeclarationStatement(
             SyntaxFactory.VariableDeclaration(SyntaxFactory.IdentifierName(typeName))
             .WithVariables(SyntaxFactory.SingletonSeparatedList(
-                SyntaxFactory.VariableDeclarator(variableName)
-                .WithInitializer(SyntaxFactory.EqualsValueClause(initializerExpression)))));
+                        SyntaxFactory.VariableDeclarator(variableName)
+                            .WithInitializer(SyntaxFactory.EqualsValueClause(initializerExpression!)))));
 
         var variableReference = SyntaxFactory.IdentifierName(variableName);
 
@@ -151,7 +151,7 @@ public static class IntroduceVariableTool
             SyntaxFactory.VariableDeclaration(SyntaxFactory.IdentifierName(typeName))
                 .WithVariables(SyntaxFactory.SingletonSeparatedList(
                     SyntaxFactory.VariableDeclarator(variableName)
-                        .WithInitializer(SyntaxFactory.EqualsValueClause(initializerExpression)))));
+                        .WithInitializer(SyntaxFactory.EqualsValueClause(initializerExpression!)))));
 
         var variableReference = SyntaxFactory.IdentifierName(variableName);
         var containingStatement = selectedExpression.Ancestors().OfType<StatementSyntax>().FirstOrDefault();
