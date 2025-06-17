@@ -114,7 +114,7 @@ public static partial class MoveMultipleMethodsTool
                 {
                     var methodName = methodNames[i];
                     if (!visitor.Methods.TryGetValue(methodName, out var methodInfo))
-                        throw new McpException($"Error: No method named '{methodName}' in class '{sourceClass}'");
+                        return $"Error: No method named '{methodName}' in class '{sourceClass}'";
 
                     isStatic[i] = methodInfo.IsStatic;
 
