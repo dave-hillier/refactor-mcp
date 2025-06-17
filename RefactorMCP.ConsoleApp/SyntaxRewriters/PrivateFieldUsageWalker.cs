@@ -1,17 +1,12 @@
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
 
-internal class PrivateFieldUsageWalker : IdentifierUsageWalker
+internal class PrivateFieldUsageWalker : TrackedNameWalker
 {
-    public HashSet<string> UsedFields { get; } = new();
+    public HashSet<string> UsedFields => Matches;
 
     public PrivateFieldUsageWalker(HashSet<string> privateFieldNames)
         : base(privateFieldNames)
     {
-    }
-
-    protected override void RecordUsage(string name)
-    {
-        UsedFields.Add(name);
     }
 }

@@ -1,18 +1,23 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System;
 using System.Collections.Generic;
 
-internal abstract class IdentifierUsageWalker : CSharpSyntaxWalker
+internal abstract class TrackedNameWalker : CSharpSyntaxWalker
 {
-    private readonly HashSet<string> _identifiers;
+    private readonly HashSet<string> _names;
+    private readonly Action<string>? _onMatch;
 
-    protected IdentifierUsageWalker(HashSet<string> identifiers)
+    public HashSet<string> Matches { get; } = new();
+
+    protected TrackedNameWalker(HashSet<string> names, Action<string>? onMatch = null)
     {
-        _identifiers = identifiers;
+        _names = names;
+        _onMatch = onMatch;
     }
 
-    protected bool IsTarget(string name) => _identifiers.Contains(name);
+    protected bool IsTarget(string name) => _names.Contains(name);
 
     protected static bool IsParameterOrType(SyntaxNode? node) =>
         node is ParameterSyntax || node is TypeSyntax;
@@ -55,7 +60,7 @@ internal abstract class IdentifierUsageWalker : CSharpSyntaxWalker
     public override void VisitIdentifierName(IdentifierNameSyntax node)
     {
         if (ShouldRecordIdentifier(node))
-            RecordUsage(node.Identifier.ValueText);
+            RecordMatch(node.Identifier.ValueText);
         base.VisitIdentifierName(node);
     }
 
@@ -67,5 +72,9 @@ internal abstract class IdentifierUsageWalker : CSharpSyntaxWalker
             base.VisitInvocationExpression(node);
     }
 
-    protected abstract void RecordUsage(string name);
+    protected void RecordMatch(string name)
+    {
+        Matches.Add(name);
+        _onMatch?.Invoke(name);
+    }
 }

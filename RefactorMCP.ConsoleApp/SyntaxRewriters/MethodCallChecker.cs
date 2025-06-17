@@ -3,26 +3,23 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
 
-internal class MethodCallChecker : CSharpSyntaxWalker
+internal class MethodCallChecker : TrackedNameWalker
 {
-    private readonly HashSet<string> _classMethodNames;
-    public bool HasMethodCalls { get; private set; }
+    public bool HasMethodCalls => Matches.Count > 0;
 
     public MethodCallChecker(HashSet<string> classMethodNames)
+        : base(classMethodNames)
     {
-        _classMethodNames = classMethodNames;
     }
 
-    public override void VisitInvocationExpression(InvocationExpressionSyntax node)
+    protected override bool TryRecordInvocation(InvocationExpressionSyntax node)
     {
-        if (node.Expression is IdentifierNameSyntax identifier)
+        if (node.Expression is IdentifierNameSyntax identifier && IsTarget(identifier.Identifier.ValueText))
         {
-            if (_classMethodNames.Contains(identifier.Identifier.ValueText))
-            {
-                HasMethodCalls = true;
-            }
+            RecordMatch(identifier.Identifier.ValueText);
+            return true;
         }
-        base.VisitInvocationExpression(node);
+        return false;
     }
 }
 
