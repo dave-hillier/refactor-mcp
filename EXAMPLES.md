@@ -704,6 +704,21 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli clear-solution-cache
 Cleared all cached solutions
 ```
 
+## Reset Move History (Utility Command)
+
+**Purpose**: Allow previously moved methods to be moved again in the same session.
+
+### Example
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli reset-move-history
+```
+
+**Expected Output**:
+```
+Cleared move history
+```
+
 ## 11. List Tools (Utility Command)
 
 **Purpose**: Display all available refactoring tools and their status.
