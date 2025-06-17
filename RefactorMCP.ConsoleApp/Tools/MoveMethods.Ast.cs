@@ -594,9 +594,17 @@ public static partial class MoveMethodsTool
 
         if (targetClassDecl == null)
         {
+            var adjustedMethod = method;
+            if (method.Modifiers.Any(SyntaxKind.OverrideKeyword))
+            {
+                var mods = method.Modifiers
+                    .Where(m => !m.IsKind(SyntaxKind.OverrideKeyword));
+                adjustedMethod = method.WithModifiers(SyntaxFactory.TokenList(mods));
+            }
+
             var newClass = SyntaxFactory.ClassDeclaration(targetClass)
                 .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
-                .AddMembers(method.WithLeadingTrivia());
+                .AddMembers(adjustedMethod.WithLeadingTrivia());
             var compilationUnit = (CompilationUnitSyntax)targetRoot;
 
             var nsDecl = compilationUnit.Members.OfType<BaseNamespaceDeclarationSyntax>().FirstOrDefault();
