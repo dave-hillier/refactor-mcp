@@ -32,7 +32,7 @@ public static partial class MoveMethodsTool
         }
     }
 
-    private static void MarkMoved(string filePath, string methodName)
+    internal static void MarkMoved(string filePath, string methodName)
         => _movedMethods.Add(GetKey(filePath, methodName));
 
     [McpServerTool, Description("Clear the record of moved methods so they can be moved again. Do not use unless explicitly asked to.")]

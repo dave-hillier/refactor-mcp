@@ -66,6 +66,7 @@ public static partial class MoveMultipleMethodsTool
         var updatedDoc = solution.GetDocument(document.Id)!;
         RefactoringHelpers.UpdateSolutionCache(updatedDoc);
 
+        MoveMethodsTool.MarkMoved(document.FilePath!, methodName);
         return (message, updatedDoc);
     }
 
