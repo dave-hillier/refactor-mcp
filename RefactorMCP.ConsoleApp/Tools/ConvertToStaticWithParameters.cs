@@ -33,9 +33,9 @@ public static class ConvertToStaticWithParametersTool
                 if (member is not IFieldSymbol && member is not IPropertySymbol)
                     continue;
 
-                if (member is IFieldSymbol f && f.IsStatic)
+                if (member is IFieldSymbol fieldSymbol && fieldSymbol.IsStatic)
                     continue;
-                if (member is IPropertySymbol p && p.IsStatic)
+                if (member is IPropertySymbol propSymbol && propSymbol.IsStatic)
                     continue;
 
                 string memberName = member.Name;
