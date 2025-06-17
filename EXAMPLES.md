@@ -1000,12 +1000,15 @@ When a tool needs to create a new file, the namespace uses the file-scoped style
 {"tool":"move-multiple-methods","solutionPath":"./RefactorMCP.sln","filePath":"./RefactorMCP.Tests/ExampleCode.cs","sourceClass":"Helper","methodNames":["A","A"],"targetClass":"Target","targetFilePath":"./Target.cs"}
 ```
 
-### Static Suggestion Example
-When a moved instance method has no dependencies on instance members, the result advises it can be made static:
+### JSON Example
+Provide `methodNames` as a comma-separated string (this property is required):
 
 ```json
 {"tool":"move-instance-method","solutionPath":"./RefactorMCP.sln","filePath":"./RefactorMCP.Tests/ExampleCode.cs","sourceClass":"Calculator","methodNames":"LogOperation","targetClass":"Logger"}
 ```
+
+### Static Suggestion Example
+When a moved instance method has no dependencies on instance members, the result advises it can be made static.
 
 ## Metrics Resource
 
