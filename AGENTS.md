@@ -17,15 +17,20 @@ When implementing functionality in this project, use these MCP components approp
 - **Tools**: Use for discrete, actionable operations that transform code (refactorings, analysis tasks)
   - Implemented as static classes with `[McpServerToolType]` attribute
   - Methods have `[McpServerTool]` attribute with descriptive parameters
+  - Can handle various parameter types including CancellationToken, IServiceProvider, IMcpServer, and IProgress<T>
+  - Return values are automatically converted to appropriate McpToolResponse objects
   - Examples: Extract Method, Rename Symbol, Move Method
 
 - **Resources**: Use for providing contextual information or read-only data
-- 
   - Implemented as static classes with `[McpServerResourceType]` attribute
-  - Provide code structure data, statistics, or other reference information
+  - Methods have `[McpServerResource]` attribute with descriptive parameters
+  - Can represent both direct resources (e.g. "resource://example") and templated resources (e.g. "resource://example/{id}")
+  - Support URI-based parameter binding for templated resources
   - Examples: Class metrics, method dependencies, refactoring opportunities
 
 - **Prompts**: Use for guiding AI with specific instructions or context
+  - Implemented as static classes with `[McpServerPromptType]` attribute
+  - Methods have `[McpServerPrompt]` attribute with descriptive parameters
   - Help shape AI behavior for specific refactoring scenarios
   - Provide domain knowledge or project-specific guidance
   - Examples: Style guidelines, architecture constraints, naming conventions
@@ -40,13 +45,25 @@ public static class ExampleTool
 {
     [McpServerTool] // Applied to each method implementing a tool
     [Description("Performs a specific refactoring operation")] // Top-level tool description
-    public static McpToolResponse ToolName(
+    public static async Task<string> ToolName(
         [Description("First parameter description")] string param1,
-        [Description("Second parameter description")] int param2)
+        [Description("Second parameter description")] int param2,
+        CancellationToken cancellationToken = default)
     {
-        // Tool implementation
-        return new McpToolResponse.Success("Operation completed successfully");
-        // Or return new McpToolResponse.Error("Error message", McpErrorCode.InvalidParams);
+        // Protocol-level validation
+        if (string.IsNullOrEmpty(param1))
+        {
+            throw new McpException("Parameter cannot be empty", McpErrorCode.InvalidParams);
+        }
+
+        // Business logic validation - return error as string
+        if (param2 < 0)
+        {
+            return "Error: Value must be non-negative";
+        }
+
+        // Success case
+        return "Operation completed successfully";
     }
 }
 ```
@@ -54,7 +71,18 @@ public static class ExampleTool
 - **`[McpServerToolType]`**: Marks a class as containing MCP tool methods
 - **`[McpServerTool]`**: Marks a method as an MCP tool operation
 - **`[Description]`**: Provides documentation for the tool and its parameters
-- Return an appropriate `McpToolResponse` object to indicate success or failure
+- Return a string for both success and business-level errors
+- For protocol-level errors only, throw McpException with appropriate McpErrorCode:
+  - `InvalidParams`: When parameters don't meet requirements
+  - `InvalidRequest`: When request format is incorrect
+  - `MethodNotFound`: When operation doesn't exist
+  - `ParseError`: When input cannot be parsed
+  - `InternalError`: For unexpected internal failures
+- Special parameter types:
+  - `CancellationToken`: Automatically bound to the request's cancellation token
+  - `IServiceProvider`: Bound from the request context
+  - `IMcpServer`: Bound to the current server instance
+  - `IProgress<T>`: For progress notifications to the client
 
 ### Resource Attributes
 
@@ -64,13 +92,25 @@ public static class ExampleResource
 {
     [McpServerResource] // Applied to each method implementing a resource
     [Description("Provides specific information about the code")] // Resource description
-    public static McpResourceResponse ResourceName(
-        [Description("Input parameter description")] string input)
+    public static async Task<object> ResourceName(
+        [Description("Input parameter description")] string input,
+        CancellationToken cancellationToken = default)
     {
-        // Resource implementation
-        object data = GetResourceData(input);
-        return new McpResourceResponse.Success(data);
-        // Or return new McpResourceResponse.Error("Error message", McpErrorCode.ResourceNotFound);
+        // Protocol-level validation
+        if (string.IsNullOrEmpty(input))
+        {
+            throw new McpException("Input parameter cannot be empty", McpErrorCode.InvalidParams);
+        }
+
+        // Business logic validation - return error as string
+        if (!input.StartsWith("resource://"))
+        {
+            return "Error: Invalid resource URI format";
+        }
+
+        // Success case
+        object data = await GetResourceDataAsync(input, cancellationToken);
+        return data;
     }
 }
 ```
@@ -78,7 +118,9 @@ public static class ExampleResource
 - **`[McpServerResourceType]`**: Marks a class as containing MCP resource methods
 - **`[McpServerResource]`**: Marks a method as an MCP resource provider
 - **`[Description]`**: Documents the resource and its parameters
-- Return an appropriate `McpResourceResponse` object with the requested data
+- Return an object for success, string for business-level errors
+- For protocol-level errors only, throw McpException with appropriate McpErrorCode
+- Support for URI-based parameter binding in templated resources
 
 ### Prompt Attributes
 
@@ -88,13 +130,25 @@ public static class ExamplePrompts
 {
     [McpServerPrompt] // Applied to each method implementing a prompt
     [Description("Provides guidance for a specific scenario")] // Prompt description
-    public static McpPromptResponse PromptName(
-        [Description("Context parameter")] string context)
+    public static async Task<string> PromptName(
+        [Description("Context parameter")] string context,
+        CancellationToken cancellationToken = default)
     {
-        // Prompt implementation
-        string guidance = GenerateGuidance(context);
-        return new McpPromptResponse.Success(guidance);
-        // Or return new McpPromptResponse.Error("Error message", McpErrorCode.InvalidRequest);
+        // Protocol-level validation
+        if (string.IsNullOrEmpty(context))
+        {
+            throw new McpException("Context parameter cannot be empty", McpErrorCode.InvalidParams);
+        }
+
+        // Business logic validation - return error as string
+        if (context.Length > 1000)
+        {
+            return "Error: Context is too long (max 1000 characters)";
+        }
+
+        // Success case
+        string guidance = await GenerateGuidanceAsync(context, cancellationToken);
+        return guidance;
     }
 }
 ```
@@ -102,111 +156,8 @@ public static class ExamplePrompts
 - **`[McpServerPromptType]`**: Marks a class as containing MCP prompt methods
 - **`[McpServerPrompt]`**: Marks a method as an MCP prompt provider
 - **`[Description]`**: Explains the prompt's purpose and its parameters
-- Return an appropriate `McpPromptResponse` object with the guidance content
-# Coding Agents Guidelines
-
-This repository implements a Model Context Protocol (MCP) server that exposes **C#** refactoring tools as **agents**. When adding new agents or modifying existing ones, follow these guidelines.
-
-## Model Context Protocol Overview
-
-The Model Context Protocol (MCP) is a communication protocol designed for AI-assisted coding tools. This project leverages the MCP C# SDK to provide structured interaction between AI models and our refactoring capabilities. Key components include:
-
-- **IMcpEndpoint**: The core interface for client-server communication
-- **McpErrorCode**: Standard error codes for consistent error handling
-- **McpJsonUtilities**: Utilities for JSON processing within MCP
-
-## MCP Component Usage Guidelines
-
-When implementing functionality in this project, use these MCP components appropriately:
-
-- **Tools**: Use for discrete, actionable operations that transform code (refactorings, analysis tasks)
-  - Implemented as static classes with `[McpServerToolType]` attribute
-  - Methods have `[McpServerTool]` attribute with descriptive parameters
-  - Examples: Extract Method, Rename Symbol, Move Method
-
-- **Resources**: Use for providing contextual information or read-only data
-  - Implemented as static classes with `[McpServerResourceType]` attribute
-  - Provide code structure data, statistics, or other reference information
-  - Examples: Class metrics, method dependencies, refactoring opportunities
-
-- **Prompts**: Use for guiding AI with specific instructions or context
-  - Help shape AI behavior for specific refactoring scenarios
-  - Provide domain knowledge or project-specific guidance
-  - Examples: Style guidelines, architecture constraints, naming conventions
-
-## MCP Attribute Usage
-
-### Tool Attributes
-
-```csharp
-[McpServerToolType] // Applied to the class containing tool methods
-public static class ExampleTool
-{
-    [McpServerTool] // Applied to each method implementing a tool
-    [Description("Performs a specific refactoring operation")] // Top-level tool description
-    public static McpToolResponse ToolName(
-        [Description("First parameter description")] string param1,
-        [Description("Second parameter description")] int param2)
-    {
-        // Tool implementation
-        return new McpToolResponse.Success("Operation completed successfully");
-        // Or return new McpToolResponse.Error("Error message", McpErrorCode.InvalidParams);
-    }
-}
-```
-
-- **`[McpServerToolType]`**: Marks a class as containing MCP tool methods
-- **`[McpServerTool]`**: Marks a method as an MCP tool operation
-- **`[Description]`**: Provides documentation for the tool and its parameters
-- Return an appropriate `McpToolResponse` object to indicate success or failure
-
-### Resource Attributes
-
-```csharp
-[McpServerResourceType] // Applied to the class containing resource methods
-public static class ExampleResource
-{
-    [McpServerResource] // Applied to each method implementing a resource
-    [Description("Provides specific information about the code")] // Resource description
-    public static McpResourceResponse ResourceName(
-        [Description("Input parameter description")] string input)
-    {
-        // Resource implementation
-        object data = GetResourceData(input);
-        return new McpResourceResponse.Success(data);
-        // Or return new McpResourceResponse.Error("Error message", McpErrorCode.ResourceNotFound);
-    }
-}
-```
-
-- **`[McpServerResourceType]`**: Marks a class as containing MCP resource methods
-- **`[McpServerResource]`**: Marks a method as an MCP resource provider
-- **`[Description]`**: Documents the resource and its parameters
-- Return an appropriate `McpResourceResponse` object with the requested data
-
-### Prompt Attributes
-
-```csharp
-[McpServerPromptType] // Applied to the class containing prompt methods
-public static class ExamplePrompts
-{
-    [McpServerPrompt] // Applied to each method implementing a prompt
-    [Description("Provides guidance for a specific scenario")] // Prompt description
-    public static McpPromptResponse PromptName(
-        [Description("Context parameter")] string context)
-    {
-        // Prompt implementation
-        string guidance = GenerateGuidance(context);
-        return new McpPromptResponse.Success(guidance);
-        // Or return new McpPromptResponse.Error("Error message", McpErrorCode.InvalidRequest);
-    }
-}
-```
-
-- **`[McpServerPromptType]`**: Marks a class as containing MCP prompt methods
-- **`[McpServerPrompt]`**: Marks a method as an MCP prompt provider
-- **`[Description]`**: Explains the prompt's purpose and its parameters
-- Return an appropriate `McpPromptResponse` object with the guidance content
+- Return a string for both success and business-level errors
+- For protocol-level errors only, throw McpException with appropriate McpErrorCode
 
 ## Error Handling in MCP
 
