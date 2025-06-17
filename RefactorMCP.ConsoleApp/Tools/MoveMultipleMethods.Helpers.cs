@@ -21,12 +21,9 @@ public static partial class MoveMultipleMethodsTool
     {
         // Build map keyed by "Class.Method" to support duplicate method names in different classes
         var opSet = sourceClasses.Zip(methodNames, (c, m) => $"{c}.{m}").ToHashSet();
-        var map = sourceRoot.DescendantNodes().OfType<ClassDeclarationSyntax>()
-            .SelectMany(cls => cls.Members.OfType<MethodDeclarationSyntax>()
-                .Select(m => new { Key = $"{cls.Identifier.ValueText}.{m.Identifier.ValueText}", Method = m }))
-            .Where(x => opSet.Contains(x.Key))
-            .GroupBy(x => x.Key)
-            .ToDictionary(g => g.Key, g => g.First().Method);
+        var collector = new RefactorMCP.ConsoleApp.SyntaxRewriters.MethodCollectorWalker(opSet);
+        collector.Visit(sourceRoot);
+        var map = collector.Methods;
 
         var methodNameSet = methodNames.ToHashSet();
         var deps = new Dictionary<string, HashSet<string>>();
