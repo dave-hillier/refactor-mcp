@@ -230,7 +230,7 @@ public static partial class MoveMethodsTool
         [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file containing the method")] string filePath,
         [Description("Name of the source class containing the method")] string sourceClass,
-        [Description("Comma separated names of the methods to move")] string methodNames,
+        [Description("Comma separated names of the methods to move (required)")] string methodNames,
         [Description("Name of the target class")] string targetClass,
         [Description("Path to the target file (optional, will create if doesn't exist or unspecified)")] string? targetFilePath = null,
         IProgress<string>? progress = null,
