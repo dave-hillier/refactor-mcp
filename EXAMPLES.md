@@ -704,6 +704,21 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli clear-solution-cache
 Cleared all cached solutions
 ```
 
+## Reset Move History (Utility Command)
+
+**Purpose**: Allow previously moved methods to be moved again in the same session.
+
+### Example
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli reset-move-history
+```
+
+**Expected Output**:
+```
+Cleared move history
+```
+
 ## 11. List Tools (Utility Command)
 
 **Purpose**: Display all available refactoring tools and their status.
@@ -974,3 +989,12 @@ metrics://RefactorMCP.Tests/ExampleCode.cs/Calculator.Calculate
 This URI returns metrics for the `Calculate` method. Omitting the method name
 returns metrics for the whole class, and specifying only the file gives all
 classes and methods.
+
+## Summary Resource
+
+Retrieve a file with method bodies omitted using the `summary://` scheme:
+
+```
+summary://RefactorMCP.Tests/ExampleCode.cs
+```
+The returned text begins with `// summary://...` and shows each method body as `// ...`.

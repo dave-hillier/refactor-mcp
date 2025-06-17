@@ -84,7 +84,7 @@ public static class IntroduceFieldTool
         {
             var classSymbol = semanticModel.GetDeclaredSymbol(containingClass);
             if (classSymbol?.GetMembers().OfType<IFieldSymbol>().Any(f => f.Name == fieldName) == true)
-                throw new McpException($"Error: Field '{fieldName}' already exists");
+                return $"Error: Field '{fieldName}' already exists";
         }
         var rewriter = new FieldIntroductionRewriter(selectedExpression, fieldReference, fieldDeclaration, containingClass);
         var newRoot = rewriter.Visit(syntaxRoot);
@@ -109,6 +109,9 @@ public static class IntroduceFieldTool
         var (sourceText, encoding) = await RefactoringHelpers.ReadFileWithEncodingAsync(filePath);
         var model = await RefactoringHelpers.GetOrCreateSemanticModelAsync(filePath);
         var newText = IntroduceFieldInSource(sourceText, selectionRange, fieldName, accessModifier, model);
+        if (newText.StartsWith("Error:"))
+            return newText;
+
         await File.WriteAllTextAsync(filePath, newText, encoding);
         RefactoringHelpers.UpdateFileCaches(filePath, newText);
         return $"Successfully introduced {accessModifier} field '{fieldName}' from {selectionRange} in {filePath} (single file mode)";
@@ -172,7 +175,7 @@ public static class IntroduceFieldTool
                 .SelectMany(f => f.Declaration.Variables)
                 .Any(v => v.Identifier.ValueText == fieldName);
             if (exists)
-                throw new McpException($"Error: Field '{fieldName}' already exists");
+                return $"Error: Field '{fieldName}' already exists";
         }
         var rewriter = new FieldIntroductionRewriter(selectedExpression, fieldReference, fieldDeclaration, containingClass);
         var newRoot = rewriter.Visit(syntaxRoot);

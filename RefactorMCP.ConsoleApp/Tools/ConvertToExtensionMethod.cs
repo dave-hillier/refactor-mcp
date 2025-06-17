@@ -42,7 +42,7 @@ public static class ConvertToExtensionMethodTool
             .OfType<MethodDeclarationSyntax>()
             .FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            throw new McpException($"Error: No method named '{methodName}' found");
+            return $"Error: No method named '{methodName}' found";
 
         var semanticModel = await document.GetSemanticModelAsync();
         var classDecl = method.Ancestors().OfType<ClassDeclarationSyntax>().FirstOrDefault();
@@ -134,7 +134,7 @@ public static class ConvertToExtensionMethodTool
             .OfType<MethodDeclarationSyntax>()
             .FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            throw new McpException($"Error: No method named '{methodName}' found");
+            return $"Error: No method named '{methodName}' found";
 
         var classDecl = method.Ancestors().OfType<ClassDeclarationSyntax>().FirstOrDefault();
         if (classDecl == null)
