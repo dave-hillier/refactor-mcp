@@ -230,7 +230,10 @@ public static partial class MoveMethodsTool
         bool usesInstanceMembers = analysis.UsesInstanceMembers;
         bool callsOtherMethods = analysis.CallsOtherMethods;
         bool isRecursive = analysis.IsRecursive;
-        bool needsThisParameter = usesInstanceMembers || callsOtherMethods || isRecursive;
+        bool hasThisUsage = method.DescendantNodes()
+            .OfType<ThisExpressionSyntax>()
+            .Any(t => t.Parent is not MemberAccessExpressionSyntax);
+        bool needsThisParameter = hasThisUsage || usesInstanceMembers || callsOtherMethods || isRecursive;
 
         var otherMethodNames = new HashSet<string>(methodNames);
         otherMethodNames.Remove(methodName);
@@ -374,7 +377,9 @@ public static partial class MoveMethodsTool
         var parameters = method.ParameterList.Parameters.Insert(0, sourceParameter);
         var newParameterList = method.ParameterList.WithParameters(parameters);
 
-        return method.WithParameterList(newParameterList);
+        var updatedMethod = method.WithParameterList(newParameterList);
+        updatedMethod = AstTransformations.ReplaceThisReferences(updatedMethod, "@this");
+        return updatedMethod;
     }
 
     private static MethodDeclarationSyntax RewriteMethodBody(
