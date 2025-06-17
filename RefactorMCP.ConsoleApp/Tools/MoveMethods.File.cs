@@ -67,7 +67,6 @@ public static partial class MoveMethodsTool
             progress?.Report(filePath);
         }
 
-        MarkMoved(filePath, methodName);
         return $"Successfully moved static method '{methodName}' to {targetClass} in {targetPath}. A delegate method remains in the original class to preserve the interface.";
     }
 
@@ -151,7 +150,6 @@ public static partial class MoveMethodsTool
         }
 
         var locationInfo = targetFilePath != null ? $" in {targetPath}" : string.Empty;
-        MarkMoved(filePath, methodName);
         return $"Successfully moved instance method {sourceClass}.{methodName} to {targetClass}{locationInfo}. A delegate method remains in the original class to preserve the interface.";
     }
 

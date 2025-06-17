@@ -719,6 +719,13 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli reset-move-history
 Cleared move history
 ```
 
+### Failed Move Example
+A failed move does not record the method:
+```json
+{"tool":"move-instance-method","solutionPath":"./RefactorMCP.sln","filePath":"./RefactorMCP.Tests/ExampleCode.cs","sourceClass":"Wrong","methodNames":"LogOperation","targetClass":"Logger"}
+```
+Running the command again with the correct `sourceClass` succeeds.
+
 ## 11. List Tools (Utility Command)
 
 **Purpose**: Display all available refactoring tools and their status.
