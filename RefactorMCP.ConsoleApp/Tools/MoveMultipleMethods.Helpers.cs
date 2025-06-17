@@ -25,7 +25,8 @@ public static partial class MoveMultipleMethodsTool
             .SelectMany(cls => cls.Members.OfType<MethodDeclarationSyntax>()
                 .Select(m => new { Key = $"{cls.Identifier.ValueText}.{m.Identifier.ValueText}", Method = m }))
             .Where(x => opSet.Contains(x.Key))
-            .ToDictionary(x => x.Key, x => x.Method);
+            .GroupBy(x => x.Key)
+            .ToDictionary(g => g.Key, g => g.First().Method);
 
         var methodNameSet = methodNames.ToHashSet();
         var deps = new Dictionary<string, HashSet<string>>();
