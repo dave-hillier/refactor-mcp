@@ -24,6 +24,7 @@ Unit tests for each refactoring tool in the `Tools` folder covering solution loa
 ### 4. Metrics and Analysis
 Tests covering metrics and refactoring suggestions:
 - ✅ `MetricsResourceTests` - Metrics resource returns JSON
+- ✅ `SummaryResourceTests` - Summary resource omits method bodies
 - ✅ `ClassLengthMetricsTests` - Class length listings
 - ✅ `AnalyzeRefactoringOpportunitiesTests` - Suggests safe deletions
 
@@ -94,6 +95,7 @@ RefactorMCP.Tests/
 ├── ExampleValidationTests.cs # Documentation validation
 ├── PerformanceTests.cs       # Performance tests
 ├── MetricsResourceTests.cs   # Metrics resource validation
+├── SummaryResourceTests.cs   # Summary resource validation
 ├── ClassLengthMetricsTests.cs # Class size metrics
 ├── AnalyzeRefactoringOpportunitiesTests.cs
 ├── ExampleCode.cs            # Sample code for testing
