@@ -5,6 +5,7 @@ using Microsoft.CodeAnalysis.MSBuild;
 using Microsoft.Extensions.Caching.Memory;
 using System.ComponentModel;
 using System.IO;
+using System.Threading;
 
 
 [McpServerToolType]
@@ -12,7 +13,9 @@ public static class LoadSolutionTool
 {
     [McpServerTool, Description("Load a solution file for refactoring operations and set the current directory to the solution directory")]
     public static async Task<string> LoadSolution(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath)
+        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        IProgress<string>? progress = null,
+        CancellationToken cancellationToken = default)
     {
         try
         {
@@ -21,6 +24,7 @@ public static class LoadSolutionTool
                 throw new McpException($"Error: Solution file not found at {solutionPath}");
             }
             Directory.SetCurrentDirectory(Path.GetDirectoryName(solutionPath)!);
+            progress?.Report($"Loading {solutionPath}");
 
             if (RefactoringHelpers.SolutionCache.TryGetValue(solutionPath, out Solution? cached))
             {
@@ -29,12 +33,14 @@ public static class LoadSolutionTool
             }
 
             using var workspace = RefactoringHelpers.CreateWorkspace();
-            var solution = await workspace.OpenSolutionAsync(solutionPath);
+            var solution = await workspace.OpenSolutionAsync(solutionPath, progress: null, cancellationToken);
 
             RefactoringHelpers.SolutionCache.Set(solutionPath, solution);
 
             var projects = solution.Projects.Select(p => p.Name).ToList();
-            return $"Successfully loaded solution '{Path.GetFileName(solutionPath)}' with {projects.Count} projects: {string.Join(", ", projects)}";
+            var message = $"Successfully loaded solution '{Path.GetFileName(solutionPath)}' with {projects.Count} projects: {string.Join(", ", projects)}";
+            progress?.Report(message);
+            return message;
         }
         catch (Exception ex)
         {

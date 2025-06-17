@@ -10,7 +10,7 @@ public class ConvertToStaticWithInstanceTests : TestBase
     [Fact]
     public async Task ConvertToStaticWithInstance_ReturnsSuccess()
     {
-        await LoadSolutionTool.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
         var testFile = Path.Combine(TestOutputPath, "ConvertToStaticInstance.cs");
         await TestUtilities.CreateTestFile(testFile, TestUtilities.GetSampleCodeForConvertToStaticInstance());
 

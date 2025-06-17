@@ -10,7 +10,7 @@ public class IntroduceParameterTests : TestBase
     [Fact]
     public async Task IntroduceParameter_ValidExpression_ReturnsSuccess()
     {
-        await LoadSolutionTool.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
         var testFile = Path.Combine(TestOutputPath, "IntroduceParameter.cs");
         await TestUtilities.CreateTestFile(testFile, TestUtilities.GetSampleCodeForIntroduceVariable());
 
@@ -29,7 +29,7 @@ public class IntroduceParameterTests : TestBase
     [Fact]
     public async Task IntroduceParameter_InvalidMethod_ReturnsError()
     {
-        await LoadSolutionTool.LoadSolution(SolutionPath);
+        await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
         var result = await IntroduceParameterTool.IntroduceParameter(
             SolutionPath,
             ExampleFilePath,
