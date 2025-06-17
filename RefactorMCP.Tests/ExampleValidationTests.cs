@@ -179,7 +179,6 @@ public class ExampleValidationTests : IDisposable
         await CreateTestFile(testFile, GetCalculatorCodeForExtractMethod());
         await LoadSolutionTool.LoadSolution(SolutionPath);
 
-        // Use the exact command from QUICK_REFERENCE.md
         var result = await ExtractMethodTool.ExtractMethod(
             SolutionPath,
             testFile,
@@ -200,7 +199,6 @@ public class ExampleValidationTests : IDisposable
         await CreateTestFile(testFile, GetCalculatorCodeForIntroduceField());
         await LoadSolutionTool.LoadSolution(SolutionPath);
 
-        // Use the exact command from QUICK_REFERENCE.md
         var result = await IntroduceFieldTool.IntroduceField(
             SolutionPath,
             testFile,
