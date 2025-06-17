@@ -28,7 +28,7 @@ internal class MethodReferenceRewriter : CSharpSyntaxRewriter
                 return memberAccess.WithTriviaFrom(node);
             }
         }
-        return base.VisitIdentifierName(node);
+        return base.VisitIdentifierName(node)!;
     }
 
     public override SyntaxNode VisitMemberAccessExpression(MemberAccessExpressionSyntax node)
@@ -39,8 +39,8 @@ internal class MethodReferenceRewriter : CSharpSyntaxRewriter
             node.Parent is not InvocationExpressionSyntax)
         {
             var updated = node.WithExpression(SyntaxFactory.IdentifierName(_parameterName));
-            return base.VisitMemberAccessExpression(updated);
+            return base.VisitMemberAccessExpression(updated)!;
         }
-        return base.VisitMemberAccessExpression(node);
+        return base.VisitMemberAccessExpression(node)!;
     }
 }

@@ -58,7 +58,7 @@ public static class InlineMethodTool
             .OfType<MethodDeclarationSyntax>()
             .First(m => m.Identifier.ValueText == methodName);
         newRoot = newRoot.RemoveNode(updatedMethod, SyntaxRemoveOptions.KeepNoTrivia);
-        var formattedRoot = Formatter.Format(newRoot, document.Project.Solution.Workspace);
+        var formattedRoot = Formatter.Format(newRoot!, document.Project.Solution.Workspace);
         var newDocument = document.WithSyntaxRoot(formattedRoot);
         var newText = await newDocument.GetTextAsync();
         var encoding = await RefactoringHelpers.GetFileEncodingAsync(document.FilePath!);
