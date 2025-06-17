@@ -42,13 +42,14 @@ public static partial class MoveMethodsTool
         return "Cleared move history";
     }
     [McpServerTool, Description("Move a static method to another class (preferred for large C# file refactoring). " +
-        "Leaves a delegating method in the original class to preserve the interface.")]
+        "Leaves a delegating method in the original class to preserve the interface." +
+        "The target class will be automatically created if it doesn't exist.")]
     public static async Task<string> MoveStaticMethod(
         [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file containing the method")] string filePath,
         [Description("Name of the static method to move")] string methodName,
         [Description("Name of the target class")] string targetClass,
-        [Description("Path to the target file (optional, will create if doesn't exist)")] string? targetFilePath = null,
+        [Description("Path to the target file (optional, will create if doesn't exist or unspecified)")] string? targetFilePath = null,
         IProgress<string>? progress = null,
         CancellationToken cancellationToken = default)
     {
@@ -223,14 +224,15 @@ public static partial class MoveMethodsTool
     }
 
     [McpServerTool, Description("Move one or more instance methods to another class (preferred for large C# file refactoring). " +
-        "Each original method is replaced with a wrapper that calls the moved version to maintain the public API.")]
+        "Each original method is replaced with a wrapper that calls the moved version to maintain the public API." +
+        "The target class will be automatically created if it doesn't exist.")]
     public static async Task<string> MoveInstanceMethod(
         [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file containing the method")] string filePath,
         [Description("Name of the source class containing the method")] string sourceClass,
         [Description("Comma separated names of the methods to move")] string methodNames,
         [Description("Name of the target class")] string targetClass,
-        [Description("Path to the target file (optional, will create if doesn't exist)")] string? targetFilePath = null,
+        [Description("Path to the target file (optional, will create if doesn't exist or unspecified)")] string? targetFilePath = null,
         IProgress<string>? progress = null,
         CancellationToken cancellationToken = default)
     {
