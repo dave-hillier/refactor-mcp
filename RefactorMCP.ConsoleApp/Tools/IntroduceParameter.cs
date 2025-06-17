@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.CodeAnalysis.Editing;
 
 [McpServerToolType]
 public static class IntroduceParameterTool
@@ -45,7 +46,8 @@ public static class IntroduceParameterTool
             .WithType(SyntaxFactory.ParseTypeName(typeName));
 
         var parameterReference = SyntaxFactory.IdentifierName(parameterName);
-        var rewriter = new ParameterIntroductionRewriter(selectedExpression, methodName, parameter, parameterReference);
+        var generator = SyntaxGenerator.GetGenerator(document.Project.Solution.Workspace, LanguageNames.CSharp);
+        var rewriter = new ParameterIntroductionRewriter(selectedExpression, methodName, parameter, parameterReference, generator);
         var newRoot = rewriter.Visit(syntaxRoot);
 
         var formattedRoot = Formatter.Format(newRoot, document.Project.Solution.Workspace);
@@ -102,7 +104,8 @@ public static class IntroduceParameterTool
             .WithType(SyntaxFactory.ParseTypeName("object"));
 
         var parameterReference = SyntaxFactory.IdentifierName(parameterName);
-        var rewriter = new ParameterIntroductionRewriter(selectedExpression, methodName, parameter, parameterReference);
+        var generator = SyntaxGenerator.GetGenerator(RefactoringHelpers.SharedWorkspace, LanguageNames.CSharp);
+        var rewriter = new ParameterIntroductionRewriter(selectedExpression, methodName, parameter, parameterReference, generator);
         var newRoot = rewriter.Visit(syntaxRoot);
 
         var formattedRoot = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);

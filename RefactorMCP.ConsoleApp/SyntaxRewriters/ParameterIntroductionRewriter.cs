@@ -2,6 +2,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.CodeAnalysis.Editing;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -11,17 +12,20 @@ internal class ParameterIntroductionRewriter : CSharpSyntaxRewriter
     private readonly string _methodName;
     private readonly ParameterSyntax _parameter;
     private readonly IdentifierNameSyntax _parameterReference;
+    private readonly SyntaxGenerator _generator;
 
     public ParameterIntroductionRewriter(
         ExpressionSyntax targetExpression,
         string methodName,
         ParameterSyntax parameter,
-        IdentifierNameSyntax parameterReference)
+        IdentifierNameSyntax parameterReference,
+        SyntaxGenerator generator)
     {
         _targetExpression = targetExpression;
         _methodName = methodName;
         _parameter = parameter;
         _parameterReference = parameterReference;
+        _generator = generator;
     }
 
     public override SyntaxNode Visit(SyntaxNode? node)
@@ -41,8 +45,10 @@ internal class ParameterIntroductionRewriter : CSharpSyntaxRewriter
 
         if (isTarget)
         {
-            var newArgs = visited.ArgumentList.AddArguments(SyntaxFactory.Argument(_targetExpression.WithoutTrivia()));
-            visited = visited.WithArgumentList(newArgs);
+            visited = AstTransformations.AddArgument(
+                visited,
+                _targetExpression.WithoutTrivia(),
+                _generator);
         }
 
         return visited;

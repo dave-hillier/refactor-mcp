@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Formatting;
+using Microsoft.CodeAnalysis.Editing;
 
 [McpServerToolType]
 public static class SafeDeleteTool
@@ -233,7 +234,8 @@ public static class SafeDeleteTool
         if (!docs.Contains(document))
             docs.Add(document);
 
-        var rewriter = new ParameterRemovalRewriter(methodName, paramIndex);
+        var generator = SyntaxGenerator.GetGenerator(document.Project.Solution.Workspace, LanguageNames.CSharp);
+        var rewriter = new ParameterRemovalRewriter(methodName, paramIndex, generator);
 
         foreach (var doc in docs)
         {
@@ -271,7 +273,8 @@ public static class SafeDeleteTool
             throw new McpException($"Error: Parameter '{parameterName}' not found. Verify the parameter name and ensure the file is part of the loaded solution.");
 
         var paramIndex = method.ParameterList.Parameters.IndexOf(parameter);
-        var rewriter = new ParameterRemovalRewriter(methodName, paramIndex);
+        var generator = SyntaxGenerator.GetGenerator(RefactoringHelpers.SharedWorkspace, LanguageNames.CSharp);
+        var rewriter = new ParameterRemovalRewriter(methodName, paramIndex, generator);
         var newRoot = rewriter.Visit(root)!;
         var formatted = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
         return formatted.ToFullString();
