@@ -1,47 +1,30 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
-using System.Collections.Generic;
-using System.Linq;
 
-internal class FieldIntroductionRewriter : CSharpSyntaxRewriter
+internal class FieldIntroductionRewriter : ExpressionIntroductionRewriter<ClassDeclarationSyntax>
 {
-    private readonly ExpressionSyntax _targetExpression;
-    private readonly IdentifierNameSyntax _fieldReference;
     private readonly FieldDeclarationSyntax _fieldDeclaration;
-    private readonly ClassDeclarationSyntax? _containingClass;
 
     public FieldIntroductionRewriter(
         ExpressionSyntax targetExpression,
         IdentifierNameSyntax fieldReference,
         FieldDeclarationSyntax fieldDeclaration,
         ClassDeclarationSyntax? containingClass)
+        : base(targetExpression, fieldReference, fieldDeclaration, containingClass)
     {
-        _targetExpression = targetExpression;
-        _fieldReference = fieldReference;
         _fieldDeclaration = fieldDeclaration;
-        _containingClass = containingClass;
     }
 
-    public override SyntaxNode Visit(SyntaxNode? node)
+    protected override ClassDeclarationSyntax InsertDeclaration(ClassDeclarationSyntax node, SyntaxNode declaration)
     {
-        if (node is ExpressionSyntax expr && SyntaxFactory.AreEquivalent(expr, _targetExpression))
-            return _fieldReference;
-
-        return base.Visit(node)!;
+        return node.WithMembers(node.Members.Insert(0, (MemberDeclarationSyntax)declaration));
     }
 
     public override SyntaxNode VisitClassDeclaration(ClassDeclarationSyntax node)
     {
         var rewritten = (ClassDeclarationSyntax)base.VisitClassDeclaration(node)!;
-
-        if (_containingClass != null && node == _containingClass)
-        {
-            rewritten = rewritten.WithMembers(rewritten.Members.Insert(0, _fieldDeclaration));
-        }
-
-        return rewritten;
+        return MaybeInsertDeclaration(node, rewritten);
     }
 }
 
