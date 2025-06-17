@@ -83,4 +83,33 @@ public class MoveInstanceMethodTests : TestBase
                 null,
                 CancellationToken.None));
     }
+
+    [Fact]
+    public async Task ResetMoveHistory_AllowsRepeatMove()
+    {
+        UnloadSolutionTool.ClearSolutionCache();
+        var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "ResetMoveHistory.cs"));
+        await TestUtilities.CreateTestFile(testFile, "public class A { public void Do(){} } public class B { }");
+        await LoadSolutionTool.LoadSolution(SolutionPath);
+
+        var result1 = await MoveMethodsTool.MoveInstanceMethod(
+            SolutionPath,
+            testFile,
+            "A",
+            "Do",
+            "B");
+        Assert.Contains("Successfully moved", result1);
+
+        // Clear move tracking and try again
+        MoveMethodsTool.ResetMoveHistory();
+
+        var result2 = await MoveMethodsTool.MoveInstanceMethod(
+            SolutionPath,
+            testFile,
+            "A",
+            "Do",
+            "B");
+
+        Assert.Contains("Successfully moved", result2);
+    }
 }

@@ -24,6 +24,8 @@ Below is a quick reference of all tool classes provided by RefactorMCP. Each too
   Remove unused using directives from a C# file (preferred for large C# file refactoring).
 - **MetricsResource** `[McpServerResourceType]`
   Read metrics using `metrics://` URIs for directories, files, classes or methods.
+- **SummaryResources** `[McpServerResourceType]`
+  Return a code file with method bodies removed via the `summary://` scheme.
 - **ConvertToExtensionMethodTool** `[McpServerToolType]`  
   Convert an instance method to an extension method in a static class.
 - **ConvertToStaticWithInstanceTool** `[McpServerToolType]`  
@@ -51,6 +53,7 @@ Below is a quick reference of all tool classes provided by RefactorMCP. Each too
 - **MoveMethodsTool** `[McpServerToolType]`
   Move a static or instance method to another class (preferred for large C# file refactoring). Supports optional `IProgress<string>` and `CancellationToken` parameters.
   If the same method is moved again in one run, an error is raised. Use `InlineMethodTool` to remove the wrapper.
+  Call `ResetMoveHistory` to clear the session history when needed.
 - **MoveMultipleMethodsTool** `[McpServerToolType]`  
   Move multiple methods from a source class to a target class, automatically ordering by dependencies.
 - **RenameSymbolTool** `[McpServerToolType]`  
@@ -298,8 +301,20 @@ solution and file paths return the cached JSON without recomputing. Delete this 
 Metrics can also be accessed via the `metrics://` resource scheme. Use a URI like
 `metrics://<file path>/[ClassName].[MethodName]` to retrieve metrics for a
 specific scope. Supplying only a directory lists all classes. Specifying a file
-returns metrics for all classes and methods, adding a class name narrows to that
-class, and appending a method name yields metrics just for that method.
+    returns metrics for all classes and methods, adding a class name narrows to that
+    class, and appending a method name yields metrics just for that method.
+
+### Summary Resource
+
+Use the `summary://` scheme to retrieve a code file with all method bodies replaced by
+`// ...`. This is useful for sharing context with an LLM without exposing implementation
+details.
+
+Example MCP request:
+
+```json
+{"role":"tool","name":"summary://RefactorMCP.Tests/ExampleCode.cs"}
+```
 
 ## Range Format
 

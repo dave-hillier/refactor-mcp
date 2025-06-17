@@ -31,7 +31,7 @@ public static class MoveClassToFileTool
             else
             {
                 if (!File.Exists(filePath))
-                    throw new McpException($"Error: File {filePath} not found");
+                    throw new McpException($"Error: File {filePath} not found. Verify the file path and ensure the file is part of the loaded solution.");
 
                 var (text, _) = await RefactoringHelpers.ReadFileWithEncodingAsync(filePath);
                 root = (CompilationUnitSyntax)CSharpSyntaxTree.ParseText(text).GetRoot();
@@ -39,7 +39,7 @@ public static class MoveClassToFileTool
             var classNode = root.DescendantNodes().OfType<ClassDeclarationSyntax>()
                 .FirstOrDefault(c => c.Identifier.Text == className);
             if (classNode == null)
-                throw new McpException($"Error: Class {className} not found");
+                throw new McpException($"Error: Class {className} not found. Verify the class name and ensure the file is part of the loaded solution.");
 
             var duplicateDoc = await RefactoringHelpers.FindClassInSolution(solution, className, filePath, newFilePath);
             if (duplicateDoc != null)
