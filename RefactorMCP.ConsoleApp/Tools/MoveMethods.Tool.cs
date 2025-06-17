@@ -339,16 +339,19 @@ public static partial class MoveMethodsTool
             var tree = CSharpSyntaxTree.ParseText(sourceText);
             var root = await tree.GetRootAsync(cancellationToken);
 
+            var suggestStatic = false;
             foreach (var methodName in methodNames)
             {
                 var moveResult = MoveInstanceMethodAst(root, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
+                suggestStatic |= !moveResult.NeedsThisParameter;
                 root = AddMethodToTargetClass(moveResult.NewSourceRoot, targetClass, moveResult.MovedMethod, moveResult.Namespace);
             }
 
             var formatted = Formatter.Format(root, RefactoringHelpers.SharedWorkspace);
             await File.WriteAllTextAsync(filePath, formatted.ToFullString(), sourceEncoding, cancellationToken);
             progress?.Report(filePath);
-            return $"Successfully moved {methodNames.Length} methods from {sourceClass} to {targetClass} in {filePath}. Delegate methods remain in the original class to preserve the interface.";
+            var staticHint = suggestStatic ? " At least one moved method has no instance dependencies and could be made static." : string.Empty;
+            return $"Successfully moved {methodNames.Length} methods from {sourceClass} to {targetClass} in {filePath}. Delegate methods remain in the original class to preserve the interface.{staticHint}";
         }
         else
         {
@@ -362,9 +365,11 @@ public static partial class MoveMethodsTool
                 .FirstOrDefault()?.Name.ToString();
             targetRoot = PropagateUsings(sourceRoot, targetRoot, nsName);
 
+            var suggestStatic2 = false;
             foreach (var methodName in methodNames)
             {
                 var moveResult = MoveInstanceMethodAst(sourceRoot, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
+                suggestStatic2 |= !moveResult.NeedsThisParameter;
                 sourceRoot = moveResult.NewSourceRoot;
                 targetRoot = AddMethodToTargetClass(targetRoot, targetClass, moveResult.MovedMethod, moveResult.Namespace);
             }
@@ -381,7 +386,8 @@ public static partial class MoveMethodsTool
             await File.WriteAllTextAsync(targetPath, formattedTarget.ToFullString(), targetEncoding, cancellationToken);
             progress?.Report(targetPath);
 
-            return $"Successfully moved {methodNames.Length} methods from {sourceClass} to {targetClass} in {targetPath}. Delegate methods remain in the original class to preserve the interface.";
+            var staticHint2 = suggestStatic2 ? " At least one moved method has no instance dependencies and could be made static." : string.Empty;
+            return $"Successfully moved {methodNames.Length} methods from {sourceClass} to {targetClass} in {targetPath}. Delegate methods remain in the original class to preserve the interface.{staticHint2}";
         }
     }
 
