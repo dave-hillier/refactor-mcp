@@ -30,12 +30,12 @@ public class IntroduceParameterTests : TestBase
     public async Task IntroduceParameter_InvalidMethod_ReturnsError()
     {
         await LoadSolutionTool.LoadSolution(SolutionPath);
-        await Assert.ThrowsAsync<McpException>(async () =>
-            await IntroduceParameterTool.IntroduceParameter(
-                SolutionPath,
-                ExampleFilePath,
-                "Nonexistent",
-                "1:1-1:2",
-                "param"));
+        var result = await IntroduceParameterTool.IntroduceParameter(
+            SolutionPath,
+            ExampleFilePath,
+            "Nonexistent",
+            "1:1-1:2",
+            "param");
+        Assert.Equal("Error: No method named 'Nonexistent' found", result);
     }
 }

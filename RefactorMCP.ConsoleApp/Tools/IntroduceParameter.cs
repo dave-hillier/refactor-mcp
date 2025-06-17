@@ -21,7 +21,7 @@ public static class IntroduceParameterTool
             .OfType<MethodDeclarationSyntax>()
             .FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            throw new McpException($"Error: No method named '{methodName}' found");
+            return $"Error: No method named '{methodName}' found";
 
         if (!RefactoringHelpers.TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
             throw new McpException("Error: Invalid selection range format");
@@ -77,7 +77,7 @@ public static class IntroduceParameterTool
             .OfType<MethodDeclarationSyntax>()
             .FirstOrDefault(m => m.Identifier.ValueText == methodName);
         if (method == null)
-            throw new McpException($"Error: No method named '{methodName}' found");
+            return $"Error: No method named '{methodName}' found";
 
         if (!RefactoringHelpers.TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
             throw new McpException("Error: Invalid selection range format");
