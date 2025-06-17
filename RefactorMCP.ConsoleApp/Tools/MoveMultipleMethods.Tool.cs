@@ -74,14 +74,15 @@ public static partial class MoveMultipleMethodsTool
     // Solution/Document operations that use the AST layer
 
     [McpServerTool, Description("Move multiple methods from a source class to a target class, automatically ordering by dependencies. " +
-        "Wrapper methods remain at the original locations to delegate to the moved implementations.")]
+        "Wrapper methods remain at the original locations to delegate to the moved implementations." +
+        "The target class will be automatically created if it doesn't exist.")]
     public static async Task<string> MoveMultipleMethods(
         [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file containing the methods")] string filePath,
         [Description("Name of the source class containing the methods")] string sourceClass,
         [Description("Names of the methods to move")] string[] methodNames,
         [Description("Name of the target class")] string targetClass,
-        [Description("Path to the target file (optional)")] string? targetFilePath = null)
+        [Description("Path to the target file (optional, target class will be automatically created if it doesnt exist or its unspecified)")] string? targetFilePath = null)
     {
         try
         {
