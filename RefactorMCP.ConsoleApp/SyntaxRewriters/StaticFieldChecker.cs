@@ -3,35 +3,27 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
 
-internal class StaticFieldChecker : CSharpSyntaxWalker
+internal class StaticFieldChecker : TrackedNameWalker
 {
-    private readonly HashSet<string> _staticFieldNames;
-    public bool HasStaticFieldReferences { get; private set; }
+    public bool HasStaticFieldReferences => Matches.Count > 0;
 
     public StaticFieldChecker(HashSet<string> staticFieldNames)
+        : base(staticFieldNames)
     {
-        _staticFieldNames = staticFieldNames;
     }
 
-    public override void VisitIdentifierName(IdentifierNameSyntax node)
+    protected override bool ShouldRecordIdentifier(IdentifierNameSyntax node)
     {
         var parent = node.Parent;
-        if (parent is ParameterSyntax || parent is TypeSyntax)
+        if (!IsTarget(node.Identifier.ValueText) || IsParameterOrType(parent))
+            return false;
+
+        if (parent is MemberAccessExpressionSyntax memberAccess)
         {
-            base.VisitIdentifierName(node);
-            return;
+            return memberAccess.Name == node;
         }
 
-        if (_staticFieldNames.Contains(node.Identifier.ValueText))
-        {
-            if (parent is not MemberAccessExpressionSyntax ||
-                (parent is MemberAccessExpressionSyntax memberAccess && memberAccess.Name == node))
-            {
-                HasStaticFieldReferences = true;
-            }
-        }
-
-        base.VisitIdentifierName(node);
+        return true;
     }
 }
 
