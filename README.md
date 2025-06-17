@@ -57,6 +57,7 @@ Below is a quick reference of all tool classes provided by RefactorMCP. Each too
   Move a static or instance method to another class (preferred for large C# file refactoring). Supports optional `IProgress<string>` and `CancellationToken` parameters.
   If the same method is moved again in one run, an error is raised. Use `InlineMethodTool` to remove the wrapper.
   Failed move attempts do not add to the session history, and `ResetMoveHistory` clears the record when needed.
+  When a moved method has no instance dependencies the result suggests it can be made static.
 - **MoveMultipleMethodsTool** `[McpServerToolType]`
   Move multiple methods from a source class to a target class, automatically ordering by dependencies. Overloaded method names are supported.
 - **RenameSymbolTool** `[McpServerToolType]`  
