@@ -138,4 +138,32 @@ public static class StringProcessorExtensions
         var output = ConvertToStaticWithParametersTool.ConvertToStaticWithParametersInSource(input, "MultiplyValue");
         Assert.Equal(expected, output.Trim());
     }
+
+    [Fact]
+    public void ConvertToStaticWithInstanceInSource_HandlesExplicitInterface()
+    {
+        var input = @"public class cResRoom : IRoomPick
+{
+    object IRoomPick.GetResProfile(int id) => GetResProfile(id);
+    public object GetResProfile(int id) => null;
+}
+
+public interface IRoomPick
+{
+    object GetResProfile(int id);
+}";
+        var expected = @"public class cResRoom : IRoomPick
+{
+    public static object GetResProfile(cResRoom room, int id) => room.GetResProfile(id);
+    public object GetResProfile(int id) => null;
+}
+
+public interface IRoomPick
+{
+    object GetResProfile(int id);
+}";
+        var output = ConvertToStaticWithInstanceTool.ConvertToStaticWithInstanceInSource(input, "GetResProfile", "room");
+        Assert.Equal(expected, output.Trim());
+        Assert.DoesNotContain("IRoomPick.", output);
+    }
 }
