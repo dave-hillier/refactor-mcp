@@ -24,7 +24,7 @@ public static class ExtractInterfaceTool
             if (document == null)
                 throw new McpException($"Error: File {filePath} not found in solution");
 
-            var root = (CompilationUnitSyntax)await document.GetSyntaxRootAsync();
+            var root = (CompilationUnitSyntax)(await document.GetSyntaxRootAsync())!;
             var classNode = root.DescendantNodes().OfType<ClassDeclarationSyntax>()
                 .FirstOrDefault(c => c.Identifier.ValueText == className);
             if (classNode == null)

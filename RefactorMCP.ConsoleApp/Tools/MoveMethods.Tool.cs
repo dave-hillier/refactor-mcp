@@ -181,7 +181,7 @@ public static partial class MoveMethodsTool
 
     private static SyntaxNode PropagateUsingsToTarget(StaticMethodMoveContext context, SyntaxNode targetRoot)
     {
-        var targetCompilationUnit = (CompilationUnitSyntax)targetRoot;
+        var targetCompilationUnit = targetRoot as CompilationUnitSyntax ?? throw new InvalidOperationException("Expected compilation unit");
         var targetUsingNames = targetCompilationUnit.Usings
             .Select(u => u.Name.ToString())
             .ToHashSet();
@@ -426,7 +426,7 @@ public static partial class MoveMethodsTool
             {
                 var (newText, _) = await RefactoringHelpers.ReadFileWithEncodingAsync(targetPath, cancellationToken);
                 var newRoot = await CSharpSyntaxTree.ParseText(newText).GetRootAsync(cancellationToken);
-                currentDocument = document.Project.Solution.WithDocumentSyntaxRoot(currentDocument.Id, newRoot).GetDocument(currentDocument.Id);
+                currentDocument = document.Project.Solution.WithDocumentSyntaxRoot(currentDocument.Id, newRoot).GetDocument(currentDocument.Id)!;
             }
             else
             {
@@ -449,10 +449,10 @@ public static partial class MoveMethodsTool
                     var targetSourceText = SourceText.From(targetText, targetEnc);
                     solution = solution.WithDocumentText(targetDocument.Id, targetSourceText);
                 }
-                currentDocument = solution.GetDocument(currentDocument.Id);
+                currentDocument = solution.GetDocument(currentDocument.Id)!;
             }
 
-            RefactoringHelpers.UpdateSolutionCache(currentDocument);
+            RefactoringHelpers.UpdateSolutionCache(currentDocument!);
             messages.Add(message);
         }
 
