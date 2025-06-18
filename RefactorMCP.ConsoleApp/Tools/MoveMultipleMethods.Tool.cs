@@ -89,6 +89,10 @@ public static partial class MoveMultipleMethodsTool
             if (methodNames.Length == 0)
                 throw new McpException("Error: No method names provided");
 
+            // Check upfront if any methods have already been moved
+            foreach (var methodName in methodNames)
+                MoveMethodsTool.EnsureNotAlreadyMoved(filePath, methodName);
+
             var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
             var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
 
@@ -140,18 +144,26 @@ public static partial class MoveMultipleMethodsTool
 
                 foreach (var idx in orderedIndices)
                 {
-                    var result = await MoveSingleMethod(
-                        currentDoc,
-                        sourceClass,
-                        methodNames[idx],
-                        isStatic[idx],
-                        targetClass,
-                        accessMemberName,
-                        accessMemberTypes[idx],
-                        targetPath);
-                    currentDoc = result.updatedDocument;
-                    moved.Add((document.FilePath!, methodNames[idx]));
-                    results.Add(result.message);
+                    try
+                    {
+                        var result = await MoveSingleMethod(
+                            currentDoc,
+                            sourceClass,
+                            methodNames[idx],
+                            isStatic[idx],
+                            targetClass,
+                            accessMemberName,
+                            accessMemberTypes[idx],
+                            targetPath);
+                        currentDoc = result.updatedDocument;
+                        moved.Add((document.FilePath!, methodNames[idx]));
+                        results.Add(result.message);
+                    }
+                    catch (Exception ex)
+                    {
+                        results.Add($"Error moving method '{methodNames[idx]}': {ex.Message}");
+                        // Don't add to moved list if the operation failed
+                    }
                 }
 
                 foreach (var (file, method) in moved)
