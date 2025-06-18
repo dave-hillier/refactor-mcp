@@ -31,7 +31,8 @@ public static class RenameSymbolTool
             if (symbol == null)
                 throw new McpException($"Error: Symbol '{oldName}' not found");
 
-            var renamed = await Renamer.RenameSymbolAsync(solution, symbol, newName, solution.Workspace.Options);
+            var options = new SymbolRenameOptions();
+            var renamed = await Renamer.RenameSymbolAsync(solution, symbol, options, newName, cancellationToken: default);
             var changes = renamed.GetChanges(solution);
             foreach (var projectChange in changes.GetProjectChanges())
             {

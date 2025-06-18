@@ -52,8 +52,8 @@ public static class CleanupUsingsTool
             .OfType<UsingDirectiveSyntax>()
             .ToList();
 
-        var newRoot = root.RemoveNodes(unused, SyntaxRemoveOptions.KeepNoTrivia);
-        var formatted = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
+        var newRoot = root!.RemoveNodes(unused, SyntaxRemoveOptions.KeepNoTrivia);
+        var formatted = Formatter.Format(newRoot!, RefactoringHelpers.SharedWorkspace);
         var encoding = await RefactoringHelpers.GetFileEncodingAsync(document.FilePath!);
         await File.WriteAllTextAsync(document.FilePath!, formatted.ToFullString(), encoding);
 
