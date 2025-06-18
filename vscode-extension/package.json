@@ -3,7 +3,7 @@
   "displayName": "Refactor MCP",
   "description": "Invoke RefactorMCP refactoring tools from VS Code",
   "version": "0.0.1",
-  "publisher": "your-name",
+  "publisher": "dave-hillier",
   "engines": {
     "vscode": "^1.89.0"
   },
