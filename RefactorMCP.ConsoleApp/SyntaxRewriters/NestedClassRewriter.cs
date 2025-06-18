@@ -63,6 +63,8 @@ internal class NestedClassRewriter : CSharpSyntaxRewriter
         var parent = node.Parent;
         return (parent is VariableDeclarationSyntax v && v.Type == node)
             || (parent is ParameterSyntax p && p.Type == node)
+            || (parent is MethodDeclarationSyntax md && md.ReturnType == node)
+            || (parent is LocalFunctionStatementSyntax lf && lf.ReturnType == node)
             || (parent is ObjectCreationExpressionSyntax o && o.Type == node)
             || (parent is ForEachStatementSyntax f && f.Type == node)
             || (parent is ForEachVariableStatementSyntax fv && fv.Variable == node)
