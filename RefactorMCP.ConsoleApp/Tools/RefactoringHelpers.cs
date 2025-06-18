@@ -79,6 +79,10 @@ internal static class RefactoringHelpers
         if (!string.IsNullOrEmpty(solutionPath))
         {
             SolutionCache.Set(solutionPath!, updatedDocument.Project.Solution);
+            if (!string.IsNullOrEmpty(updatedDocument.FilePath))
+            {
+                _ = MetricsProvider.RefreshFileMetrics(solutionPath!, updatedDocument.FilePath!);
+            }
         }
     }
 
