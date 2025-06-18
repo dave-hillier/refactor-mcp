@@ -1021,6 +1021,12 @@ This URI returns metrics for the `Calculate` method. Omitting the method name
 returns metrics for the whole class, and specifying only the file gives all
 classes and methods.
 
+Metrics are cached in `.refactor-mcp/metrics/` once a solution is loaded. The path mirrors the solution's folder structure. For example after running `load-solution` on `RefactorMCP.sln` metrics for `RefactorMCP.Tests/ExampleCode.cs` are written to:
+
+```text
+.refactor-mcp/metrics/RefactorMCP.Tests/ExampleCode.cs.json
+```
+
 ## Summary Resource
 
 Retrieve a file with method bodies omitted using the `summary://` scheme:

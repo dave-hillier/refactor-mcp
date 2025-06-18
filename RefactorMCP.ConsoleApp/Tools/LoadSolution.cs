@@ -37,6 +37,9 @@ public static class LoadSolutionTool
 
             RefactoringHelpers.SolutionCache.Set(solutionPath, solution);
 
+            var metricsDir = Path.Combine(Path.GetDirectoryName(solutionPath)!, ".refactor-mcp", "metrics");
+            Directory.CreateDirectory(metricsDir);
+
             var projects = solution.Projects.Select(p => p.Name).ToList();
             var message = $"Successfully loaded solution '{Path.GetFileName(solutionPath)}' with {projects.Count} projects: {string.Join(", ", projects)}";
             progress?.Report(message);
