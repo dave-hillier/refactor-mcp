@@ -22,7 +22,7 @@ public static partial class MoveMethodsTool
     private static string GetKey(string filePath, string methodName) =>
         $"{Path.GetFullPath(filePath)}::{methodName}";
 
-    private static void EnsureNotAlreadyMoved(string filePath, string methodName)
+    internal static void EnsureNotAlreadyMoved(string filePath, string methodName)
     {
         if (_movedMethods.Contains(GetKey(filePath, methodName)))
         {
