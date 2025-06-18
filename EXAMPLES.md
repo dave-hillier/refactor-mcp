@@ -1038,8 +1038,8 @@ The returned text begins with `// summary://...` and shows each method body as `
 
 ## Playback Log
 
-After each CLI tool invocation, the parameters are appended to `tool-call-log.jsonl`. Replay them with:
+After each CLI tool invocation, the parameters are appended to `.refactor-mcp/tool-call-log.jsonl`. Replay them with:
 
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --cli play-log ./tool-call-log.jsonl
+dotnet run --project RefactorMCP.ConsoleApp -- --cli play-log ./.refactor-mcp/tool-call-log.jsonl
 ```
