@@ -12,24 +12,13 @@ using System.IO;
 public static class MetricsProvider
 {
     private static readonly MemoryCache _cache = new(new MemoryCacheOptions());
-    private static string CacheFilePath => Path.Combine(Directory.GetCurrentDirectory(), "codeMetricsCache.json");
 
-    static MetricsProvider()
+    private static string GetMetricsFilePath(string solutionPath, string filePath)
     {
-        if (File.Exists(CacheFilePath))
-        {
-            try
-            {
-                var text = File.ReadAllText(CacheFilePath);
-                var dict = JsonSerializer.Deserialize<Dictionary<string, string>>(text) ?? new();
-                foreach (var kv in dict)
-                    _cache.Set(kv.Key, kv.Value);
-            }
-            catch
-            {
-                // ignore corrupted cache
-            }
-        }
+        var solutionDir = Path.GetDirectoryName(solutionPath)!;
+        var relative = Path.GetRelativePath(solutionDir, filePath);
+        var metricsPath = Path.Combine(solutionDir, ".refactor-mcp", "metrics", relative);
+        return Path.ChangeExtension(metricsPath, ".json");
     }
 
     public static async Task<string> GetFileMetrics(
@@ -39,8 +28,17 @@ public static class MetricsProvider
         try
         {
             var key = $"{solutionPath}|{filePath}";
+
             if (_cache.TryGetValue(key, out string? cached))
                 return cached!;
+
+            var metricsFile = GetMetricsFilePath(solutionPath, filePath);
+            if (File.Exists(metricsFile))
+            {
+                var fromDisk = await File.ReadAllTextAsync(metricsFile);
+                _cache.Set(key, fromDisk);
+                return fromDisk;
+            }
 
             var (tree, model) = await LoadTreeAndModel(solutionPath, filePath);
             var root = await tree.GetRootAsync();
@@ -51,21 +49,11 @@ public static class MetricsProvider
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             });
             _cache.Set(key, json);
+
             try
             {
-                Dictionary<string, string> disk;
-                if (File.Exists(CacheFilePath))
-                {
-                    var text = await File.ReadAllTextAsync(CacheFilePath);
-                    disk = JsonSerializer.Deserialize<Dictionary<string, string>>(text) ?? new();
-                }
-                else
-                {
-                    disk = new();
-                }
-                disk[key] = json;
-                var diskJson = JsonSerializer.Serialize(disk, new JsonSerializerOptions { WriteIndented = true });
-                await File.WriteAllTextAsync(CacheFilePath, diskJson);
+                Directory.CreateDirectory(Path.GetDirectoryName(metricsFile)!);
+                await File.WriteAllTextAsync(metricsFile, json);
             }
             catch
             {
@@ -77,6 +65,12 @@ public static class MetricsProvider
         {
             throw new McpException($"Error analyzing metrics: {ex.Message}", ex);
         }
+    }
+
+    public static Task RefreshFileMetrics(string solutionPath, string filePath)
+    {
+        // recompute metrics and update cache/disk
+        return GetFileMetrics(solutionPath, filePath);
     }
 
     private static async Task<(SyntaxTree tree, SemanticModel? model)> LoadTreeAndModel(string solutionPath, string filePath)
