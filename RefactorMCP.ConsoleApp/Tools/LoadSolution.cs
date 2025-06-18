@@ -5,6 +5,7 @@ using Microsoft.CodeAnalysis.MSBuild;
 using Microsoft.Extensions.Caching.Memory;
 using System.ComponentModel;
 using System.IO;
+using System.Collections.Generic;
 using System.Threading;
 
 
@@ -23,6 +24,11 @@ public static class LoadSolutionTool
             {
                 throw new McpException($"Error: Solution file not found at {solutionPath}");
             }
+
+            var logDir = Path.Combine(Path.GetDirectoryName(solutionPath)!, ".refactor-mcp");
+            ToolCallLogger.SetLogDirectory(logDir);
+            ToolCallLogger.Log(nameof(LoadSolution), new Dictionary<string, string?> { ["solutionPath"] = solutionPath });
+
             Directory.SetCurrentDirectory(Path.GetDirectoryName(solutionPath)!);
             progress?.Report($"Loading {solutionPath}");
 

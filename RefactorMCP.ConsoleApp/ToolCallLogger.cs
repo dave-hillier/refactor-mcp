@@ -9,10 +9,20 @@ using ModelContextProtocol.Server;
 
 internal static class ToolCallLogger
 {
-    private const string DefaultLogFile = "tool-call-log.jsonl";
+    private static string _logFile = "tool-call-log.jsonl";
+
+    public static string DefaultLogFile => _logFile;
+
+    public static void SetLogDirectory(string directory)
+    {
+        _logFile = Path.Combine(directory, "tool-call-log.jsonl");
+    }
 
     public static void Log(string toolName, Dictionary<string, string?> parameters, string? logFile = null)
     {
+        var file = logFile ?? DefaultLogFile;
+        Directory.CreateDirectory(Path.GetDirectoryName(file)!);
+
         var record = new ToolCallRecord
         {
             Tool = toolName,
@@ -20,7 +30,7 @@ internal static class ToolCallLogger
             Timestamp = DateTime.UtcNow
         };
         var json = JsonSerializer.Serialize(record);
-        File.AppendAllText(logFile ?? DefaultLogFile, json + Environment.NewLine);
+        File.AppendAllText(file, json + Environment.NewLine);
     }
 
     public static async Task Playback(string logFilePath)
