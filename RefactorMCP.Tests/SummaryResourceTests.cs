@@ -1,3 +1,4 @@
+using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -8,7 +9,7 @@ public class SummaryResourceTests : TestBase
     [Fact]
     public async Task GetSummary_OmitsMethodBodies()
     {
-        var result = await SummaryResources.GetSummary(ExampleFilePath);
+        var result = await SummaryResources.GetSummary(ExampleFilePath, CancellationToken.None);
         Assert.Contains("public int Calculate(int a, int b)\n        {}", result);
         Assert.DoesNotContain("throw new ArgumentException", result);
     }
