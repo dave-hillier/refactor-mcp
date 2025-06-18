@@ -90,7 +90,7 @@ public static class ConvertToExtensionMethodTool
         }
         else
         {
-            var duplicateDoc = await RefactoringHelpers.FindClassInSolution(document.Project.Solution, extClassName, document.FilePath);
+            var duplicateDoc = await RefactoringHelpers.FindClassInSolution(document.Project.Solution, extClassName, document.FilePath!);
             if (duplicateDoc != null)
                 throw new McpException($"Error: Class {extClassName} already exists in {duplicateDoc.FilePath}");
             var extensionClassDecl = SyntaxFactory.ClassDeclaration(extClassName)

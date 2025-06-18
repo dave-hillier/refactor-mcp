@@ -703,10 +703,10 @@ public static partial class MoveMethodsTool
         SyntaxNode targetRoot,
         string? namespaceName = null)
     {
-        var sourceCompilationUnit = (CompilationUnitSyntax)sourceRoot;
+        var sourceCompilationUnit = sourceRoot as CompilationUnitSyntax ?? throw new InvalidOperationException("Expected compilation unit");
         var sourceUsings = sourceCompilationUnit.Usings.ToList();
 
-        var targetCompilationUnit = (CompilationUnitSyntax)targetRoot;
+        var targetCompilationUnit = targetRoot as CompilationUnitSyntax ?? throw new InvalidOperationException("Expected compilation unit");
         var targetUsingNames = targetCompilationUnit.Usings
             .Select(u => u.Name.ToString())
             .ToHashSet();

@@ -91,7 +91,7 @@ public static class InlineMethodTool
             .OfType<MethodDeclarationSyntax>()
             .First(m => m.Identifier.ValueText == methodName && m.ParameterList.Parameters.Count == 0);
         newRoot = newRoot.RemoveNode(updatedMethod, SyntaxRemoveOptions.KeepNoTrivia);
-        var formatted = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
+        var formatted = Formatter.Format(newRoot!, RefactoringHelpers.SharedWorkspace);
         return formatted.ToFullString();
     }
 

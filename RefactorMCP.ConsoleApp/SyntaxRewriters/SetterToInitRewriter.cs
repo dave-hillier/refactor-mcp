@@ -13,7 +13,7 @@ internal class SetterToInitRewriter : CSharpSyntaxRewriter
         _propertyName = propertyName;
     }
 
-    public override SyntaxNode VisitPropertyDeclaration(PropertyDeclarationSyntax node)
+    public override SyntaxNode? VisitPropertyDeclaration(PropertyDeclarationSyntax node)
     {
         if (node.Identifier.ValueText != _propertyName)
             return base.VisitPropertyDeclaration(node);
@@ -24,7 +24,7 @@ internal class SetterToInitRewriter : CSharpSyntaxRewriter
 
         var initAccessor = SyntaxFactory.AccessorDeclaration(SyntaxKind.InitAccessorDeclaration)
             .WithSemicolonToken(setter.SemicolonToken);
-        var newAccessorList = node.AccessorList.ReplaceNode(setter, initAccessor);
+        var newAccessorList = node.AccessorList!.ReplaceNode(setter, initAccessor);
         return node.WithAccessorList(newAccessorList);
     }
 }
