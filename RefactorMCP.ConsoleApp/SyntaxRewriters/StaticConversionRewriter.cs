@@ -65,7 +65,40 @@ internal class StaticConversionRewriter
             var newParameters = method.ParameterList.Parameters.InsertRange(0, _parameters);
             result = result.WithParameterList(method.ParameterList.WithParameters(newParameters));
         }
+        result = AstTransformations.EnsureStaticModifier(result);
 
-        return AstTransformations.EnsureStaticModifier(result);
+        if (result.ExplicitInterfaceSpecifier != null)
+        {
+            // Remove explicit interface implementation when converting to static
+            result = result.WithExplicitInterfaceSpecifier(null)
+                           .WithIdentifier(result.Identifier.WithoutTrivia())
+                           .WithTriviaFrom(result);
+
+            if (!result.Modifiers.Any(m =>
+                    m.IsKind(SyntaxKind.PublicKeyword) ||
+                    m.IsKind(SyntaxKind.InternalKeyword) ||
+                    m.IsKind(SyntaxKind.ProtectedKeyword) ||
+                    m.IsKind(SyntaxKind.PrivateKeyword)))
+            {
+                SyntaxToken accessToken = SyntaxFactory.Token(SyntaxKind.PublicKeyword);
+
+                if (_semanticModel != null)
+                {
+                    var ifaceSymbol = _semanticModel.GetSymbolInfo(method.ExplicitInterfaceSpecifier!.Name).Symbol as INamedTypeSymbol;
+                    accessToken = ifaceSymbol?.DeclaredAccessibility switch
+                    {
+                        Accessibility.Internal => SyntaxFactory.Token(SyntaxKind.InternalKeyword),
+                        Accessibility.Private => SyntaxFactory.Token(SyntaxKind.PrivateKeyword),
+                        Accessibility.Protected => SyntaxFactory.Token(SyntaxKind.ProtectedKeyword),
+                        Accessibility.ProtectedAndInternal or Accessibility.ProtectedOrInternal => SyntaxFactory.Token(SyntaxKind.InternalKeyword),
+                        _ => SyntaxFactory.Token(SyntaxKind.PublicKeyword)
+                    };
+                }
+
+                result = result.WithModifiers(result.Modifiers.Insert(0, accessToken));
+            }
+        }
+
+        return result;
     }
 }
