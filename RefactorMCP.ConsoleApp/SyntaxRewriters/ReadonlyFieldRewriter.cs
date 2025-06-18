@@ -16,7 +16,7 @@ internal class ReadonlyFieldRewriter : CSharpSyntaxRewriter
         _initializer = initializer;
     }
 
-    public override SyntaxNode VisitFieldDeclaration(FieldDeclarationSyntax node)
+    public override SyntaxNode? VisitFieldDeclaration(FieldDeclarationSyntax node)
     {
         var variable = node.Declaration.Variables.FirstOrDefault(v => v.Identifier.ValueText == _fieldName);
         if (variable == null)
@@ -31,9 +31,9 @@ internal class ReadonlyFieldRewriter : CSharpSyntaxRewriter
         return node.WithDeclaration(newDecl).WithModifiers(modifiers);
     }
 
-    public override SyntaxNode VisitConstructorDeclaration(ConstructorDeclarationSyntax node)
+    public override SyntaxNode? VisitConstructorDeclaration(ConstructorDeclarationSyntax node)
     {
-        var visited = (ConstructorDeclarationSyntax)base.VisitConstructorDeclaration(node);
+        var visited = (ConstructorDeclarationSyntax)base.VisitConstructorDeclaration(node)!;
         if (_initializer != null)
         {
             var assignment = SyntaxFactory.ExpressionStatement(
