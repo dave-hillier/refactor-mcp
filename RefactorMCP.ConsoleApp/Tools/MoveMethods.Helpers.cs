@@ -80,20 +80,37 @@ public static partial class MoveMethodsTool
     private static HashSet<string> GetInstanceMemberNames(ClassDeclarationSyntax originClass)
     {
         var knownMembers = new HashSet<string>();
-        foreach (var member in originClass.Members)
+        var root = originClass.SyntaxTree.GetRoot();
+
+        while (originClass != null)
         {
-            if (member is FieldDeclarationSyntax field)
+            foreach (var member in originClass.Members)
             {
-                foreach (var variable in field.Declaration.Variables)
+                if (member is FieldDeclarationSyntax field)
                 {
-                    knownMembers.Add(variable.Identifier.ValueText);
+                    foreach (var variable in field.Declaration.Variables)
+                    {
+                        knownMembers.Add(variable.Identifier.ValueText);
+                    }
+                }
+                else if (member is PropertyDeclarationSyntax property)
+                {
+                    knownMembers.Add(property.Identifier.ValueText);
                 }
             }
-            else if (member is PropertyDeclarationSyntax property)
-            {
-                knownMembers.Add(property.Identifier.ValueText);
-            }
+
+            var baseIdentifier = originClass.BaseList?.Types
+                .Select(t => t.Type)
+                .OfType<IdentifierNameSyntax>()
+                .FirstOrDefault();
+
+            originClass = baseIdentifier != null
+                ? root.DescendantNodes()
+                    .OfType<ClassDeclarationSyntax>()
+                    .FirstOrDefault(c => c.Identifier.ValueText == baseIdentifier.Identifier.ValueText)
+                : null;
         }
+
         return knownMembers;
     }
 
