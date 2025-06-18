@@ -28,7 +28,7 @@ internal class NestedClassRewriter : CSharpSyntaxRewriter
                 return qualified.WithTriviaFrom(node);
             }
 
-            if (IsTypeContext(node))
+            if (IsTypeContext(node) || parent is TypeArgumentListSyntax)
             {
                 var qualified = SyntaxFactory.QualifiedName(
                     SyntaxFactory.IdentifierName(_outerClass),

@@ -9,7 +9,7 @@ namespace RefactorMCP.Tests;
 
 public class MoveMultipleMethodsBugTests : TestBase
 {
-    [Fact(Skip = "Demonstrates bug: MoveMultipleMethods fails with nested class generics")]
+    [Fact]
     public async Task MoveMultipleMethods_NestedClassGenerics_Fails()
     {
         UnloadSolutionTool.ClearSolutionCache();
@@ -22,7 +22,7 @@ public class Outer
     public int CountList(List<Inner> items) => items.Count;
 }
 public class Target { }";
-        await File.WriteAllTextAsync(testFile, code);
+        await TestUtilities.CreateTestFile(testFile, code);
         await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
         var solution = await RefactoringHelpers.GetOrLoadSolution(SolutionPath);
         var project = solution.Projects.First();

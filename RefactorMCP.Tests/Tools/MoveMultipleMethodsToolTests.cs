@@ -12,7 +12,7 @@ public class MoveMultipleMethodsToolTests : TestBase
     {
         UnloadSolutionTool.ClearSolutionCache();
         var testFile = Path.Combine(TestOutputPath, "MoveMultiFailHistory.cs");
-        File.Copy(ExampleFilePath, testFile, true);
+        await TestUtilities.CreateTestFile(testFile, File.ReadAllText(ExampleFilePath));
         await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
         var solution = await RefactoringHelpers.GetOrLoadSolution(SolutionPath);
         var project = solution.Projects.First();
