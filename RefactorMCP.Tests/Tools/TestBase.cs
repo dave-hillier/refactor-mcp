@@ -7,7 +7,8 @@ public abstract class TestBase : IDisposable
 {
     protected static readonly string SolutionPath = TestUtilities.GetSolutionPath();
     protected static readonly string ExampleFilePath = Path.Combine(Path.GetDirectoryName(SolutionPath)!, "RefactorMCP.Tests", "ExampleCode.cs");
-    protected const string TestOutputPath = "./RefactorMCP.Tests/TestOutput";
+    protected static readonly string TestOutputPath =
+        Path.Combine(Path.GetDirectoryName(SolutionPath)!, "RefactorMCP.Tests", "TestOutput");
 
     protected TestBase()
     {

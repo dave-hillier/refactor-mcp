@@ -22,7 +22,7 @@ public static partial class MoveMethodsTool
     private static string GetKey(string filePath, string methodName) =>
         $"{Path.GetFullPath(filePath)}::{methodName}";
 
-    private static void EnsureNotAlreadyMoved(string filePath, string methodName)
+    internal static void EnsureNotAlreadyMoved(string filePath, string methodName)
     {
         if (_movedMethods.Contains(GetKey(filePath, methodName)))
         {
@@ -238,6 +238,10 @@ public static partial class MoveMethodsTool
     {
         try
         {
+            filePath = Path.GetFullPath(filePath);
+            if (targetFilePath != null)
+                targetFilePath = Path.GetFullPath(targetFilePath);
+
             var methodList = methodNames.Split(',').Select(m => m.Trim()).Where(m => m.Length > 0).ToArray();
             if (methodList.Length == 0)
                 throw new McpException("Error: No method names provided");
@@ -256,7 +260,7 @@ public static partial class MoveMethodsTool
             if (duplicateDoc != null)
                 throw new McpException($"Error: Class {targetClass} already exists in {duplicateDoc.FilePath}");
 
-            if (document == null && !File.Exists(filePath))
+            if (document == null && !File.Exists(Path.GetFullPath(filePath)))
                 throw new McpException($"Error: File {filePath} not found");
 
             SyntaxNode? rootNode = document != null
@@ -325,7 +329,7 @@ public static partial class MoveMethodsTool
         IProgress<string>? progress,
         CancellationToken cancellationToken)
     {
-        if (!File.Exists(filePath))
+        if (!File.Exists(Path.GetFullPath(filePath)))
             throw new McpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
 
         var targetPath = targetFilePath ?? filePath;
