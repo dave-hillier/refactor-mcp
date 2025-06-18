@@ -9,6 +9,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Text;
+using RefactorMCP.ConsoleApp.SyntaxRewriters;
 
 public static partial class MoveMethodsTool
 {
@@ -29,6 +30,7 @@ public static partial class MoveMethodsTool
         public MethodDeclarationSyntax MovedMethod { get; set; } = null!;
         public MethodDeclarationSyntax StubMethod { get; set; } = null!;
         public MemberDeclarationSyntax? AccessMember { get; set; }
+        public MethodDeclarationSyntax? BaseWrapper { get; set; }
         public bool NeedsThisParameter { get; set; }
         public string? Namespace { get; set; }
     }
@@ -276,7 +278,13 @@ public static partial class MoveMethodsTool
         bool hasThisUsage = method.DescendantNodes()
             .OfType<ThisExpressionSyntax>()
             .Any(t => t.Parent is not MemberAccessExpressionSyntax);
-        bool needsThisParameter = hasThisUsage || usesInstanceMembers || callsOtherMethods || isRecursive;
+        bool callsBase = method.DescendantNodes()
+            .OfType<InvocationExpressionSyntax>()
+            .Any(inv => inv.Expression is MemberAccessExpressionSyntax ma &&
+                        ma.Expression is BaseExpressionSyntax &&
+                        ma.Name is IdentifierNameSyntax id &&
+                        id.Identifier.ValueText == methodName);
+        bool needsThisParameter = hasThisUsage || usesInstanceMembers || callsOtherMethods || isRecursive || callsBase;
 
         var otherMethodNames = new HashSet<string>(methodNames);
         otherMethodNames.Remove(methodName);
@@ -289,6 +297,8 @@ public static partial class MoveMethodsTool
         bool isVoid = method.ReturnType is PredefinedTypeSyntax pts &&
                        pts.Keyword.IsKind(SyntaxKind.VoidKeyword);
         var typeParameters = method.TypeParameterList;
+
+        MethodDeclarationSyntax? baseWrapper = callsBase ? CreateBaseWrapper(method) : null;
 
         var paramMap = usedPrivateFields.ToDictionary(n => n, n => n.TrimStart('_'));
         var injectedParameters = paramMap
@@ -310,6 +320,12 @@ public static partial class MoveMethodsTool
             injectedParameters,
             paramMap);
         transformedMethod = EnsureMethodIsInternal(transformedMethod);
+
+        if (callsBase && baseWrapper != null)
+        {
+            var rewriter = new BaseCallRewriter(methodName, "@this", baseWrapper.Identifier.ValueText);
+            transformedMethod = (MethodDeclarationSyntax)rewriter.Visit(transformedMethod)!;
+        }
 
         var collector = new CalledMethodCollector(methodNames);
         collector.Visit(method);
@@ -342,7 +358,7 @@ public static partial class MoveMethodsTool
             }
         }
 
-        var updatedSourceRoot = UpdateSourceClassWithStub(originClass, method, stubMethod, accessMember, dependencyUpdates);
+        var updatedSourceRoot = UpdateSourceClassWithStub(originClass, method, stubMethod, accessMember, dependencyUpdates, baseWrapper);
 
         var ns = (originClass.Parent as NamespaceDeclarationSyntax)?.Name.ToString()
                  ?? (originClass.Parent as FileScopedNamespaceDeclarationSyntax)?.Name.ToString();
@@ -353,6 +369,7 @@ public static partial class MoveMethodsTool
             MovedMethod = transformedMethod,
             StubMethod = stubMethod,
             AccessMember = accessMember,
+            BaseWrapper = baseWrapper,
             NeedsThisParameter = needsThisParameter,
             Namespace = ns
         };
@@ -598,12 +615,40 @@ public static partial class MoveMethodsTool
         return SyntaxFactory.ReturnStatement(returnExpression);
     }
 
+    private static MethodDeclarationSyntax CreateBaseWrapper(MethodDeclarationSyntax method)
+    {
+        var wrapperName = "Base" + method.Identifier.ValueText;
+        var invocationArgs = method.ParameterList.Parameters
+            .Select(p => SyntaxFactory.Argument(SyntaxFactory.IdentifierName(p.Identifier)));
+        var invocation = SyntaxFactory.InvocationExpression(
+                SyntaxFactory.MemberAccessExpression(
+                    SyntaxKind.SimpleMemberAccessExpression,
+                    SyntaxFactory.BaseExpression(),
+                    SyntaxFactory.IdentifierName(method.Identifier)))
+            .WithArgumentList(SyntaxFactory.ArgumentList(SyntaxFactory.SeparatedList(invocationArgs)));
+
+        StatementSyntax call = method.ReturnType is PredefinedTypeSyntax pts && pts.Keyword.IsKind(SyntaxKind.VoidKeyword)
+            ? SyntaxFactory.ExpressionStatement(invocation)
+            : SyntaxFactory.ReturnStatement(invocation);
+
+        var mods = method.Modifiers.Where(m => !m.IsKind(SyntaxKind.OverrideKeyword)
+                                              && !m.IsKind(SyntaxKind.VirtualKeyword)
+                                              && !m.IsKind(SyntaxKind.AbstractKeyword));
+
+        return method.WithIdentifier(SyntaxFactory.Identifier(wrapperName))
+            .WithModifiers(SyntaxFactory.TokenList(mods))
+            .WithBody(SyntaxFactory.Block(call))
+            .WithExpressionBody(null)
+            .WithSemicolonToken(default);
+    }
+
     private static SyntaxNode UpdateSourceClassWithStub(
         ClassDeclarationSyntax sourceClass,
         MethodDeclarationSyntax originalMethod,
         MethodDeclarationSyntax stubMethod,
         MemberDeclarationSyntax? accessMember,
-        Dictionary<string, MethodDeclarationSyntax>? dependencyUpdates = null)
+        Dictionary<string, MethodDeclarationSyntax>? dependencyUpdates = null,
+        MethodDeclarationSyntax? baseWrapper = null)
     {
         var originMembers = sourceClass.Members.ToList();
 
@@ -617,6 +662,14 @@ public static partial class MoveMethodsTool
         if (methodIndex >= 0)
         {
             originMembers[methodIndex] = stubMethod;
+            if (baseWrapper != null)
+            {
+                originMembers.Insert(methodIndex + 1, baseWrapper);
+            }
+        }
+        else if (baseWrapper != null)
+        {
+            originMembers.Add(baseWrapper);
         }
 
         if (dependencyUpdates != null)
