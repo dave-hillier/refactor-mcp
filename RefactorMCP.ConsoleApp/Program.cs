@@ -115,7 +115,8 @@ static RootCommand BuildCliRoot()
                 }
             }
 
-            ToolCallLogger.Log(method.Name, rawValues);
+            if (!string.Equals(method.Name, nameof(LoadSolutionTool.LoadSolution)))
+                ToolCallLogger.Log(method.Name, rawValues);
 
             var result = method.Invoke(null, values);
             if (result is Task<string> taskStr)
@@ -231,7 +232,8 @@ static async Task RunJsonMode(string[] args)
         }
     }
 
-    ToolCallLogger.Log(method.Name, rawValues);
+    if (!string.Equals(method.Name, nameof(LoadSolutionTool.LoadSolution)))
+        ToolCallLogger.Log(method.Name, rawValues);
 
     try
     {
