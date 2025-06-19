@@ -115,9 +115,6 @@ static RootCommand BuildCliRoot()
                 }
             }
 
-            if (!string.Equals(method.Name, nameof(LoadSolutionTool.LoadSolution)))
-                ToolCallLogger.Log(method.Name, rawValues);
-
             var result = method.Invoke(null, values);
             if (result is Task<string> taskStr)
                 Console.WriteLine(await taskStr);
@@ -174,6 +171,8 @@ static async Task RunJsonMode(string[] args)
         Console.WriteLine("Usage: --json <ToolName> '{\"param\":\"value\"}'");
         return;
     }
+
+    ToolCallLogger.RestoreFromEnvironment();
 
     var toolName = args[1];
     var json = string.Join(" ", args.Skip(2));

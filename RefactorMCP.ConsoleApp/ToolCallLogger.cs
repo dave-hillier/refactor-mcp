@@ -9,6 +9,7 @@ using ModelContextProtocol.Server;
 
 internal static class ToolCallLogger
 {
+    private const string LogDirEnvVar = "REFACTOR_MCP_LOG_DIR";
     private static string _logFile = "tool-call-log.jsonl";
 
     public static string DefaultLogFile => _logFile;
@@ -16,6 +17,14 @@ internal static class ToolCallLogger
     public static void SetLogDirectory(string directory)
     {
         _logFile = Path.Combine(directory, "tool-call-log.jsonl");
+        Environment.SetEnvironmentVariable(LogDirEnvVar, directory);
+    }
+
+    public static void RestoreFromEnvironment()
+    {
+        var dir = Environment.GetEnvironmentVariable(LogDirEnvVar);
+        if (!string.IsNullOrEmpty(dir))
+            SetLogDirectory(dir);
     }
 
     public static void Log(string toolName, Dictionary<string, string?> parameters, string? logFile = null)
