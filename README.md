@@ -21,7 +21,7 @@ The project includes the following refactorings and helpers:
 - LoadSolution / UnloadSolution
 - MakeFieldReadonly
 - MoveClassToFile
-- MoveMethods
+- MoveMethods (protected override methods cannot be moved)
 - MoveMultipleMethods
 - RenameSymbol
 - SafeDelete

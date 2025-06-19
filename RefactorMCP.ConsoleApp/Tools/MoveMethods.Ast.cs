@@ -41,6 +41,9 @@ public static partial class MoveMethodsTool
         string targetClass)
     {
         var method = FindStaticMethod(sourceRoot, methodName);
+        if (method.Modifiers.Any(SyntaxKind.ProtectedKeyword) &&
+            method.Modifiers.Any(SyntaxKind.OverrideKeyword))
+            throw new McpException($"Error: Cannot move protected override method '{methodName}'");
         var sourceClass = FindSourceClassForMethod(sourceRoot, method);
         var methodNames = GetMethodNames(sourceClass);
         var collector = new CalledMethodCollector(methodNames);
@@ -257,6 +260,9 @@ public static partial class MoveMethodsTool
     {
         var originClass = FindSourceClass(sourceRoot, sourceClass);
         var method = FindMethodInClass(originClass, methodName);
+        if (method.Modifiers.Any(SyntaxKind.ProtectedKeyword) &&
+            method.Modifiers.Any(SyntaxKind.OverrideKeyword))
+            throw new McpException($"Error: Cannot move protected override method '{methodName}'");
 
         var nestedClassNames = GetNestedClassNames(originClass);
 
