@@ -55,6 +55,26 @@ public class MoveInstanceMethodTests : TestBase
     }
 
     [Fact]
+    public async Task MoveInstanceMethod_FailsWhenMethodIsProtectedOverride()
+    {
+        UnloadSolutionTool.ClearSolutionCache();
+        var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "MoveInstanceProtectedOverride.cs"));
+        await TestUtilities.CreateTestFile(testFile, @"public class Base { protected virtual void Do(){} } public class A : Base { protected override void Do(){} } public class B { }");
+        await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
+
+        await Assert.ThrowsAsync<McpException>(() =>
+            MoveMethodsTool.MoveInstanceMethod(
+                SolutionPath,
+                testFile,
+                "A",
+                "Do",
+                "B",
+                null,
+                null,
+                CancellationToken.None));
+    }
+
+    [Fact]
     public async Task MoveInstanceMethod_FailsOnSecondMove()
     {
         UnloadSolutionTool.ClearSolutionCache();

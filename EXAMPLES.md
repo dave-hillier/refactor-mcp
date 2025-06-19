@@ -344,7 +344,7 @@ Running `move-static-method` again on this wrapper will now fail. Use `inline-me
 
 ## 10. Move Instance Method
 
-**Purpose**: Move an instance method to another class while leaving a wrapper behind.
+**Purpose**: Move an instance method to another class while leaving a wrapper behind. Protected override methods cannot be moved and will result in an error.
 
 ### Example
 **Before** (in `ExampleCode.cs` line 69):
