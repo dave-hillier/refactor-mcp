@@ -30,6 +30,8 @@ The project includes the following refactorings and helpers:
 
 Metrics and code summaries are also available via the `metrics://` and `summary://` resource schemes. After loading a solution, metrics are cached under `.refactor-mcp/metrics/` mirroring the project structure so they can be served directly from disk.
 
+`load-solution` sets the `REFACTOR_MCP_LOG_DIR` environment variable so subsequent JSON invocations append their parameters to `.refactor-mcp/tool-call-log.jsonl`. Use `play-log` to replay these calls.
+
 ## Usage
 
 Run the console application directly or start it as an MCP server to integrate with other clients:
