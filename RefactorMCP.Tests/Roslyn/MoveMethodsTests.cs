@@ -208,7 +208,7 @@ public class TargetClass
 
             Assert.Contains("public int GetValue(int value)", formatted);
             Assert.Contains("return value + 2", formatted);
-            Assert.Contains("return _target.GetValue(value)", formatted);
+            Assert.Contains("return _target.GetValue(_value)", formatted);
         }
 
         [Fact]
@@ -239,7 +239,7 @@ public class TargetClass
             var formatted = Formatter.Format(finalRoot, new AdhocWorkspace()).ToFullString();
 
             Assert.Contains("public int GetValue(int value, int n = 5)", formatted);
-            Assert.Contains("_target.GetValue(value, n)", formatted);
+            Assert.Contains("_target.GetValue(_value, n)", formatted);
         }
 
         [Fact]
