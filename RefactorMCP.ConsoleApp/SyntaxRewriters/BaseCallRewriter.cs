@@ -19,10 +19,7 @@ namespace RefactorMCP.ConsoleApp.SyntaxRewriters
 
         public override SyntaxNode VisitInvocationExpression(InvocationExpressionSyntax node)
         {
-            if (node.Expression is MemberAccessExpressionSyntax ma &&
-                ma.Expression is BaseExpressionSyntax &&
-                ma.Name is IdentifierNameSyntax id &&
-                id.Identifier.ValueText == _methodName)
+            if (InvocationHelpers.IsBaseInvocationOf(node, _methodName))
             {
                 var memberAccess = SyntaxFactory.MemberAccessExpression(
                     SyntaxKind.SimpleMemberAccessExpression,
