@@ -1,9 +1,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
 using System.Collections.Generic;
-using System.Linq;
 
 internal class MethodCallRewriter : CSharpSyntaxRewriter
 {
@@ -18,22 +16,18 @@ internal class MethodCallRewriter : CSharpSyntaxRewriter
 
     public override SyntaxNode? VisitInvocationExpression(InvocationExpressionSyntax node)
     {
-        if (node.Expression is IdentifierNameSyntax identifier)
+        if (node.Expression is IdentifierNameSyntax identifier && _classMethodNames.Contains(identifier.Identifier.ValueText))
         {
-            if (_classMethodNames.Contains(identifier.Identifier.ValueText))
-            {
-                var memberAccess = SyntaxFactory.MemberAccessExpression(
-                    SyntaxKind.SimpleMemberAccessExpression,
-                    SyntaxFactory.IdentifierName(_parameterName),
-                    identifier);
-
-                return node.WithExpression(memberAccess);
-            }
+            var memberAccess = SyntaxFactory.MemberAccessExpression(
+                SyntaxKind.SimpleMemberAccessExpression,
+                SyntaxFactory.IdentifierName(_parameterName),
+                identifier);
+            return node.WithExpression(memberAccess);
         }
         else if (node.Expression is MemberAccessExpressionSyntax member &&
                  member.Expression is ThisExpressionSyntax &&
-                 member.Name is IdentifierNameSyntax id &&
-                 _classMethodNames.Contains(id.Identifier.ValueText))
+                 InvocationHelpers.GetInvokedMethodName(node) is string name &&
+                 _classMethodNames.Contains(name))
         {
             var updatedMember = member.WithExpression(SyntaxFactory.IdentifierName(_parameterName));
             return node.WithExpression(updatedMember);
@@ -42,4 +36,3 @@ internal class MethodCallRewriter : CSharpSyntaxRewriter
         return base.VisitInvocationExpression(node);
     }
 }
-
