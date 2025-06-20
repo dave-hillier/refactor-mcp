@@ -89,6 +89,14 @@ public static partial class MoveMultipleMethodsTool
             if (methodNames.Length == 0)
                 throw new McpException("Error: No method names provided");
 
+            var dupes = methodNames
+                .GroupBy(m => m)
+                .Where(g => g.Count() > 1)
+                .Select(g => g.Key)
+                .ToList();
+            if (dupes.Count > 0)
+                return $"Error: Duplicate method names are not supported: {string.Join(", ", dupes)}";
+
             // Check upfront if any methods have already been moved
             foreach (var methodName in methodNames)
                 MoveMethodsTool.EnsureNotAlreadyMoved(filePath, methodName);
