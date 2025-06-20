@@ -33,7 +33,6 @@ public static partial class MoveMultipleMethodsTool
         }
         else
         {
-            var model = await document.GetSemanticModelAsync();
             message = await MoveMethodsTool.MoveInstanceMethodInFile(
                 document.FilePath!,
                 sourceClass,
@@ -41,10 +40,7 @@ public static partial class MoveMultipleMethodsTool
                 targetClass,
                 accessMember,
                 accessMemberType,
-                targetPath,
-                null,
-                default,
-                model);
+                targetPath);
         }
 
         var (newText, _) = await RefactoringHelpers.ReadFileWithEncodingAsync(document.FilePath!);
