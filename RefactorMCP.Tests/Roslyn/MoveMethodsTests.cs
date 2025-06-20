@@ -472,11 +472,11 @@ public class B { }";
         {
             var source = @"public class A
 {
-    public enum Kinds { A, B }
+    public enum Kind { A, B }
 
-    public Kinds GetKind()
+    public Kind GetKind()
     {
-        return Kinds.B;
+        return Kind.A;
     }
 }
 
@@ -496,8 +496,8 @@ public class B { }";
             var finalRoot = MoveMethodsTool.AddMethodToTargetClass(result.NewSourceRoot, "B", result.MovedMethod, result.Namespace);
             var formatted = Formatter.Format(finalRoot, new AdhocWorkspace()).ToFullString();
 
-            Assert.Contains("A.Kinds GetKind()", formatted);
-            Assert.Contains("A.Kinds.B", formatted);
+            Assert.Contains("A.Kind GetKind()", formatted);
+            Assert.Contains("A.Kind.A", formatted);
             Assert.Contains("return _b.GetKind()", formatted);
         }
 

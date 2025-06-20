@@ -257,10 +257,8 @@ public static partial class MoveMethodsTool
             .Select(c => c.Identifier.ValueText)
             .ToHashSet();
 
-        foreach (var en in originClass.Members.OfType<EnumDeclarationSyntax>())
-        {
-            names.Add(en.Identifier.ValueText);
-        }
+        foreach (var e in originClass.Members.OfType<EnumDeclarationSyntax>())
+            names.Add(e.Identifier.ValueText);
 
         return names;
     }
