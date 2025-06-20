@@ -1,58 +1,36 @@
 # RefactorMCP
 
-RefactorMCP is a Model Context Protocol server that exposes Roslyn based refactoring tools for C# code. It can run as a standalone MCP server or as a simple command line application.
-
-## Available Tools
-
-The project includes the following refactorings and helpers:
-
-- AnalyzeRefactoringOpportunities
-- ClassLengthMetrics
-- CleanupUsings
-- ConvertToExtensionMethod
-- ConvertToStaticWithInstance
-- ConvertToStaticWithParameters
-- ExtractInterface
-- ExtractMethod
-- InlineMethod
-- IntroduceField
-- IntroduceParameter
-- IntroduceVariable
-- LoadSolution (clears caches and move history) / UnloadSolution
-- MakeFieldReadonly
-- MoveClassToFile
-- MoveMethods (protected override methods cannot be moved)
-- MoveMethods now prefixes inherited members with `@this` when moving
-- MoveMultipleMethods
-- RenameSymbol
-- SafeDelete
-- TransformSetterToInit
-- FeatureFlagRefactor
-- Version
-
-Metrics and code summaries are also available via the `metrics://` and `summary://` resource schemes. After loading a solution, metrics are cached under `.refactor-mcp/metrics/` mirroring the project structure so they can be served directly from disk.
-
-`load-solution` sets the `REFACTOR_MCP_LOG_FILE` environment variable. Each session writes to a timestamped file like `.refactor-mcp/tool-call-log-YYYYMMDDHHMMSS.jsonl`; subsequent JSON invocations append to this file. Use `play-log` to replay these calls.
+RefactorMCP is a Model Context Protocol server that exposes Roslyn-based refactoring tools for C#.
 
 ## Usage
 
-Run the console application directly or start it as an MCP server to integrate with other clients:
+Run the console application directly or host it as an MCP server:
 
 ```bash
 dotnet run --project RefactorMCP.ConsoleApp
 ```
 
-For examples of each tool see [EXAMPLES.md](./EXAMPLES.md).
+For usage examples see [EXAMPLES.md](./EXAMPLES.md).
 
-## Development
+## Available Refactorings
 
-Build and test with the standard .NET tooling:
+- **Extract Method** – create a new method from selected code and replace the original with a call.
+- **Introduce Field/Parameter/Variable** – turn expressions into new members; fails if a field already exists.
+- **Convert to Static** – make instance methods static using parameters or an instance argument.
+- **Move Static Method** – relocate a static method and keep a wrapper in the original class.
+- **Move Instance Method** – move an instance method to another class and delegate from the source.
+- **Make Field Readonly** – move initialization into constructors and mark the field readonly.
+- **Transform Setter to Init** – convert property setters to init-only and initialize in constructors.
+- **Safe Delete** – remove fields or variables only after dependency checks.
+- **Extract Class** – create a new class from selected members and compose it with the original.
+- **Inline Method** – replace calls with the method body and delete the original.
 
-```bash
-dotnet test
-```
+Metrics and summaries are also available via the `metrics://` and `summary://` resource schemes.
 
-Formatting uses `dotnet format`.
+## Contributing
+
+* Run `dotnet test` to ensure all tests pass.
+* Format the code with `dotnet format` before opening a pull request.
 
 ## License
 
