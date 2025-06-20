@@ -135,6 +135,34 @@ public class MoveInstanceMethodTests : TestBase
     }
 
     [Fact]
+    public async Task LoadSolution_ResetsMoveHistory()
+    {
+        UnloadSolutionTool.ClearSolutionCache();
+        var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "LoadSolutionReset.cs"));
+        await TestUtilities.CreateTestFile(testFile, "public class A { public void Do(){} } public class B { }");
+        await LoadSolutionTool.LoadSolution(SolutionPath);
+
+        var result1 = await MoveMethodsTool.MoveInstanceMethod(
+            SolutionPath,
+            testFile,
+            "A",
+            "Do",
+            "B");
+        Assert.Contains("Successfully moved", result1);
+
+        await LoadSolutionTool.LoadSolution(SolutionPath);
+
+        var result2 = await MoveMethodsTool.MoveInstanceMethod(
+            SolutionPath,
+            testFile,
+            "A",
+            "Do",
+            "B");
+
+        Assert.Contains("Successfully moved", result2);
+    }
+
+    [Fact]
     public async Task MoveInstanceMethod_FailureDoesNotRecordHistory()
     {
         UnloadSolutionTool.ClearSolutionCache();
