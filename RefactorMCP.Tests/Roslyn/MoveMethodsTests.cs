@@ -460,6 +460,67 @@ public class Target { }";
 
             Assert.Contains("internal void Helper()", formatted);
         }
+
+        [Fact]
+        public void MoveInstanceMethod_QualifiesInterfaceMethod()
+        {
+            var source = @"
+using System;
+interface IName { string GetName(); }
+class Source : IName
+{
+    public string GetName() => ""N"";
+    public string Print() => GetName();
+}
+
+class Target { }";
+
+            var tree = CSharpSyntaxTree.ParseText(source);
+            var root = tree.GetRoot();
+
+            var result = MoveMethodsTool.MoveInstanceMethodAst(
+                root,
+                "Source",
+                "Print",
+                "Target",
+                "_t",
+                "field");
+
+            var finalRoot = MoveMethodsTool.AddMethodToTargetClass(result.NewSourceRoot, "Target", result.MovedMethod, result.Namespace);
+            var formatted = Formatter.Format(finalRoot, new AdhocWorkspace()).ToFullString();
+
+            Assert.Contains("@this.GetName()", formatted);
+        }
+
+        [Fact]
+        public void MoveInstanceMethod_QualifiesBaseAfterInterface()
+        {
+            var source = @"
+interface IThing { }
+class Base { public int Value; }
+class Derived : IThing, Base
+{
+    public int Read() => Value;
+}
+
+class Target { }";
+
+            var tree = CSharpSyntaxTree.ParseText(source);
+            var root = tree.GetRoot();
+
+            var result = MoveMethodsTool.MoveInstanceMethodAst(
+                root,
+                "Derived",
+                "Read",
+                "Target",
+                "_t",
+                "field");
+
+            var finalRoot = MoveMethodsTool.AddMethodToTargetClass(result.NewSourceRoot, "Target", result.MovedMethod, result.Namespace);
+            var formatted = Formatter.Format(finalRoot, new AdhocWorkspace()).ToFullString();
+
+            Assert.Contains("@this.Value", formatted);
+        }
     }
 }
 
