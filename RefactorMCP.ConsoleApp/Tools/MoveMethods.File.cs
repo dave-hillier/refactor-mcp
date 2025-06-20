@@ -103,7 +103,8 @@ public static partial class MoveMethodsTool
         string accessMemberType,
         string? targetFilePath = null,
         IProgress<string>? progress = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        SemanticModel? semanticModel = null)
     {
         EnsureNotAlreadyMoved(filePath, methodName);
         ValidateFileExists(filePath);
@@ -115,7 +116,7 @@ public static partial class MoveMethodsTool
         var sourceRoot = (await CSharpSyntaxTree.ParseText(sourceText).GetRootAsync(cancellationToken));
 
         var moveResult = MoveInstanceMethodAst(
-            sourceRoot, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
+            sourceRoot, sourceClass, methodName, targetClass, accessMemberName, accessMemberType, semanticModel);
 
         if (sameFile)
         {
