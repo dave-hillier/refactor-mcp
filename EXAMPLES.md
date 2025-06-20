@@ -666,7 +666,7 @@ public class CleanupSample
 
 ## 6. Load Solution (Utility Command)
 
-**Purpose**: Clear previous caches and load a solution file before performing refactorings.
+**Purpose**: Clear previous caches, reset move history, and load a solution file before performing refactorings.
 
 ### Example
 **Command**:
@@ -714,7 +714,7 @@ Cleared all cached solutions
 
 ## Reset Move History (Utility Command)
 
-**Purpose**: Allow previously moved methods to be moved again in the same session.
+**Purpose**: Allow previously moved methods to be moved again in the same session. Loading a solution automatically clears this history.
 
 ### Example
 **Command**:
