@@ -25,6 +25,16 @@ internal static class RefactoringHelpers
     internal static MemoryCache SyntaxTreeCache = new(new MemoryCacheOptions());
     internal static MemoryCache ModelCache = new(new MemoryCacheOptions());
 
+    internal static void ClearAllCaches()
+    {
+        SolutionCache.Dispose();
+        SolutionCache = new MemoryCache(new MemoryCacheOptions());
+        SyntaxTreeCache.Dispose();
+        SyntaxTreeCache = new MemoryCache(new MemoryCacheOptions());
+        ModelCache.Dispose();
+        ModelCache = new MemoryCache(new MemoryCacheOptions());
+    }
+
     private static readonly Lazy<AdhocWorkspace> _workspace =
         new(() => new AdhocWorkspace());
 
