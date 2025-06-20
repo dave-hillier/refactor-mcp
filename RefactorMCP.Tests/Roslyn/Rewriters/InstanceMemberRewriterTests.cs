@@ -26,4 +26,19 @@ public partial class RoslynTransformationTests
         Assert.Contains("inst.Value", result);
         Assert.DoesNotContain("this.Value", result);
     }
+
+    [Fact]
+    public void InstanceMemberRewriter_IgnoresObjectInitializerPropertyNames()
+    {
+        var method = SyntaxFactory.ParseMemberDeclaration(@"void Test(){ var h = new RequestHeaders{ Username = strCurrentOperatorCode, SiteId = ConnectedSiteID, GroupId = ConnectedGroupID }; }") as MethodDeclarationSyntax;
+        var members = new HashSet<string> { "strCurrentOperatorCode", "ConnectedSiteID", "ConnectedGroupID" };
+        var rewriter = new InstanceMemberRewriter("inst", members);
+        var result = rewriter.Visit(method!)!.NormalizeWhitespace().ToFullString();
+        Assert.Contains("Username = inst.strCurrentOperatorCode", result);
+        Assert.Contains("SiteId = inst.ConnectedSiteID", result);
+        Assert.Contains("GroupId = inst.ConnectedGroupID", result);
+        Assert.DoesNotContain("inst.Username", result);
+        Assert.DoesNotContain("inst.SiteId", result);
+        Assert.DoesNotContain("inst.GroupId", result);
+    }
 }
