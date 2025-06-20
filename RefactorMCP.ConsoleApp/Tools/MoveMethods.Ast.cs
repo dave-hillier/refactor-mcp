@@ -256,8 +256,7 @@ public static partial class MoveMethodsTool
         string methodName,
         string targetClass,
         string accessMemberName,
-        string accessMemberType,
-        SemanticModel? semanticModel = null)
+        string accessMemberType)
     {
         var originClass = FindSourceClass(sourceRoot, sourceClass);
         var method = FindMethodInClass(originClass, methodName);
@@ -267,7 +266,7 @@ public static partial class MoveMethodsTool
 
         var nestedClassNames = GetNestedClassNames(originClass);
 
-        var instanceMembers = GetInstanceMemberNames(originClass, semanticModel);
+        var instanceMembers = GetInstanceMemberNames(originClass);
         var methodNames = GetMethodNames(originClass);
         var privateFieldInfos = GetPrivateFieldInfos(originClass);
         var usedPrivateFields = GetUsedPrivateFields(method, new HashSet<string>(privateFieldInfos.Keys));
