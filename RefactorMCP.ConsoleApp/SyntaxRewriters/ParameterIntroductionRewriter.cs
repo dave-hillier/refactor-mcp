@@ -1,5 +1,4 @@
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Editing;
 
@@ -25,15 +24,10 @@ internal class ParameterIntroductionRewriter : ExpressionIntroductionRewriter<Me
         return node.AddParameterListParameters((ParameterSyntax)declaration);
     }
 
-
     public override SyntaxNode VisitInvocationExpression(InvocationExpressionSyntax node)
     {
         var visited = (InvocationExpressionSyntax)base.VisitInvocationExpression(node)!;
-        var isTarget =
-            (visited.Expression is IdentifierNameSyntax id && id.Identifier.ValueText == _methodName) ||
-            (visited.Expression is MemberAccessExpressionSyntax ma && ma.Name.Identifier.ValueText == _methodName);
-
-        if (isTarget)
+        if (InvocationHelpers.IsInvocationOf(visited, _methodName))
         {
             visited = AstTransformations.AddArgument(
                 visited,
@@ -49,7 +43,5 @@ internal class ParameterIntroductionRewriter : ExpressionIntroductionRewriter<Me
         var visited = (MethodDeclarationSyntax)base.VisitMethodDeclaration(node)!;
         bool shouldInsert = node.Identifier.ValueText == _methodName;
         return MaybeInsertDeclaration(node, visited, shouldInsert);
-
     }
 }
-
