@@ -415,6 +415,7 @@ public static partial class MoveMethodsTool
             var targetPath = targetFilePath ?? currentDocument.FilePath!;
             var sameFile = targetPath == currentDocument.FilePath;
 
+            var semanticModel = await currentDocument.GetSemanticModelAsync(cancellationToken);
             var message = await MoveInstanceMethodInFile(
                 currentDocument.FilePath!,
                 sourceClassName,
@@ -424,7 +425,8 @@ public static partial class MoveMethodsTool
                 accessMemberType,
                 targetFilePath,
                 progress,
-                cancellationToken);
+                cancellationToken,
+                semanticModel);
 
             if (sameFile)
             {

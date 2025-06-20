@@ -521,6 +521,41 @@ class Target { }";
 
             Assert.Contains("@this.Value", formatted);
         }
+
+        [Fact]
+        public void MoveInstanceMethod_QualifiesInheritedInterfaceProperty()
+        {
+            var iface = CSharpSyntaxTree.ParseText("interface D { int Value => 1; }");
+            var source = @"class C : D { }
+class B : C { }
+class A : B
+{
+    public int Read() => Value;
+}
+
+class Target { }";
+
+            var tree = CSharpSyntaxTree.ParseText(source);
+            var compilation = CSharpCompilation.Create("t")
+                .AddSyntaxTrees(iface, tree)
+                .AddReferences(MetadataReference.CreateFromFile(typeof(object).Assembly.Location));
+            var model = compilation.GetSemanticModel(tree);
+            var root = tree.GetRoot();
+
+            var result = MoveMethodsTool.MoveInstanceMethodAst(
+                root,
+                "A",
+                "Read",
+                "Target",
+                "_t",
+                "field",
+                model);
+
+            var finalRoot = MoveMethodsTool.AddMethodToTargetClass(result.NewSourceRoot, "Target", result.MovedMethod, result.Namespace);
+            var formatted = Formatter.Format(finalRoot, new AdhocWorkspace()).ToFullString();
+
+            Assert.Contains("@this.Value", formatted);
+        }
     }
 }
 
