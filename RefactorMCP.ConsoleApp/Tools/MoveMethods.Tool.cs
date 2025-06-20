@@ -354,7 +354,7 @@ public static partial class MoveMethodsTool
             var formatted = Formatter.Format(root, RefactoringHelpers.SharedWorkspace);
             await File.WriteAllTextAsync(filePath, formatted.ToFullString(), sourceEncoding, cancellationToken);
             progress?.Report(filePath);
-            var staticHint = suggestStatic ? " At least one moved method has no instance dependencies and could be made static." : string.Empty;
+            var staticHint = suggestStatic ? " At least one moved method had no instance dependencies and was made static." : string.Empty;
             return $"Successfully moved {methodNames.Length} methods from {sourceClass} to {targetClass} in {filePath}. Delegate methods remain in the original class to preserve the interface.{staticHint}";
         }
         else
@@ -390,7 +390,7 @@ public static partial class MoveMethodsTool
             await File.WriteAllTextAsync(targetPath, formattedTarget.ToFullString(), targetEncoding, cancellationToken);
             progress?.Report(targetPath);
 
-            var staticHint2 = suggestStatic2 ? " At least one moved method has no instance dependencies and could be made static." : string.Empty;
+            var staticHint2 = suggestStatic2 ? " At least one moved method had no instance dependencies and was made static." : string.Empty;
             return $"Successfully moved {methodNames.Length} methods from {sourceClass} to {targetClass} in {targetPath}. Delegate methods remain in the original class to preserve the interface.{staticHint2}";
         }
     }
