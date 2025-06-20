@@ -32,26 +32,36 @@ public class MoveInstanceMethodTests : TestBase
         Assert.Contains("A.Do", result);
         Assert.Contains("B", result);
         Assert.Contains("made static", result);
+
+        var newContent = await File.ReadAllTextAsync(testFile);
+        var tree = CSharpSyntaxTree.ParseText(newContent);
+        var root = await tree.GetRootAsync();
+        var bClass = root.DescendantNodes().OfType<ClassDeclarationSyntax>()
+            .First(c => c.Identifier.ValueText == "B");
+        var method = bClass.Members.OfType<MethodDeclarationSyntax>()
+            .First(m => m.Identifier.ValueText == "Do");
+        Assert.True(method.Modifiers.Any(SyntaxKind.StaticKeyword));
     }
 
     [Fact]
-    public async Task MoveInstanceMethod_FailsWhenTargetClassIsStatic()
+    public async Task MoveInstanceMethod_AllowsStaticTargetWhenNoDependencies()
     {
         UnloadSolutionTool.ClearSolutionCache();
         var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "MoveInstanceMethodStatic.cs"));
         await TestUtilities.CreateTestFile(testFile, "public class A { public void Do(){} } public static class B { }");
         await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
 
-        await Assert.ThrowsAsync<McpException>(() =>
-            MoveMethodsTool.MoveInstanceMethod(
-                SolutionPath,
-                testFile,
-                "A",
-                "Do",
-                "B",
-                null,
-                null,
-                CancellationToken.None));
+        var result = await MoveMethodsTool.MoveInstanceMethod(
+            SolutionPath,
+            testFile,
+            "A",
+            "Do",
+            "B",
+            null,
+            null,
+            CancellationToken.None);
+
+        Assert.Contains("Successfully moved", result);
     }
 
     [Fact]
