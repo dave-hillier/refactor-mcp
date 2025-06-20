@@ -77,38 +77,89 @@ public static partial class MoveMethodsTool
         return formatted.ToFullString();
     }
 
+    private static string? GetSimpleTypeName(TypeSyntax type)
+    {
+        return type switch
+        {
+            IdentifierNameSyntax id => id.Identifier.ValueText,
+            QualifiedNameSyntax q => q.Right.Identifier.ValueText,
+            GenericNameSyntax g => g.Identifier.ValueText,
+            _ => null
+        };
+    }
+
     private static HashSet<string> GetInstanceMemberNames(ClassDeclarationSyntax originClass)
     {
         var knownMembers = new HashSet<string>();
         var root = originClass.SyntaxTree.GetRoot();
+        var queue = new Queue<MemberDeclarationSyntax>();
+        var visited = new HashSet<string>();
 
-        while (originClass != null)
+        queue.Enqueue(originClass);
+        visited.Add(originClass.Identifier.ValueText);
+
+        while (queue.Count > 0)
         {
-            foreach (var member in originClass.Members)
+            var current = queue.Dequeue();
+
+            if (current is ClassDeclarationSyntax cls)
             {
-                if (member is FieldDeclarationSyntax field)
+                foreach (var member in cls.Members)
                 {
-                    foreach (var variable in field.Declaration.Variables)
+                    if (member is FieldDeclarationSyntax field)
                     {
-                        knownMembers.Add(variable.Identifier.ValueText);
+                        foreach (var variable in field.Declaration.Variables)
+                            knownMembers.Add(variable.Identifier.ValueText);
+                    }
+                    else if (member is PropertyDeclarationSyntax prop)
+                    {
+                        knownMembers.Add(prop.Identifier.ValueText);
                     }
                 }
-                else if (member is PropertyDeclarationSyntax property)
+
+                if (cls.BaseList != null)
                 {
-                    knownMembers.Add(property.Identifier.ValueText);
+                    foreach (var bt in cls.BaseList.Types)
+                    {
+                        var name = GetSimpleTypeName(bt.Type);
+                        if (name == null || !visited.Add(name))
+                            continue;
+
+                        var bClass = root.DescendantNodes()
+                            .OfType<ClassDeclarationSyntax>()
+                            .FirstOrDefault(c => c.Identifier.ValueText == name);
+                        if (bClass != null)
+                            queue.Enqueue(bClass);
+
+                        var iface = root.DescendantNodes()
+                            .OfType<InterfaceDeclarationSyntax>()
+                            .FirstOrDefault(i => i.Identifier.ValueText == name);
+                        if (iface != null)
+                            queue.Enqueue(iface);
+                    }
                 }
             }
+            else if (current is InterfaceDeclarationSyntax iface)
+            {
+                foreach (var prop in iface.Members.OfType<PropertyDeclarationSyntax>())
+                    knownMembers.Add(prop.Identifier.ValueText);
 
-            var baseIdentifier = originClass.BaseList?.Types
-                .Select(t => t.Type)
-                .OfType<IdentifierNameSyntax>()
-                .FirstOrDefault();
+                if (iface.BaseList != null)
+                {
+                    foreach (var bt in iface.BaseList.Types)
+                    {
+                        var name = GetSimpleTypeName(bt.Type);
+                        if (name == null || !visited.Add(name))
+                            continue;
 
-            originClass = baseIdentifier != null
-                ? root.DescendantNodes()
-                    .OfType<ClassDeclarationSyntax>()
-                    .FirstOrDefault(c => c.Identifier.ValueText == baseIdentifier.Identifier.ValueText)
-                : null;
+                        var nestedIface = root.DescendantNodes()
+                            .OfType<InterfaceDeclarationSyntax>()
+                            .FirstOrDefault(i => i.Identifier.ValueText == name);
+                        if (nestedIface != null)
+                            queue.Enqueue(nestedIface);
+                    }
+                }
+            }
         }
 
         return knownMembers;
@@ -118,13 +169,67 @@ public static partial class MoveMethodsTool
     private static HashSet<string> GetMethodNames(ClassDeclarationSyntax originClass)
     {
         var methodNames = new HashSet<string>();
-        foreach (var member in originClass.Members)
+        var root = originClass.SyntaxTree.GetRoot();
+        var queue = new Queue<MemberDeclarationSyntax>();
+        var visited = new HashSet<string>();
+
+        queue.Enqueue(originClass);
+        visited.Add(originClass.Identifier.ValueText);
+
+        while (queue.Count > 0)
         {
-            if (member is MethodDeclarationSyntax method)
+            var current = queue.Dequeue();
+
+            if (current is ClassDeclarationSyntax cls)
             {
-                methodNames.Add(method.Identifier.ValueText);
+                foreach (var m in cls.Members.OfType<MethodDeclarationSyntax>())
+                    methodNames.Add(m.Identifier.ValueText);
+
+                if (cls.BaseList != null)
+                {
+                    foreach (var bt in cls.BaseList.Types)
+                    {
+                        var name = GetSimpleTypeName(bt.Type);
+                        if (name == null || !visited.Add(name))
+                            continue;
+
+                        var bClass = root.DescendantNodes()
+                            .OfType<ClassDeclarationSyntax>()
+                            .FirstOrDefault(c => c.Identifier.ValueText == name);
+                        if (bClass != null)
+                            queue.Enqueue(bClass);
+
+                        var iface = root.DescendantNodes()
+                            .OfType<InterfaceDeclarationSyntax>()
+                            .FirstOrDefault(i => i.Identifier.ValueText == name);
+                        if (iface != null)
+                            queue.Enqueue(iface);
+                    }
+                }
+            }
+            else if (current is InterfaceDeclarationSyntax iface)
+            {
+                foreach (var m in iface.Members.OfType<MethodDeclarationSyntax>())
+                    methodNames.Add(m.Identifier.ValueText);
+
+                if (iface.BaseList != null)
+                {
+                    foreach (var bt in iface.BaseList.Types)
+                    {
+                        var name = GetSimpleTypeName(bt.Type);
+                        if (name == null || !visited.Add(name))
+                            continue;
+
+                        var nestedIface = root.DescendantNodes()
+                            .OfType<InterfaceDeclarationSyntax>()
+                            .FirstOrDefault(i => i.Identifier.ValueText == name);
+                        if (nestedIface != null)
+                            queue.Enqueue(nestedIface);
+                    }
+                }
             }
         }
+
         return methodNames;
     }
 

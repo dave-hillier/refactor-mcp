@@ -22,6 +22,7 @@ The project includes the following refactorings and helpers:
 - MakeFieldReadonly
 - MoveClassToFile
 - MoveMethods (protected override methods cannot be moved)
+- MoveMethods now prefixes inherited members with `@this` when moving
 - MoveMultipleMethods
 - RenameSymbol
 - SafeDelete
