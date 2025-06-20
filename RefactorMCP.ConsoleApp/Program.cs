@@ -127,6 +127,9 @@ static RootCommand BuildCliRoot()
             {
                 Console.WriteLine(result.ToString());
             }
+
+            if (!string.Equals(method.Name, nameof(LoadSolutionTool.LoadSolution)))
+                ToolCallLogger.Log(method.Name, rawValues);
         });
 
         root.AddCommand(command);
@@ -231,9 +234,6 @@ static async Task RunJsonMode(string[] args)
         }
     }
 
-    if (!string.Equals(method.Name, nameof(LoadSolutionTool.LoadSolution)))
-        ToolCallLogger.Log(method.Name, rawValues);
-
     try
     {
         var result = method.Invoke(null, invokeArgs);
@@ -254,6 +254,11 @@ static async Task RunJsonMode(string[] args)
     catch (Exception ex)
     {
         Console.WriteLine($"Error executing tool: {ex.Message}");
+    }
+    finally
+    {
+        if (!string.Equals(method.Name, nameof(LoadSolutionTool.LoadSolution)))
+            ToolCallLogger.Log(method.Name, rawValues);
     }
 }
 

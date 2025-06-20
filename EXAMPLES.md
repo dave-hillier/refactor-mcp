@@ -1089,10 +1089,10 @@ The returned text begins with `// summary://...` and shows each method body as `
 
 ## Playback Log
 
-After each tool invocation in JSON mode (after running `load-solution`), the parameters are appended to `.refactor-mcp/tool-call-log.jsonl`. Replay them with:
+After each tool invocation in JSON mode (after running `load-solution`), the parameters are appended to a session log such as `.refactor-mcp/tool-call-log-YYYYMMDDHHMMSS.jsonl`. Replay them with:
 
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --cli play-log ./.refactor-mcp/tool-call-log.jsonl
+dotnet run --project RefactorMCP.ConsoleApp -- --cli play-log ./.refactor-mcp/tool-call-log-YYYYMMDDHHMMSS.jsonl
 ```
 
 ### JSON Logging Example
