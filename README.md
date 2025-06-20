@@ -27,6 +27,7 @@ The project includes the following refactorings and helpers:
 - RenameSymbol
 - SafeDelete
 - TransformSetterToInit
+- FeatureFlagRefactor
 - Version
 
 Metrics and code summaries are also available via the `metrics://` and `summary://` resource schemes. After loading a solution, metrics are cached under `.refactor-mcp/metrics/` mirroring the project structure so they can be served directly from disk.

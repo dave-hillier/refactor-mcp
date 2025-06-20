@@ -182,5 +182,36 @@ public class Person
     public void Greet() { }
 }
 """;
+
+    public static string GetSampleCodeForFeatureFlag() => """
+using System;
+
+public class FeatureService
+{
+    private readonly IFeatureFlags featureFlags;
+
+    public FeatureService(IFeatureFlags featureFlags)
+    {
+        this.featureFlags = featureFlags;
+    }
+
+    public void DoWork()
+    {
+        if (featureFlags.IsEnabled("CoolFeature"))
+        {
+            Console.WriteLine("New path");
+        }
+        else
+        {
+            Console.WriteLine("Old path");
+        }
+    }
+}
+
+public interface IFeatureFlags
+{
+    bool IsEnabled(string name);
+}
+""";
 }
 

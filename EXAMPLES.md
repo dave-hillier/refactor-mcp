@@ -898,6 +898,42 @@ values.Add(result);
 return values.Sum() / (double)values.Count;
 ```
 
+## 17. Feature Flag Refactor
+
+**Purpose**: Replace `features.IsEnabled(flag)` checks with strategy classes.
+
+### Example
+**Before**:
+```csharp
+public void DoWork()
+{
+    if (featureFlags.IsEnabled("CoolFeature"))
+    {
+        Console.WriteLine("New path");
+    }
+    else
+    {
+        Console.WriteLine("Old path");
+    }
+}
+```
+
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli feature-flag-refactor \
+  "./RefactorMCP.sln" \
+  "./RefactorMCP.Tests/FeatureFlag.cs" \
+  CoolFeature
+```
+
+**After**:
+```csharp
+public void DoWork()
+{
+    _coolFeatureStrategy.Apply();
+}
+```
+
 ## Range Format
 
 All refactoring commands that require selecting code use the range format:
