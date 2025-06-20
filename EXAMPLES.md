@@ -389,13 +389,13 @@ public class Logger
         Console.WriteLine($"[LOG] {message}");
     }
 
-    public void LogOperation(string operation)
+    public static void LogOperation(string operation)
     {
         Console.WriteLine($"[{DateTime.Now}] {operation}");
     }
 }
 ```
-The original method in `Calculator` now delegates to `Logger.LogOperation`, preserving existing call sites.
+The original method in `Calculator` now delegates to the static `Logger.LogOperation` method, preserving existing call sites.
 If you run `move-instance-method` again on this wrapper, an error will be reported. Use `inline-method` to remove the wrapper if desired.
 When a moved method references private fields from its original class, those values are passed as additional parameters.
 
@@ -1058,8 +1058,8 @@ Inherited members are automatically qualified when moved:
 {"tool":"move-instance-method","solutionPath":"./RefactorMCP.sln","filePath":"./RefactorMCP.Tests/ExampleCode.cs","sourceClass":"Derived","methodNames":"PrintName","targetClass":"Target"}
 ```
 
-### Static Suggestion Example
-When a moved instance method has no dependencies on instance members, the result advises it can be made static.
+### Automatic Static Conversion
+When a moved instance method has no dependencies on instance members, it is made static automatically.
 
 ## Metrics Resource
 
