@@ -26,6 +26,7 @@ public static class LoadSolutionTool
             }
 
             RefactoringHelpers.ClearAllCaches();
+            MoveMethodsTool.ResetMoveHistory();
 
             var logDir = Path.Combine(Path.GetDirectoryName(solutionPath)!, ".refactor-mcp");
             ToolCallLogger.SetLogDirectory(logDir);
