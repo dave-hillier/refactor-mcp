@@ -515,7 +515,15 @@ public static partial class MoveMethodsTool
         var mods = method.Modifiers.Where(m => !m.IsKind(SyntaxKind.PrivateKeyword) &&
                                               !m.IsKind(SyntaxKind.ProtectedKeyword));
 
-        return method.WithModifiers(SyntaxFactory.TokenList(mods).Add(SyntaxFactory.Token(SyntaxKind.InternalKeyword)));
+        if (method.Modifiers.Any(SyntaxKind.ProtectedKeyword))
+        {
+            // Keep the protected modifier for overrides to avoid reducing
+            // accessibility but add internal for cross-class access
+            mods = mods.Append(SyntaxFactory.Token(SyntaxKind.ProtectedKeyword));
+        }
+
+        return method.WithModifiers(SyntaxFactory.TokenList(mods)
+            .Add(SyntaxFactory.Token(SyntaxKind.InternalKeyword)));
     }
 
     private static MethodDeclarationSyntax CreateStubMethod(
