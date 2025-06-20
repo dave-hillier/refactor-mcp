@@ -9,22 +9,24 @@ using ModelContextProtocol.Server;
 
 internal static class ToolCallLogger
 {
-    private const string LogDirEnvVar = "REFACTOR_MCP_LOG_DIR";
+    private const string LogFileEnvVar = "REFACTOR_MCP_LOG_FILE";
     private static string _logFile = "tool-call-log.jsonl";
 
     public static string DefaultLogFile => _logFile;
 
     public static void SetLogDirectory(string directory)
     {
-        _logFile = Path.Combine(directory, "tool-call-log.jsonl");
-        Environment.SetEnvironmentVariable(LogDirEnvVar, directory);
+        Directory.CreateDirectory(directory);
+        var timestamp = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
+        _logFile = Path.Combine(directory, $"tool-call-log-{timestamp}.jsonl");
+        Environment.SetEnvironmentVariable(LogFileEnvVar, _logFile);
     }
 
     public static void RestoreFromEnvironment()
     {
-        var dir = Environment.GetEnvironmentVariable(LogDirEnvVar);
-        if (!string.IsNullOrEmpty(dir))
-            SetLogDirectory(dir);
+        var file = Environment.GetEnvironmentVariable(LogFileEnvVar);
+        if (!string.IsNullOrEmpty(file))
+            _logFile = file;
     }
 
     public static void Log(string toolName, Dictionary<string, string?> parameters, string? logFile = null)
