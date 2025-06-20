@@ -41,4 +41,24 @@ public partial class RoslynTransformationTests
         Assert.DoesNotContain("inst.SiteId", result);
         Assert.DoesNotContain("inst.GroupId", result);
     }
+
+    [Fact]
+    public void InstanceMemberRewriter_QualifiesBasePropertyAccess()
+    {
+        var method = SyntaxFactory.ParseMemberDeclaration("void Test(){ var n = base.Value; }") as MethodDeclarationSyntax;
+        var rewriter = new InstanceMemberRewriter("inst", new HashSet<string> { "Value" });
+        var result = rewriter.Visit(method!)!.NormalizeWhitespace().ToFullString();
+        Assert.Contains("inst.Value", result);
+        Assert.DoesNotContain("base.Value", result);
+    }
+
+    [Fact]
+    public void InstanceMemberRewriter_IgnoresPropertyPatternNames()
+    {
+        var method = SyntaxFactory.ParseMemberDeclaration("void Test(){ if(this is { Value: > 0 }) { } }") as MethodDeclarationSyntax;
+        var rewriter = new InstanceMemberRewriter("inst", new HashSet<string> { "Value" });
+        var result = rewriter.Visit(method!)!.NormalizeWhitespace().ToFullString();
+        Assert.Contains("this is { Value: > 0 }", result);
+        Assert.DoesNotContain("inst.Value", result);
+    }
 }
