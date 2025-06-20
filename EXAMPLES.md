@@ -7,10 +7,15 @@ Using the MCP tools is the preferred method for refactoring large C# files where
 ## Getting Started
 
 ### Loading a Solution
-Before performing any refactoring, you need to load a solution:
+Before performing any refactoring, you need to load a solution. This also clears any cached data so each load starts a fresh session:
 
 ```bash
 dotnet run --project RefactorMCP.ConsoleApp -- --cli load-solution ./RefactorMCP.sln
+```
+
+### JSON Example
+```json
+{"tool":"load-solution","solutionPath":"./RefactorMCP.sln"}
 ```
 
 ### CLI Mode Usage
@@ -661,12 +666,15 @@ public class CleanupSample
 
 ## 6. Load Solution (Utility Command)
 
-**Purpose**: Load and validate a solution file before performing refactorings.
+**Purpose**: Clear previous caches and load a solution file before performing refactorings.
 
 ### Example
 **Command**:
 ```bash
 dotnet run --project RefactorMCP.ConsoleApp -- --cli load-solution "./RefactorMCP.sln"
+```
+```json
+{"tool":"load-solution","solutionPath":"./RefactorMCP.sln"}
 ```
 
 **Expected Output**:
@@ -739,7 +747,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli list-tools
 **Output**:
 ```
 Available refactoring tools:
-load-solution - Load a solution file and set the working directory
+load-solution - Start a new session and load a solution file
 unload-solution - Remove a loaded solution from cache
 clear-solution-cache - Clear all cached solutions
 extract-method - Extract selected code into a new method
