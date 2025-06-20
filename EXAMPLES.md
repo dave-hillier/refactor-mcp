@@ -1015,6 +1015,13 @@ Provide `methodNames` as a comma-separated string (this property is required):
 {"tool":"move-instance-method","solutionPath":"./RefactorMCP.sln","filePath":"./RefactorMCP.Tests/ExampleCode.cs","sourceClass":"Calculator","methodNames":"LogOperation","targetClass":"Logger"}
 ```
 
+### Interface/Base Member Example
+Inherited members are automatically qualified when moved:
+
+```json
+{"tool":"move-instance-method","solutionPath":"./RefactorMCP.sln","filePath":"./RefactorMCP.Tests/ExampleCode.cs","sourceClass":"Derived","methodNames":"PrintName","targetClass":"Target"}
+```
+
 ### Static Suggestion Example
 When a moved instance method has no dependencies on instance members, the result advises it can be made static.
 
