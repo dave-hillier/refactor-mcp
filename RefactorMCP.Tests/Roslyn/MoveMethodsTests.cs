@@ -434,6 +434,74 @@ class B { }";
         }
 
         [Fact]
+        public void MoveInstanceMethod_QualifiesPublicNestedClass()
+        {
+            var source = @"public class A
+{
+    public class Nested { }
+
+    public Nested GetNested()
+    {
+        return new Nested();
+    }
+}
+
+public class B { }";
+
+            var tree = CSharpSyntaxTree.ParseText(source);
+            var root = tree.GetRoot();
+
+            var result = MoveMethodsTool.MoveInstanceMethodAst(
+                root,
+                "A",
+                "GetNested",
+                "B",
+                "_b",
+                "field");
+
+            var finalRoot = MoveMethodsTool.AddMethodToTargetClass(result.NewSourceRoot, "B", result.MovedMethod, result.Namespace);
+            var formatted = Formatter.Format(finalRoot, new AdhocWorkspace()).ToFullString();
+
+            Assert.Contains("A.Nested GetNested()", formatted);
+            Assert.Contains("new A.Nested()", formatted);
+            Assert.Contains("return _b.GetNested()", formatted);
+        }
+
+        [Fact]
+        public void MoveInstanceMethod_QualifiesPublicNestedEnum()
+        {
+            var source = @"public class A
+{
+    public enum Kinds { A, B }
+
+    public Kinds GetKind()
+    {
+        return Kinds.B;
+    }
+}
+
+public class B { }";
+
+            var tree = CSharpSyntaxTree.ParseText(source);
+            var root = tree.GetRoot();
+
+            var result = MoveMethodsTool.MoveInstanceMethodAst(
+                root,
+                "A",
+                "GetKind",
+                "B",
+                "_b",
+                "field");
+
+            var finalRoot = MoveMethodsTool.AddMethodToTargetClass(result.NewSourceRoot, "B", result.MovedMethod, result.Namespace);
+            var formatted = Formatter.Format(finalRoot, new AdhocWorkspace()).ToFullString();
+
+            Assert.Contains("A.Kinds GetKind()", formatted);
+            Assert.Contains("A.Kinds.B", formatted);
+            Assert.Contains("return _b.GetKind()", formatted);
+        }
+
+        [Fact]
         public void MoveInstanceMethod_UpdatesPrivateDependencyAccess()
         {
             var source = @"public class A

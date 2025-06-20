@@ -252,10 +252,17 @@ public static partial class MoveMethodsTool
 
     private static HashSet<string> GetNestedClassNames(ClassDeclarationSyntax originClass)
     {
-        return originClass.Members
+        var names = originClass.Members
             .OfType<ClassDeclarationSyntax>()
             .Select(c => c.Identifier.ValueText)
             .ToHashSet();
+
+        foreach (var en in originClass.Members.OfType<EnumDeclarationSyntax>())
+        {
+            names.Add(en.Identifier.ValueText);
+        }
+
+        return names;
     }
 
     private static Dictionary<string, TypeSyntax> GetPrivateFieldInfos(ClassDeclarationSyntax originClass)
