@@ -88,41 +88,8 @@ public static partial class MoveMethodsTool
         };
     }
 
-    private static HashSet<string> GetInstanceMemberNames(
-        ClassDeclarationSyntax originClass,
-        SemanticModel? model = null)
+    private static HashSet<string> GetInstanceMemberNames(ClassDeclarationSyntax originClass)
     {
-        if (model != null)
-        {
-            var symbol = model.GetDeclaredSymbol(originClass) as INamedTypeSymbol;
-            if (symbol != null)
-            {
-                var names = new HashSet<string>();
-                var visitedTypes = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
-                var stack = new Stack<INamedTypeSymbol>();
-                stack.Push(symbol);
-                while (stack.Count > 0)
-                {
-                    var current = stack.Pop();
-                    if (!visitedTypes.Add(current))
-                        continue;
-
-                    foreach (var member in current.GetMembers())
-                    {
-                        if (!member.IsStatic && member is IFieldSymbol or IPropertySymbol)
-                            names.Add(member.Name);
-                    }
-
-                    if (current.BaseType != null)
-                        stack.Push(current.BaseType);
-                    foreach (var iface in current.Interfaces)
-                        stack.Push(iface);
-                }
-
-                return names;
-            }
-        }
-
         var knownMembers = new HashSet<string>();
         var root = originClass.SyntaxTree.GetRoot();
         var queue = new Queue<MemberDeclarationSyntax>();
