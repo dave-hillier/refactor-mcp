@@ -12,7 +12,7 @@ using System.Threading;
 [McpServerToolType]
 public static class LoadSolutionTool
 {
-    [McpServerTool, Description("Load a solution file for refactoring operations and set the current directory to the solution directory")]
+    [McpServerTool, Description("Start a new session by clearing caches then load a solution file and set the current directory")]
     public static async Task<string> LoadSolution(
         [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         IProgress<string>? progress = null,
@@ -24,6 +24,8 @@ public static class LoadSolutionTool
             {
                 throw new McpException($"Error: Solution file not found at {solutionPath}");
             }
+
+            RefactoringHelpers.ClearAllCaches();
 
             var logDir = Path.Combine(Path.GetDirectoryName(solutionPath)!, ".refactor-mcp");
             ToolCallLogger.SetLogDirectory(logDir);
