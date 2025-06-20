@@ -1,10 +1,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.Editing;
-using System.Collections.Generic;
-using System.Linq;
 
 public class ParameterRemovalRewriter : CSharpSyntaxRewriter
 {
@@ -33,13 +30,7 @@ public class ParameterRemovalRewriter : CSharpSyntaxRewriter
     public override SyntaxNode VisitInvocationExpression(InvocationExpressionSyntax node)
     {
         var visited = (InvocationExpressionSyntax)base.VisitInvocationExpression(node)!;
-        bool isTarget = false;
-        if (visited.Expression is IdentifierNameSyntax id && id.Identifier.ValueText == _methodName)
-            isTarget = true;
-        else if (visited.Expression is MemberAccessExpressionSyntax ma && ma.Name.Identifier.ValueText == _methodName)
-            isTarget = true;
-
-        if (isTarget && _parameterIndex < visited.ArgumentList.Arguments.Count)
+        if (InvocationHelpers.IsInvocationOf(visited, _methodName) && _parameterIndex < visited.ArgumentList.Arguments.Count)
         {
             visited = AstTransformations.RemoveArgument(visited, _parameterIndex);
         }
@@ -47,4 +38,3 @@ public class ParameterRemovalRewriter : CSharpSyntaxRewriter
         return visited;
     }
 }
-
