@@ -18,7 +18,7 @@ internal class InstanceMemberRewriter : CSharpSyntaxRewriter
 
     public override SyntaxNode VisitMemberAccessExpression(MemberAccessExpressionSyntax node)
     {
-        if (node.Expression is ThisExpressionSyntax &&
+        if ((node.Expression is ThisExpressionSyntax || node.Expression is BaseExpressionSyntax) &&
             node.Name is IdentifierNameSyntax id &&
             _knownInstanceMembers.Contains(id.Identifier.ValueText))
         {
@@ -38,9 +38,16 @@ internal class InstanceMemberRewriter : CSharpSyntaxRewriter
         if (parent is AssignmentExpressionSyntax assign &&
             assign.Left == node &&
             assign.Parent is InitializerExpressionSyntax init &&
-            init.IsKind(SyntaxKind.ObjectInitializerExpression))
+            (init.IsKind(SyntaxKind.ObjectInitializerExpression) || init.IsKind(SyntaxKind.WithInitializerExpression)))
         {
             // Property names in object initializers should not be qualified
+            return base.VisitIdentifierName(node);
+        }
+
+        if (parent is NameColonSyntax nameColon &&
+            nameColon.Parent is SubpatternSyntax &&
+            nameColon.Parent.Parent is PropertyPatternClauseSyntax)
+        {
             return base.VisitIdentifierName(node);
         }
 
