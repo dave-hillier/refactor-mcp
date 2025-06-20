@@ -18,7 +18,7 @@ The project includes the following refactorings and helpers:
 - IntroduceField
 - IntroduceParameter
 - IntroduceVariable
-- LoadSolution (clears caches) / UnloadSolution
+- LoadSolution (clears caches and move history) / UnloadSolution
 - MakeFieldReadonly
 - MoveClassToFile
 - MoveMethods (protected override methods cannot be moved)
