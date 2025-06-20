@@ -164,7 +164,7 @@ public class TargetClass
             var targetClassCode = result.Split(new[] { "public class TargetClass" }, StringSplitOptions.None)[1];
             var sourceClassCode = result.Split(new[] { "public class SourceClass" }, StringSplitOptions.None)[1].Split(new[] { "public class TargetClass" }, StringSplitOptions.None)[0];
 
-            Assert.Contains("public int Method1(int field1)", targetClassCode);
+            Assert.Contains("public static int Method1(int field1)", targetClassCode);
             Assert.Contains("public int Method2(SourceClass @this)", targetClassCode);
             Assert.Contains("public int Method3(SourceClass @this)", targetClassCode);
             Assert.Contains("return @this.Method1() + 1", targetClassCode);
@@ -206,7 +206,7 @@ public class TargetClass
             var finalRoot = MoveMethodsTool.AddMethodToTargetClass(result.NewSourceRoot, "TargetClass", result.MovedMethod, result.Namespace);
             var formatted = Formatter.Format(finalRoot, new AdhocWorkspace()).ToFullString();
 
-            Assert.Contains("public int GetValue(int value)", formatted);
+            Assert.Contains("public static int GetValue(int value)", formatted);
             Assert.Contains("return value + 2", formatted);
             Assert.Contains("return _target.GetValue(_value)", formatted);
         }
@@ -238,7 +238,7 @@ public class TargetClass
             var finalRoot = MoveMethodsTool.AddMethodToTargetClass(result.NewSourceRoot, "TargetClass", result.MovedMethod, result.Namespace);
             var formatted = Formatter.Format(finalRoot, new AdhocWorkspace()).ToFullString();
 
-            Assert.Contains("public int GetValue(int value, int n = 5)", formatted);
+            Assert.Contains("public static int GetValue(int value, int n = 5)", formatted);
             Assert.Contains("_target.GetValue(_value, n)", formatted);
         }
 
