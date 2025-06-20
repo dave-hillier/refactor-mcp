@@ -22,8 +22,7 @@ public static class UnloadSolutionTool
     [McpServerTool, Description("Clear all cached solutions")]
     public static string ClearSolutionCache()
     {
-        RefactoringHelpers.SolutionCache.Dispose();
-        RefactoringHelpers.SolutionCache = new MemoryCache(new MemoryCacheOptions());
+        RefactoringHelpers.ClearAllCaches();
         return "Cleared all cached solutions";
     }
 }
