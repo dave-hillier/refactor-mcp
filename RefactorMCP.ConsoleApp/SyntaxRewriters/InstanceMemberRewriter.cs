@@ -35,6 +35,15 @@ internal class InstanceMemberRewriter : CSharpSyntaxRewriter
         if (parent is ParameterSyntax || parent is TypeSyntax)
             return base.VisitIdentifierName(node);
 
+        if (parent is AssignmentExpressionSyntax assign &&
+            assign.Left == node &&
+            assign.Parent is InitializerExpressionSyntax init &&
+            init.IsKind(SyntaxKind.ObjectInitializerExpression))
+        {
+            // Property names in object initializers should not be qualified
+            return base.VisitIdentifierName(node);
+        }
+
         if (_knownInstanceMembers.Contains(node.Identifier.ValueText))
         {
             if (parent is MemberAccessExpressionSyntax memberAccess && memberAccess.Expression == node)
