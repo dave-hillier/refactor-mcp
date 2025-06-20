@@ -352,7 +352,7 @@ public static partial class MoveMethodsTool
             isVoid,
             isAsync,
             typeParameters,
-            paramMap.Values);
+            paramMap.Keys);
 
         var dependencyUpdates = new Dictionary<string, MethodDeclarationSyntax>();
         foreach (var m in originClass.Members.OfType<MethodDeclarationSyntax>())
