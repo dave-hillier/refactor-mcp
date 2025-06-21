@@ -976,14 +976,116 @@ public void DoWork()
     _coolFeatureStrategy.Apply();
 }
 ```
+## 18. Extract Decorator
 
-## 18. Constructor Injection
+**Purpose**: Generate a decorator class that delegates to an existing method.
+
+### Example
+**Before**:
+```csharp
+public class Greeter
+{
+    public void Greet(string name)
+    {
+        Console.WriteLine($"Hello {name}");
+    }
+}
+```
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli extract-decorator \
+  "./RefactorMCP.sln" \
+  "./RefactorMCP.Tests/Decorator.cs" \
+  Greeter \
+  Greet
+```
+**After**:
+```csharp
+public class GreeterDecorator
+{
+    private readonly Greeter _inner;
+    public GreeterDecorator(Greeter inner) { _inner = inner; }
+    public void Greet(string name) { _inner.Greet(name); }
+}
+```
+
+## 19. Create Adapter
+
+**Purpose**: Create an adapter class wrapping an existing method.
+
+### Example
+**Before**:
+```csharp
+public class LegacyLogger
+{
+    public void Write(string message)
+    {
+        Console.WriteLine(message);
+    }
+}
+```
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli create-adapter \
+  "./RefactorMCP.sln" \
+  "./RefactorMCP.Tests/Adapter.cs" \
+  LegacyLogger \
+  Write \
+  LoggerAdapter
+```
+**After**:
+```csharp
+public class LoggerAdapter
+{
+    private readonly LegacyLogger _inner;
+    public LoggerAdapter(LegacyLogger inner) { _inner = inner; }
+    public void Adapt(string message) { _inner.Write(message); }
+}
+```
+
+## 20. Add Observer
+
+**Purpose**: Add an event and raise it within a method.
+
+### Example
+**Before**:
+```csharp
+public class Counter
+{
+    private int _value;
+    public void Update(int value)
+    {
+        _value = value;
+    }
+}
+```
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli add-observer \
+  "./RefactorMCP.sln" \
+  "./RefactorMCP.Tests/Observer.cs" \
+  Counter \
+  Update \
+  Updated
+```
+**After**:
+```csharp
+public event Action<int> Updated;
+public void Update(int value)
+{
+    _value = value;
+    Updated?.Invoke(value);
+}
+```
+
+## 21. Constructor Injection
 
 **Purpose**: Convert one or more method parameters to constructor-injected fields.
 
 ### Example
 **Before**:
 ```csharp
+
 class C
 {
     int Add(int a)
