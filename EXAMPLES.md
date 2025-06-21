@@ -399,6 +399,49 @@ The original method in `Calculator` now delegates to the static `Logger.LogOpera
 If you run `move-instance-method` again on this wrapper, an error will be reported. Use `inline-method` to remove the wrapper if desired.
 When a moved method references private fields from its original class, those values are passed as additional parameters.
 
+## 10. Make Static Then Move
+
+**Purpose**: Convert an instance method to static with an explicit instance parameter and move it to another class.
+
+### Example
+**Before** (in `ExampleCode.cs` line 46):
+```csharp
+public string GetFormattedNumber(int number)
+{
+    return $"{operatorSymbol}: {number}";
+}
+```
+
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli make-static-then-move \
+  "./RefactorMCP.sln" \
+  "./RefactorMCP.Tests/ExampleCode.cs" \
+  GetFormattedNumber \
+  MathUtilities \
+  calculator
+```
+
+**After**:
+```csharp
+public class Calculator
+{
+    public string GetFormattedNumber(int number)
+    {
+        return MathUtilities.GetFormattedNumber(this, number);
+    }
+}
+
+public class MathUtilities
+{
+    public static string GetFormattedNumber(Calculator calculator, int number)
+    {
+        return $"{calculator.operatorSymbol}: {number}";
+    }
+}
+```
+The wrapper in `Calculator` preserves call sites while the actual logic moves to `MathUtilities`.
+
 ## 10. Move Multiple Methods
 
 **Purpose**: Move several methods at once, ordered by dependencies.
