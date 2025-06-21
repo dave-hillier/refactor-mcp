@@ -227,6 +227,13 @@ public static partial class MoveMethodsTool
         return walker.UsedFields;
     }
 
+    private static HashSet<string> GetImplicitInstanceMembers(MethodDeclarationSyntax method)
+    {
+        var walker = new ImplicitInstanceMemberWalker();
+        walker.Visit(method);
+        return walker.Members;
+    }
+
     private static bool MemberExists(ClassDeclarationSyntax classDecl, string memberName)
     {
         var walker = new InstanceMemberNameWalker();
