@@ -154,6 +154,19 @@ static object? ConvertInput(string value, Type targetType)
         return value;
     if (targetType == typeof(string[]))
         return value.Split(',', StringSplitOptions.RemoveEmptyEntries);
+    if (targetType == typeof(ConstructorInjectionTool.MethodParameterPair[]))
+    {
+        var parts = value.Split(';', StringSplitOptions.RemoveEmptyEntries);
+        var pairs = new ConstructorInjectionTool.MethodParameterPair[parts.Length];
+        for (int i = 0; i < parts.Length; i++)
+        {
+            var nv = parts[i].Split(':', 2, StringSplitOptions.RemoveEmptyEntries);
+            if (nv.Length != 2)
+                throw new FormatException("Invalid pair format. Use 'Method:Parameter;...'");
+            pairs[i] = new ConstructorInjectionTool.MethodParameterPair(nv[0], nv[1]);
+        }
+        return pairs;
+    }
     if (targetType == typeof(int))
         return int.Parse(value);
     if (targetType == typeof(bool))
