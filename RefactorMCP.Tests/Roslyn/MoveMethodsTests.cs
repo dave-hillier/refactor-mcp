@@ -589,6 +589,50 @@ class Target { }";
 
             Assert.Contains("@this.Value", formatted);
         }
+        [Fact]
+        public void MoveInstanceMethod_QualifiesInterfacePropertyImplementedInBase()
+        {
+            var source = @"public class RequestHeaders
+{
+    public string Username;
+    public int SiteId;
+    public int GroupId;
+}
+
+class cResRoom : RoomBase
+{
+    public RequestHeaders GetDepositServiceRequestHeaders()
+    {
+        return new RequestHeaders
+        {
+            Username = strCurrentOperatorCode,
+            SiteId = ConnectedSiteID,
+            GroupId = ConnectedGroupID
+        };
+    }
+}
+
+class Target { }";
+
+            var tree = CSharpSyntaxTree.ParseText(source);
+            var root = tree.GetRoot();
+
+            var result = MoveMethodsTool.MoveInstanceMethodAst(
+                root,
+                "cResRoom",
+                "GetDepositServiceRequestHeaders",
+                "Target",
+                "_t",
+                "field");
+
+            var finalRoot = MoveMethodsTool.AddMethodToTargetClass(result.NewSourceRoot, "Target", result.MovedMethod, result.Namespace);
+            var formatted = Formatter.Format(finalRoot, new AdhocWorkspace()).ToFullString();
+
+            Assert.Contains("Username = @this.strCurrentOperatorCode", formatted);
+            Assert.Contains("SiteId = @this.ConnectedSiteID", formatted);
+            Assert.Contains("GroupId = @this.ConnectedGroupID", formatted);
+        }
+
     }
 }
 
