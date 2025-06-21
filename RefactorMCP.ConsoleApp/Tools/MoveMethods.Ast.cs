@@ -267,6 +267,7 @@ public static partial class MoveMethodsTool
         var nestedClassNames = GetNestedClassNames(originClass);
 
         var instanceMembers = GetInstanceMemberNames(originClass);
+        instanceMembers.UnionWith(GetImplicitInstanceMembers(method));
         var methodNames = GetMethodNames(originClass);
         var privateFieldInfos = GetPrivateFieldInfos(originClass);
         var usedPrivateFields = GetUsedPrivateFields(method, new HashSet<string>(privateFieldInfos.Keys));
