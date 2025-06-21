@@ -454,10 +454,8 @@ public static partial class MoveMethodsTool
             transformedMethod = (MethodDeclarationSyntax)nestedRewriter.Visit(transformedMethod)!;
         }
 
-        if (!needsThisParameter)
-        {
-            transformedMethod = AstTransformations.EnsureStaticModifier(transformedMethod);
-        }
+
+        transformedMethod = AstTransformations.EnsureStaticModifier(transformedMethod);
 
         return EnsureMethodIsInternal(transformedMethod);
     }
