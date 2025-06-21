@@ -32,7 +32,9 @@ internal static class ToolCallLogger
     public static void Log(string toolName, Dictionary<string, string?> parameters, string? logFile = null)
     {
         var file = logFile ?? DefaultLogFile;
-        Directory.CreateDirectory(Path.GetDirectoryName(file)!);
+        var dir = Path.GetDirectoryName(file);
+        if (!string.IsNullOrEmpty(dir))
+            Directory.CreateDirectory(dir);
 
         var record = new ToolCallRecord
         {
