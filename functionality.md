@@ -35,6 +35,9 @@ Moves field initialization to all constructors and marks the field as readonly.
 ### Transform Setter to Init
 Converts property setters to init-only setters and moves initialization to constructors.
 
+### Constructor Injection
+Converts method parameters to constructor-injected fields or properties.
+
 ### Safe Delete
 Safely removes fields, parameters, or variables with dependency warnings before deletion.
 
