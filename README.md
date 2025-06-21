@@ -24,6 +24,9 @@ For usage examples see [EXAMPLES.md](./EXAMPLES.md).
 - **Safe Delete** – remove fields or variables only after dependency checks.
 - **Extract Class** – create a new class from selected members and compose it with the original.
 - **Inline Method** – replace calls with the method body and delete the original.
+- **Extract Decorator** – create a decorator class that delegates to an existing method.
+- **Create Adapter** – generate an adapter class wrapping an existing method.
+- **Add Observer** – introduce an event and raise it from a method.
 
 Metrics and summaries are also available via the `metrics://` and `summary://` resource schemes.
 

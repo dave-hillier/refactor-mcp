@@ -213,5 +213,36 @@ public interface IFeatureFlags
     bool IsEnabled(string name);
 }
 """;
+
+    public static string GetSampleCodeForDecorator() => """
+public class Greeter
+{
+    public void Greet(string name)
+    {
+        Console.WriteLine("Hello {name}");
+    }
+}
+""";
+
+    public static string GetSampleCodeForAdapter() => """
+public class LegacyLogger
+{
+    public void Write(string message)
+    {
+        Console.WriteLine(message);
+    }
+}
+""";
+
+    public static string GetSampleCodeForObserver() => """
+public class Counter
+{
+    private int _value;
+    public void Update(int value)
+    {
+        _value = value;
+    }
+}
+""";
 }
 
