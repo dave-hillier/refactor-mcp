@@ -347,7 +347,7 @@ public static partial class MoveMethodsTool
             foreach (var methodName in methodNames)
             {
                 var moveResult = MoveInstanceMethodAst(root, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
-                suggestStatic |= !moveResult.NeedsThisParameter;
+                suggestStatic |= moveResult.MovedMethod.Modifiers.Any(SyntaxKind.StaticKeyword);
                 root = AddMethodToTargetClass(moveResult.NewSourceRoot, targetClass, moveResult.MovedMethod, moveResult.Namespace);
             }
 
@@ -373,7 +373,7 @@ public static partial class MoveMethodsTool
             foreach (var methodName in methodNames)
             {
                 var moveResult = MoveInstanceMethodAst(sourceRoot, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
-                suggestStatic2 |= !moveResult.NeedsThisParameter;
+                suggestStatic2 |= moveResult.MovedMethod.Modifiers.Any(SyntaxKind.StaticKeyword);
                 sourceRoot = moveResult.NewSourceRoot;
                 targetRoot = AddMethodToTargetClass(targetRoot, targetClass, moveResult.MovedMethod, moveResult.Namespace);
             }
