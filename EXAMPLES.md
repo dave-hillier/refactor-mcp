@@ -399,6 +399,49 @@ The original method in `Calculator` now delegates to the static `Logger.LogOpera
 If you run `move-instance-method` again on this wrapper, an error will be reported. Use `inline-method` to remove the wrapper if desired.
 When a moved method references private fields from its original class, those values are passed as additional parameters.
 
+## 10. Make Static Then Move
+
+**Purpose**: Convert an instance method to static with an explicit instance parameter and move it to another class.
+
+### Example
+**Before** (in `ExampleCode.cs` line 46):
+```csharp
+public string GetFormattedNumber(int number)
+{
+    return $"{operatorSymbol}: {number}";
+}
+```
+
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli make-static-then-move \
+  "./RefactorMCP.sln" \
+  "./RefactorMCP.Tests/ExampleCode.cs" \
+  GetFormattedNumber \
+  MathUtilities \
+  calculator
+```
+
+**After**:
+```csharp
+public class Calculator
+{
+    public string GetFormattedNumber(int number)
+    {
+        return MathUtilities.GetFormattedNumber(this, number);
+    }
+}
+
+public class MathUtilities
+{
+    public static string GetFormattedNumber(Calculator calculator, int number)
+    {
+        return $"{calculator.operatorSymbol}: {number}";
+    }
+}
+```
+The wrapper in `Calculator` preserves call sites while the actual logic moves to `MathUtilities`.
+
 ## 10. Move Multiple Methods
 
 **Purpose**: Move several methods at once, ordered by dependencies.
@@ -933,8 +976,6 @@ public void DoWork()
     _coolFeatureStrategy.Apply();
 }
 ```
-
-
 ## 18. Extract Decorator
 
 **Purpose**: Generate a decorator class that delegates to an existing method.
@@ -1036,6 +1077,74 @@ public void Update(int value)
     Updated?.Invoke(value);
 }
 ```
+
+## 21. Constructor Injection
+
+**Purpose**: Convert one or more method parameters to constructor-injected fields.
+
+### Example
+**Before**:
+```csharp
+
+class C
+{
+    int Add(int a)
+    {
+        return a + 1;
+    }
+
+    int Multiply(int b)
+    {
+        return b * 2;
+    }
+
+    void Call()
+    {
+        Add(1);
+        Multiply(2);
+    }
+}
+```
+
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli constructor-injection \
+  "./RefactorMCP.sln" \
+  "./RefactorMCP.Tests/ExampleCode.cs" \
+  "Add:a;Multiply:b"
+```
+
+**After**:
+```csharp
+class C
+{
+    private readonly int _a;
+    private readonly int _b;
+
+    public C(int a, int b)
+    {
+        _a = a;
+        _b = b;
+    }
+
+    int Add()
+    {
+        return _a + 1;
+    }
+
+    int Multiply()
+    {
+        return _b * 2;
+    }
+
+    void Call()
+    {
+        Add();
+        Multiply();
+    }
+}
+```
+
 ## Range Format
 
 All refactoring commands that require selecting code use the range format:
