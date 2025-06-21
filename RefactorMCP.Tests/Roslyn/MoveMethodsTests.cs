@@ -174,9 +174,9 @@ public class TargetClass
             Assert.DoesNotContain("public int Method2() { return Method1() + 1; }", sourceClassCode);
             Assert.DoesNotContain("public int Method3() { return Method2() + 1; }", sourceClassCode);
 
-            Assert.Contains("return field1.Method1(field1)", sourceClassCode);
-            Assert.Contains("return field1.Method2(this)", sourceClassCode);
-            Assert.Contains("return field1.Method3(this)", sourceClassCode);
+            Assert.Contains("return TargetClass.Method1(field1)", sourceClassCode);
+            Assert.Contains("return TargetClass.Method2(this)", sourceClassCode);
+            Assert.Contains("return TargetClass.Method3(this)", sourceClassCode);
         }
 
         [Fact]
@@ -208,7 +208,7 @@ public class TargetClass
 
             Assert.Contains("public static int GetValue(int value)", formatted);
             Assert.Contains("return value + 2", formatted);
-            Assert.Contains("return _target.GetValue(_value)", formatted);
+            Assert.Contains("return TargetClass.GetValue(_value)", formatted);
         }
 
         [Fact]
@@ -239,7 +239,7 @@ public class TargetClass
             var formatted = Formatter.Format(finalRoot, new AdhocWorkspace()).ToFullString();
 
             Assert.Contains("public static int GetValue(int value, int n = 5)", formatted);
-            Assert.Contains("_target.GetValue(_value, n)", formatted);
+            Assert.Contains("TargetClass.GetValue(_value, n)", formatted);
         }
 
         [Fact]
@@ -368,7 +368,7 @@ public class Extracted { }";
             var finalRoot = MoveMethodsTool.AddMethodToTargetClass(result.NewSourceRoot, "Extracted", result.MovedMethod, result.Namespace);
             var formatted = Formatter.Format(finalRoot, new AdhocWorkspace()).ToFullString();
 
-            Assert.Contains("_extracted.MethodBefore(this)", formatted);
+            Assert.Contains("Extracted.MethodBefore(this)", formatted);
             Assert.Contains("new T(@this)", formatted);
         }
 
@@ -464,7 +464,7 @@ public class B { }";
 
             Assert.Contains("A.Nested GetNested()", formatted);
             Assert.Contains("new A.Nested()", formatted);
-            Assert.Contains("return _b.GetNested()", formatted);
+            Assert.Contains("return B.GetNested()", formatted);
         }
 
         [Fact]
@@ -498,7 +498,7 @@ public class B { }";
 
             Assert.Contains("A.Kind GetKind()", formatted);
             Assert.Contains("A.Kind.A", formatted);
-            Assert.Contains("return _b.GetKind()", formatted);
+            Assert.Contains("return B.GetKind()", formatted);
         }
 
         [Fact]

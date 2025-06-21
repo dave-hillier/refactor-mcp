@@ -296,9 +296,8 @@ public static partial class MoveMethodsTool
         var otherMethodNames = new HashSet<string>(methodNames);
         otherMethodNames.Remove(methodName);
 
-        var accessMember = MemberExists(originClass, accessMemberName)
-            ? null
-            : CreateAccessMember(accessMemberType, accessMemberName, targetClass);
+        MemberDeclarationSyntax? accessMember;
+        string actualAccessName;
 
         bool isAsync = method.Modifiers.Any(SyntaxKind.AsyncKeyword);
         bool isVoid = method.ReturnType is PredefinedTypeSyntax pts &&
@@ -344,10 +343,18 @@ public static partial class MoveMethodsTool
             needsThisParameter = false;
         }
 
+        var isStaticMethod = transformedMethod.Modifiers.Any(SyntaxKind.StaticKeyword);
+        actualAccessName = isStaticMethod ? targetClass : accessMemberName;
+        accessMember = isStaticMethod
+            ? null
+            : MemberExists(originClass, accessMemberName)
+                ? null
+                : CreateAccessMember(accessMemberType, accessMemberName, targetClass);
+
         var stubMethod = CreateStubMethod(
             method,
             methodName,
-            accessMemberName,
+            actualAccessName,
             accessMemberType,
             needsThisParameter,
             isVoid,
