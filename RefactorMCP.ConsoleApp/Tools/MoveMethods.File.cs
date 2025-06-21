@@ -150,9 +150,9 @@ public static partial class MoveMethodsTool
         }
 
         var locationInfo = targetFilePath != null ? $" in {targetPath}" : string.Empty;
-        var staticHint = moveResult.NeedsThisParameter
-            ? string.Empty
-            : " It was made static.";
+        var staticHint = moveResult.MovedMethod.Modifiers.Any(SyntaxKind.StaticKeyword)
+            ? " It was made static."
+            : string.Empty;
         return $"Successfully moved instance method {sourceClass}.{methodName} to {targetClass}{locationInfo}. A delegate method remains in the original class to preserve the interface.{staticHint}";
     }
 
