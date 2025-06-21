@@ -165,8 +165,8 @@ public class TargetClass
             var sourceClassCode = result.Split(new[] { "public class SourceClass" }, StringSplitOptions.None)[1].Split(new[] { "public class TargetClass" }, StringSplitOptions.None)[0];
 
             Assert.Contains("public static int Method1(int field1)", targetClassCode);
-            Assert.Contains("public int Method2(SourceClass @this)", targetClassCode);
-            Assert.Contains("public int Method3(SourceClass @this)", targetClassCode);
+            Assert.Contains("public static int Method2(SourceClass @this)", targetClassCode);
+            Assert.Contains("public static int Method3(SourceClass @this)", targetClassCode);
             Assert.Contains("return @this.Method1() + 1", targetClassCode);
             Assert.Contains("return @this.Method2() + 1", targetClassCode);
 
