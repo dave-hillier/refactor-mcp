@@ -977,6 +977,72 @@ public void DoWork()
 }
 ```
 
+## 18. Constructor Injection
+
+**Purpose**: Convert one or more method parameters to constructor-injected fields.
+
+### Example
+**Before**:
+```csharp
+class C
+{
+    int Add(int a)
+    {
+        return a + 1;
+    }
+
+    int Multiply(int b)
+    {
+        return b * 2;
+    }
+
+    void Call()
+    {
+        Add(1);
+        Multiply(2);
+    }
+}
+```
+
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli constructor-injection \
+  "./RefactorMCP.sln" \
+  "./RefactorMCP.Tests/ExampleCode.cs" \
+  "Add:a;Multiply:b"
+```
+
+**After**:
+```csharp
+class C
+{
+    private readonly int _a;
+    private readonly int _b;
+
+    public C(int a, int b)
+    {
+        _a = a;
+        _b = b;
+    }
+
+    int Add()
+    {
+        return _a + 1;
+    }
+
+    int Multiply()
+    {
+        return _b * 2;
+    }
+
+    void Call()
+    {
+        Add();
+        Multiply();
+    }
+}
+```
+
 ## Range Format
 
 All refactoring commands that require selecting code use the range format:

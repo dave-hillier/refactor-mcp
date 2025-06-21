@@ -22,6 +22,7 @@ For usage examples see [EXAMPLES.md](./EXAMPLES.md).
 - **Make Static Then Move** – convert an instance method to static and relocate it to another class in one step.
 - **Make Field Readonly** – move initialization into constructors and mark the field readonly.
 - **Transform Setter to Init** – convert property setters to init-only and initialize in constructors.
+- **Constructor Injection** – convert method parameters to constructor-injected fields or properties.
 - **Safe Delete** – remove fields or variables only after dependency checks.
 - **Extract Class** – create a new class from selected members and compose it with the original.
 - **Inline Method** – replace calls with the method body and delete the original.
