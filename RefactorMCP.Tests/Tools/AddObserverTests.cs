@@ -26,4 +26,38 @@ public class AddObserverTests : TestBase
         Assert.Contains("event", text);
         Assert.Contains("Updated?.Invoke", text);
     }
+
+    [Fact]
+    public async Task AddObserver_InvalidClassName_ThrowsMcpException()
+    {
+        await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
+        var testFile = Path.Combine(TestOutputPath, "Observer.cs");
+        await TestUtilities.CreateTestFile(testFile, TestUtilities.GetSampleCodeForObserver());
+
+        var ex = await Assert.ThrowsAsync<McpException>(() => AddObserverTool.AddObserver(
+            SolutionPath,
+            testFile,
+            "WrongClass",
+            "Update",
+            "Updated"));
+
+        Assert.Equal("Error adding observer: Error: Class 'WrongClass' not found", ex.Message);
+    }
+
+    [Fact]
+    public async Task AddObserver_InvalidMethodName_ThrowsMcpException()
+    {
+        await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
+        var testFile = Path.Combine(TestOutputPath, "Observer.cs");
+        await TestUtilities.CreateTestFile(testFile, TestUtilities.GetSampleCodeForObserver());
+
+        var ex = await Assert.ThrowsAsync<McpException>(() => AddObserverTool.AddObserver(
+            SolutionPath,
+            testFile,
+            "Counter",
+            "WrongMethod",
+            "Updated"));
+
+        Assert.Equal("Error adding observer: Error: Method 'WrongMethod' not found", ex.Message);
+    }
 }
