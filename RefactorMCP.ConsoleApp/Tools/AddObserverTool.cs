@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.ComponentModel;
+using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -20,7 +21,8 @@ public static class AddObserverTool
         [Description("Path to the C# file")] string filePath,
         [Description("Name of the class containing the method")] string className,
         [Description("Name of the method to raise the event from")] string methodName,
-        [Description("Name of the event to create")] string eventName)
+        [Description("Name of the event to create")] string eventName,
+        CancellationToken cancellationToken = default)
     {
         try
         {

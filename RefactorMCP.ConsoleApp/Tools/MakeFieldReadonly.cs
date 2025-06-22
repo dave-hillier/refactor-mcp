@@ -6,6 +6,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
 using System.Linq;
+using System.Threading;
 
 [McpServerToolType]
 public static class MakeFieldReadonlyTool
@@ -14,7 +15,8 @@ public static class MakeFieldReadonlyTool
     public static async Task<string> MakeFieldReadonly(
         [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
-        [Description("Name of the field to make readonly")] string fieldName)
+        [Description("Name of the field to make readonly")] string fieldName,
+        CancellationToken cancellationToken = default)
     {
         try
         {
