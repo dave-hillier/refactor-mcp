@@ -25,7 +25,7 @@ public static class MetricsResource
                 using var metrics = await GetFileMetricsJson(solutionPath, file);
                 if (metrics.RootElement.TryGetProperty("classes", out var clsArray))
                 {
-                    classes.AddRange(clsArray.EnumerateArray());
+                    classes.AddRange(clsArray.EnumerateArray().Select(c => c.Clone()));
                 }
             }
             var json = JsonSerializer.Serialize(classes, new JsonSerializerOptions { WriteIndented = true });
