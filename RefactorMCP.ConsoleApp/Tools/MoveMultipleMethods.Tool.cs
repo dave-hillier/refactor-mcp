@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using System.Threading.Tasks;
+using System.Threading;
 using Microsoft.CodeAnalysis.Text;
 using RefactorMCP.ConsoleApp.SyntaxRewriters;
 using RefactorMCP.ConsoleApp.Move;
@@ -25,12 +26,13 @@ public static partial class MoveMultipleMethodsTool
         string targetClass,
         string accessMember,
         string accessMemberType,
-        string targetPath)
+        string targetPath,
+        CancellationToken cancellationToken)
     {
         string message;
         if (isStatic)
         {
-            message = await MoveMethodFileService.MoveStaticMethodInFile(document.FilePath!, methodName, targetClass, targetPath);
+            message = await MoveMethodFileService.MoveStaticMethodInFile(document.FilePath!, methodName, targetClass, targetPath, progress: null, cancellationToken);
         }
         else
         {
@@ -41,25 +43,27 @@ public static partial class MoveMultipleMethodsTool
                 targetClass,
                 accessMember,
                 accessMemberType,
-                targetPath);
+                targetPath,
+                progress: null,
+                cancellationToken);
         }
 
-        var (newText, _) = await RefactoringHelpers.ReadFileWithEncodingAsync(document.FilePath!);
-        var newRoot = await CSharpSyntaxTree.ParseText(newText).GetRootAsync();
+        var (newText, _) = await RefactoringHelpers.ReadFileWithEncodingAsync(document.FilePath!, cancellationToken);
+        var newRoot = await CSharpSyntaxTree.ParseText(newText).GetRootAsync(cancellationToken);
         var solution = document.Project.Solution.WithDocumentSyntaxRoot(document.Id, newRoot);
 
         var project = solution.GetProject(document.Project.Id)!;
         var targetDocument = project.Documents.FirstOrDefault(d => d.FilePath == targetPath);
         if (targetDocument == null)
         {
-            var (targetText, targetEncoding) = await RefactoringHelpers.ReadFileWithEncodingAsync(targetPath);
+            var (targetText, targetEncoding) = await RefactoringHelpers.ReadFileWithEncodingAsync(targetPath, cancellationToken);
             var targetSource = SourceText.From(targetText, targetEncoding);
             targetDocument = project.AddDocument(Path.GetFileName(targetPath), targetSource, filePath: targetPath);
             solution = targetDocument.Project.Solution;
         }
         else
         {
-            var (targetText, targetEncoding) = await RefactoringHelpers.ReadFileWithEncodingAsync(targetPath);
+            var (targetText, targetEncoding) = await RefactoringHelpers.ReadFileWithEncodingAsync(targetPath, cancellationToken);
             var targetSource = SourceText.From(targetText, targetEncoding);
             solution = solution.WithDocumentText(targetDocument.Id, targetSource);
         }
@@ -83,7 +87,8 @@ public static partial class MoveMultipleMethodsTool
         [Description("Name of the source class containing the methods")] string sourceClass,
         [Description("Names of the methods to move")] string[] methodNames,
         [Description("Name of the target class")] string targetClass,
-        [Description("Path to the target file (optional, target class will be automatically created if it doesnt exist or its unspecified)")] string? targetFilePath = null)
+        [Description("Path to the target file (optional, target class will be automatically created if it doesnt exist or its unspecified)")] string? targetFilePath = null,
+        CancellationToken cancellationToken = default)
     {
         try
         {
@@ -102,12 +107,12 @@ public static partial class MoveMultipleMethodsTool
             foreach (var methodName in methodNames)
                 MoveMethodTool.EnsureNotAlreadyMoved(filePath, methodName);
 
-            var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
+            var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath, cancellationToken);
             var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
 
             if (document != null)
             {
-                var root = await document.GetSyntaxRootAsync();
+                var root = await document.GetSyntaxRootAsync(cancellationToken);
                 if (root == null)
                     throw new McpException("Error: Could not get syntax root");
 
@@ -163,7 +168,8 @@ public static partial class MoveMultipleMethodsTool
                             targetClass,
                             accessMemberName,
                             accessMemberTypes[idx],
-                            targetPath);
+                            targetPath,
+                            cancellationToken);
                         currentDoc = result.updatedDocument;
                         moved.Add((document.FilePath!, methodNames[idx]));
                         results.Add(result.message);

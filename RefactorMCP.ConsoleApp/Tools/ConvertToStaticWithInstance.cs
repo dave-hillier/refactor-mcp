@@ -8,6 +8,7 @@ using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Text;
 using System.Linq;
 using System.Collections.Generic;
+using System.Threading;
 
 [McpServerToolType]
 public static class ConvertToStaticWithInstanceTool
@@ -60,7 +61,8 @@ public static class ConvertToStaticWithInstanceTool
         [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Name of the method to convert")] string methodName,
-        [Description("Name for the instance parameter")] string instanceParameterName = "instance")
+        [Description("Name for the instance parameter")] string instanceParameterName = "instance",
+        CancellationToken cancellationToken = default)
     {
         try
         {
