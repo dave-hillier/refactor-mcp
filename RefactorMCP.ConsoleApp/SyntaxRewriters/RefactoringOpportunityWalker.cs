@@ -9,6 +9,7 @@ namespace RefactorMCP.ConsoleApp.SyntaxRewriters
         private readonly MethodMetricsWalker _methodMetrics;
         private readonly ClassMetricsWalker _classMetrics;
         private readonly UnusedMembersWalker _unusedMembers;
+        private readonly UseInterfaceWalker _useInterface;
 
         public List<string> Suggestions { get; } = new();
 
@@ -17,6 +18,7 @@ namespace RefactorMCP.ConsoleApp.SyntaxRewriters
             _methodMetrics = new MethodMetricsWalker(model);
             _classMetrics = new ClassMetricsWalker();
             _unusedMembers = new UnusedMembersWalker(model, solution);
+            _useInterface = new UseInterfaceWalker(model);
         }
 
         public void Visit(SyntaxNode root)
@@ -24,6 +26,7 @@ namespace RefactorMCP.ConsoleApp.SyntaxRewriters
             _methodMetrics.Visit(root);
             _classMetrics.Visit(root);
             _unusedMembers.Visit(root);
+            _useInterface.Visit(root);
         }
 
         public async Task PostProcessAsync()
@@ -32,6 +35,7 @@ namespace RefactorMCP.ConsoleApp.SyntaxRewriters
             Suggestions.AddRange(_methodMetrics.Suggestions);
             Suggestions.AddRange(_classMetrics.Suggestions);
             Suggestions.AddRange(_unusedMembers.Suggestions);
+            Suggestions.AddRange(_useInterface.Suggestions);
         }
     }
 }

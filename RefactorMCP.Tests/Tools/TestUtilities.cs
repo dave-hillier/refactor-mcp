@@ -244,5 +244,17 @@ public class Counter
     }
 }
 """;
+
+    public static string GetSampleCodeForUseInterface() => """
+public interface IWriter { void Write(string value); }
+public class FileWriter : IWriter { public void Write(string value) { } }
+public class C
+{
+    public void DoWork(FileWriter writer)
+    {
+        writer.Write("hi");
+    }
+}
+""";
 }
 
