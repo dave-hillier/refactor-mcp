@@ -34,7 +34,7 @@ public class AddObserverTests : TestBase
         var testFile = Path.Combine(TestOutputPath, "Observer.cs");
         await TestUtilities.CreateTestFile(testFile, TestUtilities.GetSampleCodeForObserver());
 
-        var ex = await Assert.ThrowsAsync<McpException>(() => AddObserverTool.AddObserver(
+        McpException ex = await Assert.ThrowsAsync<McpException>(() => AddObserverTool.AddObserver(
             SolutionPath,
             testFile,
             "WrongClass",
@@ -51,7 +51,7 @@ public class AddObserverTests : TestBase
         var testFile = Path.Combine(TestOutputPath, "Observer.cs");
         await TestUtilities.CreateTestFile(testFile, TestUtilities.GetSampleCodeForObserver());
 
-        var ex = await Assert.ThrowsAsync<McpException>(() => AddObserverTool.AddObserver(
+        McpException ex = await Assert.ThrowsAsync<McpException>(() => AddObserverTool.AddObserver(
             SolutionPath,
             testFile,
             "Counter",
