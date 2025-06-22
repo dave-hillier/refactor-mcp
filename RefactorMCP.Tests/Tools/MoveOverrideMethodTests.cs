@@ -2,6 +2,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
+using RefactorMCP.ConsoleApp.Move;
 using Xunit;
 
 namespace RefactorMCP.Tests;
@@ -15,8 +16,8 @@ public class MoveOverrideMethodTests
         var tree = CSharpSyntaxTree.ParseText(source);
         var root = tree.GetRoot();
 
-        var moveResult = MoveMethodsTool.MoveInstanceMethodAst(root, "Derived", "Foo", "Target", "", "");
-        var updatedRoot = MoveMethodsTool.AddMethodToTargetClass(moveResult.NewSourceRoot, "Target", moveResult.MovedMethod, moveResult.Namespace);
+        var moveResult = MoveMethodAst.MoveInstanceMethodAst(root, "Derived", "Foo", "Target", "", "");
+        var updatedRoot = MoveMethodAst.AddMethodToTargetClass(moveResult.NewSourceRoot, "Target", moveResult.MovedMethod, moveResult.Namespace);
         var formattedRoot = Formatter.Format(updatedRoot, new AdhocWorkspace());
 
         var targetClass = formattedRoot.DescendantNodes().OfType<ClassDeclarationSyntax>()

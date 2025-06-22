@@ -11,7 +11,9 @@ using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Text;
 using RefactorMCP.ConsoleApp.SyntaxRewriters;
 
-public static partial class MoveMethodsTool
+namespace RefactorMCP.ConsoleApp.Move;
+
+public static partial class MoveMethodAst
 {
     // ===== AST TRANSFORMATION LAYER =====
     // Pure syntax tree operations with no file I/O

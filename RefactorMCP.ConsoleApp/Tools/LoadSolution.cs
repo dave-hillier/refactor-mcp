@@ -3,6 +3,7 @@ using ModelContextProtocol;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.MSBuild;
 using Microsoft.Extensions.Caching.Memory;
+using RefactorMCP.ConsoleApp.Move;
 using System.ComponentModel;
 using System.IO;
 using System.Collections.Generic;
@@ -26,7 +27,7 @@ public static class LoadSolutionTool
             }
 
             RefactoringHelpers.ClearAllCaches();
-            MoveMethodsTool.ResetMoveHistory();
+            MoveMethodTool.ResetMoveHistory();
 
             var logDir = Path.Combine(Path.GetDirectoryName(solutionPath)!, ".refactor-mcp");
             ToolCallLogger.SetLogDirectory(logDir);

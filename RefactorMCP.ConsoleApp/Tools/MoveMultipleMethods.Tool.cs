@@ -12,6 +12,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.Text;
 using RefactorMCP.ConsoleApp.SyntaxRewriters;
+using RefactorMCP.ConsoleApp.Move;
 
 [McpServerToolType]
 public static partial class MoveMultipleMethodsTool
@@ -29,11 +30,11 @@ public static partial class MoveMultipleMethodsTool
         string message;
         if (isStatic)
         {
-            message = await MoveMethodsTool.MoveStaticMethodInFile(document.FilePath!, methodName, targetClass, targetPath);
+            message = await MoveMethodFileService.MoveStaticMethodInFile(document.FilePath!, methodName, targetClass, targetPath);
         }
         else
         {
-            message = await MoveMethodsTool.MoveInstanceMethodInFile(
+            message = await MoveMethodFileService.MoveInstanceMethodInFile(
                 document.FilePath!,
                 sourceClass,
                 methodName,
@@ -99,7 +100,7 @@ public static partial class MoveMultipleMethodsTool
 
             // Check upfront if any methods have already been moved
             foreach (var methodName in methodNames)
-                MoveMethodsTool.EnsureNotAlreadyMoved(filePath, methodName);
+                MoveMethodTool.EnsureNotAlreadyMoved(filePath, methodName);
 
             var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
             var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
@@ -120,7 +121,7 @@ public static partial class MoveMultipleMethodsTool
                 var visitor = new MethodAndMemberVisitor();
                 visitor.Visit(sourceClassNode);
 
-                var accessMemberName = MoveMethodsTool.GenerateAccessMemberName(visitor.Members.Keys, targetClass);
+                var accessMemberName = MoveMethodAst.GenerateAccessMemberName(visitor.Members.Keys, targetClass);
 
                 var staticWalker = new MethodStaticWalker(methodNames);
                 staticWalker.Visit(sourceClassNode);
@@ -175,7 +176,7 @@ public static partial class MoveMultipleMethodsTool
                 }
 
                 foreach (var (file, method) in moved)
-                    MoveMethodsTool.MarkMoved(file, method);
+                    MoveMethodTool.MarkMoved(file, method);
 
                 return string.Join("\n", results);
             }

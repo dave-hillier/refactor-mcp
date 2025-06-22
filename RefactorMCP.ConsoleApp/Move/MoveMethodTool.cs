@@ -14,8 +14,10 @@ using System.Text;
 using System.Threading;
 using RefactorMCP.ConsoleApp.SyntaxRewriters;
 
+namespace RefactorMCP.ConsoleApp.Move;
+
 [McpServerToolType]
-public static partial class MoveMethodsTool
+public static class MoveMethodTool
 {
     private static readonly HashSet<string> _movedMethods = new();
 
@@ -56,7 +58,7 @@ public static partial class MoveMethodsTool
         try
         {
             EnsureNotAlreadyMoved(filePath, methodName);
-            ValidateFileExists(filePath);
+            MoveMethodFileService.ValidateFileExists(filePath);
 
             var moveContext = await PrepareStaticMethodMove(filePath, targetFilePath, targetClass, cancellationToken);
             var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath, cancellationToken);
@@ -147,7 +149,7 @@ public static partial class MoveMethodsTool
     {
         var newSourceRoot = context.SourceRoot.RemoveNode(method, SyntaxRemoveOptions.KeepNoTrivia);
         var targetRoot = await PrepareTargetRootForStaticMove(context, cancellationToken);
-        var updatedTargetRoot = AddMethodToTargetClass(targetRoot, context.TargetClassName, method, context.Namespace);
+        var updatedTargetRoot = MoveMethodAst.AddMethodToTargetClass(targetRoot, context.TargetClassName, method, context.Namespace);
 
         return new SourceAndTargetRoots
         {
@@ -274,7 +276,7 @@ public static partial class MoveMethodsTool
             var visitor = new MethodAndMemberVisitor();
             visitor.Visit(sourceClassNode);
 
-            var accessMemberName = GenerateAccessMemberName(visitor.Members.Keys, targetClass);
+            var accessMemberName = MoveMethodAst.GenerateAccessMemberName(visitor.Members.Keys, targetClass);
             var accessMemberType = visitor.Members.TryGetValue(accessMemberName, out var info)
                 ? info.Type
                 : "field";
@@ -299,7 +301,7 @@ public static partial class MoveMethodsTool
                 // For single-file operations, use the bulk move method for better efficiency
                 if (methodList.Length == 1)
                 {
-                    message = await MoveInstanceMethodInFile(filePath, sourceClass, methodList[0], targetClass, accessMemberName, accessMemberType, targetFilePath, progress, cancellationToken);
+                    message = await MoveMethodFileService.MoveInstanceMethodInFile(filePath, sourceClass, methodList[0], targetClass, accessMemberName, accessMemberType, targetFilePath, progress, cancellationToken);
                 }
                 else
                 {
@@ -346,9 +348,9 @@ public static partial class MoveMethodsTool
             var suggestStatic = false;
             foreach (var methodName in methodNames)
             {
-                var moveResult = MoveInstanceMethodAst(root, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
+                var moveResult = MoveMethodAst.MoveInstanceMethodAst(root, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
                 suggestStatic |= moveResult.MovedMethod.Modifiers.Any(SyntaxKind.StaticKeyword);
-                root = AddMethodToTargetClass(moveResult.NewSourceRoot, targetClass, moveResult.MovedMethod, moveResult.Namespace);
+                root = MoveMethodAst.AddMethodToTargetClass(moveResult.NewSourceRoot, targetClass, moveResult.MovedMethod, moveResult.Namespace);
             }
 
             var formatted = Formatter.Format(root, RefactoringHelpers.SharedWorkspace);
@@ -363,19 +365,19 @@ public static partial class MoveMethodsTool
             var sourceTree = CSharpSyntaxTree.ParseText(sourceText);
             var sourceRoot = await sourceTree.GetRootAsync(cancellationToken);
 
-            var targetRoot = await LoadOrCreateTargetRoot(targetPath, cancellationToken);
+            var targetRoot = await MoveMethodFileService.LoadOrCreateTargetRoot(targetPath, cancellationToken);
             var nsName = sourceRoot.DescendantNodes()
                 .OfType<BaseNamespaceDeclarationSyntax>()
                 .FirstOrDefault()?.Name.ToString();
-            targetRoot = PropagateUsings(sourceRoot, targetRoot, nsName);
+            targetRoot = MoveMethodAst.PropagateUsings(sourceRoot, targetRoot, nsName);
 
             var suggestStatic2 = false;
             foreach (var methodName in methodNames)
             {
-                var moveResult = MoveInstanceMethodAst(sourceRoot, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
+                var moveResult = MoveMethodAst.MoveInstanceMethodAst(sourceRoot, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
                 suggestStatic2 |= moveResult.MovedMethod.Modifiers.Any(SyntaxKind.StaticKeyword);
                 sourceRoot = moveResult.NewSourceRoot;
-                targetRoot = AddMethodToTargetClass(targetRoot, targetClass, moveResult.MovedMethod, moveResult.Namespace);
+                targetRoot = MoveMethodAst.AddMethodToTargetClass(targetRoot, targetClass, moveResult.MovedMethod, moveResult.Namespace);
             }
 
             var formattedSource = Formatter.Format(sourceRoot, RefactoringHelpers.SharedWorkspace);
@@ -415,7 +417,7 @@ public static partial class MoveMethodsTool
             var targetPath = targetFilePath ?? currentDocument.FilePath!;
             var sameFile = targetPath == currentDocument.FilePath;
 
-            var message = await MoveInstanceMethodInFile(
+            var message = await MoveMethodFileService.MoveInstanceMethodInFile(
                 currentDocument.FilePath!,
                 sourceClassName,
                 methodName,
