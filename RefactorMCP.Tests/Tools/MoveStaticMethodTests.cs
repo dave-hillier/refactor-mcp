@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using RefactorMCP.ConsoleApp.Move;
 using Xunit;
 
 namespace RefactorMCP.Tests;
@@ -17,7 +18,7 @@ public class MoveStaticMethodTests : TestBase
         var testFile = Path.Combine(TestOutputPath, "MoveStaticMethod.cs");
         await TestUtilities.CreateTestFile(testFile, "public class SourceClass { public static void Foo(){} } public class TargetClass { } ");
 
-        var result = await MoveMethodsTool.MoveStaticMethod(
+        var result = await MoveMethodTool.MoveStaticMethod(
             SolutionPath,
             testFile,
             "Foo",
@@ -39,7 +40,7 @@ public class MoveStaticMethodTests : TestBase
         var testFile = Path.Combine(TestOutputPath, "MoveStaticWithUsings.cs");
         await TestUtilities.CreateTestFile(testFile, TestUtilities.GetSampleCodeForMoveStaticMethodWithUsings());
 
-        var result = await MoveMethodsTool.MoveStaticMethod(
+        var result = await MoveMethodTool.MoveStaticMethod(
             SolutionPath,
             testFile,
             "PrintList",

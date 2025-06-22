@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using RefactorMCP.ConsoleApp.Move;
 using Xunit;
 
 namespace RefactorMCP.Tests;
@@ -18,7 +19,7 @@ public class MoveInstanceMethodTests : TestBase
         await TestUtilities.CreateTestFile(testFile, "public class A { public void Do(){} } public class B { }");
         await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
 
-        var result = await MoveMethodsTool.MoveInstanceMethod(
+        var result = await MoveMethodTool.MoveInstanceMethod(
             SolutionPath,
             testFile,
             "A",
@@ -51,7 +52,7 @@ public class MoveInstanceMethodTests : TestBase
         await TestUtilities.CreateTestFile(testFile, "public class A { public void Do(){} } public static class B { }");
         await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
 
-        var result = await MoveMethodsTool.MoveInstanceMethod(
+        var result = await MoveMethodTool.MoveInstanceMethod(
             SolutionPath,
             testFile,
             "A",
@@ -73,7 +74,7 @@ public class MoveInstanceMethodTests : TestBase
         await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
 
         await Assert.ThrowsAsync<McpException>(() =>
-            MoveMethodsTool.MoveInstanceMethod(
+            MoveMethodTool.MoveInstanceMethod(
                 SolutionPath,
                 testFile,
                 "A",
@@ -92,7 +93,7 @@ public class MoveInstanceMethodTests : TestBase
         await TestUtilities.CreateTestFile(testFile, "public class A { public void Do(){} } public class B { }");
         await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
 
-        var result = await MoveMethodsTool.MoveInstanceMethod(
+        var result = await MoveMethodTool.MoveInstanceMethod(
             SolutionPath,
             testFile,
             "A",
@@ -104,7 +105,7 @@ public class MoveInstanceMethodTests : TestBase
         Assert.Contains("Successfully moved", result);
 
         await Assert.ThrowsAsync<McpException>(() =>
-            MoveMethodsTool.MoveInstanceMethod(
+            MoveMethodTool.MoveInstanceMethod(
                 SolutionPath,
                 testFile,
                 "A",
@@ -123,7 +124,7 @@ public class MoveInstanceMethodTests : TestBase
         await TestUtilities.CreateTestFile(testFile, "public class A { public void Do(){} } public class B { }");
         await LoadSolutionTool.LoadSolution(SolutionPath);
 
-        var result1 = await MoveMethodsTool.MoveInstanceMethod(
+        var result1 = await MoveMethodTool.MoveInstanceMethod(
             SolutionPath,
             testFile,
             "A",
@@ -132,9 +133,9 @@ public class MoveInstanceMethodTests : TestBase
         Assert.Contains("Successfully moved", result1);
 
         // Clear move tracking and try again
-        MoveMethodsTool.ResetMoveHistory();
+        MoveMethodTool.ResetMoveHistory();
 
-        var result2 = await MoveMethodsTool.MoveInstanceMethod(
+        var result2 = await MoveMethodTool.MoveInstanceMethod(
             SolutionPath,
             testFile,
             "A",
@@ -152,7 +153,7 @@ public class MoveInstanceMethodTests : TestBase
         await TestUtilities.CreateTestFile(testFile, "public class A { public void Do(){} } public class B { }");
         await LoadSolutionTool.LoadSolution(SolutionPath);
 
-        var result1 = await MoveMethodsTool.MoveInstanceMethod(
+        var result1 = await MoveMethodTool.MoveInstanceMethod(
             SolutionPath,
             testFile,
             "A",
@@ -162,7 +163,7 @@ public class MoveInstanceMethodTests : TestBase
 
         await LoadSolutionTool.LoadSolution(SolutionPath);
 
-        var result2 = await MoveMethodsTool.MoveInstanceMethod(
+        var result2 = await MoveMethodTool.MoveInstanceMethod(
             SolutionPath,
             testFile,
             "A",
@@ -181,7 +182,7 @@ public class MoveInstanceMethodTests : TestBase
         await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
 
         await Assert.ThrowsAsync<McpException>(() =>
-            MoveMethodsTool.MoveInstanceMethod(
+            MoveMethodTool.MoveInstanceMethod(
                 SolutionPath,
                 testFile,
                 "Wrong",
@@ -191,7 +192,7 @@ public class MoveInstanceMethodTests : TestBase
                 null,
                 CancellationToken.None));
 
-        var result = await MoveMethodsTool.MoveInstanceMethod(
+        var result = await MoveMethodTool.MoveInstanceMethod(
             SolutionPath,
             testFile,
             "A",

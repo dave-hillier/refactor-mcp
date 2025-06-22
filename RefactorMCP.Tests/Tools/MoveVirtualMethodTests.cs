@@ -2,6 +2,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
+using RefactorMCP.ConsoleApp.Move;
 using Xunit;
 
 namespace RefactorMCP.Tests;
@@ -16,8 +17,8 @@ public class MoveVirtualMethodTests
         var tree = CSharpSyntaxTree.ParseText(source);
         var root = tree.GetRoot();
 
-        var moveResult = MoveMethodsTool.MoveInstanceMethodAst(root, "B", "Method1", "ExtractedFromB", "", "");
-        var updatedRoot = MoveMethodsTool.AddMethodToTargetClass(moveResult.NewSourceRoot, "ExtractedFromB", moveResult.MovedMethod, moveResult.Namespace);
+        var moveResult = MoveMethodAst.MoveInstanceMethodAst(root, "B", "Method1", "ExtractedFromB", "", "");
+        var updatedRoot = MoveMethodAst.AddMethodToTargetClass(moveResult.NewSourceRoot, "ExtractedFromB", moveResult.MovedMethod, moveResult.Namespace);
         var formattedRoot = Formatter.Format(updatedRoot, new AdhocWorkspace());
 
         var bClass = formattedRoot.DescendantNodes().OfType<ClassDeclarationSyntax>().First(c => c.Identifier.ValueText == "B");

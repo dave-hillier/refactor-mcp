@@ -2,6 +2,7 @@ using ModelContextProtocol;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using RefactorMCP.ConsoleApp.Move;
 using Xunit;
 
 namespace RefactorMCP.Tests;
@@ -27,7 +28,7 @@ public class B { }";
         await TestUtilities.CreateTestFile(testFile, code);
         await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
 
-        var result = await MoveMethodsTool.MoveInstanceMethod(
+        var result = await MoveMethodTool.MoveInstanceMethod(
             SolutionPath,
             testFile,
             "A",
