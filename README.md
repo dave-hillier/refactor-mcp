@@ -29,6 +29,7 @@ For usage examples see [EXAMPLES.md](./EXAMPLES.md).
 - **Extract Decorator** – create a decorator class that delegates to an existing method.
 - **Create Adapter** – generate an adapter class wrapping an existing method.
 - **Add Observer** – introduce an event and raise it from a method.
+- **Use Interface** – change a method parameter type to one of its implemented interfaces.
 
 Metrics and summaries are also available via the `metrics://` and `summary://` resource schemes.
 

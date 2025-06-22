@@ -1145,6 +1145,40 @@ class C
 }
 ```
 
+## 22. Use Interface
+
+**Purpose**: Change a method parameter type to an implemented interface when only interface members are used.
+
+### Example
+**Before**:
+```csharp
+public interface IWriter { void Write(string value); }
+public class FileWriter : IWriter { public void Write(string value) { } }
+public class C
+{
+    public void DoWork(FileWriter writer)
+    {
+        writer.Write("hi");
+    }
+}
+```
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli use-interface \
+  "./RefactorMCP.sln" \
+  "./RefactorMCP.Tests/Writer.cs" \
+  DoWork \
+  writer \
+  IWriter
+```
+**After**:
+```csharp
+public void DoWork(IWriter writer)
+{
+    writer.Write("hi");
+}
+```
+
 ## Range Format
 
 All refactoring commands that require selecting code use the range format:
