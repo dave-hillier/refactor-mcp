@@ -3,6 +3,7 @@ using ModelContextProtocol;
 using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
+using RefactorMCP.ConsoleApp.Move;
 
 [McpServerToolType]
 public static class MakeStaticThenMoveTool
@@ -24,7 +25,7 @@ public static class MakeStaticThenMoveTool
             methodName,
             instanceParameterName);
 
-        return await MoveMethodsTool.MoveStaticMethod(
+        return await MoveMethodTool.MoveStaticMethod(
             solutionPath,
             filePath,
             methodName,

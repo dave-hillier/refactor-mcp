@@ -1,6 +1,7 @@
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using RefactorMCP.ConsoleApp.Move;
 using Xunit;
 
 namespace RefactorMCP.Tests;
@@ -13,7 +14,7 @@ public class MoveMethodsFileTests : TestBase
         var testFile = Path.Combine(TestOutputPath, "StaticFile.cs");
         await TestUtilities.CreateTestFile(testFile, "public class A { public static int Foo(){ return 1; } } public class B { }");
 
-        var result = await MoveMethodsTool.MoveStaticMethodInFile(
+        var result = await MoveMethodFileService.MoveStaticMethodInFile(
             testFile,
             "Foo",
             "B");
@@ -35,7 +36,7 @@ public class MoveMethodsFileTests : TestBase
         var testFile = Path.Combine(TestOutputPath, "StaticSameFile.cs");
         await TestUtilities.CreateTestFile(testFile, "public class A { public static int Foo(){ return 1; } } public class B { }");
 
-        var result = await MoveMethodsTool.MoveStaticMethodInFile(
+        var result = await MoveMethodFileService.MoveStaticMethodInFile(
             testFile,
             "Foo",
             "B",
@@ -55,7 +56,7 @@ public class MoveMethodsFileTests : TestBase
         await TestUtilities.CreateTestFile(testFile, "public class A { public int Bar(){ return 1; } } public class B { }");
 
         var targetFile = Path.Combine(Path.GetDirectoryName(testFile)!, "B.cs");
-        var result = await MoveMethodsTool.MoveInstanceMethodInFile(
+        var result = await MoveMethodFileService.MoveInstanceMethodInFile(
             testFile,
             "A",
             "Bar",
@@ -81,7 +82,7 @@ public class MoveMethodsFileTests : TestBase
         var testFile = Path.Combine(TestOutputPath, "InstanceSameFile.cs");
         await TestUtilities.CreateTestFile(testFile, "public class A { public int Bar(){ return 1; } } public class B { }");
 
-        var result = await MoveMethodsTool.MoveInstanceMethodInFile(
+        var result = await MoveMethodFileService.MoveInstanceMethodInFile(
             testFile,
             "A",
             "Bar",

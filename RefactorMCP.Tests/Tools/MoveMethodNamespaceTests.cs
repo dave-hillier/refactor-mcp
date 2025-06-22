@@ -1,6 +1,7 @@
 using ModelContextProtocol;
 using System.IO;
 using System.Threading.Tasks;
+using RefactorMCP.ConsoleApp.Move;
 using Xunit;
 
 namespace RefactorMCP.Tests;
@@ -16,7 +17,7 @@ public class MoveMethodNamespaceTests : TestBase
         await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
 
         var targetFile = Path.Combine(Path.GetDirectoryName(testFile)!, "B.cs");
-        var result = await MoveMethodsTool.MoveInstanceMethod(
+        var result = await MoveMethodTool.MoveInstanceMethod(
             SolutionPath,
             testFile,
             "A",
@@ -40,7 +41,7 @@ public class MoveMethodNamespaceTests : TestBase
         await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
 
         var targetFile = Path.Combine(Path.GetDirectoryName(testFile)!, "C.cs");
-        var result = await MoveMethodsTool.MoveInstanceMethod(
+        var result = await MoveMethodTool.MoveInstanceMethod(
             SolutionPath,
             testFile,
             "A",

@@ -12,7 +12,9 @@ using Microsoft.CodeAnalysis.Text;
 using System.IO;
 using RefactorMCP.ConsoleApp.SyntaxRewriters;
 
-public static partial class MoveMethodsTool
+namespace RefactorMCP.ConsoleApp.Move;
+
+public static partial class MoveMethodAst
 {
     // ===== HELPER METHODS =====
 

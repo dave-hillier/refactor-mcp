@@ -4,6 +4,7 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Formatting;
+using RefactorMCP.ConsoleApp.Move;
 
 namespace RefactorMCP.Tests.Roslyn
 {
@@ -27,13 +28,13 @@ namespace RefactorMCP.Tests.Roslyn
             {
                 if (isStatic[i])
                 {
-                    var moveResult = MoveMethodsTool.MoveStaticMethodAst(root, methodNames[i], targetClasses[i]);
-                    root = MoveMethodsTool.AddMethodToTargetClass(moveResult.NewSourceRoot, targetClasses[i], moveResult.MovedMethod, moveResult.Namespace);
+                    var moveResult = MoveMethodAst.MoveStaticMethodAst(root, methodNames[i], targetClasses[i]);
+                    root = MoveMethodAst.AddMethodToTargetClass(moveResult.NewSourceRoot, targetClasses[i], moveResult.MovedMethod, moveResult.Namespace);
                 }
                 else
                 {
-                    var moveResult = MoveMethodsTool.MoveInstanceMethodAst(root, sourceClasses[i], methodNames[i], targetClasses[i], accessMembers[i], accessMemberTypes[i]);
-                    root = MoveMethodsTool.AddMethodToTargetClass(moveResult.NewSourceRoot, targetClasses[i], moveResult.MovedMethod, moveResult.Namespace);
+                    var moveResult = MoveMethodAst.MoveInstanceMethodAst(root, sourceClasses[i], methodNames[i], targetClasses[i], accessMembers[i], accessMemberTypes[i]);
+                    root = MoveMethodAst.AddMethodToTargetClass(moveResult.NewSourceRoot, targetClasses[i], moveResult.MovedMethod, moveResult.Namespace);
                 }
             }
 
@@ -195,7 +196,7 @@ public class TargetClass
             var tree = CSharpSyntaxTree.ParseText(source);
             var root = tree.GetRoot();
 
-            var result = MoveMethodsTool.MoveInstanceMethodAst(
+            var result = MoveMethodAst.MoveInstanceMethodAst(
                 root,
                 "SourceClass",
                 "GetValue",
@@ -203,7 +204,7 @@ public class TargetClass
                 "_target",
                 "field");
 
-            var finalRoot = MoveMethodsTool.AddMethodToTargetClass(result.NewSourceRoot, "TargetClass", result.MovedMethod, result.Namespace);
+            var finalRoot = MoveMethodAst.AddMethodToTargetClass(result.NewSourceRoot, "TargetClass", result.MovedMethod, result.Namespace);
             var formatted = Formatter.Format(finalRoot, new AdhocWorkspace()).ToFullString();
 
             Assert.Contains("public static int GetValue(int value)", formatted);
@@ -227,7 +228,7 @@ public class TargetClass
             var tree = CSharpSyntaxTree.ParseText(source);
             var root = tree.GetRoot();
 
-            var result = MoveMethodsTool.MoveInstanceMethodAst(
+            var result = MoveMethodAst.MoveInstanceMethodAst(
                 root,
                 "SourceClass",
                 "GetValue",
@@ -235,7 +236,7 @@ public class TargetClass
                 "_target",
                 "field");
 
-            var finalRoot = MoveMethodsTool.AddMethodToTargetClass(result.NewSourceRoot, "TargetClass", result.MovedMethod, result.Namespace);
+            var finalRoot = MoveMethodAst.AddMethodToTargetClass(result.NewSourceRoot, "TargetClass", result.MovedMethod, result.Namespace);
             var formatted = Formatter.Format(finalRoot, new AdhocWorkspace()).ToFullString();
 
             Assert.Contains("public static int GetValue(int value, int n = 5)", formatted);
@@ -257,7 +258,7 @@ public class TargetClass
             var tree = CSharpSyntaxTree.ParseText(source);
             var root = tree.GetRoot();
 
-            var result = MoveMethodsTool.MoveInstanceMethodAst(
+            var result = MoveMethodAst.MoveInstanceMethodAst(
                 root,
                 "SourceClass",
                 "Say",
@@ -265,7 +266,7 @@ public class TargetClass
                 "_target",
                 "field");
 
-            var finalRoot = MoveMethodsTool.AddMethodToTargetClass(result.NewSourceRoot, "TargetClass", result.MovedMethod, result.Namespace);
+            var finalRoot = MoveMethodAst.AddMethodToTargetClass(result.NewSourceRoot, "TargetClass", result.MovedMethod, result.Namespace);
             var formatted = Formatter.Format(finalRoot, new AdhocWorkspace()).ToFullString();
 
             Assert.Contains("public void Say()", formatted);
@@ -294,7 +295,7 @@ public class TargetClass
             var tree = CSharpSyntaxTree.ParseText(source);
             var root = tree.GetRoot();
 
-            var result = MoveMethodsTool.MoveInstanceMethodAst(
+            var result = MoveMethodAst.MoveInstanceMethodAst(
                 root,
                 "SourceClass",
                 "AddResProduct",
@@ -302,7 +303,7 @@ public class TargetClass
                 "_target",
                 "field");
 
-            var finalRoot = MoveMethodsTool.AddMethodToTargetClass(result.NewSourceRoot, "TargetClass", result.MovedMethod, result.Namespace);
+            var finalRoot = MoveMethodAst.AddMethodToTargetClass(result.NewSourceRoot, "TargetClass", result.MovedMethod, result.Namespace);
             var formatted = Formatter.Format(finalRoot, new AdhocWorkspace()).ToFullString();
 
             Assert.Contains("resProduct.Modified += @this.Child_Modified", formatted);
@@ -330,7 +331,7 @@ class Target { }";
             var tree = CSharpSyntaxTree.ParseText(source);
             var root = tree.GetRoot();
 
-            var result = MoveMethodsTool.MoveInstanceMethodAst(
+            var result = MoveMethodAst.MoveInstanceMethodAst(
                 root,
                 "Derived",
                 "Method1",
@@ -338,7 +339,7 @@ class Target { }";
                 "_t",
                 "field");
 
-            var finalRoot = MoveMethodsTool.AddMethodToTargetClass(result.NewSourceRoot, "Target", result.MovedMethod, result.Namespace);
+            var finalRoot = MoveMethodAst.AddMethodToTargetClass(result.NewSourceRoot, "Target", result.MovedMethod, result.Namespace);
             var formatted = Formatter.Format(finalRoot, new AdhocWorkspace()).ToFullString();
 
             Assert.Contains("@this.Name", formatted);
@@ -357,7 +358,7 @@ public class Extracted { }";
             var tree = CSharpSyntaxTree.ParseText(source);
             var root = tree.GetRoot();
 
-            var result = MoveMethodsTool.MoveInstanceMethodAst(
+            var result = MoveMethodAst.MoveInstanceMethodAst(
                 root,
                 "A",
                 "MethodBefore",
@@ -365,7 +366,7 @@ public class Extracted { }";
                 "_extracted",
                 "field");
 
-            var finalRoot = MoveMethodsTool.AddMethodToTargetClass(result.NewSourceRoot, "Extracted", result.MovedMethod, result.Namespace);
+            var finalRoot = MoveMethodAst.AddMethodToTargetClass(result.NewSourceRoot, "Extracted", result.MovedMethod, result.Namespace);
             var formatted = Formatter.Format(finalRoot, new AdhocWorkspace()).ToFullString();
 
             Assert.Contains("Extracted.MethodBefore(this)", formatted);
@@ -386,7 +387,7 @@ public class Target { }";
             var tree = CSharpSyntaxTree.ParseText(source);
             var root = tree.GetRoot();
 
-            var result = MoveMethodsTool.MoveInstanceMethodAst(
+            var result = MoveMethodAst.MoveInstanceMethodAst(
                 root,
                 "Outer",
                 "Do",
@@ -394,7 +395,7 @@ public class Target { }";
                 "_t",
                 "field");
 
-            var finalRoot = MoveMethodsTool.AddMethodToTargetClass(result.NewSourceRoot, "Target", result.MovedMethod, result.Namespace);
+            var finalRoot = MoveMethodAst.AddMethodToTargetClass(result.NewSourceRoot, "Target", result.MovedMethod, result.Namespace);
             var formatted = Formatter.Format(finalRoot, new AdhocWorkspace()).ToFullString();
 
             Assert.Contains("Outer.Helper", formatted);
@@ -418,7 +419,7 @@ class B { }";
             var tree = CSharpSyntaxTree.ParseText(source);
             var root = tree.GetRoot();
 
-            var result = MoveMethodsTool.MoveInstanceMethodAst(
+            var result = MoveMethodAst.MoveInstanceMethodAst(
                 root,
                 "A",
                 "Method1",
@@ -426,7 +427,7 @@ class B { }";
                 "_b",
                 "field");
 
-            var finalRoot = MoveMethodsTool.AddMethodToTargetClass(result.NewSourceRoot, "B", result.MovedMethod, result.Namespace);
+            var finalRoot = MoveMethodAst.AddMethodToTargetClass(result.NewSourceRoot, "B", result.MovedMethod, result.Namespace);
             var formatted = Formatter.Format(finalRoot, new AdhocWorkspace()).ToFullString();
 
             Assert.Contains("A.C Method1()", formatted);
@@ -451,7 +452,7 @@ public class B { }";
             var tree = CSharpSyntaxTree.ParseText(source);
             var root = tree.GetRoot();
 
-            var result = MoveMethodsTool.MoveInstanceMethodAst(
+            var result = MoveMethodAst.MoveInstanceMethodAst(
                 root,
                 "A",
                 "GetNested",
@@ -459,7 +460,7 @@ public class B { }";
                 "_b",
                 "field");
 
-            var finalRoot = MoveMethodsTool.AddMethodToTargetClass(result.NewSourceRoot, "B", result.MovedMethod, result.Namespace);
+            var finalRoot = MoveMethodAst.AddMethodToTargetClass(result.NewSourceRoot, "B", result.MovedMethod, result.Namespace);
             var formatted = Formatter.Format(finalRoot, new AdhocWorkspace()).ToFullString();
 
             Assert.Contains("A.Nested GetNested()", formatted);
@@ -485,7 +486,7 @@ public class B { }";
             var tree = CSharpSyntaxTree.ParseText(source);
             var root = tree.GetRoot();
 
-            var result = MoveMethodsTool.MoveInstanceMethodAst(
+            var result = MoveMethodAst.MoveInstanceMethodAst(
                 root,
                 "A",
                 "GetKind",
@@ -493,7 +494,7 @@ public class B { }";
                 "_b",
                 "field");
 
-            var finalRoot = MoveMethodsTool.AddMethodToTargetClass(result.NewSourceRoot, "B", result.MovedMethod, result.Namespace);
+            var finalRoot = MoveMethodAst.AddMethodToTargetClass(result.NewSourceRoot, "B", result.MovedMethod, result.Namespace);
             var formatted = Formatter.Format(finalRoot, new AdhocWorkspace()).ToFullString();
 
             Assert.Contains("A.Kind GetKind()", formatted);
@@ -515,7 +516,7 @@ public class Target { }";
             var tree = CSharpSyntaxTree.ParseText(source);
             var root = tree.GetRoot();
 
-            var result = MoveMethodsTool.MoveInstanceMethodAst(
+            var result = MoveMethodAst.MoveInstanceMethodAst(
                 root,
                 "A",
                 "Do",
@@ -523,7 +524,7 @@ public class Target { }";
                 "_t",
                 "field");
 
-            var finalRoot = MoveMethodsTool.AddMethodToTargetClass(result.NewSourceRoot, "Target", result.MovedMethod, result.Namespace);
+            var finalRoot = MoveMethodAst.AddMethodToTargetClass(result.NewSourceRoot, "Target", result.MovedMethod, result.Namespace);
             var formatted = Formatter.Format(finalRoot, new AdhocWorkspace()).ToFullString();
 
             Assert.Contains("internal void Helper()", formatted);
@@ -546,7 +547,7 @@ class Target { }";
             var tree = CSharpSyntaxTree.ParseText(source);
             var root = tree.GetRoot();
 
-            var result = MoveMethodsTool.MoveInstanceMethodAst(
+            var result = MoveMethodAst.MoveInstanceMethodAst(
                 root,
                 "Source",
                 "Print",
@@ -554,7 +555,7 @@ class Target { }";
                 "_t",
                 "field");
 
-            var finalRoot = MoveMethodsTool.AddMethodToTargetClass(result.NewSourceRoot, "Target", result.MovedMethod, result.Namespace);
+            var finalRoot = MoveMethodAst.AddMethodToTargetClass(result.NewSourceRoot, "Target", result.MovedMethod, result.Namespace);
             var formatted = Formatter.Format(finalRoot, new AdhocWorkspace()).ToFullString();
 
             Assert.Contains("@this.GetName()", formatted);
@@ -576,7 +577,7 @@ class Target { }";
             var tree = CSharpSyntaxTree.ParseText(source);
             var root = tree.GetRoot();
 
-            var result = MoveMethodsTool.MoveInstanceMethodAst(
+            var result = MoveMethodAst.MoveInstanceMethodAst(
                 root,
                 "Derived",
                 "Read",
@@ -584,7 +585,7 @@ class Target { }";
                 "_t",
                 "field");
 
-            var finalRoot = MoveMethodsTool.AddMethodToTargetClass(result.NewSourceRoot, "Target", result.MovedMethod, result.Namespace);
+            var finalRoot = MoveMethodAst.AddMethodToTargetClass(result.NewSourceRoot, "Target", result.MovedMethod, result.Namespace);
             var formatted = Formatter.Format(finalRoot, new AdhocWorkspace()).ToFullString();
 
             Assert.Contains("@this.Value", formatted);
@@ -617,7 +618,7 @@ class Target { }";
             var tree = CSharpSyntaxTree.ParseText(source);
             var root = tree.GetRoot();
 
-            var result = MoveMethodsTool.MoveInstanceMethodAst(
+            var result = MoveMethodAst.MoveInstanceMethodAst(
                 root,
                 "cResRoom",
                 "GetDepositServiceRequestHeaders",
@@ -625,7 +626,7 @@ class Target { }";
                 "_t",
                 "field");
 
-            var finalRoot = MoveMethodsTool.AddMethodToTargetClass(result.NewSourceRoot, "Target", result.MovedMethod, result.Namespace);
+            var finalRoot = MoveMethodAst.AddMethodToTargetClass(result.NewSourceRoot, "Target", result.MovedMethod, result.Namespace);
             var formatted = Formatter.Format(finalRoot, new AdhocWorkspace()).ToFullString();
 
             Assert.Contains("Username = @this.strCurrentOperatorCode", formatted);
