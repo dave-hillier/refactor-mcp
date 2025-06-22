@@ -6,6 +6,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
 using System.Linq;
+using System.Threading;
 
 [McpServerToolType]
 public static class MoveClassToFileTool
@@ -14,11 +15,12 @@ public static class MoveClassToFileTool
     public static async Task<string> MoveToSeparateFile(
         [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file containing the class")] string filePath,
-        [Description("Name of the class to move")] string className)
+        [Description("Name of the class to move")] string className,
+        CancellationToken cancellationToken = default)
     {
         try
         {
-            var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
+            var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath, cancellationToken);
             var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
 
             var newFilePath = Path.Combine(Path.GetDirectoryName(filePath)!, $"{className}.cs");
@@ -26,14 +28,14 @@ public static class MoveClassToFileTool
             CompilationUnitSyntax root;
             if (document != null)
             {
-                root = (CompilationUnitSyntax)(await document.GetSyntaxRootAsync())!;
+                root = (CompilationUnitSyntax)(await document.GetSyntaxRootAsync(cancellationToken))!;
             }
             else
             {
                 if (!File.Exists(filePath))
                     throw new McpException($"Error: File {filePath} not found. Verify the file path and ensure the file is part of the loaded solution.");
 
-                var (text, _) = await RefactoringHelpers.ReadFileWithEncodingAsync(filePath);
+                var (text, _) = await RefactoringHelpers.ReadFileWithEncodingAsync(filePath, cancellationToken);
                 root = (CompilationUnitSyntax)CSharpSyntaxTree.ParseText(text).GetRoot();
             }
             var classNode = root.DescendantNodes().OfType<ClassDeclarationSyntax>()
@@ -47,8 +49,8 @@ public static class MoveClassToFileTool
 
             var rootWithoutClass = (CompilationUnitSyntax)root.RemoveNode(classNode, SyntaxRemoveOptions.KeepNoTrivia)!;
             rootWithoutClass = (CompilationUnitSyntax)Formatter.Format(rootWithoutClass, RefactoringHelpers.SharedWorkspace);
-            var sourceEncoding = await RefactoringHelpers.GetFileEncodingAsync(filePath);
-            await File.WriteAllTextAsync(filePath, rootWithoutClass.ToFullString(), sourceEncoding);
+            var sourceEncoding = await RefactoringHelpers.GetFileEncodingAsync(filePath, cancellationToken);
+            await File.WriteAllTextAsync(filePath, rootWithoutClass.ToFullString(), sourceEncoding, cancellationToken);
 
             var usingStatements = root.Usings;
             CompilationUnitSyntax newRoot = SyntaxFactory.CompilationUnit().WithUsings(usingStatements);
@@ -71,8 +73,8 @@ public static class MoveClassToFileTool
             newRoot = (CompilationUnitSyntax)Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
             if (File.Exists(newFilePath))
                 throw new McpException($"Error: File {newFilePath} already exists");
-            var newFileEncoding = await RefactoringHelpers.GetFileEncodingAsync(filePath);
-            await File.WriteAllTextAsync(newFilePath, newRoot.ToFullString(), newFileEncoding);
+            var newFileEncoding = await RefactoringHelpers.GetFileEncodingAsync(filePath, cancellationToken);
+            await File.WriteAllTextAsync(newFilePath, newRoot.ToFullString(), newFileEncoding, cancellationToken);
 
             if (document != null)
             {

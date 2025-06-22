@@ -5,6 +5,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
 using System.ComponentModel;
+using System.Threading;
 
 [McpServerToolType]
 public static class ExtractInterfaceTool
@@ -15,16 +16,17 @@ public static class ExtractInterfaceTool
         [Description("Path to the C# file containing the class")] string filePath,
         [Description("Name of the class to extract from")] string className,
         [Description("Comma separated list of member names to include")] string memberList,
-        [Description("Path to write the generated interface file")] string interfaceFilePath)
+        [Description("Path to write the generated interface file")] string interfaceFilePath,
+        CancellationToken cancellationToken = default)
     {
         try
         {
-            var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
+            var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath, cancellationToken);
             var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
             if (document == null)
                 throw new McpException($"Error: File {filePath} not found in solution");
 
-            var root = (CompilationUnitSyntax)(await document.GetSyntaxRootAsync())!;
+            var root = (CompilationUnitSyntax)(await document.GetSyntaxRootAsync(cancellationToken))!;
             var classNode = root.DescendantNodes().OfType<ClassDeclarationSyntax>()
                 .FirstOrDefault(c => c.Identifier.ValueText == className);
             if (classNode == null)
@@ -84,8 +86,8 @@ public static class ExtractInterfaceTool
                 .WithMembers(SyntaxFactory.SingletonList(interfaceNode))
                 .NormalizeWhitespace();
 
-            var encoding = await RefactoringHelpers.GetFileEncodingAsync(filePath);
-            await File.WriteAllTextAsync(interfaceFilePath, ifaceUnit.ToFullString(), encoding);
+            var encoding = await RefactoringHelpers.GetFileEncodingAsync(filePath, cancellationToken);
+            await File.WriteAllTextAsync(interfaceFilePath, ifaceUnit.ToFullString(), encoding, cancellationToken);
 
             var baseList = SyntaxFactory.BaseList(
                     SyntaxFactory.SingletonSeparatedList<BaseTypeSyntax>(
@@ -94,7 +96,7 @@ public static class ExtractInterfaceTool
             var updatedClass = classNode.WithBaseList(baseList);
             var newRoot = root.ReplaceNode(classNode, updatedClass);
             var formatted = newRoot.NormalizeWhitespace().ToFullString();
-            await File.WriteAllTextAsync(filePath, formatted, encoding);
+            await File.WriteAllTextAsync(filePath, formatted, encoding, cancellationToken);
             RefactoringHelpers.UpdateFileCaches(filePath, formatted);
             RefactoringHelpers.AddDocumentToProject(document.Project, interfaceFilePath);
             return $"Successfully extracted interface '{interfaceName}' to {interfaceFilePath}";
