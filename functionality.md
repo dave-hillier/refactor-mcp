@@ -46,3 +46,6 @@ Creates a new class from selected fields and methods, establishing a composition
 
 ### Inline Method
 Replaces method calls with the method's body content, removing the method definition.
+
+### Use Interface
+Changes a method parameter type to one of its implemented interfaces when possible.

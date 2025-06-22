@@ -24,5 +24,6 @@ public class AnalyzeRefactoringOpportunitiesTests : IDisposable
         var result = await AnalyzeRefactoringOpportunitiesTool.AnalyzeRefactoringOpportunities(SolutionPath, ExampleFilePath);
         Assert.Contains("safe-delete-field", result, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("safe-delete-method", result, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("make-static", result, StringComparison.OrdinalIgnoreCase);
     }
 }
