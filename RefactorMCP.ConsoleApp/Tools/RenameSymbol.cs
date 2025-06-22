@@ -7,6 +7,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Threading;
 
 [McpServerToolType]
 public static class RenameSymbolTool
@@ -18,30 +19,31 @@ public static class RenameSymbolTool
         [Description("Current name of the symbol")] string oldName,
         [Description("New name for the symbol")] string newName,
         [Description("Line number of the symbol (1-based, optional)")] int? line = null,
-        [Description("Column number of the symbol (1-based, optional)")] int? column = null)
+        [Description("Column number of the symbol (1-based, optional)")] int? column = null,
+        CancellationToken cancellationToken = default)
     {
         try
         {
-            var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
+            var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath, cancellationToken);
             var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
             if (document == null)
                 throw new McpException($"Error: File {filePath} not found in solution");
 
-            var symbol = await FindSymbol(document, oldName, line, column);
+            var symbol = await FindSymbol(document, oldName, line, column, cancellationToken);
             if (symbol == null)
                 throw new McpException($"Error: Symbol '{oldName}' not found");
 
             var options = new SymbolRenameOptions();
-            var renamed = await Renamer.RenameSymbolAsync(solution, symbol, options, newName, cancellationToken: default);
+            var renamed = await Renamer.RenameSymbolAsync(solution, symbol, options, newName, cancellationToken);
             var changes = renamed.GetChanges(solution);
             foreach (var projectChange in changes.GetProjectChanges())
             {
                 foreach (var id in projectChange.GetChangedDocuments())
                 {
                     var newDoc = renamed.GetDocument(id)!;
-                    var text = await newDoc.GetTextAsync();
-                    var encoding = await RefactoringHelpers.GetFileEncodingAsync(newDoc.FilePath!);
-                    await File.WriteAllTextAsync(newDoc.FilePath!, text.ToString(), encoding);
+                    var text = await newDoc.GetTextAsync(cancellationToken);
+                    var encoding = await RefactoringHelpers.GetFileEncodingAsync(newDoc.FilePath!, cancellationToken);
+                    await File.WriteAllTextAsync(newDoc.FilePath!, text.ToString(), encoding, cancellationToken);
                     RefactoringHelpers.UpdateSolutionCache(newDoc);
                 }
             }
@@ -54,16 +56,16 @@ public static class RenameSymbolTool
         }
     }
 
-    private static async Task<ISymbol?> FindSymbol(Document document, string name, int? line, int? column)
+    private static async Task<ISymbol?> FindSymbol(Document document, string name, int? line, int? column, CancellationToken cancellationToken)
     {
-        var model = await document.GetSemanticModelAsync();
-        var root = await document.GetSyntaxRootAsync();
+        var model = await document.GetSemanticModelAsync(cancellationToken);
+        var root = await document.GetSyntaxRootAsync(cancellationToken);
         if (model == null || root == null)
             return null;
 
         if (line.HasValue && column.HasValue)
         {
-            var text = await document.GetTextAsync();
+            var text = await document.GetTextAsync(cancellationToken);
             if (line.Value > 0 && line.Value <= text.Lines.Count && column.Value > 0)
             {
                 var pos = text.Lines[line.Value - 1].Start + column.Value - 1;
@@ -79,7 +81,7 @@ public static class RenameSymbolTool
             }
         }
 
-        var decls = await SymbolFinder.FindDeclarationsAsync(document.Project, name, false);
+        var decls = await SymbolFinder.FindDeclarationsAsync(document.Project, name, false, cancellationToken);
         return decls.FirstOrDefault();
     }
 }

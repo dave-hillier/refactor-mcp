@@ -8,6 +8,7 @@ using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Text;
 using System.Linq;
 using System.Collections.Generic;
+using System.Threading;
 
 [McpServerToolType]
 public static class ConvertToStaticWithParametersTool
@@ -112,7 +113,8 @@ public static class ConvertToStaticWithParametersTool
     public static async Task<string> ConvertToStaticWithParameters(
         [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
-        [Description("Name of the method to convert")] string methodName)
+        [Description("Name of the method to convert")] string methodName,
+        CancellationToken cancellationToken = default)
     {
         try
         {
