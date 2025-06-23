@@ -529,9 +529,9 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli batch-move-methods \
   "[{\"SourceClass\":\"Helper\",\"Method\":\"A\",\"TargetClass\":\"Target\",\"AccessMember\":\"t\"}]"
 ```
 
-## 12. Move Class to Separate File
+## 12. Move Type to Separate File
 
-**Purpose**: Move a class into its own file named after the class.
+**Purpose**: Move a top-level type into its own file named after the type. Works for classes, interfaces, structs, records, enums and delegates.
 
 ### Example
 **Before**:
