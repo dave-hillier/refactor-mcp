@@ -11,25 +11,6 @@ function getWorkspaceFolder(): string | undefined {
     return folder.uri.fsPath;
 }
 
-function runCli(command: string, args: string[]): Thenable<string> {
-    const config = vscode.workspace.getConfiguration();
-    const dotnetPath = config.get<string>('refactorMcp.dotnetPath', 'dotnet');
-    const workspaceFolder = getWorkspaceFolder();
-    if (!workspaceFolder) {
-        return Promise.reject('No workspace');
-    }
-    const projectPath = path.join(workspaceFolder, 'RefactorMCP.ConsoleApp');
-    const commandArgs = ['run', '--project', projectPath, '--', '--cli', command, ...args];
-    return new Promise((resolve, reject) => {
-        execFile(dotnetPath, commandArgs, { cwd: workspaceFolder }, (err, stdout, stderr) => {
-            if (err) {
-                reject(stderr || err.message);
-            } else {
-                resolve(stdout);
-            }
-        });
-    });
-}
 
 function runJson(toolName: string, json: string): Thenable<string> {
     const config = vscode.workspace.getConfiguration();
@@ -53,11 +34,11 @@ function runJson(toolName: string, json: string): Thenable<string> {
 
 async function getAvailableTools(): Promise<string[]> {
     try {
-        const output = await runCli('list-tools', []);
+        const output = await runJson('ListTools', '{}');
         return output
             .split(/\r?\n/)
             .map(l => l.trim())
-            .filter(l => l && !l.startsWith('Available'));
+            .filter(l => l.length > 0);
     } catch {
         return [];
     }

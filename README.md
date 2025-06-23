@@ -31,6 +31,7 @@ For usage examples see [EXAMPLES.md](./EXAMPLES.md).
 - **Create Adapter** – generate an adapter class wrapping an existing method.
 - **Add Observer** – introduce an event and raise it from a method.
 - **Use Interface** – change a method parameter type to one of its implemented interfaces.
+- **List Tools** – display all available refactoring tools as kebab-case names.
 
 Metrics and summaries are also available via the `metrics://` and `summary://` resource schemes.
 

@@ -9,7 +9,7 @@ This extension exposes [RefactorMCP](../README.md) tools to Visual Studio Code.
 
 ### Available Tools
 
-Output of `list-tools`:
+Output of `ListTools`:
 
 ```
 cleanup-usings
