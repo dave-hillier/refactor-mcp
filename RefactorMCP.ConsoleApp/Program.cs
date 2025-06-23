@@ -192,10 +192,10 @@ static async Task RunJsonMode(string[] args)
 
     var toolName = args[1];
     var json = string.Join(" ", args.Skip(2));
-    Dictionary<string, string>? paramDict;
+    Dictionary<string, JsonElement>? paramDict;
     try
     {
-        paramDict = JsonSerializer.Deserialize<Dictionary<string, string>>(json, new JsonSerializerOptions
+        paramDict = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(json, new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
         });
@@ -232,8 +232,15 @@ static async Task RunJsonMode(string[] args)
         var p = parameters[i];
         if (paramDict.TryGetValue(p.Name!, out var value))
         {
-            rawValues[p.Name!] = value;
-            invokeArgs[i] = value;
+            rawValues[p.Name!] = value.ToString();
+            if (value.ValueKind == JsonValueKind.String)
+            {
+                invokeArgs[i] = ConvertInput(value.GetString()!, p.ParameterType);
+            }
+            else
+            {
+                invokeArgs[i] = value.Deserialize(p.ParameterType, new JsonSerializerOptions());
+            }
         }
         else if (p.HasDefaultValue)
         {
