@@ -58,7 +58,14 @@ public static partial class MoveMethodAst
         var tree = CSharpSyntaxTree.ParseText(sourceText);
         var root = tree.GetRoot();
 
-        var moveResult = MoveInstanceMethodAst(root, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
+        var moveResult = MoveInstanceMethodAst(
+            root,
+            sourceClass,
+            methodName,
+            targetClass,
+            accessMemberName,
+            accessMemberType,
+            Array.Empty<string>());
         var finalRoot = AddMethodToTargetClass(moveResult.NewSourceRoot, targetClass, moveResult.MovedMethod, moveResult.Namespace);
 
         var formatted = Formatter.Format(finalRoot, RefactoringHelpers.SharedWorkspace);
@@ -72,7 +79,14 @@ public static partial class MoveMethodAst
 
         foreach (var methodName in methodNames)
         {
-            var moveResult = MoveInstanceMethodAst(root, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
+            var moveResult = MoveInstanceMethodAst(
+                root,
+                sourceClass,
+                methodName,
+                targetClass,
+                accessMemberName,
+                accessMemberType,
+                Array.Empty<string>());
             root = AddMethodToTargetClass(moveResult.NewSourceRoot, targetClass, moveResult.MovedMethod, moveResult.Namespace);
         }
 
