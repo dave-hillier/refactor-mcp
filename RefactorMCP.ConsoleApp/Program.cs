@@ -8,7 +8,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Server;
-using System.CommandLine;
 using System.ComponentModel;
 using System.Reflection;
 using System.Text;
@@ -18,11 +17,6 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("RefactorMCP.Tests")]
 
 // Parse command line arguments
-if (args.Length > 0 && args[0] == "--cli")
-{
-    await RunCliMode(args);
-    return;
-}
 if (args.Length > 0 && args[0] == "--json")
 {
     await RunJsonMode(args);
@@ -44,141 +38,6 @@ builder.Services
     .WithPromptsFromAssembly();
 
 await builder.Build().RunAsync();
-
-static async Task RunCliMode(string[] args)
-{
-    if (args.Length < 2)
-    {
-        ShowCliHelp();
-        return;
-    }
-
-    var root = BuildCliRoot();
-    await root.InvokeAsync(args.Skip(1).ToArray());
-}
-static RootCommand BuildCliRoot()
-{
-    var root = new RootCommand("RefactorMCP CLI Mode");
-
-    var toolMethods = typeof(LoadSolutionTool).Assembly
-        .GetTypes()
-        .Where(t => t.GetCustomAttributes(typeof(McpServerToolTypeAttribute), false).Length > 0)
-        .SelectMany(t => t.GetMethods(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static))
-        .Where(m => m.GetCustomAttributes(typeof(McpServerToolAttribute), false).Length > 0)
-        .ToArray();
-
-    foreach (var method in toolMethods)
-    {
-        var commandName = ToKebabCase(method.Name);
-        var description = method.GetCustomAttribute<DescriptionAttribute>()?.Description;
-        var command = new Command(commandName, description ?? string.Empty);
-
-        var parameterSymbols = new List<(ParameterInfo param, Argument<string>? arg, Option<string?>? opt)>();
-        foreach (var p in method.GetParameters())
-        {
-            var desc = p.GetCustomAttribute<DescriptionAttribute>()?.Description;
-            var kebab = ToKebabCase(p.Name!);
-            if (p.HasDefaultValue)
-            {
-                var opt = new Option<string?>("--" + kebab, desc);
-                command.AddOption(opt);
-                parameterSymbols.Add((p, null, opt));
-            }
-            else
-            {
-                var arg = new Argument<string>(kebab, desc);
-                command.AddArgument(arg);
-                parameterSymbols.Add((p, arg, null));
-            }
-        }
-
-        command.SetHandler(async ctx =>
-        {
-            var values = new object?[parameterSymbols.Count];
-            var rawValues = new Dictionary<string, string?>();
-            for (int i = 0; i < parameterSymbols.Count; i++)
-            {
-                var (param, arg, opt) = parameterSymbols[i];
-                string? input = arg != null
-                    ? ctx.ParseResult.GetValueForArgument(arg)
-                    : ctx.ParseResult.GetValueForOption(opt!);
-
-                rawValues[param.Name!] = input;
-
-                if (string.IsNullOrEmpty(input))
-                {
-                    values[i] = param.HasDefaultValue ? param.DefaultValue : null;
-                }
-                else
-                {
-                    values[i] = ConvertInput(input, param.ParameterType);
-                }
-            }
-
-            var result = method.Invoke(null, values);
-            if (result is Task<string> taskStr)
-                Console.WriteLine(await taskStr);
-            else if (result is Task task)
-            {
-                await task;
-                Console.WriteLine("Done");
-            }
-            else if (result != null)
-            {
-                Console.WriteLine(result.ToString());
-            }
-
-            if (!string.Equals(method.Name, nameof(LoadSolutionTool.LoadSolution)))
-                ToolCallLogger.Log(method.Name, rawValues);
-        });
-
-        root.AddCommand(command);
-    }
-
-    var listTools = new Command("list-tools", "List all available refactoring tools");
-    listTools.SetHandler(() => Console.WriteLine(ListAvailableTools()));
-    root.AddCommand(listTools);
-
-    var playLog = new Command("play-log", "Replay tool calls from a log file");
-    var logArg = new Argument<string>("log-file", "Path to the log file");
-    playLog.AddArgument(logArg);
-    playLog.SetHandler(async (string file) => await ToolCallLogger.Playback(file), logArg);
-    root.AddCommand(playLog);
-
-    return root;
-}
-
-static object? ConvertInput(string value, Type targetType)
-{
-    if (targetType == typeof(string))
-        return value;
-    if (targetType == typeof(string[]))
-        return value.Split(',', StringSplitOptions.RemoveEmptyEntries);
-    if (targetType == typeof(ConstructorInjectionTool.MethodParameterPair[]))
-    {
-        var parts = value.Split(';', StringSplitOptions.RemoveEmptyEntries);
-        var pairs = new ConstructorInjectionTool.MethodParameterPair[parts.Length];
-        for (int i = 0; i < parts.Length; i++)
-        {
-            var nv = parts[i].Split(':', 2, StringSplitOptions.RemoveEmptyEntries);
-            if (nv.Length != 2)
-                throw new FormatException("Invalid pair format. Use 'Method:Parameter;...'");
-            pairs[i] = new ConstructorInjectionTool.MethodParameterPair(nv[0], nv[1]);
-        }
-        return pairs;
-    }
-    if (targetType == typeof(int))
-        return int.Parse(value);
-    if (targetType == typeof(bool))
-        return bool.Parse(value);
-    return Convert.ChangeType(value, targetType);
-}
-
-
-static void ShowCliHelp()
-{
-    BuildCliRoot().Invoke("--help");
-}
 
 static async Task RunJsonMode(string[] args)
 {
@@ -220,7 +79,7 @@ static async Task RunJsonMode(string[] args)
 
     if (method == null)
     {
-        Console.WriteLine($"Unknown tool: {toolName}. Use --cli list-tools to see available commands.");
+        Console.WriteLine($"Unknown tool: {toolName}. Use the ListTools tool to see available commands.");
         return;
     }
 
