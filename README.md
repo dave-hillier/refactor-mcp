@@ -20,6 +20,7 @@ For usage examples see [EXAMPLES.md](./EXAMPLES.md).
 - **Move Static Method** – relocate a static method and keep a wrapper in the original class.
 - **Move Instance Method** – move an instance method to another class and delegate from the source. If the moved method no longer accesses instance members, it is made static automatically. Supports optional `constructor-injections` and `parameter-injections` lists to control dependency handling.
 - **Make Static Then Move** – convert an instance method to static and relocate it to another class in one step.
+- **Move Type to Separate File** – move a top-level type into its own file named after the type.
 - **Make Field Readonly** – move initialization into constructors and mark the field readonly.
 - **Transform Setter to Init** – convert property setters to init-only and initialize in constructors.
 - **Constructor Injection** – convert method parameters to constructor-injected fields or properties.

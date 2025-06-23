@@ -187,6 +187,30 @@ internal static class RefactoringHelpers
         return null;
     }
 
+    internal static async Task<Document?> FindTypeInSolution(
+        Solution solution,
+        string typeName,
+        params string[]? excludingFilePaths)
+    {
+        foreach (var doc in solution.Projects.SelectMany(p => p.Documents))
+        {
+            var docPath = doc.FilePath ?? string.Empty;
+            if (excludingFilePaths != null && excludingFilePaths.Any(p => Path.GetFullPath(docPath) == Path.GetFullPath(p)))
+                continue;
+
+            var root = await doc.GetSyntaxRootAsync();
+            if (root != null && root.DescendantNodes().Any(n =>
+                    n is BaseTypeDeclarationSyntax bt && bt.Identifier.Text == typeName ||
+                    n is EnumDeclarationSyntax en && en.Identifier.Text == typeName ||
+                    n is DelegateDeclarationSyntax dd && dd.Identifier.Text == typeName))
+            {
+                return doc;
+            }
+        }
+
+        return null;
+    }
+
     internal static void AddDocumentToProject(Project project, string filePath)
     {
         if (project.Documents.Any(d =>

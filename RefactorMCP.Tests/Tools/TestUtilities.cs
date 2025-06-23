@@ -169,7 +169,7 @@ public class CleanupSample
 }
 """;
 
-    public static string GetSampleCodeForMoveClassToFile() =>
+    public static string GetSampleCodeForMoveTypeToFile() =>
         File.ReadAllText(Path.Combine(Path.GetDirectoryName(GetSolutionPath())!, "RefactorMCP.Tests", "ExampleCode.cs"));
 
     public static string GetSampleCodeForRenameSymbol() =>
