@@ -26,10 +26,10 @@ public class MoveInstanceMethodTests : TestBase
             "Do",
             "B",
             null,
+            Array.Empty<string>(),
+            Array.Empty<string>(),
             null,
-            CancellationToken.None,
-            null,
-            null);
+            CancellationToken.None);
 
         Assert.Contains("Successfully moved", result);
         Assert.Contains("A.Do", result);
@@ -61,10 +61,10 @@ public class MoveInstanceMethodTests : TestBase
             "Do",
             "B",
             null,
+            Array.Empty<string>(),
+            Array.Empty<string>(),
             null,
-            CancellationToken.None,
-            null,
-            null);
+            CancellationToken.None);
 
         Assert.Contains("Successfully moved", result);
     }
@@ -85,10 +85,10 @@ public class MoveInstanceMethodTests : TestBase
                 "Do",
                 "B",
                 null,
+                Array.Empty<string>(),
+                Array.Empty<string>(),
                 null,
-                CancellationToken.None,
-                null,
-                null));
+                CancellationToken.None));
     }
 
     [Fact]
@@ -106,10 +106,10 @@ public class MoveInstanceMethodTests : TestBase
             "Do",
             "B",
             null,
+            Array.Empty<string>(),
+            Array.Empty<string>(),
             null,
-            CancellationToken.None,
-            null,
-            null);
+            CancellationToken.None);
         Assert.Contains("Successfully moved", result);
 
         await Assert.ThrowsAsync<McpException>(() =>
@@ -120,10 +120,10 @@ public class MoveInstanceMethodTests : TestBase
                 "Do",
                 "B",
                 null,
+                Array.Empty<string>(),
+                Array.Empty<string>(),
                 null,
-                CancellationToken.None,
-                null,
-                null));
+                CancellationToken.None));
     }
 
     [Fact]
@@ -141,10 +141,10 @@ public class MoveInstanceMethodTests : TestBase
             "Do",
             "B",
             null,
+            Array.Empty<string>(),
+            Array.Empty<string>(),
             null,
-            CancellationToken.None,
-            null,
-            null);
+            CancellationToken.None);
         Assert.Contains("Successfully moved", result1);
 
         // Clear move tracking and try again
@@ -157,10 +157,10 @@ public class MoveInstanceMethodTests : TestBase
             "Do",
             "B",
             null,
+            Array.Empty<string>(),
+            Array.Empty<string>(),
             null,
-            CancellationToken.None,
-            null,
-            null);
+            CancellationToken.None);
 
         Assert.Contains("Successfully moved", result2);
     }
@@ -178,7 +178,12 @@ public class MoveInstanceMethodTests : TestBase
             testFile,
             "A",
             "Do",
-            "B");
+            "B",
+            null,
+            Array.Empty<string>(),
+            Array.Empty<string>(),
+            null,
+            CancellationToken.None);
         Assert.Contains("Successfully moved", result1);
 
         await LoadSolutionTool.LoadSolution(SolutionPath);
@@ -188,7 +193,12 @@ public class MoveInstanceMethodTests : TestBase
             testFile,
             "A",
             "Do",
-            "B");
+            "B",
+            null,
+            Array.Empty<string>(),
+            Array.Empty<string>(),
+            null,
+            CancellationToken.None);
 
         Assert.Contains("Successfully moved", result2);
     }
@@ -209,6 +219,8 @@ public class MoveInstanceMethodTests : TestBase
                 "Do",
                 "B",
                 null,
+                Array.Empty<string>(),
+                Array.Empty<string>(),
                 null,
                 CancellationToken.None));
 
@@ -219,10 +231,10 @@ public class MoveInstanceMethodTests : TestBase
             "Do",
             "B",
             null,
+            Array.Empty<string>(),
+            Array.Empty<string>(),
             null,
-            CancellationToken.None,
-            null,
-            null);
+            CancellationToken.None);
 
         Assert.Contains("Successfully moved", result);
     }
@@ -242,10 +254,10 @@ public class MoveInstanceMethodTests : TestBase
             "Get",
             "B",
             null,
-            null,
-            CancellationToken.None,
             new[] { "this" },
-            null);
+            Array.Empty<string>(),
+            null,
+            CancellationToken.None);
 
         Assert.Contains("Successfully moved", result);
 
