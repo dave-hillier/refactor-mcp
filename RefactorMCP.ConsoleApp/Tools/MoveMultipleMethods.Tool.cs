@@ -40,7 +40,7 @@ public static partial class MoveMultipleMethodsTool
                 document.FilePath!,
                 sourceClass,
                 methodName,
-                Array.Empty<string>(),
+                new[] { "this" },
                 Array.Empty<string>(),
                 targetClass,
                 accessMember,
