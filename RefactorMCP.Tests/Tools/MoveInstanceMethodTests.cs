@@ -26,6 +26,8 @@ public class MoveInstanceMethodTests : TestBase
             "Do",
             "B",
             null,
+            Array.Empty<string>(),
+            Array.Empty<string>(),
             null,
             CancellationToken.None);
 
@@ -59,6 +61,8 @@ public class MoveInstanceMethodTests : TestBase
             "Do",
             "B",
             null,
+            Array.Empty<string>(),
+            Array.Empty<string>(),
             null,
             CancellationToken.None);
 
@@ -81,6 +85,8 @@ public class MoveInstanceMethodTests : TestBase
                 "Do",
                 "B",
                 null,
+                Array.Empty<string>(),
+                Array.Empty<string>(),
                 null,
                 CancellationToken.None));
     }
@@ -100,6 +106,8 @@ public class MoveInstanceMethodTests : TestBase
             "Do",
             "B",
             null,
+            Array.Empty<string>(),
+            Array.Empty<string>(),
             null,
             CancellationToken.None);
         Assert.Contains("Successfully moved", result);
@@ -112,6 +120,8 @@ public class MoveInstanceMethodTests : TestBase
                 "Do",
                 "B",
                 null,
+                Array.Empty<string>(),
+                Array.Empty<string>(),
                 null,
                 CancellationToken.None));
     }
@@ -129,7 +139,12 @@ public class MoveInstanceMethodTests : TestBase
             testFile,
             "A",
             "Do",
-            "B");
+            "B",
+            null,
+            Array.Empty<string>(),
+            Array.Empty<string>(),
+            null,
+            CancellationToken.None);
         Assert.Contains("Successfully moved", result1);
 
         // Clear move tracking and try again
@@ -140,7 +155,12 @@ public class MoveInstanceMethodTests : TestBase
             testFile,
             "A",
             "Do",
-            "B");
+            "B",
+            null,
+            Array.Empty<string>(),
+            Array.Empty<string>(),
+            null,
+            CancellationToken.None);
 
         Assert.Contains("Successfully moved", result2);
     }
@@ -158,7 +178,12 @@ public class MoveInstanceMethodTests : TestBase
             testFile,
             "A",
             "Do",
-            "B");
+            "B",
+            null,
+            Array.Empty<string>(),
+            Array.Empty<string>(),
+            null,
+            CancellationToken.None);
         Assert.Contains("Successfully moved", result1);
 
         await LoadSolutionTool.LoadSolution(SolutionPath);
@@ -168,7 +193,12 @@ public class MoveInstanceMethodTests : TestBase
             testFile,
             "A",
             "Do",
-            "B");
+            "B",
+            null,
+            Array.Empty<string>(),
+            Array.Empty<string>(),
+            null,
+            CancellationToken.None);
 
         Assert.Contains("Successfully moved", result2);
     }
@@ -189,6 +219,8 @@ public class MoveInstanceMethodTests : TestBase
                 "Do",
                 "B",
                 null,
+                Array.Empty<string>(),
+                Array.Empty<string>(),
                 null,
                 CancellationToken.None));
 
@@ -199,9 +231,35 @@ public class MoveInstanceMethodTests : TestBase
             "Do",
             "B",
             null,
+            Array.Empty<string>(),
+            Array.Empty<string>(),
             null,
             CancellationToken.None);
 
         Assert.Contains("Successfully moved", result);
+    }
+
+    [Fact]
+    public async Task MoveInstanceMethod_ConstructorInjection_HandlesThis()
+    {
+        UnloadSolutionTool.ClearSolutionCache();
+        var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "CtorMove.cs"));
+        await TestUtilities.CreateTestFile(testFile, "public class cA{ public int Value=>1; public int Get(){ return Value; }} public class B{ }");
+        await LoadSolutionTool.LoadSolution(SolutionPath);
+
+        var result = await MoveMethodTool.MoveInstanceMethod(
+            SolutionPath,
+            testFile,
+            "cA",
+            "Get",
+            "B",
+            null,
+            new[] { "this" },
+            Array.Empty<string>(),
+            null,
+            CancellationToken.None);
+
+        Assert.Contains("Successfully moved", result);
+
     }
 }

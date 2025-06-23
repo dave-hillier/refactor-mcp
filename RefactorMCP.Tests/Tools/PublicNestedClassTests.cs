@@ -35,6 +35,8 @@ public class B { }";
             "GetNested",
             "B",
             null,
+            Array.Empty<string>(),
+            Array.Empty<string>(),
             null,
             CancellationToken.None);
 

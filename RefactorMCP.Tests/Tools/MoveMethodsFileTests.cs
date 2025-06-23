@@ -60,10 +60,14 @@ public class MoveMethodsFileTests : TestBase
             testFile,
             "A",
             "Bar",
+            Array.Empty<string>(),
+            Array.Empty<string>(),
             "B",
             "",
             "",
-            targetFile);
+            targetFile,
+            progress: null,
+            cancellationToken: CancellationToken.None);
 
         Assert.Contains("Successfully moved instance method", result);
         Assert.Contains("made static", result);
@@ -86,10 +90,14 @@ public class MoveMethodsFileTests : TestBase
             testFile,
             "A",
             "Bar",
+            Array.Empty<string>(),
+            Array.Empty<string>(),
             "B",
             "",
             "",
-            testFile);
+            testFile,
+            progress: null,
+            cancellationToken: CancellationToken.None);
 
         Assert.Contains("Successfully moved instance method", result);
         var fileContent = await File.ReadAllTextAsync(testFile);

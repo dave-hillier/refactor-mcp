@@ -40,6 +40,8 @@ public static partial class MoveMultipleMethodsTool
                 document.FilePath!,
                 sourceClass,
                 methodName,
+                Array.Empty<string>(),
+                Array.Empty<string>(),
                 targetClass,
                 accessMember,
                 accessMemberType,
