@@ -119,7 +119,13 @@ public static class MoveMethodFileService
         var sourceRoot = (await CSharpSyntaxTree.ParseText(sourceText).GetRootAsync(cancellationToken));
 
         var moveResult = MoveMethodAst.MoveInstanceMethodAst(
-            sourceRoot, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
+            sourceRoot,
+            sourceClass,
+            methodName,
+            targetClass,
+            accessMemberName,
+            accessMemberType,
+            parameterInjections);
 
 
         SyntaxNode updatedSourceRoot = moveResult.NewSourceRoot;
@@ -175,7 +181,7 @@ public static class MoveMethodFileService
     {
         foreach (var inj in constructorInjections)
         {
-            var paramName = inj == "this" ? "@this" : inj.TrimStart('_');
+            var paramName = GetParameterName(inj, sourceClass);
             var fieldName = GetFieldName(inj, sourceClass);
             var method = root.DescendantNodes()
                 .OfType<MethodDeclarationSyntax>()
@@ -224,6 +230,29 @@ public static class MoveMethodFileService
             baseName = char.ToLower(baseName[0]) + baseName.Substring(1);
 
         return "_" + baseName;
+    }
+
+    internal static string GetParameterName(string inj, string sourceClass)
+    {
+        string baseName;
+        if (inj == "this")
+        {
+            baseName = sourceClass;
+            if (baseName.Length >= 2 && baseName[0] == 'c' && char.IsUpper(baseName[1]))
+                baseName = baseName.Substring(1);
+        }
+        else
+        {
+            baseName = inj.TrimStart('_');
+        }
+
+        if (baseName.StartsWith("@"))
+            baseName = baseName.Substring(1);
+
+        if (baseName.Length > 0)
+            baseName = char.ToLower(baseName[0]) + baseName.Substring(1);
+
+        return baseName;
     }
 
 
