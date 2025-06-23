@@ -320,7 +320,18 @@ public static class MoveMethodTool
                 }
                 else
                 {
-                    message = await MoveBulkInstanceMethodsInFile(filePath, sourceClass, methodList, targetClass, accessMemberName, accessMemberType, targetFilePath, progress, cancellationToken);
+                    message = await MoveBulkInstanceMethodsInFile(
+                        filePath,
+                        sourceClass,
+                        methodList,
+                        targetClass,
+                        accessMemberName,
+                        accessMemberType,
+                        targetFilePath,
+                        constructorInjections,
+                        parameterInjections,
+                        progress,
+                        cancellationToken);
                 }
             }
 
@@ -343,6 +354,8 @@ public static class MoveMethodTool
         string accessMemberName,
         string accessMemberType,
         string? targetFilePath,
+        string[] constructorInjections,
+        string[] parameterInjections,
         IProgress<string>? progress,
         CancellationToken cancellationToken)
     {
@@ -363,7 +376,14 @@ public static class MoveMethodTool
             var suggestStatic = false;
             foreach (var methodName in methodNames)
             {
-                var moveResult = MoveMethodAst.MoveInstanceMethodAst(root, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
+                var moveResult = MoveMethodAst.MoveInstanceMethodAst(
+                    root,
+                    sourceClass,
+                    methodName,
+                    targetClass,
+                    accessMemberName,
+                    accessMemberType,
+                    parameterInjections);
                 suggestStatic |= moveResult.MovedMethod.Modifiers.Any(SyntaxKind.StaticKeyword);
                 root = MoveMethodAst.AddMethodToTargetClass(moveResult.NewSourceRoot, targetClass, moveResult.MovedMethod, moveResult.Namespace);
             }
@@ -389,7 +409,14 @@ public static class MoveMethodTool
             var suggestStatic2 = false;
             foreach (var methodName in methodNames)
             {
-                var moveResult = MoveMethodAst.MoveInstanceMethodAst(sourceRoot, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
+                var moveResult = MoveMethodAst.MoveInstanceMethodAst(
+                    sourceRoot,
+                    sourceClass,
+                    methodName,
+                    targetClass,
+                    accessMemberName,
+                    accessMemberType,
+                    parameterInjections);
                 suggestStatic2 |= moveResult.MovedMethod.Modifiers.Any(SyntaxKind.StaticKeyword);
                 sourceRoot = moveResult.NewSourceRoot;
                 targetRoot = MoveMethodAst.AddMethodToTargetClass(targetRoot, targetClass, moveResult.MovedMethod, moveResult.Namespace);
