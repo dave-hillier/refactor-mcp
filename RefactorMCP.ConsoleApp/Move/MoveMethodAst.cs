@@ -461,12 +461,12 @@ public static partial class MoveMethodAst
             transformedMethod = RewriteMethodBody(
                 transformedMethod,
                 methodName,
+                thisParameterName,
                 usesInstanceMembers,
                 callsOtherMethods,
                 isRecursive,
                 instanceMembers,
-                otherMethodNames,
-                thisParameterName);
+                otherMethodNames);
         }
 
         if (injectedParameters.Count > 0)
@@ -511,15 +511,14 @@ public static partial class MoveMethodAst
     private static MethodDeclarationSyntax RewriteMethodBody(
         MethodDeclarationSyntax method,
         string methodName,
+        string thisParameterName,
         bool usesInstanceMembers,
         bool callsOtherMethods,
         bool isRecursive,
         HashSet<string> instanceMembers,
-        HashSet<string> otherMethodNames,
-        string parameterName)
+        HashSet<string> otherMethodNames)
     {
-        if (string.IsNullOrEmpty(parameterName))
-            parameterName = "@this";
+        var parameterName = thisParameterName;
 
         if (usesInstanceMembers)
         {
