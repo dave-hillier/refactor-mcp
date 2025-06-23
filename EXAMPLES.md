@@ -1,6 +1,6 @@
 # RefactorMCP Examples
 
-This document provides comprehensive examples for all refactoring tools available in RefactorMCP. Each example shows the before/after code and the exact CLI commands to perform the refactoring.
+This document provides comprehensive examples for all refactoring tools available in RefactorMCP. Each example shows the before/after code and the JSON command needed to perform the refactoring.
 
 Using the MCP tools is the preferred method for refactoring large C# files where manual edits become cumbersome.
 
@@ -10,7 +10,7 @@ Using the MCP tools is the preferred method for refactoring large C# files where
 Before performing any refactoring, you need to load a solution. This also clears any cached data so each load starts a fresh session:
 
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --cli load-solution ./RefactorMCP.sln
+dotnet run --project RefactorMCP.ConsoleApp -- --json load-solution '{"solutionPath":"./RefactorMCP.sln"}'
 ```
 
 ### JSON Example
@@ -18,14 +18,8 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli load-solution ./RefactorMCP
 {"tool":"load-solution","solutionPath":"./RefactorMCP.sln"}
 ```
 
-### CLI Mode Usage
-All examples use the CLI syntax:
-```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --cli <command> [arguments]
-```
-
 ### JSON Mode Usage
-Parameters can also be passed as JSON:
+All examples use JSON parameters:
 ```bash
 dotnet run --project RefactorMCP.ConsoleApp -- --json ToolName '{"param":"value"}'
 ```
@@ -786,7 +780,7 @@ Running the command again with the correct `sourceClass` succeeds.
 ### Example
 **Command**:
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --cli list-tools
+dotnet run --project RefactorMCP.ConsoleApp -- --json ListTools '{}'
 ```
 
 **Output**:
