@@ -235,6 +235,8 @@ public static class MoveMethodTool
         [Description("Comma separated names of the methods to move (required)")] string methodNames,
         [Description("Name of the target class")] string targetClass,
         [Description("Path to the target file (optional, will create if doesn't exist or unspecified)")] string? targetFilePath = null,
+        [Description("Dependencies to inject via the constructor")] string[] constructorInjections = null!,
+        [Description("Dependencies to keep as parameters")] string[] parameterInjections = null!,
         IProgress<string>? progress = null,
         CancellationToken cancellationToken = default)
     {
@@ -288,6 +290,8 @@ public static class MoveMethodTool
                     document,
                     sourceClass,
                     methodList,
+                    constructorInjections,
+                    parameterInjections,
                     targetClass,
                     accessMemberName,
                     accessMemberType,
@@ -301,7 +305,18 @@ public static class MoveMethodTool
                 // For single-file operations, use the bulk move method for better efficiency
                 if (methodList.Length == 1)
                 {
-                    message = await MoveMethodFileService.MoveInstanceMethodInFile(filePath, sourceClass, methodList[0], targetClass, accessMemberName, accessMemberType, targetFilePath, progress, cancellationToken);
+                    message = await MoveMethodFileService.MoveInstanceMethodInFile(
+                        filePath,
+                        sourceClass,
+                        methodList[0],
+                        constructorInjections,
+                        parameterInjections,
+                        targetClass,
+                        accessMemberName,
+                        accessMemberType,
+                        targetFilePath,
+                        progress,
+                        cancellationToken);
                 }
                 else
                 {
@@ -401,6 +416,8 @@ public static class MoveMethodTool
         Document document,
         string sourceClassName,
         string[] methodNames,
+        string[] constructorInjections,
+        string[] parameterInjections,
         string targetClassName,
         string accessMemberName,
         string accessMemberType,
@@ -421,6 +438,8 @@ public static class MoveMethodTool
                 currentDocument.FilePath!,
                 sourceClassName,
                 methodName,
+                constructorInjections,
+                parameterInjections,
                 targetClassName,
                 accessMemberName,
                 accessMemberType,

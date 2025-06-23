@@ -18,7 +18,7 @@ For usage examples see [EXAMPLES.md](./EXAMPLES.md).
 - **Introduce Field/Parameter/Variable** – turn expressions into new members; fails if a field already exists.
 - **Convert to Static** – make instance methods static using parameters or an instance argument.
 - **Move Static Method** – relocate a static method and keep a wrapper in the original class.
-- **Move Instance Method** – move an instance method to another class and delegate from the source. If the moved method no longer accesses instance members, it is made static automatically.
+- **Move Instance Method** – move an instance method to another class and delegate from the source. If the moved method no longer accesses instance members, it is made static automatically. Supports optional `constructor-injections` and `parameter-injections` lists to control dependency handling.
 - **Make Static Then Move** – convert an instance method to static and relocate it to another class in one step.
 - **Make Field Readonly** – move initialization into constructors and mark the field readonly.
 - **Transform Setter to Init** – convert property setters to init-only and initialize in constructors.
