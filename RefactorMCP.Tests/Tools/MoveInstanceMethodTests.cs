@@ -1,11 +1,8 @@
 using ModelContextProtocol;
-using System.IO;
-using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using RefactorMCP.ConsoleApp.Move;
-using Xunit;
 
 namespace RefactorMCP.Tests;
 
@@ -240,26 +237,103 @@ public class MoveInstanceMethodTests : TestBase
     }
 
     [Fact]
-    public async Task MoveInstanceMethod_ConstructorInjection_HandlesThis()
+    public async Task MoveInstanceMethod_ComplexInheritedMemberAccess_ReproducesBug()
     {
         UnloadSolutionTool.ClearSolutionCache();
-        var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "CtorMove.cs"));
-        await TestUtilities.CreateTestFile(testFile, "public class cA{ public int Value=>1; public int Get(){ return Value; }} public class B{ }");
+        var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "ComplexInheritedAccess.cs"));
+        
+        // Create a more realistic scenario that matches your cResRoom.cs example
+        var sourceCode = @"
+public interface IBaseInitialiser 
+{
+    ICache Cache { get; }
+}
+
+public interface ICache 
+{
+    IINISite INISite { get; }
+}
+
+public interface IINISite
+{
+    bool TRANSACTIONHANDLING_EnableDocumentTracking { get; }
+}
+
+public class BaseClass : IBaseInitialiser
+{
+    public ICache Cache { get; } = new CacheImpl();
+}
+
+public class CacheImpl : ICache
+{
+    public IINISite INISite { get; } = new INISiteImpl();
+}
+
+public class INISiteImpl : IINISite
+{
+    public bool TRANSACTIONHANDLING_EnableDocumentTracking => true;
+}
+
+public class cResRoom : BaseClass
+{
+    public List<string> colGroupedPostedCharges { get; } = new List<string>();
+    
+    public void AddDepositRefundFinTransaction(string taxReference)
+    {
+        // This complex inherited member access should be transformed to @this.Cache.INISite.TRANSACTIONHANDLING_EnableDocumentTracking
+        if (Cache.INISite.TRANSACTIONHANDLING_EnableDocumentTracking)
+        {
+            var sourceDeposit = colGroupedPostedCharges.FirstOrDefault(x => x == taxReference);
+            // More complex logic here...
+        }
+    }
+}";
+
+        await TestUtilities.CreateTestFile(testFile, sourceCode);
         await LoadSolutionTool.LoadSolution(SolutionPath);
 
         var result = await MoveMethodTool.MoveInstanceMethod(
             SolutionPath,
             testFile,
-            "cA",
-            "Get",
-            "B",
+            "cResRoom",
+            "AddDepositRefundFinTransaction",
+            "TargetClass",
             null,
-            new[] { "this" },
             Array.Empty<string>(),
+            new[] { "this" },
             null,
             CancellationToken.None);
 
         Assert.Contains("Successfully moved", result);
 
+        // Check the transformation
+        var newContent = await File.ReadAllTextAsync(testFile);
+        var tree = CSharpSyntaxTree.ParseText(newContent);
+        var root = await tree.GetRootAsync();
+        
+        var targetClass = root.DescendantNodes().OfType<ClassDeclarationSyntax>()
+            .First(c => c.Identifier.ValueText == "TargetClass");
+        
+        var movedMethod = targetClass.Members.OfType<MethodDeclarationSyntax>()
+            .First(m => m.Identifier.ValueText == "AddDepositRefundFinTransaction");
+        
+        var methodBody = movedMethod.Body.ToString();
+        
+        // Check for the bug: complex inherited member access should be transformed
+        bool hasCorrectTransformation = methodBody.Contains("@this.Cache.INISite.TRANSACTIONHANDLING_EnableDocumentTracking");
+        bool hasBuggyAccess = methodBody.Contains("Cache.INISite.TRANSACTIONHANDLING_EnableDocumentTracking") && 
+                             !methodBody.Contains("@this.Cache.INISite.TRANSACTIONHANDLING_EnableDocumentTracking");
+        
+        if (hasBuggyAccess)
+        {
+            throw new Exception($"BUG REPRODUCED: Complex inherited member access was not transformed. Method body: {methodBody}");
+        }
+        
+        if (!hasCorrectTransformation)
+        {
+            throw new Exception($"BUG REPRODUCED: Expected @this.Cache.INISite.TRANSACTIONHANDLING_EnableDocumentTracking but got: {methodBody}");
+        }
+        
+        Assert.Contains("@this.Cache.INISite.TRANSACTIONHANDLING_EnableDocumentTracking", methodBody);
     }
 }
