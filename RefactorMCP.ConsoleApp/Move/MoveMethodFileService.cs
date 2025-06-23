@@ -100,14 +100,14 @@ public static class MoveMethodFileService
         string filePath,
         string sourceClass,
         string methodName,
+        string[] constructorInjections,
+        string[] parameterInjections,
         string targetClass,
         string accessMemberName,
         string accessMemberType,
         string? targetFilePath = null,
         IProgress<string>? progress = null,
-        CancellationToken cancellationToken = default,
-        string[]? constructorInjections = null,
-        string[]? parameterInjections = null)
+        CancellationToken cancellationToken = default)
     {
         MoveMethodTool.EnsureNotAlreadyMoved(filePath, methodName);
         ValidateFileExists(filePath);
@@ -121,8 +121,6 @@ public static class MoveMethodFileService
         var moveResult = MoveMethodAst.MoveInstanceMethodAst(
             sourceRoot, sourceClass, methodName, targetClass, accessMemberName, accessMemberType);
 
-        constructorInjections ??= Array.Empty<string>();
-        parameterInjections ??= Array.Empty<string>();
 
         SyntaxNode updatedSourceRoot = moveResult.NewSourceRoot;
         SyntaxNode updatedTargetRoot;

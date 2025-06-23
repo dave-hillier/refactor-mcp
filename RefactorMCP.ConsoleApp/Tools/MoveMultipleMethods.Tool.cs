@@ -40,14 +40,14 @@ public static partial class MoveMultipleMethodsTool
                 document.FilePath!,
                 sourceClass,
                 methodName,
+                Array.Empty<string>(),
+                Array.Empty<string>(),
                 targetClass,
                 accessMember,
                 accessMemberType,
                 targetPath,
                 progress: null,
-                cancellationToken,
-                null,
-                null);
+                cancellationToken);
         }
 
         var (newText, _) = await RefactoringHelpers.ReadFileWithEncodingAsync(document.FilePath!, cancellationToken);

@@ -24,6 +24,8 @@ public class MoveMethodNamespaceTests : TestBase
             "Foo",
             "B",
             targetFile,
+            Array.Empty<string>(),
+            Array.Empty<string>(),
             null,
             CancellationToken.None);
 
@@ -48,6 +50,8 @@ public class MoveMethodNamespaceTests : TestBase
             "Foo",
             "C",
             targetFile,
+            Array.Empty<string>(),
+            Array.Empty<string>(),
             null,
             CancellationToken.None);
 

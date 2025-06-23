@@ -235,10 +235,10 @@ public static class MoveMethodTool
         [Description("Comma separated names of the methods to move (required)")] string methodNames,
         [Description("Name of the target class")] string targetClass,
         [Description("Path to the target file (optional, will create if doesn't exist or unspecified)")] string? targetFilePath = null,
+        [Description("Dependencies to inject via the constructor")] string[] constructorInjections = null!,
+        [Description("Dependencies to keep as parameters")] string[] parameterInjections = null!,
         IProgress<string>? progress = null,
-        CancellationToken cancellationToken = default,
-        [Description("Dependencies to inject via the constructor")] string[]? constructorInjections = null,
-        [Description("Dependencies to keep as parameters")] string[]? parameterInjections = null)
+        CancellationToken cancellationToken = default)
     {
         try
         {
@@ -290,14 +290,14 @@ public static class MoveMethodTool
                     document,
                     sourceClass,
                     methodList,
+                    constructorInjections,
+                    parameterInjections,
                     targetClass,
                     accessMemberName,
                     accessMemberType,
                     targetFilePath,
                     progress,
-                    cancellationToken,
-                    constructorInjections,
-                    parameterInjections);
+                    cancellationToken);
                 message = msg;
             }
             else
@@ -309,14 +309,14 @@ public static class MoveMethodTool
                         filePath,
                         sourceClass,
                         methodList[0],
+                        constructorInjections,
+                        parameterInjections,
                         targetClass,
                         accessMemberName,
                         accessMemberType,
                         targetFilePath,
                         progress,
-                        cancellationToken,
-                        constructorInjections,
-                        parameterInjections);
+                        cancellationToken);
                 }
                 else
                 {
@@ -416,14 +416,14 @@ public static class MoveMethodTool
         Document document,
         string sourceClassName,
         string[] methodNames,
+        string[] constructorInjections,
+        string[] parameterInjections,
         string targetClassName,
         string accessMemberName,
         string accessMemberType,
         string? targetFilePath,
         IProgress<string>? progress,
-        CancellationToken cancellationToken,
-        string[]? constructorInjections,
-        string[]? parameterInjections)
+        CancellationToken cancellationToken)
     {
         var messages = new List<string>();
         var currentDocument = document;
@@ -438,14 +438,14 @@ public static class MoveMethodTool
                 currentDocument.FilePath!,
                 sourceClassName,
                 methodName,
+                constructorInjections,
+                parameterInjections,
                 targetClassName,
                 accessMemberName,
                 accessMemberType,
                 targetFilePath,
                 progress,
-                cancellationToken,
-                constructorInjections,
-                parameterInjections);
+                cancellationToken);
 
             if (sameFile)
             {
