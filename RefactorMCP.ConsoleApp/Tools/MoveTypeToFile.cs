@@ -9,13 +9,13 @@ using System.Linq;
 using System.Threading;
 
 [McpServerToolType]
-public static class MoveClassToFileTool
+public static class MoveTypeToFileTool
 {
-    [McpServerTool, Description("Move a class to a separate file with the same name")]
+    [McpServerTool, Description("Move a top-level type to a separate file with the same name")]
     public static async Task<string> MoveToSeparateFile(
         [Description("Absolute path to the solution file (.sln)")] string solutionPath,
-        [Description("Path to the C# file containing the class")] string filePath,
-        [Description("Name of the class to move")] string className,
+        [Description("Path to the C# file containing the type")] string filePath,
+        [Description("Name of the type to move")] string typeName,
         CancellationToken cancellationToken = default)
     {
         try
@@ -23,7 +23,7 @@ public static class MoveClassToFileTool
             var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath, cancellationToken);
             var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
 
-            var newFilePath = Path.Combine(Path.GetDirectoryName(filePath)!, $"{className}.cs");
+            var newFilePath = Path.Combine(Path.GetDirectoryName(filePath)!, $"{typeName}.cs");
 
             CompilationUnitSyntax root;
             if (document != null)
@@ -38,36 +38,38 @@ public static class MoveClassToFileTool
                 var (text, _) = await RefactoringHelpers.ReadFileWithEncodingAsync(filePath, cancellationToken);
                 root = (CompilationUnitSyntax)CSharpSyntaxTree.ParseText(text).GetRoot();
             }
-            var classNode = root.DescendantNodes().OfType<ClassDeclarationSyntax>()
-                .FirstOrDefault(c => c.Identifier.Text == className);
-            if (classNode == null)
-                throw new McpException($"Error: Class {className} not found. Verify the class name and ensure the file is part of the loaded solution.");
+            var typeNode = (MemberDeclarationSyntax?)root.DescendantNodes().FirstOrDefault(n =>
+                n is BaseTypeDeclarationSyntax bt && bt.Identifier.Text == typeName ||
+                n is EnumDeclarationSyntax en && en.Identifier.Text == typeName ||
+                n is DelegateDeclarationSyntax dd && dd.Identifier.Text == typeName);
+            if (typeNode == null)
+                throw new McpException($"Error: Type {typeName} not found. Verify the type name and ensure the file is part of the loaded solution.");
 
-            var duplicateDoc = await RefactoringHelpers.FindClassInSolution(solution, className, filePath, newFilePath);
+            var duplicateDoc = await RefactoringHelpers.FindTypeInSolution(solution, typeName, filePath, newFilePath);
             if (duplicateDoc != null)
-                throw new McpException($"Error: Class {className} already exists in {duplicateDoc.FilePath}");
+                throw new McpException($"Error: Type {typeName} already exists in {duplicateDoc.FilePath}");
 
-            var rootWithoutClass = (CompilationUnitSyntax)root.RemoveNode(classNode, SyntaxRemoveOptions.KeepNoTrivia)!;
-            rootWithoutClass = (CompilationUnitSyntax)Formatter.Format(rootWithoutClass, RefactoringHelpers.SharedWorkspace);
+            var rootWithoutType = (CompilationUnitSyntax)root.RemoveNode(typeNode, SyntaxRemoveOptions.KeepNoTrivia)!;
+            rootWithoutType = (CompilationUnitSyntax)Formatter.Format(rootWithoutType, RefactoringHelpers.SharedWorkspace);
             var sourceEncoding = await RefactoringHelpers.GetFileEncodingAsync(filePath, cancellationToken);
-            await File.WriteAllTextAsync(filePath, rootWithoutClass.ToFullString(), sourceEncoding, cancellationToken);
+            await File.WriteAllTextAsync(filePath, rootWithoutType.ToFullString(), sourceEncoding, cancellationToken);
 
             var usingStatements = root.Usings;
             CompilationUnitSyntax newRoot = SyntaxFactory.CompilationUnit().WithUsings(usingStatements);
 
-            if (classNode.Parent is NamespaceDeclarationSyntax ns)
+            if (typeNode.Parent is NamespaceDeclarationSyntax ns)
             {
-                var newNs = ns.WithMembers(SyntaxFactory.SingletonList<MemberDeclarationSyntax>(classNode));
+                var newNs = ns.WithMembers(SyntaxFactory.SingletonList<MemberDeclarationSyntax>(typeNode));
                 newRoot = newRoot.AddMembers(newNs);
             }
-            else if (classNode.Parent is FileScopedNamespaceDeclarationSyntax fns)
+            else if (typeNode.Parent is FileScopedNamespaceDeclarationSyntax fns)
             {
-                var newFsNs = fns.WithMembers(SyntaxFactory.SingletonList<MemberDeclarationSyntax>(classNode));
+                var newFsNs = fns.WithMembers(SyntaxFactory.SingletonList<MemberDeclarationSyntax>(typeNode));
                 newRoot = newRoot.AddMembers(newFsNs);
             }
             else
             {
-                newRoot = newRoot.AddMembers(classNode);
+                newRoot = newRoot.AddMembers(typeNode);
             }
 
             newRoot = (CompilationUnitSyntax)Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
@@ -85,11 +87,11 @@ public static class MoveClassToFileTool
                 UnloadSolutionTool.ClearSolutionCache();
             }
 
-            return $"Successfully moved class '{className}' to {newFilePath}";
+            return $"Successfully moved type '{typeName}' to {newFilePath}";
         }
         catch (Exception ex)
         {
-            throw new McpException($"Error moving class: {ex.Message}", ex);
+            throw new McpException($"Error moving type: {ex.Message}", ex);
         }
     }
 }
