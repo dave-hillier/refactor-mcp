@@ -20,7 +20,7 @@ public class MoveInstanceMethodTests : TestBase
             SolutionPath,
             testFile,
             "A",
-            "Do",
+            new[] { "Do" },
             "B",
             null,
             Array.Empty<string>(),
@@ -55,7 +55,7 @@ public class MoveInstanceMethodTests : TestBase
             SolutionPath,
             testFile,
             "A",
-            "Do",
+            new[] { "Do" },
             "B",
             null,
             Array.Empty<string>(),
@@ -79,7 +79,7 @@ public class MoveInstanceMethodTests : TestBase
                 SolutionPath,
                 testFile,
                 "A",
-                "Do",
+                new[] { "Do" },
                 "B",
                 null,
                 Array.Empty<string>(),
@@ -100,7 +100,7 @@ public class MoveInstanceMethodTests : TestBase
             SolutionPath,
             testFile,
             "A",
-            "Do",
+            new[] { "Do" },
             "B",
             null,
             Array.Empty<string>(),
@@ -114,7 +114,7 @@ public class MoveInstanceMethodTests : TestBase
                 SolutionPath,
                 testFile,
                 "A",
-                "Do",
+                new[] { "Do" },
                 "B",
                 null,
                 Array.Empty<string>(),
@@ -135,7 +135,7 @@ public class MoveInstanceMethodTests : TestBase
             SolutionPath,
             testFile,
             "A",
-            "Do",
+            new[] { "Do" },
             "B",
             null,
             Array.Empty<string>(),
@@ -151,7 +151,7 @@ public class MoveInstanceMethodTests : TestBase
             SolutionPath,
             testFile,
             "A",
-            "Do",
+            new[] { "Do" },
             "B",
             null,
             Array.Empty<string>(),
@@ -174,7 +174,7 @@ public class MoveInstanceMethodTests : TestBase
             SolutionPath,
             testFile,
             "A",
-            "Do",
+            new[] { "Do" },
             "B",
             null,
             Array.Empty<string>(),
@@ -189,7 +189,7 @@ public class MoveInstanceMethodTests : TestBase
             SolutionPath,
             testFile,
             "A",
-            "Do",
+            new[] { "Do" },
             "B",
             null,
             Array.Empty<string>(),
@@ -213,7 +213,7 @@ public class MoveInstanceMethodTests : TestBase
                 SolutionPath,
                 testFile,
                 "Wrong",
-                "Do",
+                new[] { "Do" },
                 "B",
                 null,
                 Array.Empty<string>(),
@@ -225,7 +225,7 @@ public class MoveInstanceMethodTests : TestBase
             SolutionPath,
             testFile,
             "A",
-            "Do",
+            new[] { "Do" },
             "B",
             null,
             Array.Empty<string>(),
@@ -241,7 +241,7 @@ public class MoveInstanceMethodTests : TestBase
     {
         UnloadSolutionTool.ClearSolutionCache();
         var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "ComplexInheritedAccess.cs"));
-        
+
         // Create a more realistic scenario that matches your cResRoom.cs example
         var sourceCode = @"
 public interface IBaseInitialiser 
@@ -296,7 +296,7 @@ public class cResRoom : BaseClass
             SolutionPath,
             testFile,
             "cResRoom",
-            "AddDepositRefundFinTransaction",
+            new[] { "AddDepositRefundFinTransaction" },
             "TargetClass",
             null,
             Array.Empty<string>(),
@@ -310,30 +310,30 @@ public class cResRoom : BaseClass
         var newContent = await File.ReadAllTextAsync(testFile);
         var tree = CSharpSyntaxTree.ParseText(newContent);
         var root = await tree.GetRootAsync();
-        
+
         var targetClass = root.DescendantNodes().OfType<ClassDeclarationSyntax>()
             .First(c => c.Identifier.ValueText == "TargetClass");
-        
+
         var movedMethod = targetClass.Members.OfType<MethodDeclarationSyntax>()
             .First(m => m.Identifier.ValueText == "AddDepositRefundFinTransaction");
-        
+
         var methodBody = movedMethod.Body.ToString();
-        
+
         // Check for the bug: complex inherited member access should be transformed
         bool hasCorrectTransformation = methodBody.Contains("@this.Cache.INISite.TRANSACTIONHANDLING_EnableDocumentTracking");
-        bool hasBuggyAccess = methodBody.Contains("Cache.INISite.TRANSACTIONHANDLING_EnableDocumentTracking") && 
+        bool hasBuggyAccess = methodBody.Contains("Cache.INISite.TRANSACTIONHANDLING_EnableDocumentTracking") &&
                              !methodBody.Contains("@this.Cache.INISite.TRANSACTIONHANDLING_EnableDocumentTracking");
-        
+
         if (hasBuggyAccess)
         {
             throw new Exception($"BUG REPRODUCED: Complex inherited member access was not transformed. Method body: {methodBody}");
         }
-        
+
         if (!hasCorrectTransformation)
         {
             throw new Exception($"BUG REPRODUCED: Expected @this.Cache.INISite.TRANSACTIONHANDLING_EnableDocumentTracking but got: {methodBody}");
         }
-        
+
         Assert.Contains("@this.Cache.INISite.TRANSACTIONHANDLING_EnableDocumentTracking", methodBody);
     }
 }
