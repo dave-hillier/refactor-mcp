@@ -32,7 +32,7 @@ public class B { }";
             SolutionPath,
             testFile,
             "A",
-            "GetNested",
+            new[] { "GetNested" },
             "B",
             null,
             Array.Empty<string>(),

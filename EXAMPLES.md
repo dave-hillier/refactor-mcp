@@ -775,7 +775,7 @@ Cleared move history
 ### Failed Move Example
 A failed move does not record the method:
 ```json
-{"tool":"move-instance-method","solutionPath":"./RefactorMCP.sln","filePath":"./RefactorMCP.Tests/ExampleCode.cs","sourceClass":"Wrong","methodNames":"LogOperation","targetClass":"Logger"}
+{"tool":"move-instance-method","solutionPath":"./RefactorMCP.sln","filePath":"./RefactorMCP.Tests/ExampleCode.cs","sourceClass":"Wrong","methodNames":["LogOperation"],"targetClass":"Logger"}
 ```
 Running the command again with the correct `sourceClass` succeeds.
 
@@ -1292,17 +1292,17 @@ When a tool needs to create a new file, the namespace uses the file-scoped style
 ```
 
 ### JSON Example
-Provide `methodNames` as a comma-separated string (this property is required):
+Provide `methodNames` as a list (this property is required):
 
 ```json
-{"tool":"move-instance-method","solutionPath":"./RefactorMCP.sln","filePath":"./RefactorMCP.Tests/ExampleCode.cs","sourceClass":"Calculator","methodNames":"LogOperation","targetClass":"Logger"}
+{"tool":"move-instance-method","solutionPath":"./RefactorMCP.sln","filePath":"./RefactorMCP.Tests/ExampleCode.cs","sourceClass":"Calculator","methodNames":["LogOperation"],"targetClass":"Logger"}
 ```
 
 ### Interface/Base Member Example
 Inherited members are automatically qualified when moved:
 
 ```json
-{"tool":"move-instance-method","solutionPath":"./RefactorMCP.sln","filePath":"./RefactorMCP.Tests/ExampleCode.cs","sourceClass":"Derived","methodNames":"PrintName","targetClass":"Target"}
+{"tool":"move-instance-method","solutionPath":"./RefactorMCP.sln","filePath":"./RefactorMCP.Tests/ExampleCode.cs","sourceClass":"Derived","methodNames":["PrintName"],"targetClass":"Target"}
 ```
 
 ### Automatic Static Conversion
