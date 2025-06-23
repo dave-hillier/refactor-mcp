@@ -45,7 +45,9 @@ public static partial class MoveMultipleMethodsTool
                 accessMemberType,
                 targetPath,
                 progress: null,
-                cancellationToken);
+                cancellationToken,
+                null,
+                null);
         }
 
         var (newText, _) = await RefactoringHelpers.ReadFileWithEncodingAsync(document.FilePath!, cancellationToken);
