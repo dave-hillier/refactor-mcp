@@ -258,7 +258,8 @@ public static partial class MoveMethodAst
         string methodName,
         string targetClass,
         string accessMemberName,
-        string accessMemberType)
+        string accessMemberType,
+        IEnumerable<string>? parameterInjections = null)
     {
         var originClass = FindSourceClass(sourceRoot, sourceClass);
         var method = FindMethodInClass(originClass, methodName);
@@ -293,7 +294,12 @@ public static partial class MoveMethodAst
                         ma.Expression is BaseExpressionSyntax &&
                         ma.Name is IdentifierNameSyntax id &&
                         id.Identifier.ValueText == methodName);
-        bool needsThisParameter = hasThisUsage || usesInstanceMembers || callsOtherMethods || isRecursive || callsBase;
+        parameterInjections ??= Array.Empty<string>();
+        bool forceThisParameter = parameterInjections.Contains("this");
+        bool needsThisParameter = hasThisUsage || usesInstanceMembers || callsOtherMethods || isRecursive || callsBase || forceThisParameter;
+        var thisParameterName = forceThisParameter
+            ? MoveMethodFileService.GetParameterName("this", sourceClass)
+            : "@this";
 
         var otherMethodNames = new HashSet<string>(methodNames);
         otherMethodNames.Remove(methodName);
@@ -314,6 +320,20 @@ public static partial class MoveMethodAst
                 .WithType(privateFieldInfos[kvp.Key]))
             .ToList();
 
+        foreach (var inj in parameterInjections)
+        {
+            if (inj == "this")
+                continue;
+            if (!privateFieldInfos.TryGetValue(inj, out var type))
+                continue;
+            if (!paramMap.ContainsKey(inj))
+            {
+                var name = MoveMethodFileService.GetParameterName(inj, sourceClass);
+                paramMap[inj] = name;
+                injectedParameters.Add(SyntaxFactory.Parameter(SyntaxFactory.Identifier(name)).WithType(type));
+            }
+        }
+
         var transformedMethod = TransformMethodForMove(
             method,
             sourceClass,
@@ -326,12 +346,13 @@ public static partial class MoveMethodAst
             otherMethodNames,
             nestedClassNames,
             injectedParameters,
-            paramMap);
+            paramMap,
+            thisParameterName);
         transformedMethod = EnsureMethodIsInternal(transformedMethod);
 
         if (callsBase && baseWrapper != null)
         {
-            var rewriter = new BaseCallRewriter(methodName, "@this", baseWrapper.Identifier.ValueText);
+            var rewriter = new BaseCallRewriter(methodName, thisParameterName, baseWrapper.Identifier.ValueText);
             transformedMethod = (MethodDeclarationSyntax)rewriter.Visit(transformedMethod)!;
         }
 
@@ -339,9 +360,9 @@ public static partial class MoveMethodAst
         collector.Visit(method);
         var calledMethods = collector.CalledMethods;
 
-        if (needsThisParameter && !HasParameterUsage(transformedMethod, "@this"))
+        if (needsThisParameter && !HasParameterUsage(transformedMethod, thisParameterName))
         {
-            transformedMethod = RemoveParameter(transformedMethod, "@this");
+            transformedMethod = RemoveParameter(transformedMethod, thisParameterName);
             needsThisParameter = false;
         }
 
@@ -429,13 +450,14 @@ public static partial class MoveMethodAst
         HashSet<string> otherMethodNames,
         HashSet<string> nestedClassNames,
         List<ParameterSyntax> injectedParameters,
-        Dictionary<string, string> injectedParameterMap)
+        Dictionary<string, string> injectedParameterMap,
+        string thisParameterName)
     {
         var transformedMethod = method;
 
         if (needsThisParameter)
         {
-            transformedMethod = AddThisParameterToMethod(transformedMethod, sourceClassName);
+            transformedMethod = AddThisParameterToMethod(transformedMethod, sourceClassName, thisParameterName);
             transformedMethod = RewriteMethodBody(
                 transformedMethod,
                 methodName,
@@ -471,16 +493,17 @@ public static partial class MoveMethodAst
 
     private static MethodDeclarationSyntax AddThisParameterToMethod(
         MethodDeclarationSyntax method,
-        string sourceClassName)
+        string sourceClassName,
+        string parameterName)
     {
-        var sourceParameter = SyntaxFactory.Parameter(SyntaxFactory.Identifier("@this"))
+        var sourceParameter = SyntaxFactory.Parameter(SyntaxFactory.Identifier(parameterName))
             .WithType(SyntaxFactory.IdentifierName(sourceClassName));
 
         var parameters = method.ParameterList.Parameters.Insert(0, sourceParameter);
         var newParameterList = method.ParameterList.WithParameters(parameters);
 
         var updatedMethod = method.WithParameterList(newParameterList);
-        updatedMethod = AstTransformations.ReplaceThisReferences(updatedMethod, "@this");
+        updatedMethod = AstTransformations.ReplaceThisReferences(updatedMethod, parameterName);
         return updatedMethod;
     }
 
