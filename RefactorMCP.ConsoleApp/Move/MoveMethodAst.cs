@@ -465,7 +465,8 @@ public static partial class MoveMethodAst
                 callsOtherMethods,
                 isRecursive,
                 instanceMembers,
-                otherMethodNames);
+                otherMethodNames,
+                thisParameterName);
         }
 
         if (injectedParameters.Count > 0)
@@ -514,9 +515,11 @@ public static partial class MoveMethodAst
         bool callsOtherMethods,
         bool isRecursive,
         HashSet<string> instanceMembers,
-        HashSet<string> otherMethodNames)
+        HashSet<string> otherMethodNames,
+        string parameterName)
     {
-        var parameterName = "@this";
+        if (string.IsNullOrEmpty(parameterName))
+            parameterName = "@this";
 
         if (usesInstanceMembers)
         {
