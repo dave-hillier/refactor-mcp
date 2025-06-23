@@ -236,7 +236,9 @@ public static class MoveMethodTool
         [Description("Name of the target class")] string targetClass,
         [Description("Path to the target file (optional, will create if doesn't exist or unspecified)")] string? targetFilePath = null,
         IProgress<string>? progress = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        [Description("Dependencies to inject via the constructor")] string[]? constructorInjections = null,
+        [Description("Dependencies to keep as parameters")] string[]? parameterInjections = null)
     {
         try
         {
@@ -293,7 +295,9 @@ public static class MoveMethodTool
                     accessMemberType,
                     targetFilePath,
                     progress,
-                    cancellationToken);
+                    cancellationToken,
+                    constructorInjections,
+                    parameterInjections);
                 message = msg;
             }
             else
@@ -301,7 +305,18 @@ public static class MoveMethodTool
                 // For single-file operations, use the bulk move method for better efficiency
                 if (methodList.Length == 1)
                 {
-                    message = await MoveMethodFileService.MoveInstanceMethodInFile(filePath, sourceClass, methodList[0], targetClass, accessMemberName, accessMemberType, targetFilePath, progress, cancellationToken);
+                    message = await MoveMethodFileService.MoveInstanceMethodInFile(
+                        filePath,
+                        sourceClass,
+                        methodList[0],
+                        targetClass,
+                        accessMemberName,
+                        accessMemberType,
+                        targetFilePath,
+                        progress,
+                        cancellationToken,
+                        constructorInjections,
+                        parameterInjections);
                 }
                 else
                 {
@@ -406,7 +421,9 @@ public static class MoveMethodTool
         string accessMemberType,
         string? targetFilePath,
         IProgress<string>? progress,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string[]? constructorInjections,
+        string[]? parameterInjections)
     {
         var messages = new List<string>();
         var currentDocument = document;
@@ -426,7 +443,9 @@ public static class MoveMethodTool
                 accessMemberType,
                 targetFilePath,
                 progress,
-                cancellationToken);
+                cancellationToken,
+                constructorInjections,
+                parameterInjections);
 
             if (sameFile)
             {

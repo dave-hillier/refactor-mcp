@@ -367,7 +367,8 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli move-instance-method \
   "./RefactorMCP.Tests/ExampleCode.cs" \
   Calculator \
   LogOperation \
-  Logger
+  Logger \
+  --constructor-injections this
 ```
 
 **After**:
