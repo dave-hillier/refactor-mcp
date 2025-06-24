@@ -2,7 +2,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace RefactorMCP.ConsoleApp.SyntaxRewriters
+namespace RefactorMCP.ConsoleApp.SyntaxWalkers
 {
     internal class AccessMemberTypeWalker : CSharpSyntaxWalker
     {

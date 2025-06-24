@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.Extensions.Caching.Memory;
-using RefactorMCP.ConsoleApp.SyntaxRewriters;
+using RefactorMCP.ConsoleApp.SyntaxWalkers;
 using System.Text.Json;
 using System.IO;
 

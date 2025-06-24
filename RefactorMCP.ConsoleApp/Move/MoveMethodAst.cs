@@ -10,6 +10,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Text;
 using RefactorMCP.ConsoleApp.SyntaxRewriters;
+using RefactorMCP.ConsoleApp.SyntaxWalkers;
 
 namespace RefactorMCP.ConsoleApp.Move;
 

@@ -2,7 +2,7 @@ using ModelContextProtocol.Server;
 using ModelContextProtocol;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using RefactorMCP.ConsoleApp.SyntaxRewriters;
+using RefactorMCP.ConsoleApp.SyntaxWalkers;
 using System.ComponentModel;
 using System.Threading;
 

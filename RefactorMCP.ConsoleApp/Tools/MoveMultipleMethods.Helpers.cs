@@ -1,3 +1,4 @@
+using RefactorMCP.ConsoleApp.SyntaxWalkers;
 using ModelContextProtocol.Server;
 using ModelContextProtocol;
 using System;
@@ -21,7 +22,7 @@ public static partial class MoveMultipleMethodsTool
     {
         // Build map keyed by "Class.Method" to support duplicate method names in different classes
         var opSet = sourceClasses.Zip(methodNames, (c, m) => $"{c}.{m}").ToHashSet();
-        var collector = new RefactorMCP.ConsoleApp.SyntaxRewriters.MethodCollectorWalker(opSet);
+        var collector = new MethodCollectorWalker(opSet);
         collector.Visit(sourceRoot);
         var map = collector.Methods;
 
@@ -37,7 +38,7 @@ public static partial class MoveMultipleMethodsTool
                 continue;
             }
 
-            var walker = new RefactorMCP.ConsoleApp.SyntaxRewriters.MethodDependencyWalker(methodNameSet);
+            var walker = new MethodDependencyWalker(methodNameSet);
             walker.Visit(method);
 
             var called = walker.Dependencies
