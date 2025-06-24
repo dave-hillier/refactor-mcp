@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Server;
+using System;
 using System.ComponentModel;
 using System.Reflection;
 using System.Text;
@@ -168,4 +169,17 @@ static string ToKebabCase(string name)
         sb.Append(char.ToLowerInvariant(c));
     }
     return sb.ToString();
+}
+
+static object? ConvertInput(string value, Type targetType)
+{
+    if (targetType == typeof(string))
+        return value;
+    if (targetType == typeof(string[]))
+        return value.Split(',', StringSplitOptions.RemoveEmptyEntries);
+    if (targetType == typeof(int))
+        return int.Parse(value);
+    if (targetType == typeof(bool))
+        return bool.Parse(value);
+    return Convert.ChangeType(value, targetType);
 }
