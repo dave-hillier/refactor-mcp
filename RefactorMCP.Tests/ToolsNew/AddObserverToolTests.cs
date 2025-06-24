@@ -21,14 +21,9 @@ public class Counter
         const string expectedCode = """
 public class Counter
 {
-    public event System.Action? Updated;
+    public void Update() { Updated?.Invoke(); }
 
-    public void Update() { }
-
-    protected void OnUpdated()
-    {
-        Updated?.Invoke();
-    }
+    public event Action Updated;
 }
 """;
 
@@ -46,8 +41,7 @@ public class Counter
 
         Assert.Contains("Added observer", result);
         var fileContent = await File.ReadAllTextAsync(testFile);
-        Assert.Contains("public event", fileContent);
-        Assert.Contains("Updated?.Invoke()", fileContent);
+        Assert.Equal(expectedCode, fileContent.Replace("\r\n", "\n"));
     }
 
     [Fact]
