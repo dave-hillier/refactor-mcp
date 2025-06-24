@@ -3,7 +3,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 
-namespace RefactorMCP.ConsoleApp.SyntaxRewriters
+namespace RefactorMCP.ConsoleApp.SyntaxWalkers
 {
     internal class ComplexityWalker : CSharpSyntaxWalker
     {

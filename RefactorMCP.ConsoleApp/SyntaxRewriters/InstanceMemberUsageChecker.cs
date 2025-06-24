@@ -1,3 +1,4 @@
+using RefactorMCP.ConsoleApp.SyntaxWalkers;
 using System.Collections.Generic;
 
 internal class InstanceMemberUsageChecker : TrackedNameWalker

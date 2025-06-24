@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace RefactorMCP.ConsoleApp.SyntaxRewriters
+namespace RefactorMCP.ConsoleApp.SyntaxWalkers
 {
     internal class UnusedMembersWalker : CSharpSyntaxWalker
     {

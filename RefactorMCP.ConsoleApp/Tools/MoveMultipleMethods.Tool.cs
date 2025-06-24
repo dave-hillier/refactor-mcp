@@ -12,7 +12,7 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Threading;
 using Microsoft.CodeAnalysis.Text;
-using RefactorMCP.ConsoleApp.SyntaxRewriters;
+using RefactorMCP.ConsoleApp.SyntaxWalkers;
 using RefactorMCP.ConsoleApp.Move;
 
 [McpServerToolType]
