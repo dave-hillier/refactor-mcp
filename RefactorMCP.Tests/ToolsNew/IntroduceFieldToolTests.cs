@@ -26,12 +26,11 @@ using System.Linq;
 
 public class Sample
 {
-    private double _avg;
+    private int _avg = values.Sum();
 
     public double GetAverage(int[] values)
     {
-        _avg = values.Sum() / (double)values.Length;
-        return _avg;
+        return _avg / (double)values.Length;
     }
 }
 """;
@@ -48,8 +47,7 @@ public class Sample
 
         Assert.Contains("Successfully introduced", result);
         var fileContent = await File.ReadAllTextAsync(testFile);
-        Assert.Contains("_avg", fileContent);
-        Assert.Contains("values.Sum()", fileContent);
+        Assert.Equal(expectedCode, fileContent.Replace("\r\n", "\n"));
     }
 
     [Fact]
