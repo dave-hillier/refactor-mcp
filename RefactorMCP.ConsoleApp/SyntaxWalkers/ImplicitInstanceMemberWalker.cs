@@ -3,7 +3,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
 
-namespace RefactorMCP.ConsoleApp.SyntaxRewriters
+namespace RefactorMCP.ConsoleApp.SyntaxWalkers
 {
     internal class ImplicitInstanceMemberWalker : CSharpSyntaxWalker
     {
