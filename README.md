@@ -39,6 +39,11 @@ Metrics and summaries are also available via the `metrics://` and `summary://` r
 
 * Run `dotnet test` to ensure all tests pass.
 * Format the code with `dotnet format` before opening a pull request.
+* Structure new refactoring tests consistently:
+  * Define `initialCode` and `expectedCode` strings.
+  * Call `LoadSolutionTool.LoadSolution` and create a test file with `TestUtilities.CreateTestFile`.
+  * After running the tool, read the output file and compare its contents to `expectedCode`.
+  * See [`IntroduceVariableToolTests`](./RefactorMCP.Tests/ToolsNew/IntroduceVariableToolTests.cs) for a well-formatted example.
 
 ## License
 
