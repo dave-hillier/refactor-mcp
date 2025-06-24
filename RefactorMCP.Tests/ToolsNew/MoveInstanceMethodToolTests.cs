@@ -71,6 +71,27 @@ public class Source
 }
 """;
 
+        const string expectedSource = """
+public class Source
+{
+    public int Value = 1;
+    public int Add(int x)
+    {
+        return Target.Add(this, x);
+    }
+}
+""";
+
+        const string expectedTarget = """
+public class Target
+{
+    public static int Add(Source source, int x)
+    {
+        return x + source.Value;
+    }
+}
+""";
+
         await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
         var testFile = Path.Combine(TestOutputPath, "MoveParamPublic.cs");
         await TestUtilities.CreateTestFile(testFile, initialCode);
@@ -105,6 +126,41 @@ public class Source
 }
 """;
 
+        const string expectedSource = """
+public class Source
+{
+    public int Value = 1;
+    public int Add()
+    {
+        return _target.Add();
+    }
+
+    private readonly Target _target;
+
+    public Source(Target target)
+    {
+        _target = target;
+    }
+}
+""";
+
+        const string expectedTarget = """
+public class Target
+{
+    private readonly Source _source;
+
+    public Target(Source source)
+    {
+        _source = source;
+    }
+
+    public int Add()
+    {
+        return _source.Value + 1;
+    }
+}
+""";
+
         await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
         var testFile = Path.Combine(TestOutputPath, "MoveCtorPublic.cs");
         await TestUtilities.CreateTestFile(testFile, initialCode);
@@ -131,6 +187,27 @@ public class Source
 {
     private int _offset = 2;
     public int Calc(int n) { return n + _offset; }
+}
+""";
+
+        const string expectedSource = """
+public class Source
+{
+    private int _offset = 2;
+    public int Calc(int n)
+    {
+        return Target.Calc(_offset, n);
+    }
+}
+""";
+
+        const string expectedTarget = """
+public class Target
+{
+    public static int Calc(int offset, int n)
+    {
+        return n + offset;
+    }
 }
 """;
 
@@ -165,6 +242,41 @@ public class Source
 {
     private int _offset = 2;
     public int Calc() { return _offset + 1; }
+}
+""";
+
+        const string expectedSource = """
+public class Source
+{
+    private int _offset = 2;
+    private readonly Target _target;
+
+    public Source(Target target)
+    {
+        _target = target;
+    }
+
+    public int Calc()
+    {
+        return _target.Calc();
+    }
+}
+""";
+
+        const string expectedTarget = """
+public class Target
+{
+    private readonly int _offset;
+
+    public Target(int offset)
+    {
+        _offset = offset;
+    }
+
+    public int Calc()
+    {
+        return _offset + 1;
+    }
 }
 """;
 
