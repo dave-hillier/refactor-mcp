@@ -1,3 +1,4 @@
+using ModelContextProtocol;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -36,5 +37,16 @@ public class Sample
         Assert.Contains("Successfully converted setter", result);
         var fileContent = await File.ReadAllTextAsync(testFile);
         Assert.Equal(expectedCode, fileContent.Replace("\r\n", "\n"));
+    }
+
+    [Fact]
+    public async Task TransformSetter_InvalidProperty_ReturnsError()
+    {
+        await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
+        await Assert.ThrowsAsync<McpException>(async () =>
+            await TransformSetterToInitTool.TransformSetterToInit(
+                SolutionPath,
+                ExampleFilePath,
+                "Nonexistent"));
     }
 }
