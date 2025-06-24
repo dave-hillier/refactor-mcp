@@ -7,11 +7,15 @@ public abstract class TestBase : IDisposable
 {
     protected static readonly string SolutionPath = TestUtilities.GetSolutionPath();
     protected static readonly string ExampleFilePath = Path.Combine(Path.GetDirectoryName(SolutionPath)!, "RefactorMCP.Tests", "ExampleCode.cs");
-    protected static readonly string TestOutputPath =
+    private static readonly string TestOutputRoot =
         Path.Combine(Path.GetDirectoryName(SolutionPath)!, "RefactorMCP.Tests", "TestOutput");
+
+    protected string TestOutputPath { get; }
 
     protected TestBase()
     {
+        Directory.CreateDirectory(TestOutputRoot);
+        TestOutputPath = Path.Combine(TestOutputRoot, Guid.NewGuid().ToString());
         Directory.CreateDirectory(TestOutputPath);
     }
 
