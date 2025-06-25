@@ -28,7 +28,7 @@ public class Target { }";
         var project = solution.Projects.First();
         RefactoringHelpers.AddDocumentToProject(project, testFile);
 
-        var result = await MoveMultipleMethodsTool.MoveMultipleMethods(
+        var result = await MoveMultipleMethodsTool.MoveMultipleMethodsStatic(
             SolutionPath,
             testFile,
             "Outer",
