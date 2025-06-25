@@ -18,7 +18,7 @@ public class MoveMultipleMethodsToolTests : TestBase
         var project = solution.Projects.First();
         RefactoringHelpers.AddDocumentToProject(project, testFile);
 
-        var error = await MoveMultipleMethodsTool.MoveMultipleMethods(
+        var error = await MoveMultipleMethodsTool.MoveMultipleMethodsStatic(
             SolutionPath,
             testFile,
             "Calculator",
@@ -26,7 +26,7 @@ public class MoveMultipleMethodsToolTests : TestBase
             "MathUtilities");
         Assert.Contains("Error:", error);
 
-        var result = await MoveMultipleMethodsTool.MoveMultipleMethods(
+        var result = await MoveMultipleMethodsTool.MoveMultipleMethodsStatic(
             SolutionPath,
             testFile,
             "Calculator",
