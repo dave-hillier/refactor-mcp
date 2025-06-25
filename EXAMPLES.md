@@ -456,7 +456,7 @@ class Target { }
 
 **Command**:
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --cli move-multiple-methods \
+dotnet run --project RefactorMCP.ConsoleApp -- --cli move-multiple-methods-instance \
   "./RefactorMCP.sln" \
   "./RefactorMCP.Tests/ExampleCode.cs" \
   Helper \
@@ -469,13 +469,25 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli move-multiple-methods \
 Move methods to a separate file using the `targetFile` property or by passing a default path:
 
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --cli move-multiple-methods \
+dotnet run --project RefactorMCP.ConsoleApp -- --cli move-multiple-methods-instance \
   "./RefactorMCP.sln" \
   "./RefactorMCP.Tests/ExampleCode.cs" \
   Helper \
   A \
   Target \
   "./Target.cs"
+```
+
+### Static Parameter Injection
+Move the same methods but convert them to static members with an explicit `this` parameter:
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli move-multiple-methods-static \
+  "./RefactorMCP.sln" \
+  "./RefactorMCP.Tests/ExampleCode.cs" \
+  Helper \
+  "A,B" \
+  Target
 ```
 
 **After**:
@@ -798,6 +810,8 @@ convert-to-static-with-parameters - Transform instance method to static
 convert-to-static-with-instance - Transform instance method to static with instance parameter
 move-static-method - Move a static method to another class
 move-instance-method - Move an instance method to another class
+move-multiple-methods-instance - Move several methods and keep them as instance methods
+move-multiple-methods-static - Move several methods and convert them to static with a `this` parameter
 transform-setter-to-init - Convert property setter to init-only setter
 safe-delete - Safely delete a field, parameter, or variable
 
@@ -1279,10 +1293,10 @@ When a tool needs to create a new file, the namespace uses the file-scoped style
 ```
 
 ### Overloaded Methods Example
-`move-multiple-methods` now works when the source class contains overloaded methods:
+`move-multiple-methods-static` now works when the source class contains overloaded methods:
 
 ```json
-{"tool":"move-multiple-methods","solutionPath":"./RefactorMCP.sln","filePath":"./RefactorMCP.Tests/ExampleCode.cs","sourceClass":"Helper","methodNames":["A","A"],"targetClass":"Target","targetFilePath":"./Target.cs"}
+{"tool":"move-multiple-methods-static","solutionPath":"./RefactorMCP.sln","filePath":"./RefactorMCP.Tests/ExampleCode.cs","sourceClass":"Helper","methodNames":["A","A"],"targetClass":"Target","targetFilePath":"./Target.cs"}
 ```
 
 ### JSON Example
