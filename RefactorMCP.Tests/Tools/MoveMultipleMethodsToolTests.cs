@@ -35,4 +35,33 @@ public class MoveMultipleMethodsToolTests : TestBase
 
         Assert.Contains("Successfully moved", result);
     }
+
+    [Fact]
+    public async Task MoveMultipleMethods_NestedClassGenerics_ShouldSucceed()
+    {
+        UnloadSolutionTool.ClearSolutionCache();
+        var testFile = Path.Combine(TestOutputPath, "NestedGeneric.cs");
+        var code = @"using System.Collections.Generic;
+public class Outer
+{
+    public class Inner { }
+    public List<Inner> MakeList() => new List<Inner>();
+    public int CountList(List<Inner> items) => items.Count;
+}
+public class Target { }";
+        await TestUtilities.CreateTestFile(testFile, code);
+        await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
+        var solution = await RefactoringHelpers.GetOrLoadSolution(SolutionPath);
+        var project = solution.Projects.First();
+        RefactoringHelpers.AddDocumentToProject(project, testFile);
+
+        var result = await MoveMultipleMethodsTool.MoveMultipleMethodsStatic(
+            SolutionPath,
+            testFile,
+            "Outer",
+            new[] { "MakeList", "CountList" },
+            "Target");
+
+        Assert.Contains("Successfully moved", result);
+    }
 }
