@@ -177,4 +177,201 @@ class SourceClass
 
         Assert.Equal(2, indices.Count);
     }
+
+    [Fact]
+    public void DirectMoveMethod_WithNamedArgumentsAndThisAccess_ShouldSucceed()
+    {
+        // This pattern was previously failing but is now fixed after the comprehensive patch
+        var sourceCode = @"
+using System;
+
+public class PostingItem 
+{
+    public PostingItem(decimal amount, string description) { }
+}
+
+public class cResRoom
+{
+    public decimal DepositAmount { get; set; }
+    public string Description { get; set; }
+    
+    public PostingItem CreatePostingItem()
+    {
+        return new PostingItem(
+            amount: this.DepositAmount,
+            description: this.Description
+        );
+    }
+}
+
+public class DepositManager 
+{
+}";
+
+        var tree = CSharpSyntaxTree.ParseText(sourceCode);
+        var root = tree.GetRoot();
+
+        // This should now succeed without throwing exceptions - the casting bug has been fixed
+        var result = MoveMethodAst.MoveInstanceMethodAst(
+            root,
+            "cResRoom",
+            "CreatePostingItem", 
+            "DepositManager",
+            "instance",
+            "instance"
+        );
+
+        // Verify the operation succeeded without throwing an exception
+        Assert.NotNull(result);
+    }
+
+    [Fact]
+    public void DirectMoveMethod_WithConditionalAccessInAssignment_ShouldSucceed()
+    {
+        // Pattern that previously triggered the MemberBindingExpression casting issue
+        // but should now work correctly after the fix
+        var sourceCode = @"
+using System;
+
+public class DepositTransaction
+{
+    public string Status { get; set; }
+    public DateTime? ProcessedDate { get; set; }
+}
+
+public class cResRoom
+{
+    public DepositTransaction Transaction { get; set; }
+    
+    public void AddDepositFromDepositTransaction()
+    {
+        Transaction?.ProcessedDate = DateTime.Now;
+        var status = Transaction?.Status;
+    }
+}
+
+public class DepositManager 
+{
+}";
+
+        var tree = CSharpSyntaxTree.ParseText(sourceCode);
+        var root = tree.GetRoot();
+
+        // This should now succeed with the fix applied (previously threw InvalidCastException)
+        // The main verification is that no exception is thrown
+        var result = MoveMethodAst.MoveInstanceMethodAst(
+            root,
+            "cResRoom", 
+            "AddDepositFromDepositTransaction",
+            "DepositManager",
+            "instance",
+            "instance"
+        );
+
+        // Verify the operation succeeded without throwing an exception
+        Assert.NotNull(result);
+    }
+
+    [Fact]
+    public void DirectMoveMethod_WithComplexLambdaAndNamedArgs_ShouldSucceed()
+    {
+        // This pattern was previously failing in GenerateInvoice but is now fixed
+        var sourceCode = @"
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+public class InvoiceItem
+{
+    public InvoiceItem(decimal amount, string description) { }
+}
+
+public class cResRoom
+{
+    public List<string> Items { get; set; }
+    public decimal Amount { get; set; }
+    
+    public void GenerateInvoice()
+    {
+        if (Items?.Any() == true)
+        {
+            var invoiceItems = Items.Select(item => new InvoiceItem(
+                amount: this.Amount,
+                description: item
+            )).ToList();
+        }
+    }
+}
+
+public class DepositManager 
+{
+}";
+
+        var tree = CSharpSyntaxTree.ParseText(sourceCode);
+        var root = tree.GetRoot();
+
+        // This should now succeed without throwing exceptions - the lambda with named args casting bug has been fixed
+        var result = MoveMethodAst.MoveInstanceMethodAst(
+            root,
+            "cResRoom",
+            "GenerateInvoice",
+            "DepositManager", 
+            "instance",
+            "instance"
+        );
+
+        // Verify the operation succeeded without throwing an exception
+        Assert.NotNull(result);
+    }
+
+    [Fact]
+    public void DirectMoveMethod_WithNamedArgumentMemberAccess_ShouldSucceed()
+    {
+        // This test reproduces the GetInvoicedTransactionIds scenario
+        // where named arguments contain member access expressions (_dbContextFactory)
+        // This should work without throwing exceptions
+        var sourceCode = @"
+using System.Collections.Generic;
+
+public class cReportList
+{
+    public cReportList(object parent, object dbContextFactory) { }
+    public IEnumerable<int> GetInvoicedTransactionIds(string bookRef, int roomId) { return null; }
+}
+
+public class cResRoom
+{
+    private object _dbContextFactory;
+    private string strBookRef;
+    private int iRoomPickID;
+    
+    public IEnumerable<int> GetInvoicedTransactionIds()
+    {
+        var reportList = new cReportList(this, dbContextFactory: _dbContextFactory);
+        return reportList.GetInvoicedTransactionIds(strBookRef, iRoomPickID);
+    }
+}
+
+public class TargetManager { }";
+
+        var tree = CSharpSyntaxTree.ParseText(sourceCode);
+        var root = tree.GetRoot();
+
+        // This should work successfully - the method should be moved without throwing exceptions
+        var result = MoveMethodAst.MoveInstanceMethodAst(
+            root,
+            "cResRoom",
+            "GetInvoicedTransactionIds",
+            "TargetManager",
+            "instance",
+            "cResRoom"
+        );
+
+        // Verify the operation succeeded without throwing exceptions
+        Assert.NotNull(result);
+        
+        // The main success criteria is that no InvalidCastException was thrown
+        // This test reproduces the exact casting bug that was happening with
+        // named arguments containing member access expressions like _dbContextFactory
+    }
 }
