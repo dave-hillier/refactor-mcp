@@ -27,7 +27,22 @@ internal class ParameterRewriter : CSharpSyntaxRewriter
     public override SyntaxNode? VisitIdentifierName(IdentifierNameSyntax node)
     {
         if (_map.TryGetValue(node.Identifier.ValueText, out var expr))
-            return expr;
+        {
+            // Only replace if the parent context allows it
+            var parent = node.Parent;
+
+            return parent switch
+            {
+                // Don't replace if this identifier is part of a member access expression on the left side
+                MemberAccessExpressionSyntax memberAccess when memberAccess.Expression == node => base
+                    .VisitIdentifierName(node),
+                // Don't replace if this is a property/field name in an object initializer
+                AssignmentExpressionSyntax assign when assign.Left == node => base.VisitIdentifierName(node),
+                // Don't replace if this is in a parameter declaration or type context
+                ParameterSyntax or TypeSyntax => base.VisitIdentifierName(node),
+                _ => expr
+            };
+        }
         return base.VisitIdentifierName(node);
     }
 }

@@ -22,7 +22,7 @@ namespace RefactorMCP.ConsoleApp.SyntaxWalkers
         protected bool IsTarget(string name) => _names.Contains(name);
 
         protected static bool IsParameterOrType(SyntaxNode? node) =>
-            node is ParameterSyntax || node is TypeSyntax;
+            node is ParameterSyntax or TypeSyntax;
 
         protected static bool IsThisMember(MemberAccessExpressionSyntax ma, IdentifierNameSyntax node) =>
             ma.Expression is ThisExpressionSyntax && ma.Name == node;

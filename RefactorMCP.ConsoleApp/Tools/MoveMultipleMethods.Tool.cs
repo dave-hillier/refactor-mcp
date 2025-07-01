@@ -173,7 +173,7 @@ public static partial class MoveMultipleMethodsTool
             }
             catch (Exception ex)
             {
-                results.Add($"Error moving method '{methodNames[idx]}': {ex.Message}");
+                results.Add($"Error moving method '{methodNames[idx]}': {ex.Message}\nStack Trace:\n{ex.StackTrace}");
             }
         }
 
