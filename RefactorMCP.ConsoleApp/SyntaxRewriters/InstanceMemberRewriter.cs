@@ -18,7 +18,7 @@ internal class InstanceMemberRewriter : CSharpSyntaxRewriter
 
     public override SyntaxNode VisitMemberAccessExpression(MemberAccessExpressionSyntax node)
     {
-        if ((node.Expression is ThisExpressionSyntax || node.Expression is BaseExpressionSyntax) &&
+        if (node.Expression is ThisExpressionSyntax or BaseExpressionSyntax &&
             node.Name is IdentifierNameSyntax id &&
             _knownInstanceMembers.Contains(id.Identifier.ValueText))
         {
@@ -29,10 +29,22 @@ internal class InstanceMemberRewriter : CSharpSyntaxRewriter
         return base.VisitMemberAccessExpression(node)!;
     }
 
+    public override SyntaxNode? VisitConditionalAccessExpression(ConditionalAccessExpressionSyntax node)
+    {
+        // Handle cases like this.member?.Property or member?.Property
+        // We need to rewrite the expression before the ?. but leave the binding expression alone
+        var rewrittenExpression = (ExpressionSyntax?)Visit(node.Expression);
+        if (rewrittenExpression != node.Expression)
+        {
+            return node.WithExpression(rewrittenExpression);
+        }
+        return base.VisitConditionalAccessExpression(node);
+    }
+
     public override SyntaxNode? VisitIdentifierName(IdentifierNameSyntax node)
     {
         var parent = node.Parent;
-        if (parent is ParameterSyntax || parent is TypeSyntax)
+        if (parent is ParameterSyntax or TypeSyntax)
             return base.VisitIdentifierName(node);
 
         if (parent is AssignmentExpressionSyntax assign &&
@@ -47,6 +59,13 @@ internal class InstanceMemberRewriter : CSharpSyntaxRewriter
         if (parent is NameColonSyntax nameColon &&
             nameColon.Parent is SubpatternSyntax &&
             nameColon.Parent.Parent is PropertyPatternClauseSyntax)
+        {
+            return base.VisitIdentifierName(node);
+        }
+
+        // Don't rewrite identifiers inside conditional access expressions (?.member)
+        // The member binding expression expects a SimpleNameSyntax, not a MemberAccessExpressionSyntax
+        if (parent is MemberBindingExpressionSyntax)
         {
             return base.VisitIdentifierName(node);
         }

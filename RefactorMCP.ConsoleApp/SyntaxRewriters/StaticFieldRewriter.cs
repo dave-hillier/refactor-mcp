@@ -19,7 +19,7 @@ internal class StaticFieldRewriter : CSharpSyntaxRewriter
     public override SyntaxNode? VisitIdentifierName(IdentifierNameSyntax node)
     {
         var parent = node.Parent;
-        if (parent is ParameterSyntax || parent is TypeSyntax)
+        if (parent is ParameterSyntax or TypeSyntax)
             return base.VisitIdentifierName(node);
 
         if (_staticFieldNames.Contains(node.Identifier.ValueText))

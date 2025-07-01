@@ -116,9 +116,20 @@ public static partial class MoveMethodAst
             nodes.Add(method.Body);
         if (method.ExpressionBody != null)
             nodes.Add(method.ExpressionBody);
-        return nodes.SelectMany(n => n.DescendantNodes())
+        
+        var allNodes = nodes.SelectMany(n => n.DescendantNodes());
+        
+        // Check for direct identifier usage
+        var hasIdentifierUsage = allNodes
             .OfType<IdentifierNameSyntax>()
             .Any(id => id.Identifier.ValueText == parameterName);
+            
+        // Check for usage in member access expressions (e.g., parameterName.SomeProperty)
+        var hasMemberAccessUsage = allNodes
+            .OfType<MemberAccessExpressionSyntax>()
+            .Any(ma => ma.Expression is IdentifierNameSyntax id && id.Identifier.ValueText == parameterName);
+            
+        return hasIdentifierUsage || hasMemberAccessUsage;
     }
 
     private static MethodDeclarationSyntax RemoveParameter(MethodDeclarationSyntax method, string parameterName)
@@ -456,6 +467,14 @@ public static partial class MoveMethodAst
     {
         var transformedMethod = method;
 
+        // Apply parameter rewriting BEFORE other transformations to avoid casting issues
+        if (injectedParameters.Count > 0)
+        {
+            var map = injectedParameterMap.ToDictionary(kvp => kvp.Key, kvp => (ExpressionSyntax)SyntaxFactory.IdentifierName(kvp.Value));
+            var rewriter = new ParameterRewriter(map);
+            transformedMethod = (MethodDeclarationSyntax)rewriter.Visit(transformedMethod)!;
+        }
+
         if (needsThisParameter)
         {
             transformedMethod = AddThisParameterToMethod(transformedMethod, sourceClassName, thisParameterName);
@@ -470,15 +489,13 @@ public static partial class MoveMethodAst
                 otherMethodNames);
         }
 
+        // Add injected parameters to the parameter list after transformation
         if (injectedParameters.Count > 0)
         {
             var parameters = transformedMethod.ParameterList.Parameters;
             var insertIndex = needsThisParameter ? 1 : 0;
             parameters = parameters.InsertRange(insertIndex, injectedParameters);
             transformedMethod = transformedMethod.WithParameterList(transformedMethod.ParameterList.WithParameters(parameters));
-            var map = injectedParameterMap.ToDictionary(kvp => kvp.Key, kvp => (ExpressionSyntax)SyntaxFactory.IdentifierName(kvp.Value));
-            var rewriter = new ParameterRewriter(map);
-            transformedMethod = (MethodDeclarationSyntax)rewriter.Visit(transformedMethod)!;
         }
 
         if (nestedClassNames.Count > 0)
@@ -743,7 +760,7 @@ public static partial class MoveMethodAst
 
     private static int FindAccessMemberInsertionIndex(List<MemberDeclarationSyntax> members)
     {
-        var fieldIndex = members.FindLastIndex(m => m is FieldDeclarationSyntax || m is PropertyDeclarationSyntax);
+        var fieldIndex = members.FindLastIndex(m => m is FieldDeclarationSyntax or PropertyDeclarationSyntax);
         return fieldIndex >= 0 ? fieldIndex + 1 : 0;
     }
 

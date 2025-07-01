@@ -19,7 +19,11 @@ internal class MethodReferenceRewriter : CSharpSyntaxRewriter
         if (_methodNames.Contains(node.Identifier.ValueText))
         {
             var parent = node.Parent;
-            if (parent is not InvocationExpressionSyntax && parent is not MemberAccessExpressionSyntax)
+            // Don't rewrite identifiers inside conditional access expressions (?.member)
+            // or when they're already part of member access expressions or invocations
+            if (parent is not InvocationExpressionSyntax && 
+                parent is not MemberAccessExpressionSyntax && 
+                parent is not MemberBindingExpressionSyntax)
             {
                 var memberAccess = SyntaxFactory.MemberAccessExpression(
                     SyntaxKind.SimpleMemberAccessExpression,
@@ -42,5 +46,17 @@ internal class MethodReferenceRewriter : CSharpSyntaxRewriter
             return base.VisitMemberAccessExpression(updated)!;
         }
         return base.VisitMemberAccessExpression(node)!;
+    }
+
+    public override SyntaxNode? VisitConditionalAccessExpression(ConditionalAccessExpressionSyntax node)
+    {
+        // Handle cases like this.method?.Something
+        // We need to rewrite the expression before the ?. but leave the binding expression alone
+        var rewrittenExpression = (ExpressionSyntax?)Visit(node.Expression);
+        if (rewrittenExpression != node.Expression)
+        {
+            return node.WithExpression(rewrittenExpression);
+        }
+        return base.VisitConditionalAccessExpression(node);
     }
 }
