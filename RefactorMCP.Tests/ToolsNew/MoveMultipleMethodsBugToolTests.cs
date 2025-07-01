@@ -10,7 +10,7 @@ namespace RefactorMCP.Tests.ToolsNew;
 public class MoveMultipleMethodsBugToolTests : RefactorMCP.Tests.TestBase
 {
     [Fact]
-    public async Task MoveMultipleMethods_NestedClassGenerics_Fails()
+    public async Task MoveMultipleMethods_NestedClassGenerics_ShouldSucceed()
     {
         UnloadSolutionTool.ClearSolutionCache();
         var testFile = Path.Combine(TestOutputPath, "NestedGeneric.cs");
