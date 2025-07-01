@@ -41,11 +41,25 @@ internal class InstanceMemberRewriter : CSharpSyntaxRewriter
         return base.VisitConditionalAccessExpression(node);
     }
 
+    public override SyntaxNode? VisitNameColon(NameColonSyntax node)
+    {
+        // Override to handle named arguments manually and avoid casting issues
+        // Don't call base.VisitNameColon as it has assumptions about syntax structure
+        // Just visit the name part without transformation (parameter names should not be rewritten)
+        return node;
+    }
+
     public override SyntaxNode? VisitIdentifierName(IdentifierNameSyntax node)
     {
         var parent = node.Parent;
         if (parent is ParameterSyntax or TypeSyntax)
             return base.VisitIdentifierName(node);
+
+        // Don't rewrite the name part of named arguments (e.g., "dbContextFactory" in "dbContextFactory: _value")
+        if (parent is NameColonSyntax nameColon && nameColon.Name == node)
+        {
+            return base.VisitIdentifierName(node);
+        }
 
         if (parent is AssignmentExpressionSyntax assign &&
             assign.Left == node &&
@@ -56,9 +70,9 @@ internal class InstanceMemberRewriter : CSharpSyntaxRewriter
             return base.VisitIdentifierName(node);
         }
 
-        if (parent is NameColonSyntax nameColon &&
-            nameColon.Parent is SubpatternSyntax &&
-            nameColon.Parent.Parent is PropertyPatternClauseSyntax)
+        if (parent is NameColonSyntax nameColon2 &&
+            nameColon2.Parent is SubpatternSyntax &&
+            nameColon2.Parent.Parent is PropertyPatternClauseSyntax)
         {
             return base.VisitIdentifierName(node);
         }

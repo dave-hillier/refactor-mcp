@@ -43,9 +43,9 @@ public class Target { }";
     }
 
     [Fact]
-    public void DirectMoveMethod_WithNamedArgumentsAndThisAccess_ShouldThrowCastException()
+    public void DirectMoveMethod_WithNamedArgumentsAndThisAccess_ShouldSucceed()
     {
-        // This is the exact pattern that was failing in the real-world scenario
+        // This pattern was previously failing but is now fixed after the comprehensive patch
         var sourceCode = @"
 using System;
 
@@ -75,22 +75,18 @@ public class DepositManager
         var tree = CSharpSyntaxTree.ParseText(sourceCode);
         var root = tree.GetRoot();
 
-        // This should trigger the casting exception directly
-        var exception = Assert.Throws<InvalidCastException>(() =>
-        {
-            MoveMethodAst.MoveInstanceMethodAst(
-                root,
-                "cResRoom",
-                "CreatePostingItem", 
-                "DepositManager",
-                "instance",
-                "instance"
-            );
-        });
+        // This should now succeed without throwing exceptions - the casting bug has been fixed
+        var result = MoveMethodAst.MoveInstanceMethodAst(
+            root,
+            "cResRoom",
+            "CreatePostingItem", 
+            "DepositManager",
+            "instance",
+            "instance"
+        );
 
-        Assert.Contains("Unable to cast object of type", exception.Message);
-        Assert.Contains("MemberAccessExpressionSyntax", exception.Message);
-        Assert.Contains("IdentifierNameSyntax", exception.Message);
+        // Verify the operation succeeded without throwing an exception
+        Assert.NotNull(result);
     }
 
     [Fact]
@@ -141,9 +137,9 @@ public class DepositManager
     }
 
     [Fact]
-    public void DirectMoveMethod_WithComplexLambdaAndNamedArgs_ShouldThrowCastException()
+    public void DirectMoveMethod_WithComplexLambdaAndNamedArgs_ShouldSucceed()
     {
-        // Pattern that was failing in GenerateInvoice
+        // This pattern was previously failing in GenerateInvoice but is now fixed
         var sourceCode = @"
 using System;
 using System.Collections.Generic;
@@ -178,22 +174,18 @@ public class DepositManager
         var tree = CSharpSyntaxTree.ParseText(sourceCode);
         var root = tree.GetRoot();
 
-        // This should trigger the casting exception in lambda processing
-        var exception = Assert.Throws<InvalidCastException>(() =>
-        {
-            MoveMethodAst.MoveInstanceMethodAst(
-                root,
-                "cResRoom",
-                "GenerateInvoice",
-                "DepositManager", 
-                "instance",
-                "instance"
-            );
-        });
+        // This should now succeed without throwing exceptions - the lambda with named args casting bug has been fixed
+        var result = MoveMethodAst.MoveInstanceMethodAst(
+            root,
+            "cResRoom",
+            "GenerateInvoice",
+            "DepositManager", 
+            "instance",
+            "instance"
+        );
 
-        Assert.Contains("Unable to cast object of type", exception.Message);
-        Assert.Contains("MemberAccessExpressionSyntax", exception.Message);
-        Assert.Contains("IdentifierNameSyntax", exception.Message);
+        // Verify the operation succeeded without throwing an exception
+        Assert.NotNull(result);
     }
 
     [Fact]
@@ -276,7 +268,7 @@ public class DepositManager
     }
 
     [Fact]
-    public async Task MoveMethod_WithParameterInjectionAndNamedArguments_ShouldFail()
+    public async Task MoveMethod_WithParameterInjectionAndNamedArguments_ShouldSucceed()
     {
         UnloadSolutionTool.ClearSolutionCache();
         var testFile = Path.Combine(TestOutputPath, "ParameterInjectionNamed.cs");
@@ -295,17 +287,17 @@ public class SourceClass
     private DateTime _date;
     
     // This method uses instance fields that will be converted to parameters
-    // AND uses named arguments that reference these fields - this should trigger the casting bug
+    // AND uses named arguments that reference these fields - this now works correctly
     public PostingItem CreatePostingItem()
     {
         return new PostingItem(
-            amount: _amount,       // _amount becomes parameter, then InstanceMemberRewriter tries to qualify it
-            description: _description,  // Same issue here
-            date: _date           // And here
+            amount: _amount,       // _amount becomes parameter, properly handled by rewriters
+            description: _description,  // ParameterRewriter and InstanceMemberRewriter work together correctly
+            date: _date           // All casting conflicts have been resolved
         );
     }
     
-    // Another method that calls CreatePostingItem, creating recursive dependencies
+    // Another method that calls CreatePostingItem, creating recursive dependencies  
     public void AddPosting()
     {
         var item = CreatePostingItem();
@@ -323,7 +315,7 @@ public class Target { }";
         var project = solution.Projects.First();
         RefactoringHelpers.AddDocumentToProject(project, testFile);
 
-        // This should trigger the ParameterRewriter vs InstanceMemberRewriter conflict
+        // This should now succeed - the ParameterRewriter vs InstanceMemberRewriter conflict has been resolved
         var result = await MoveMultipleMethodsTool.MoveMultipleMethodsInstance(
             SolutionPath,
             testFile,
@@ -331,12 +323,11 @@ public class Target { }";
             new[] { "CreatePostingItem", "AddPosting" },
             "Target");
 
-        Assert.Contains("Error moving method", result);
-        Assert.Contains("Unable to cast", result);
+        Assert.Contains("Successfully moved", result);
     }
 
     [Fact]
-    public async Task MoveMethod_WithThisQualifierInNamedArgs_ShouldFail()  
+    public async Task MoveMethod_WithThisQualifierInNamedArgs_ShouldSucceed()  
     {
         UnloadSolutionTool.ClearSolutionCache();
         var testFile = Path.Combine(TestOutputPath, "ThisQualifierNamed.cs");
@@ -354,14 +345,14 @@ public class SourceClass
     public string Type { get; set; }
     public DateTime Timestamp { get; set; }
     
-    // Using 'this' explicitly in named arguments should trigger the casting bug
-    // when InstanceMemberRewriter processes it after ParameterRewriter
+    // Using 'this' explicitly in named arguments now works correctly
+    // InstanceMemberRewriter properly handles this after ParameterRewriter
     public Transaction CreateDepositTransaction()
     {
         return new Transaction(
-            amount: this.Amount * 1.5m,     // Complex expression with this.
-            type: this.Type ?? ""deposit"",  // this. with null coalescing
-            when: this.Timestamp            // Simple this. reference
+            amount: this.Amount * 1.5m,     // Complex expression with this - now handled correctly
+            type: this.Type ?? ""deposit"",  // this. with null coalescing - casting bug fixed
+            when: this.Timestamp            // Simple this. reference - works correctly
         );
     }
     
@@ -371,7 +362,7 @@ public class SourceClass
         var tx = CreateDepositTransaction();
         LogTransaction(
             transaction: tx,
-            source: this.Type,      // this. in named argument
+            source: this.Type,      // this. in named argument - now works
             timestamp: this.Timestamp
         );
     }
@@ -394,12 +385,11 @@ public class Target { }";
             new[] { "CreateDepositTransaction", "ProcessTransaction" },
             "Target");
 
-        Assert.Contains("Error moving method", result);
-        Assert.Contains("Unable to cast", result);
+        Assert.Contains("Successfully moved", result);
     }
 
     [Fact] 
-    public async Task MoveMethod_WithMixedInstanceMembersAndNamedArgs_ShouldFail()
+    public async Task MoveMethod_WithMixedInstanceMembersAndNamedArgs_ShouldSucceed()
     {
         UnloadSolutionTool.ClearSolutionCache();
         var testFile = Path.Combine(TestOutputPath, "MixedInstanceNamed.cs");
@@ -420,13 +410,13 @@ public class SourceClass
     private int _defaultQty;
     
     // This combines instance fields, properties, and complex named arguments
-    // The rewriter conflict should happen when processing the named arguments
+    // The rewriter conflict has been resolved - all transformations work together correctly
     public List<LineItem> CreateLineItems()
     {
         return _descriptions.Select(desc => new LineItem(
-            price: _basePrice * 1.2m,           // Instance field in expression
-            desc: desc,                         // Parameter  
-            qty: _defaultQty                    // Instance field direct
+            price: _basePrice * 1.2m,           // Instance field in expression - properly handled
+            desc: desc,                         // Parameter - works correctly  
+            qty: _defaultQty                    // Instance field direct - casting issues fixed
         )).ToList();
     }
     
@@ -435,13 +425,13 @@ public class SourceClass
     {
         var items = CreateLineItems();
         
-        // Conditional access with named arguments - this pattern should trigger the bug
+        // Conditional access with named arguments - this pattern now works correctly
         items?.FirstOrDefault()?.ToString();
         
         ValidateItems(
             items: items,
-            minPrice: _basePrice,      // Instance field in named arg
-            descriptions: _descriptions // Instance field direct
+            minPrice: _basePrice,      // Instance field in named arg - now works
+            descriptions: _descriptions // Instance field direct - casting fixed
         );
     }
     
@@ -463,7 +453,57 @@ public class Target { }";
             new[] { "CreateLineItems", "ProcessItems" },
             "Target");
 
-        Assert.Contains("Error moving method", result);
-        Assert.Contains("Unable to cast", result);
+        Assert.Contains("Successfully moved", result);
+    }
+
+    [Fact]
+    public void DirectMoveMethod_WithNamedArgumentMemberAccess_ShouldSucceed()
+    {
+        // This test reproduces the GetInvoicedTransactionIds scenario
+        // where named arguments contain member access expressions (_dbContextFactory)
+        // This should work without throwing exceptions
+        var sourceCode = @"
+using System.Collections.Generic;
+
+public class cReportList
+{
+    public cReportList(object parent, object dbContextFactory) { }
+    public IEnumerable<int> GetInvoicedTransactionIds(string bookRef, int roomId) { return null; }
+}
+
+public class cResRoom
+{
+    private object _dbContextFactory;
+    private string strBookRef;
+    private int iRoomPickID;
+    
+    public IEnumerable<int> GetInvoicedTransactionIds()
+    {
+        var reportList = new cReportList(this, dbContextFactory: _dbContextFactory);
+        return reportList.GetInvoicedTransactionIds(strBookRef, iRoomPickID);
+    }
+}
+
+public class TargetManager { }";
+
+        var tree = CSharpSyntaxTree.ParseText(sourceCode);
+        var root = tree.GetRoot();
+
+        // This should work successfully - the method should be moved without throwing exceptions
+        var result = MoveMethodAst.MoveInstanceMethodAst(
+            root,
+            "cResRoom",
+            "GetInvoicedTransactionIds",
+            "TargetManager",
+            "instance",
+            "cResRoom"
+        );
+
+        // Verify the operation succeeded without throwing exceptions
+        Assert.NotNull(result);
+        
+        // The main success criteria is that no InvalidCastException was thrown
+        // This test reproduces the exact casting bug that was happening with
+        // named arguments containing member access expressions like _dbContextFactory
     }
 }

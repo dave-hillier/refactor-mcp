@@ -59,4 +59,12 @@ internal class MethodReferenceRewriter : CSharpSyntaxRewriter
         }
         return base.VisitConditionalAccessExpression(node);
     }
+
+    public override SyntaxNode? VisitNameColon(NameColonSyntax node)
+    {
+        // Override to handle named arguments manually and avoid casting issues
+        // Don't call base.VisitNameColon as it has assumptions about syntax structure
+        // Just return the node unchanged (parameter names in named args should not be transformed)
+        return node;
+    }
 }
