@@ -80,7 +80,7 @@ RefactorMCP works seamlessly with GitHub Copilot in VS Code through MCP support:
      - "Convert this instance method to static"
      - "Show me metrics for the current C# file"
 
-     5. **Verify the integration:**
+5. **Verify the integration:**
    - In Copilot Chat, ask: "What refactoring tools are available?"
    - You should see a list of all RefactorMCP tools
    - The tools will work directly on your open workspace files
