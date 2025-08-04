@@ -10,9 +10,11 @@ Run the console application directly or host it as an MCP server:
 
 - [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0) installed
 - Clone this repository and build the project:
+```bash
 git clone <repository-url>
 cd refactor-mcp
 dotnet build RefactorMCP.ConsoleApp
+```
 ### Claude Desktop Integration
 
 1. **Locate your Claude Desktop config file:**
@@ -21,6 +23,7 @@ dotnet build RefactorMCP.ConsoleApp
    - **Linux**: `~/.config/Claude/claude_desktop_config.json`
 
 2. **Add RefactorMCP to your config:**
+```json
 {
   "mcpServers": {
     "refactor-mcp": {
@@ -32,6 +35,7 @@ dotnet build RefactorMCP.ConsoleApp
     }
   }
 }
+```
 **Important**: Replace `/absolute/path/to/refactor-mcp/` with the actual absolute path to your cloned repository.
 
 3. **Restart Claude Desktop** for the changes to take effect.
@@ -51,6 +55,7 @@ RefactorMCP works seamlessly with GitHub Copilot in VS Code through MCP support:
    - Open VS Code settings (`Ctrl/Cmd + ,`)
    - Search for "MCP" or go to Extensions > GitHub Copilot > MCP Servers
    - Add a new MCP server configuration:
+```json
 {
   "github.copilot.chat.mcp.servers": {
     "refactor-mcp": {
@@ -62,6 +67,7 @@ RefactorMCP works seamlessly with GitHub Copilot in VS Code through MCP support:
     }
   }
 }
+```
 **Important**: Replace `/absolute/path/to/refactor-mcp/` with the actual absolute path to your cloned repository.
 
 3. **Restart VS Code** for the configuration to take effect.
