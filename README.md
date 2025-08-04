@@ -52,23 +52,31 @@ RefactorMCP works seamlessly with GitHub Copilot in VS Code through MCP support:
 1. **Install GitHub Copilot extension** if not already installed from the VS Code marketplace
 
 2. **Configure RefactorMCP in VS Code settings:**
-   - Open VS Code settings (`Ctrl/Cmd + ,`)
-   - Search for "MCP" or go to Extensions > GitHub Copilot > MCP Servers
-   - Add a new MCP server configuration:
+   - Open VS Code
+   - Add the following configuration to your .vscode/mcp.json file:
 ```json
 {
-  "github.copilot.chat.mcp.servers": {
+  "servers": {
     "refactor-mcp": {
-      "command": "dotnet",
-      "args": ["run", "--project", "/absolute/path/to/refactor-mcp/RefactorMCP.ConsoleApp"],
-      "env": {
-        "DOTNET_ENVIRONMENT": "Production"
-      }
-    }
+			"id": "RefactorMCP",
+			"name": "RefactorMCP",
+			"version": "0.0.1",
+			"config": {
+				"command": "dotnet",
+				"args": [
+					"run",
+					"--project",
+					"C:\\Users\\YOUR_USERNAME\\source\\repos\\refactor-mcp\\RefactorMCP.ConsoleApp"
+				],
+				"env": {
+					"DOTNET_ENVIRONMENT": "Production"
+				}
+			}
+		}
   }
 }
 ```
-**Important**: Replace `/absolute/path/to/refactor-mcp/` with the actual absolute path to your cloned repository.
+**Important**: Replace `C:\\Users\\YOUR_USERNAME\\source\\repos\\refactor-mcp\\RefactorMCP.ConsoleApp` with the actual absolute path to your cloned repository.
 
 3. **Restart VS Code** for the configuration to take effect.
 
