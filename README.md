@@ -2,9 +2,84 @@
 
 RefactorMCP is a Model Context Protocol server that exposes Roslyn-based refactoring tools for C#.
 
-## Usage
-
 Run the console application directly or host it as an MCP server:
+
+## Setup as MCP Server
+
+### Prerequisites
+
+- [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0) installed
+- Clone this repository and build the project:
+git clone <repository-url>
+cd refactor-mcp
+dotnet build RefactorMCP.ConsoleApp
+### Claude Desktop Integration
+
+1. **Locate your Claude Desktop config file:**
+   - **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+   - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+   - **Linux**: `~/.config/Claude/claude_desktop_config.json`
+
+2. **Add RefactorMCP to your config:**
+{
+  "mcpServers": {
+    "refactor-mcp": {
+      "command": "dotnet",
+      "args": ["run", "--project", "/absolute/path/to/refactor-mcp/RefactorMCP.ConsoleApp"],
+      "env": {
+        "DOTNET_ENVIRONMENT": "Production"
+      }
+    }
+  }
+}
+**Important**: Replace `/absolute/path/to/refactor-mcp/` with the actual absolute path to your cloned repository.
+
+3. **Restart Claude Desktop** for the changes to take effect.
+
+4. **Verify the connection:**
+   - Open a new conversation in Claude Desktop
+   - You should see a small hammer/tool icon (🔨) indicating MCP tools are available
+   - Ask Claude: "What refactoring tools do you have available?"
+
+### VS Code with GitHub Copilot Integration
+
+RefactorMCP works seamlessly with GitHub Copilot in VS Code through MCP support:
+
+1. **Install GitHub Copilot extension** if not already installed from the VS Code marketplace
+
+2. **Configure RefactorMCP in VS Code settings:**
+   - Open VS Code settings (`Ctrl/Cmd + ,`)
+   - Search for "MCP" or go to Extensions > GitHub Copilot > MCP Servers
+   - Add a new MCP server configuration:
+{
+  "github.copilot.chat.mcp.servers": {
+    "refactor-mcp": {
+      "command": "dotnet",
+      "args": ["run", "--project", "/absolute/path/to/refactor-mcp/RefactorMCP.ConsoleApp"],
+      "env": {
+        "DOTNET_ENVIRONMENT": "Production"
+      }
+    }
+  }
+}
+**Important**: Replace `/absolute/path/to/refactor-mcp/` with the actual absolute path to your cloned repository.
+
+3. **Restart VS Code** for the configuration to take effect.
+
+4. **Usage in VS Code:**
+   - Open the GitHub Copilot Chat panel (`Ctrl/Cmd + Shift + I`)
+   - Use natural language to request refactoring operations:
+     - "Move the `CalculateTotal` method from `OrderService` to `PriceCalculator`"
+     - "Extract this complex logic into a separate method"
+     - "Convert this instance method to static"
+     - "Show me metrics for the current C# file"
+
+     5. **Verify the integration:**
+   - In Copilot Chat, ask: "What refactoring tools are available?"
+   - You should see a list of all RefactorMCP tools
+   - The tools will work directly on your open workspace files
+
+## Direct Usage
 
 ```bash
 dotnet run --project RefactorMCP.ConsoleApp
