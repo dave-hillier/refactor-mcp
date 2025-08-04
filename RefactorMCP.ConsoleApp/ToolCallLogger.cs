@@ -130,12 +130,8 @@ internal static class ToolCallLogger
             Console.WriteLine(await taskStr);
         else if (result is Task task)
         {
-            async Task HandleTask()
-            {
-                await task;
-            }
+            await task;
 
-            HandleTask().ConfigureAwait(false);
             Console.WriteLine("Done");
         }
         else if (result != null)
