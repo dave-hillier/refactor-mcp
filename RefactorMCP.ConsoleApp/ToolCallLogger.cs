@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using ModelContextProtocol.Server;
@@ -11,6 +12,7 @@ internal static class ToolCallLogger
 {
     private const string LogFileEnvVar = "REFACTOR_MCP_LOG_FILE";
     private static string _logFile = "tool-call-log.jsonl";
+    private static readonly object _fileLock = new object();
 
     public static string DefaultLogFile => _logFile;
 
@@ -43,7 +45,22 @@ internal static class ToolCallLogger
             Timestamp = DateTime.UtcNow
         };
         var json = JsonSerializer.Serialize(record);
-        File.AppendAllText(file, json + Environment.NewLine);
+        var logEntry = json + Environment.NewLine;
+
+        lock (_fileLock)
+        {
+            try
+            {
+                using var fileStream = new FileStream(file, FileMode.Append, FileAccess.Write, FileShare.Read);
+                using var writer = new StreamWriter(fileStream, Encoding.UTF8);
+                writer.Write(logEntry);
+                writer.Flush();
+            }
+            catch (IOException ex)
+            {
+                Console.Error.WriteLine($"Warning: Failed to write to log file '{file}': {ex.Message}");
+            }
+        }
     }
 
     public static async Task Playback(string logFilePath)
@@ -113,7 +130,12 @@ internal static class ToolCallLogger
             Console.WriteLine(await taskStr);
         else if (result is Task task)
         {
-            await task;
+            async Task HandleTask()
+            {
+                await task;
+            }
+
+            HandleTask().ConfigureAwait(false);
             Console.WriteLine("Done");
         }
         else if (result != null)
