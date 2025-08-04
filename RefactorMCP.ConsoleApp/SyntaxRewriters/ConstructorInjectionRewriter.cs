@@ -40,7 +40,7 @@ internal class ConstructorInjectionRewriter : CSharpSyntaxRewriter
         return base.VisitMethodDeclaration(node);
     }
 
-    public override SyntaxNode VisitIdentifierName(IdentifierNameSyntax node)
+    public override SyntaxNode? VisitIdentifierName(IdentifierNameSyntax node)
     {
         if (_inTargetMethod && node.Identifier.ValueText == _parameterName)
         {

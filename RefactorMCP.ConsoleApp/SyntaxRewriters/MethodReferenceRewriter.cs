@@ -53,10 +53,17 @@ internal class MethodReferenceRewriter : CSharpSyntaxRewriter
         // Handle cases like this.method?.Something
         // We need to rewrite the expression before the ?. but leave the binding expression alone
         var rewrittenExpression = (ExpressionSyntax?)Visit(node.Expression);
+
+        if (rewrittenExpression is null)
+        {
+            return base.VisitConditionalAccessExpression(node);
+        }
+
         if (rewrittenExpression != node.Expression)
         {
             return node.WithExpression(rewrittenExpression);
         }
+
         return base.VisitConditionalAccessExpression(node);
     }
 

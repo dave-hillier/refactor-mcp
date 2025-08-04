@@ -831,9 +831,11 @@ public static partial class MoveMethodAst
 
         var targetCompilationUnit = targetRoot as CompilationUnitSyntax ?? throw new InvalidOperationException("Expected compilation unit");
         var targetUsingNames = targetCompilationUnit.Usings
+            .Where(u => u != null)
             .Select(u => u.Name.ToString())
             .ToHashSet();
         var missingUsings = sourceUsings
+            .Where(u => u != null)
             .Where(u => !targetUsingNames.Contains(u.Name.ToString()))
             .Where(u => namespaceName == null || u.Name.ToString() != namespaceName)
             .ToArray();
