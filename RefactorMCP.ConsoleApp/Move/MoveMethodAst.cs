@@ -116,19 +116,19 @@ public static partial class MoveMethodAst
             nodes.Add(method.Body);
         if (method.ExpressionBody != null)
             nodes.Add(method.ExpressionBody);
-        
+
         var allNodes = nodes.SelectMany(n => n.DescendantNodes());
-        
+
         // Check for direct identifier usage
         var hasIdentifierUsage = allNodes
             .OfType<IdentifierNameSyntax>()
             .Any(id => id.Identifier.ValueText == parameterName);
-            
+
         // Check for usage in member access expressions (e.g., parameterName.SomeProperty)
         var hasMemberAccessUsage = allNodes
             .OfType<MemberAccessExpressionSyntax>()
             .Any(ma => ma.Expression is IdentifierNameSyntax id && id.Identifier.ValueText == parameterName);
-            
+
         return hasIdentifierUsage || hasMemberAccessUsage;
     }
 

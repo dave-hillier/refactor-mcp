@@ -433,7 +433,7 @@ public class SourceClass
 }
 
 public class Target { }";
-        
+
         await TestUtilities.CreateTestFile(testFile, code);
         await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
         var solution = await RefactoringHelpers.GetOrLoadSolution(SolutionPath);
@@ -452,7 +452,7 @@ public class Target { }";
     }
 
     [Fact]
-    public async Task MoveInstanceMethod_WithThisQualifierInNamedArgs_ShouldSucceed()  
+    public async Task MoveInstanceMethod_WithThisQualifierInNamedArgs_ShouldSucceed()
     {
         UnloadSolutionTool.ClearSolutionCache();
         var testFile = Path.GetFullPath(Path.Combine(TestOutputPath, "ThisQualifierNamed.cs"));
@@ -496,7 +496,7 @@ public class SourceClass
 }
 
 public class Target { }";
-        
+
         await TestUtilities.CreateTestFile(testFile, code);
         await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
         var solution = await RefactoringHelpers.GetOrLoadSolution(SolutionPath);
@@ -513,7 +513,7 @@ public class Target { }";
         Assert.Contains("Successfully moved", result);
     }
 
-    [Fact] 
+    [Fact]
     public async Task MoveInstanceMethod_WithMixedInstanceMembersAndNamedArgs_ShouldSucceed()
     {
         UnloadSolutionTool.ClearSolutionCache();
@@ -564,7 +564,7 @@ public class SourceClass
 }
 
 public class Target { }";
-        
+
         await TestUtilities.CreateTestFile(testFile, code);
         await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
         var solution = await RefactoringHelpers.GetOrLoadSolution(SolutionPath);

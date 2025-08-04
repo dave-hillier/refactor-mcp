@@ -215,7 +215,7 @@ public class DepositManager
         var result = MoveMethodAst.MoveInstanceMethodAst(
             root,
             "cResRoom",
-            "CreatePostingItem", 
+            "CreatePostingItem",
             "DepositManager",
             "instance",
             "instance"
@@ -261,7 +261,7 @@ public class DepositManager
         // The main verification is that no exception is thrown
         var result = MoveMethodAst.MoveInstanceMethodAst(
             root,
-            "cResRoom", 
+            "cResRoom",
             "AddDepositFromDepositTransaction",
             "DepositManager",
             "instance",
@@ -315,7 +315,7 @@ public class DepositManager
             root,
             "cResRoom",
             "GenerateInvoice",
-            "DepositManager", 
+            "DepositManager",
             "instance",
             "instance"
         );
@@ -369,7 +369,7 @@ public class TargetManager { }";
 
         // Verify the operation succeeded without throwing exceptions
         Assert.NotNull(result);
-        
+
         // The main success criteria is that no InvalidCastException was thrown
         // This test reproduces the exact casting bug that was happening with
         // named arguments containing member access expressions like _dbContextFactory
