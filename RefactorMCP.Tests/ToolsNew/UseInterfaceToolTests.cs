@@ -43,6 +43,8 @@ public interface ILogger { }
 
         Assert.Contains("Successfully changed parameter", result);
         var fileContent = await File.ReadAllTextAsync(testFile);
-        Assert.Equal(expectedCode, fileContent.Replace("\r\n", "\n"));
+        var expected = expectedCode.Replace("\r\n", "\n").Replace("\n", Environment.NewLine);
+        fileContent = fileContent.Replace("\r\n", "\n").Replace("\n", Environment.NewLine);
+        Assert.Equal(expected, fileContent);
     }
 }

@@ -34,7 +34,9 @@ public class Sample
 
         Assert.Contains("Successfully deleted field", result);
         var fileContent = await File.ReadAllTextAsync(testFile);
-        Assert.Equal(expectedCode, fileContent.Replace("\r\n", "\n"));
+        var expected = expectedCode.Replace("\r\n", "\n").Replace("\n", Environment.NewLine);
+        fileContent = fileContent.Replace("\r\n", "\n").Replace("\n", Environment.NewLine);
+        Assert.Equal(expected, fileContent);
     }
 
     [Fact]
@@ -67,7 +69,9 @@ public class Sample
 
         Assert.Contains("Successfully deleted method", result);
         var fileContent = await File.ReadAllTextAsync(testFile);
-        Assert.Equal(expectedCode, fileContent.Replace("\r\n", "\n"));
+        var expected = expectedCode.Replace("\r\n", "\n").Replace("\n", Environment.NewLine);
+        fileContent = fileContent.Replace("\r\n", "\n").Replace("\n", Environment.NewLine);
+        Assert.Equal(expected, fileContent);
     }
 
     [Fact]
@@ -103,6 +107,8 @@ public class Sample
 
         Assert.Contains("Successfully deleted variable", result);
         var fileContent = await File.ReadAllTextAsync(testFile);
-        Assert.Equal(expectedCode, fileContent.Replace("\r\n", "\n"));
+        var expected = expectedCode.Replace("\r\n", "\n").Replace("\n", Environment.NewLine);
+        fileContent = fileContent.Replace("\r\n", "\n").Replace("\n", Environment.NewLine);
+        Assert.Equal(expected, fileContent);
     }
 }
