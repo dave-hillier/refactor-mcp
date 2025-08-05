@@ -12,7 +12,6 @@ internal static class ToolCallLogger
 {
     private const string LogFileEnvVar = "REFACTOR_MCP_LOG_FILE";
     private static string _logFile = "tool-call-log.jsonl";
-    private static readonly object _fileLock = new object();
 
     public static string DefaultLogFile => _logFile;
 
@@ -47,12 +46,9 @@ internal static class ToolCallLogger
         var json = JsonSerializer.Serialize(record);
         var logEntry = json + Environment.NewLine;
 
-        lock (_fileLock)
-        {
             try
             {
-                using var fileStream = new FileStream(file, FileMode.Append, FileAccess.Write, FileShare.Read);
-                using var writer = new StreamWriter(fileStream, Encoding.UTF8);
+                using StreamWriter writer = new StreamWriter(file, append: true);
                 writer.Write(logEntry);
                 writer.Flush();
             }
@@ -60,7 +56,6 @@ internal static class ToolCallLogger
             {
                 Console.Error.WriteLine($"Warning: Failed to write to log file '{file}': {ex.Message}");
             }
-        }
     }
 
     public static async Task Playback(string logFilePath)
