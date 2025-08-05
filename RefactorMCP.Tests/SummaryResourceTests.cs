@@ -1,4 +1,4 @@
-using Microsoft.VisualStudio.TestPlatform.Utilities;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -7,16 +7,24 @@ namespace RefactorMCP.Tests;
 
 public class SummaryResourceTests : TestBase
 {
-    private const string ExpectedSummarySnippet = "public int Calculate(int a, int b)\n        {}";
-
     [Fact]
     public async Task GetSummary_OmitsMethodBodies()
     {
         var result = await SummaryResources.GetSummary(ExampleFilePath, CancellationToken.None);
-        var expected = ExpectedSummarySnippet.Replace("\r\n", "\n").Replace("\n", Environment.NewLine);
-        result = result.Replace("\r\n", "\n").Replace("\n", Environment.NewLine);
-        Assert.Contains(ExpectedSummarySnippet, result);
+        
+        // Use regex to match method signature with empty body, allowing for flexible whitespace
+        // This is more reliable than exact string matching as it handles platform differences in formatting
+        var methodSignaturePattern = @"public\s+int\s+Calculate\s*\(\s*int\s+a\s*,\s*int\s+b\s*\)\s*\{\s*\}";
+        Assert.Matches(methodSignaturePattern, result);
+        
+        // Verify that method bodies are actually omitted (should not contain the original implementation)
         Assert.DoesNotContain("throw new ArgumentException", result);
+        Assert.DoesNotContain("numbers.Add(result)", result);
+        Assert.DoesNotContain("Console.WriteLine($\"Result: {result}\")", result);
+        
+        // Additional verification that the summary structure is correct
+        Assert.Contains("// summary://", result);
+        Assert.Contains("// This file omits method bodies for brevity.", result);
     }
 
     [Fact]
