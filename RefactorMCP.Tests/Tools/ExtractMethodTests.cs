@@ -36,7 +36,7 @@ public class ExtractMethodTests : TestBase
         await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
         var testFile = Path.Combine(TestOutputPath, "ExtractMethodTest.cs");
         await TestUtilities.CreateTestFile(testFile, TestUtilities.GetSampleCodeForExtractMethod());
-        
+
         // Extract the lines that calculate and return the result: "var result = a + b; return result;"
         // Looking at the sample code:
         // Line 11: "        var result = a + b;"
@@ -76,7 +76,7 @@ public class ExtractMethodTests : TestBase
 
         Assert.Contains("Successfully extracted method", result);
         var fileContent = await File.ReadAllTextAsync(testFile);
-        
+
         // Should call the validation method with parameters
         Assert.Contains("ValidateInputs(a, b);", fileContent);
     }
@@ -96,7 +96,7 @@ public class ExtractMethodTests : TestBase
             "ValidateInputs");
 
         var fileContent = await File.ReadAllTextAsync(testFile);
-        
+
         // Should create a void method (validation that throws but doesn't return)
         Assert.Contains("private void ValidateInputs(int a, int b)", fileContent);
     }
@@ -153,5 +153,68 @@ public class ExtractMethodTests : TestBase
                 ExampleFilePath,
                 range,
                 methodName));
+    }
+
+    [Fact]
+    public async Task ExtractMethod_AsyncMethodWithTaskReturn_AvoidsDuplicateTaskWrapper()
+    {
+        await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
+        var testFile = Path.Combine(TestOutputPath, "ExtractAsyncMethodTest.cs");
+        await TestUtilities.CreateTestFile(testFile, TestUtilities.GetSampleCodeForExtractAsyncMethod());
+
+        // Extract the async method call that returns Task<List<int>>
+        // Line 10: "        var processedNumbers = await GetListOfIntsAsync();"
+        var result = await ExtractMethodTool.ExtractMethod(
+            SolutionPath,
+            testFile,
+            "10:9-10:63",  // Extract only the single await line
+            "GetProcessedNumbersAsync");
+
+        Assert.Contains("Successfully extracted method", result);
+        var fileContent = await File.ReadAllTextAsync(testFile);
+
+        // Should create an async method that returns Task<List<int>>, not Task<Task<List<int>>>
+        Assert.Contains("private async Task<List<int>> GetProcessedNumbersAsync()", fileContent);
+        // Should not contain the duplicate Task wrapper
+        Assert.DoesNotContain("Task<Task<", fileContent);
+        // The extracted method should contain the await call
+        Assert.Contains("var processedNumbers = await GetListOfIntsAsync();", fileContent);
+    }
+
+    [Fact]
+    public void ExtractMethod_AsyncTaskReturnType_SingleFileMode_AvoidsDuplicateTaskWrapper()
+    {
+        const string sourceCode = """
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+public class AsyncTestClass
+{
+    public async Task<List<int>> ProcessListAsync()
+    {
+        var numbers = new List<int> { 1, 2, 3 };
+        var processedNumbers = await GetListOfIntsAsync();
+        return processedNumbers;
+    }
+
+    private async Task<List<int>> GetListOfIntsAsync()
+    {
+        await Task.Delay(100);
+        return new List<int> { 4, 5, 6 };
+    }
+}
+""";
+
+        // Extract line 10: "var processedNumbers = await GetListOfIntsAsync();"
+        var result = ExtractMethodTool.ExtractMethodInSource(sourceCode, "10:9-10:63", "GetProcessedNumbersAsync");
+
+        // First, check if it contains any Task<Task< pattern (the issue we're trying to fix)
+        Assert.DoesNotContain("Task<Task<", result);
+        
+        // Let's be more flexible about the exact signature and just check the important parts
+        Assert.Contains("GetProcessedNumbersAsync", result);
+        Assert.Contains("private async", result);
+        Assert.Contains("Task<List<int>>", result);
     }
 }

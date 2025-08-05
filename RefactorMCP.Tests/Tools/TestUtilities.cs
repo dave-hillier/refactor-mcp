@@ -55,6 +55,28 @@ public class TestClass
 }
 """;
 
+    public static string GetSampleCodeForExtractAsyncMethod() => """
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+public class AsyncTestClass
+{
+    public async Task<List<int>> ProcessListAsync()
+    {
+        var numbers = new List<int> { 1, 2, 3 };
+        var processedNumbers = await GetListOfIntsAsync();
+        return processedNumbers;
+    }
+
+    private async Task<List<int>> GetListOfIntsAsync()
+    {
+        await Task.Delay(100);
+        return new List<int> { 4, 5, 6 };
+    }
+}
+""";
+
     public static string GetSampleCodeForIntroduceField() =>
         File.ReadAllText(Path.Combine(Path.GetDirectoryName(GetSolutionPath())!, "RefactorMCP.Tests", "ExampleCode.cs"));
 

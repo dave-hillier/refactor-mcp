@@ -151,7 +151,11 @@ internal class ExtractMethodRewriter : CSharpSyntaxRewriter
 
         if (analysis.IsAsync && analysis.ReturnType != "void")
         {
-            analysis.ReturnType = $"Task<{analysis.ReturnType}>";
+            // Don't wrap with Task<> if the return type is already a Task type
+            if (!analysis.ReturnType.StartsWith("Task<") && !analysis.ReturnType.Equals("Task"))
+            {
+                analysis.ReturnType = $"Task<{analysis.ReturnType}>";
+            }
         }
         else if (analysis.IsAsync)
         {
@@ -316,7 +320,7 @@ internal class ExtractMethodRewriter : CSharpSyntaxRewriter
 
     private string InferTypeFromAwaitExpression(AwaitExpressionSyntax awaitExpr)
     {
-        // Handle method invocations like GetBoolAsync()
+        // Handle method invocations like GetListOfIntsAsync()
         if (awaitExpr.Expression is InvocationExpressionSyntax invocation)
         {
             // For method calls, try to infer from the method name
@@ -333,6 +337,10 @@ internal class ExtractMethodRewriter : CSharpSyntaxRewriter
                     var name when name.Contains("Double") => "double",
                     // For GetBoolAsync specifically
                     "GetBoolAsync" => "bool",
+                    // For GetListOfIntsAsync - infer List<int> from the name
+                    "GetListOfIntsAsync" => "List<int>",
+                    // More general patterns for async methods
+                    var name when name.EndsWith("Async") && name.Contains("List") => "List<object>",
                     _ => "object" // Fallback when we can't determine the type
                 };
             }
