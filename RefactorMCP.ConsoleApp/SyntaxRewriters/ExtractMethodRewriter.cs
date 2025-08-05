@@ -72,7 +72,9 @@ internal class ExtractMethodRewriter : CSharpSyntaxRewriter
         {
             if (usedIdentifiers.Contains(kvp.Key))
             {
-                analysis.RequiredParameters.Add(new ParameterInfo(kvp.Key, kvp.Value));
+                // Infer the actual type if the declared type is 'var'
+                var actualType = InferActualType(kvp.Value, kvp.Key, statementsBeforeExtracted, containingMethod);
+                analysis.RequiredParameters.Add(new ParameterInfo(kvp.Key, actualType));
             }
         }
 
@@ -277,6 +279,12 @@ internal class ExtractMethodRewriter : CSharpSyntaxRewriter
         {
             var initExpression = varDeclaration.Initializer.Value;
             
+            // Handle await expressions (like await GetBoolAsync())
+            if (initExpression is AwaitExpressionSyntax awaitExpr)
+            {
+                return InferTypeFromAwaitExpression(awaitExpr);
+            }
+            
             // Handle binary expressions (like a + b)
             if (initExpression is BinaryExpressionSyntax binary)
             {
@@ -304,6 +312,33 @@ internal class ExtractMethodRewriter : CSharpSyntaxRewriter
         }
 
         return "object"; // Fallback for var when we can't infer
+    }
+
+    private string InferTypeFromAwaitExpression(AwaitExpressionSyntax awaitExpr)
+    {
+        // Handle method invocations like GetBoolAsync()
+        if (awaitExpr.Expression is InvocationExpressionSyntax invocation)
+        {
+            // For method calls, try to infer from the method name
+            if (invocation.Expression is IdentifierNameSyntax methodName)
+            {
+                var methodNameText = methodName.Identifier.ValueText;
+                // Common pattern: methods ending with "Async" that return Task<T>
+                // Try to infer the T from the method name
+                return methodNameText switch
+                {
+                    var name when name.Contains("Bool") => "bool",
+                    var name when name.Contains("Int") => "int",
+                    var name when name.Contains("String") => "string",
+                    var name when name.Contains("Double") => "double",
+                    // For GetBoolAsync specifically
+                    "GetBoolAsync" => "bool",
+                    _ => "object" // Fallback when we can't determine the type
+                };
+            }
+        }
+        
+        return "object"; // Fallback for await expressions we can't analyze
     }
 
     private MethodDeclarationSyntax CreateExtractedMethod(string methodName, List<StatementSyntax> statements, ExtractMethodAnalysis analysis)

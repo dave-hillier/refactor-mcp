@@ -9,14 +9,36 @@ namespace RefactorMCP.Tests;
 public class ExtractMethodTests : TestBase
 {
     [Fact]
-    public async Task ExtractMethod_ValidSelection_ReturnsMethodWithCorrectReturnType()
+    public async Task ExtractMethod_ValidSelectionOfAsyncCode_ReturnsMethodWithCorrectParameterType()
     {
         await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
         var testFile = Path.Combine(TestOutputPath, "ExtractMethodTest.cs");
         await TestUtilities.CreateTestFile(testFile, TestUtilities.GetSampleCodeForExtractMethod());
 
-        // Let's first see what the actual file content looks like
-        var originalContent = await File.ReadAllTextAsync(testFile);
+        var result = await ExtractMethodTool.ExtractMethod(
+            SolutionPath,
+            testFile,
+            "18:9-18:43",
+            "ExtractedWithBoolParam");
+
+        Assert.Contains("Successfully extracted method", result);
+        var fileContent = await File.ReadAllTextAsync(testFile);
+
+        Debug.WriteLine(fileContent);
+        Console.WriteLine(fileContent);
+
+        // Should create a method that returns int (inferred from return statement and context)
+        Assert.Contains("private void ExtractedWithBoolParam(bool theBool)", fileContent);
+        // Should call it with the right return assignment
+        Assert.Contains("ExtractedWithBoolParam(theBool);", fileContent);
+    }
+
+    [Fact]
+    public async Task ExtractMethod_ValidSelection_ReturnsMethodWithCorrectReturnType()
+    {
+        await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
+        var testFile = Path.Combine(TestOutputPath, "ExtractMethodTest.cs");
+        await TestUtilities.CreateTestFile(testFile, TestUtilities.GetSampleCodeForExtractMethod());
         
         // Extract the lines that calculate and return the result: "var result = a + b; return result;"
         // Looking at the sample code:
@@ -31,8 +53,6 @@ public class ExtractMethodTests : TestBase
         Assert.Contains("Successfully extracted method", result);
         var fileContent = await File.ReadAllTextAsync(testFile);
 
-        Debug.WriteLine(fileContent);
-        Console.WriteLine(fileContent);
         // Should create a method that returns int (inferred from return statement and context)
         Assert.Contains("private int CalculateInts(int a, int b)", fileContent);
         // Should call it with the right return assignment

@@ -40,6 +40,18 @@ public class TestClass
         var result = a + b;
         return result;
     }
+
+    public async System.Threading.Tasks.Task DoAsyncBoolTest()
+    {
+        var theBool = await GetBoolAsync();
+        System.Console.WriteLine(theBool);
+    }
+
+    public async System.Threading.Tasks.Task<bool> GetBoolAsync()
+    {
+        await Task.Delay(100);
+        return true;
+    }
 }
 """;
 
