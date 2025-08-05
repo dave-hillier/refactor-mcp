@@ -24,9 +24,6 @@ public class ExtractMethodTests : TestBase
         Assert.Contains("Successfully extracted method", result);
         var fileContent = await File.ReadAllTextAsync(testFile);
 
-        Debug.WriteLine(fileContent);
-        Console.WriteLine(fileContent);
-
         // Should create a method that returns int (inferred from return statement and context)
         Assert.Contains("private void ExtractedWithBoolParam(bool theBool)", fileContent);
         // Should call it with the right return assignment
