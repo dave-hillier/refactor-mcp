@@ -217,4 +217,81 @@ public class AsyncTestClass
         Assert.Contains("private async", result);
         Assert.Contains("Task<List<int>>", result);
     }
+
+    [Fact]
+    public void ExtractMethod_LastParameterTypeInference_ShouldInferCorrectType()
+    {
+        const string sourceCode = """
+using System;
+
+public class TestClass
+{
+    public void TestMethod()
+    {
+        var first = 10;
+        var second = "hello";
+        var third = true;
+        DoSomething(first, second, third);
+    }
+    
+    private void DoSomething(int a, string b, bool c)
+    {
+        Console.WriteLine($"{a}, {b}, {c}");
+    }
+}
+""";
+
+        // Extract line with multiple parameters: "DoSomething(first, second, third);"
+        var result = ExtractMethodTool.ExtractMethodInSource(sourceCode, "10:9-10:43", "ExtractedMethod");
+
+        Console.WriteLine("=== EXTRACTED METHOD RESULT ===");
+        Console.WriteLine(result);
+        Console.WriteLine("=== END RESULT ===");
+
+        // Should create a method with all parameters having correct types
+        Assert.Contains("private void ExtractedMethod(int first, string second, bool third)", result);
+        // Should NOT have any 'object' parameters
+        Assert.DoesNotContain("object", result);
+    }
+
+    [Fact]
+    public void ExtractMethod_LastParameterTypeInference_WithFields_ShouldInferCorrectType()
+    {
+        const string sourceCode = """
+using System;
+
+public class TestClass
+{
+    private int _value = 42;
+    
+    public void TestMethod()
+    {
+        var first = GetString();
+        var second = _value;
+        var third = DateTime.Now;
+        ProcessData(first, second, third);
+    }
+    
+    private string GetString() => "test";
+    
+    private void ProcessData(string text, int number, DateTime date)
+    {
+        Console.WriteLine($"{text}, {number}, {date}");
+    }
+}
+""";
+
+        // Extract line with field access and method call: "ProcessData(first, second, third);"
+        var result = ExtractMethodTool.ExtractMethodInSource(sourceCode, "12:9-12:43", "ExtractProcessing");
+
+        Console.WriteLine("=== EXTRACTED METHOD WITH FIELDS RESULT ===");
+        Console.WriteLine(result);
+        Console.WriteLine("=== END RESULT ===");
+
+        // Should create a method with all parameters having correct types, not 'object'
+        Assert.Contains("ExtractProcessing", result);
+        
+        // The issue: should be (string first, int second, DateTime third) but currently is (object first, object second, object third)
+        Assert.Contains("private void ExtractProcessing(string first, int second, DateTime third)", result);
+    }
 }

@@ -261,63 +261,17 @@ internal class ExtractMethodRewriter : CSharpSyntaxRewriter
             return param.Type?.ToString() ?? "object";
         }
 
+        // Check if it's a field/property access based on naming conventions
+        if (identifierName.StartsWith("_"))
+        {
+            // Use field naming conventions to infer types
+            return InferTypeFromMemberName(identifierName);
+        }
+
         // Default fallback
         return "object";
     }
-
-    private string InferActualType(string declaredType, string variableName, List<StatementSyntax> statements, MethodDeclarationSyntax containingMethod)
-    {
-        // If not var, return as-is
-        if (declaredType != "var")
-        {
-            return declaredType;
-        }
-
-        // For var declarations, try to infer from the initialization
-        var varDeclaration = statements
-            .OfType<LocalDeclarationStatementSyntax>()
-            .SelectMany(decl => decl.Declaration.Variables)
-            .FirstOrDefault(v => v.Identifier.ValueText == variableName);
-
-        if (varDeclaration?.Initializer?.Value != null)
-        {
-            var initExpression = varDeclaration.Initializer.Value;
-            
-            // Handle await expressions (like await GetBoolAsync())
-            if (initExpression is AwaitExpressionSyntax awaitExpr)
-            {
-                return InferTypeFromAwaitExpression(awaitExpr);
-            }
-            
-            // Handle binary expressions (like a + b)
-            if (initExpression is BinaryExpressionSyntax binary)
-            {
-                return InferTypeFromBinaryExpression(binary);
-            }
-            
-            // Handle simple identifier references
-            if (initExpression is IdentifierNameSyntax id)
-            {
-                return InferTypeFromIdentifier(id.Identifier.ValueText, containingMethod);
-            }
-            
-            // Handle literals
-            if (initExpression is LiteralExpressionSyntax literal)
-            {
-                return literal.Token.ValueText switch
-                {
-                    var s when int.TryParse(s, out _) => "int",
-                    var s when double.TryParse(s, out _) => "double",
-                    var s when bool.TryParse(s, out _) => "bool",
-                    _ when literal.Token.IsKind(SyntaxKind.StringLiteralToken) => "string",
-                    _ => "object"
-                };
-            }
-        }
-
-        return "object"; // Fallback for var when we can't infer
-    }
-
+    
     private string InferTypeFromAwaitExpression(AwaitExpressionSyntax awaitExpr)
     {
         // Handle method invocations like GetListOfIntsAsync()
@@ -349,6 +303,166 @@ internal class ExtractMethodRewriter : CSharpSyntaxRewriter
         return "object"; // Fallback for await expressions we can't analyze
     }
 
+    private string InferActualType(string declaredType, string variableName, List<StatementSyntax> statements, MethodDeclarationSyntax containingMethod)
+    {
+        // If not var, return as-is
+        if (declaredType != "var")
+        {
+            return declaredType;
+        }
+
+        // For var declarations, try to infer from the initialization
+        var varDeclaration = statements
+            .OfType<LocalDeclarationStatementSyntax>()
+            .SelectMany(decl => decl.Declaration.Variables)
+            .FirstOrDefault(v => v.Identifier.ValueText == variableName);
+
+        if (varDeclaration?.Initializer?.Value != null)
+        {
+            var initExpression = varDeclaration.Initializer.Value;
+            
+            // Handle await expressions (like await GetBoolAsync())
+            if (initExpression is AwaitExpressionSyntax awaitExpr)
+            {
+                return InferTypeFromAwaitExpression(awaitExpr);
+            }
+            
+            // Handle method invocations (like GetString(), DateTime.Now, etc.)
+            if (initExpression is InvocationExpressionSyntax invocation)
+            {
+                return InferTypeFromInvocationExpression(invocation);
+            }
+            
+            // Handle member access expressions (like _value, DateTime.Now, etc.)
+            if (initExpression is MemberAccessExpressionSyntax memberAccess)
+            {
+                return InferTypeFromMemberAccessExpression(memberAccess);
+            }
+            
+            // Handle binary expressions (like a + b)
+            if (initExpression is BinaryExpressionSyntax binary)
+            {
+                return InferTypeFromBinaryExpression(binary);
+            }
+            
+            // Handle simple identifier references
+            if (initExpression is IdentifierNameSyntax id)
+            {
+                return InferTypeFromIdentifier(id.Identifier.ValueText, containingMethod);
+            }
+            
+            // Handle literals
+            if (initExpression is LiteralExpressionSyntax literal)
+            {
+                return literal.Token.ValueText switch
+                {
+                    var s when int.TryParse(s, out _) => "int",
+                    var s when double.TryParse(s, out _) => "double",
+                    var s when bool.TryParse(s, out _) => "bool",
+                    _ when literal.Token.IsKind(SyntaxKind.StringLiteralToken) => "string",
+                    _ => "object"
+                };
+            }
+        }
+
+        return "object"; // Fallback for var when we can't infer
+    }
+
+    private string InferTypeFromInvocationExpression(InvocationExpressionSyntax invocation)
+    {
+        // Handle method calls by inferring from method name patterns
+        if (invocation.Expression is IdentifierNameSyntax methodName)
+        {
+            var methodNameText = methodName.Identifier.ValueText;
+            return methodNameText switch
+            {
+                // Common method patterns
+                var name when name.StartsWith("Get") && name.Contains("String") => "string",
+                var name when name.StartsWith("Get") && name.Contains("Int") => "int",
+                var name when name.StartsWith("Get") && name.Contains("Bool") => "bool",
+                var name when name.StartsWith("Get") && name.Contains("DateTime") => "DateTime",
+                var name when name.StartsWith("Get") && name.Contains("Date") => "DateTime",
+                "GetString" => "string",
+                "GetInt" => "int",
+                "GetBool" => "bool",
+                "GetDateTime" => "DateTime",
+                _ => "object"
+            };
+        }
+        
+        // Handle static method calls like DateTime.Now
+        if (invocation.Expression is MemberAccessExpressionSyntax memberCall)
+        {
+            return InferTypeFromMemberAccessExpression(memberCall);
+        }
+        
+        return "object";
+    }
+
+    private string InferTypeFromMemberAccessExpression(MemberAccessExpressionSyntax memberAccess)
+    {
+        var memberName = memberAccess.Name.Identifier.ValueText;
+        
+        // Handle specific well-known static properties
+        if (memberAccess.Expression is IdentifierNameSyntax typeName)
+        {
+            var typeNameText = typeName.Identifier.ValueText;
+            return (typeNameText, memberName) switch
+            {
+                ("DateTime", "Now") => "DateTime",
+                ("DateTime", "Today") => "DateTime",
+                ("DateTime", "UtcNow") => "DateTime",
+                ("DateTimeOffset", "Now") => "DateTimeOffset",
+                ("DateTimeOffset", "UtcNow") => "DateTimeOffset",
+                ("Guid", "NewGuid") => "Guid",
+                ("Environment", "NewLine") => "string",
+                ("Environment", "MachineName") => "string",
+                ("Console", "Title") => "string",
+                ("Thread", "CurrentThread") => "Thread",
+                _ => InferTypeFromMemberName(memberName)
+            };
+        }
+        
+        // Handle instance field/property access (we can't determine exact type without semantic analysis)
+        // But we can make educated guesses based on naming conventions
+        return InferTypeFromMemberName(memberName);
+    }
+
+    private string InferTypeFromMemberName(string memberName)
+    {
+        // Use naming conventions to infer types
+        return memberName switch
+        {
+            var name when name.StartsWith("_") && name.ToLower().Contains("value") => "int",
+            var name when name.StartsWith("_") && name.ToLower().Contains("count") => "int",
+            var name when name.StartsWith("_") && name.ToLower().Contains("index") => "int",
+            var name when name.StartsWith("_") && name.ToLower().Contains("id") => "int",
+            var name when name.StartsWith("_") && name.ToLower().Contains("name") => "string",
+            var name when name.StartsWith("_") && name.ToLower().Contains("text") => "string",
+            var name when name.StartsWith("_") && name.ToLower().Contains("message") => "string",
+            var name when name.StartsWith("_") && name.ToLower().Contains("description") => "string",
+            var name when name.StartsWith("_") && name.ToLower().Contains("flag") => "bool",
+            var name when name.StartsWith("_") && name.ToLower().Contains("enabled") => "bool",
+            var name when name.StartsWith("_") && name.ToLower().Contains("visible") => "bool",
+            var name when name.StartsWith("_") && name.ToLower().Contains("date") => "DateTime",
+            var name when name.StartsWith("_") && name.ToLower().Contains("time") => "DateTime",
+            // For properties without _ prefix
+            var name when name.ToLower().Contains("count") => "int",
+            var name when name.ToLower().Contains("length") => "int",
+            var name when name.ToLower().Contains("size") => "int",
+            var name when name.EndsWith("Id") => "int",
+            var name when name.EndsWith("Index") => "int",
+            var name when name.EndsWith("Name") => "string",
+            var name when name.EndsWith("Text") => "string",
+            var name when name.EndsWith("Message") => "string",
+            var name when name.EndsWith("Flag") => "bool",
+            var name when name.EndsWith("Enabled") => "bool",
+            var name when name.EndsWith("Date") => "DateTime",
+            var name when name.EndsWith("Time") => "DateTime",
+            _ => "object" // Fallback when we can't determine the type
+        };
+    }
+    
     private MethodDeclarationSyntax CreateExtractedMethod(string methodName, List<StatementSyntax> statements, ExtractMethodAnalysis analysis)
     {
         var parameters = analysis.RequiredParameters
