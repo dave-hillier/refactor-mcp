@@ -8,6 +8,7 @@ using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Text;
 using System.IO;
 using System;
+using System.Linq;
 using System.Threading;
 
 [McpServerToolType]
@@ -47,9 +48,14 @@ public static class CleanupUsingsTool
         if (compilation == null)
             return $"Could not compile project for {document.FilePath}";
 
+        var syntaxTree = await document.GetSyntaxTreeAsync();
+        if (syntaxTree == null)
+            return $"Could not get syntax tree for {document.FilePath}";
+
+        // Get all diagnostics and filter to only those from this syntax tree
         var diagnostics = compilation.GetDiagnostics();
         var unused = diagnostics
-            .Where(d => d.Id == "CS8019")
+            .Where(d => d.Id == "CS8019" && d.Location.SourceTree == syntaxTree)
             .Select(d => root.FindNode(d.Location.SourceSpan))
             .OfType<UsingDirectiveSyntax>()
             .ToList();
@@ -75,11 +81,16 @@ public static class CleanupUsingsTool
     public static string CleanupUsingsInSource(string sourceText)
     {
         var tree = CSharpSyntaxTree.ParseText(sourceText);
+        
+        // Use all trusted platform assemblies like RefactoringHelpers.CreateCompilation does
+        var refs = ((string?)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES")!)
+            .Split(Path.PathSeparator)
+            .Select(p => MetadataReference.CreateFromFile(p));
+            
         var compilation = CSharpCompilation.Create("Cleanup")
-            .AddReferences(
-                MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
-                MetadataReference.CreateFromFile(typeof(Console).Assembly.Location))
+            .AddReferences(refs)
             .AddSyntaxTrees(tree);
+            
         var diagnostics = compilation.GetDiagnostics();
         var root = tree.GetRoot();
         var unused = diagnostics
