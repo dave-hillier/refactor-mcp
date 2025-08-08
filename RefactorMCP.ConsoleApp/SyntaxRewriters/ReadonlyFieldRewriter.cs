@@ -9,11 +9,13 @@ internal class ReadonlyFieldRewriter : CSharpSyntaxRewriter
 {
     private readonly string _fieldName;
     private readonly ExpressionSyntax? _initializer;
+    private readonly bool _isStaticField;
 
-    public ReadonlyFieldRewriter(string fieldName, ExpressionSyntax? initializer)
+    public ReadonlyFieldRewriter(string fieldName, ExpressionSyntax? initializer, bool isStaticField = false)
     {
         _fieldName = fieldName;
         _initializer = initializer;
+        _isStaticField = isStaticField;
     }
 
     public override SyntaxNode? VisitFieldDeclaration(FieldDeclarationSyntax node)
@@ -22,9 +24,12 @@ internal class ReadonlyFieldRewriter : CSharpSyntaxRewriter
         if (variable == null)
             return base.VisitFieldDeclaration(node);
 
-        var newVariable = variable.WithInitializer(null);
+        // For static fields, keep the initializer inline if it exists
+        // For instance fields, remove the initializer to move it to constructors
+        var newVariable = _isStaticField ? variable : variable.WithInitializer(null);
         var newDecl = node.Declaration.ReplaceNode(variable, newVariable);
         var modifiers = node.Modifiers;
+        
         if (!modifiers.Any(m => m.IsKind(SyntaxKind.ReadOnlyKeyword)))
             modifiers = modifiers.Add(SyntaxFactory.Token(SyntaxKind.ReadOnlyKeyword));
 
@@ -34,7 +39,9 @@ internal class ReadonlyFieldRewriter : CSharpSyntaxRewriter
     public override SyntaxNode? VisitConstructorDeclaration(ConstructorDeclarationSyntax node)
     {
         var visited = (ConstructorDeclarationSyntax)base.VisitConstructorDeclaration(node)!;
-        if (_initializer != null)
+        
+        // Only add initialization to instance constructors for instance fields that had initializers
+        if (!_isStaticField && _initializer != null)
         {
             var assignment = SyntaxFactory.ExpressionStatement(
                 SyntaxFactory.AssignmentExpression(
