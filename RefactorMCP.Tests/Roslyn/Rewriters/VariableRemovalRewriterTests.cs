@@ -17,7 +17,7 @@ public partial class RoslynTransformationTests
         var root = tree.GetRoot();
         var varNode = root.DescendantNodes().OfType<VariableDeclaratorSyntax>().First();
         var rewriter = new VariableRemovalRewriter("x", varNode.Span);
-        var newRoot = Formatter.Format(rewriter.Visit(root)!, new AdhocWorkspace());
+        var newRoot = Formatter.Format(rewriter.Visit(root)!, RefactoringHelpers.SharedWorkspace);
         Assert.Equal("void M() { }", newRoot.ToFullString().Trim());
     }
 }

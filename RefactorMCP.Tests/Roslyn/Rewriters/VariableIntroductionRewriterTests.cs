@@ -24,7 +24,7 @@ public partial class RoslynTransformationTests
         var callStmt = root.DescendantNodes().OfType<ExpressionStatementSyntax>().First();
         var block = callStmt.Ancestors().OfType<BlockSyntax>().First();
         var rewriter = new VariableIntroductionRewriter(expr, varRef, varDecl, callStmt, block);
-        var newRoot = Formatter.Format(rewriter.Visit(root)!, new AdhocWorkspace());
+        var newRoot = Formatter.Format(rewriter.Visit(root)!, RefactoringHelpers.SharedWorkspace);
         var text = newRoot.ToFullString();
         Assert.Contains("var sum = 1 + 2;", text);
         Assert.Contains("Console.WriteLine(sum);", text);
