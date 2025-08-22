@@ -1,7 +1,8 @@
+using Microsoft.VisualStudio.TestPlatform.Utilities;
+using ModelContextProtocol;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using ModelContextProtocol;
 using Xunit;
 
 namespace RefactorMCP.Tests.ToolsNew;
@@ -41,7 +42,9 @@ public class Counter
 
         Assert.Contains("Added observer", result);
         var fileContent = await File.ReadAllTextAsync(testFile);
-        Assert.Equal(expectedCode, fileContent.Replace("\r\n", "\n"));
+        var expected = expectedCode.Replace("\r\n", "\n").Replace("\n", Environment.NewLine);
+        fileContent = fileContent.Replace("\r\n", "\n").Replace("\n", Environment.NewLine);
+        Assert.Equal(expected, fileContent);
     }
 
     [Fact]
