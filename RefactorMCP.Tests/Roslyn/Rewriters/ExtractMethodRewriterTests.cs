@@ -19,7 +19,7 @@ public partial class RoslynTransformationTests
         var method = root.DescendantNodes().OfType<MethodDeclarationSyntax>().First();
         var firstStmt = method.Body!.Statements.First();
         var rewriter = new ExtractMethodRewriter(method, root.DescendantNodes().OfType<ClassDeclarationSyntax>().First(), new List<StatementSyntax> { firstStmt }, "NewMethod");
-        var newRoot = Formatter.Format(rewriter.Visit(root)!, new AdhocWorkspace());
+        var newRoot = Formatter.Format(rewriter.Visit(root)!, RefactoringHelpers.SharedWorkspace);
         var text = newRoot.ToFullString();
         Assert.Contains("private void NewMethod()", text);
         Assert.Contains("NewMethod();", text);

@@ -18,7 +18,7 @@ public class MoveProtectedOverrideDependencyTests
 
         var moveResult = MoveMethodAst.MoveInstanceMethodAst(root, "Derived", "Another", "Target", "", "");
         var updatedRoot = MoveMethodAst.AddMethodToTargetClass(moveResult.NewSourceRoot, "Target", moveResult.MovedMethod, moveResult.Namespace);
-        var formattedRoot = Formatter.Format(updatedRoot, new AdhocWorkspace());
+        var formattedRoot = Formatter.Format(updatedRoot, RefactoringHelpers.SharedWorkspace);
 
         var derivedClass = formattedRoot.DescendantNodes().OfType<ClassDeclarationSyntax>().First(c => c.Identifier.ValueText == "Derived");
         var method = derivedClass.Members.OfType<MethodDeclarationSyntax>().First(m => m.Identifier.ValueText == "DoIt");

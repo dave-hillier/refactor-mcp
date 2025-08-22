@@ -19,9 +19,9 @@ public partial class RoslynTransformationTests
         var expr = SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(1));
         var parameter = SyntaxFactory.Parameter(SyntaxFactory.Identifier("p")).WithType(SyntaxFactory.ParseTypeName("int"));
         var paramRef = SyntaxFactory.IdentifierName("p");
-        var generator = SyntaxGenerator.GetGenerator(new AdhocWorkspace(), LanguageNames.CSharp);
+        var generator = SyntaxGenerator.GetGenerator(RefactoringHelpers.SharedWorkspace, LanguageNames.CSharp);
         var rewriter = new ParameterIntroductionRewriter(expr, "M", parameter, paramRef, generator);
-        var newRoot = Formatter.Format(rewriter.Visit(root)!, new AdhocWorkspace());
+        var newRoot = Formatter.Format(rewriter.Visit(root)!, RefactoringHelpers.SharedWorkspace);
         var text = newRoot.ToFullString();
         Assert.Contains("void M(int p)", text);
         Assert.Contains("Console.WriteLine(p)", text);

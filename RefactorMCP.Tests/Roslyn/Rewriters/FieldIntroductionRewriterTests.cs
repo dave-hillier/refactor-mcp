@@ -23,7 +23,7 @@ public partial class RoslynTransformationTests
             .AddModifiers(SyntaxFactory.Token(SyntaxKind.PrivateKeyword));
         var classNode = root.DescendantNodes().OfType<ClassDeclarationSyntax>().First();
         var rewriter = new FieldIntroductionRewriter(expr, fieldRef, fieldDecl, classNode);
-        var newRoot = Formatter.Format(rewriter.Visit(root)!, new AdhocWorkspace());
+        var newRoot = Formatter.Format(rewriter.Visit(root)!, RefactoringHelpers.SharedWorkspace);
         var text = newRoot.ToFullString();
         Assert.Contains("private int value", text);
         Assert.Contains("return value", text);

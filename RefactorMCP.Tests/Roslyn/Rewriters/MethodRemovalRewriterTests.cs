@@ -14,7 +14,7 @@ public partial class RoslynTransformationTests
         var tree = CSharpSyntaxTree.ParseText("class A{void M(){}}");
         var root = tree.GetRoot();
         var rewriter = new MethodRemovalRewriter("M");
-        var newRoot = Formatter.Format(rewriter.Visit(root)!, new AdhocWorkspace());
+        var newRoot = Formatter.Format(rewriter.Visit(root)!, RefactoringHelpers.SharedWorkspace);
         Assert.Equal("class A { }", newRoot.ToFullString().Trim());
     }
 }
