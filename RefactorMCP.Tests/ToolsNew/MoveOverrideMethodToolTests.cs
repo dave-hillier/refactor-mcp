@@ -19,7 +19,7 @@ public class MoveOverrideMethodToolTests
 
         var moveResult = MoveMethodAst.MoveInstanceMethodAst(root, "Derived", "Foo", "Target", "", "");
         var updatedRoot = MoveMethodAst.AddMethodToTargetClass(moveResult.NewSourceRoot, "Target", moveResult.MovedMethod, moveResult.Namespace);
-        var formattedRoot = Formatter.Format(updatedRoot, new AdhocWorkspace());
+        var formattedRoot = Formatter.Format(updatedRoot, RefactoringHelpers.SharedWorkspace);
 
         var targetClass = formattedRoot.DescendantNodes().OfType<ClassDeclarationSyntax>()
             .First(c => c.Identifier.ValueText == "Target");

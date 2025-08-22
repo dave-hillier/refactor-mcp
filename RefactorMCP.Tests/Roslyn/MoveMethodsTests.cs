@@ -38,7 +38,7 @@ namespace RefactorMCP.Tests.Roslyn
                 }
             }
 
-            var workspace = new AdhocWorkspace();
+            var workspace = RefactoringHelpers.SharedWorkspace;
             var formattedRoot = Formatter.Format(root, workspace);
             return formattedRoot.ToFullString();
         }
@@ -205,7 +205,7 @@ public class TargetClass
                 "field");
 
             var finalRoot = MoveMethodAst.AddMethodToTargetClass(result.NewSourceRoot, "TargetClass", result.MovedMethod, result.Namespace);
-            var formatted = Formatter.Format(finalRoot, new AdhocWorkspace()).ToFullString();
+            var formatted = Formatter.Format(finalRoot, RefactoringHelpers.SharedWorkspace).ToFullString();
 
             Assert.Contains("public static int GetValue(int value)", formatted);
             Assert.Contains("return value + 2", formatted);
@@ -237,7 +237,7 @@ public class TargetClass
                 "field");
 
             var finalRoot = MoveMethodAst.AddMethodToTargetClass(result.NewSourceRoot, "TargetClass", result.MovedMethod, result.Namespace);
-            var formatted = Formatter.Format(finalRoot, new AdhocWorkspace()).ToFullString();
+            var formatted = Formatter.Format(finalRoot, RefactoringHelpers.SharedWorkspace).ToFullString();
 
             Assert.Contains("public static int GetValue(int value, int n = 5)", formatted);
             Assert.Contains("TargetClass.GetValue(_value, n)", formatted);
@@ -267,7 +267,7 @@ public class TargetClass
                 "field");
 
             var finalRoot = MoveMethodAst.AddMethodToTargetClass(result.NewSourceRoot, "TargetClass", result.MovedMethod, result.Namespace);
-            var formatted = Formatter.Format(finalRoot, new AdhocWorkspace()).ToFullString();
+            var formatted = Formatter.Format(finalRoot, RefactoringHelpers.SharedWorkspace).ToFullString();
 
             Assert.Contains("public void Say()", formatted);
             Assert.DoesNotContain("@this", formatted);
@@ -304,7 +304,7 @@ public class TargetClass
                 "field");
 
             var finalRoot = MoveMethodAst.AddMethodToTargetClass(result.NewSourceRoot, "TargetClass", result.MovedMethod, result.Namespace);
-            var formatted = Formatter.Format(finalRoot, new AdhocWorkspace()).ToFullString();
+            var formatted = Formatter.Format(finalRoot, RefactoringHelpers.SharedWorkspace).ToFullString();
 
             Assert.Contains("resProduct.Modified += @this.Child_Modified", formatted);
         }
@@ -340,7 +340,7 @@ class Target { }";
                 "field");
 
             var finalRoot = MoveMethodAst.AddMethodToTargetClass(result.NewSourceRoot, "Target", result.MovedMethod, result.Namespace);
-            var formatted = Formatter.Format(finalRoot, new AdhocWorkspace()).ToFullString();
+            var formatted = Formatter.Format(finalRoot, RefactoringHelpers.SharedWorkspace).ToFullString();
 
             Assert.Contains("@this.Name", formatted);
         }
@@ -367,7 +367,7 @@ public class Extracted { }";
                 "field");
 
             var finalRoot = MoveMethodAst.AddMethodToTargetClass(result.NewSourceRoot, "Extracted", result.MovedMethod, result.Namespace);
-            var formatted = Formatter.Format(finalRoot, new AdhocWorkspace()).ToFullString();
+            var formatted = Formatter.Format(finalRoot, RefactoringHelpers.SharedWorkspace).ToFullString();
 
             Assert.Contains("Extracted.MethodBefore(this)", formatted);
             Assert.Contains("new T(@this)", formatted);
@@ -396,7 +396,7 @@ public class Target { }";
                 "field");
 
             var finalRoot = MoveMethodAst.AddMethodToTargetClass(result.NewSourceRoot, "Target", result.MovedMethod, result.Namespace);
-            var formatted = Formatter.Format(finalRoot, new AdhocWorkspace()).ToFullString();
+            var formatted = Formatter.Format(finalRoot, RefactoringHelpers.SharedWorkspace).ToFullString();
 
             Assert.Contains("Outer.Helper", formatted);
         }
@@ -428,7 +428,7 @@ class B { }";
                 "field");
 
             var finalRoot = MoveMethodAst.AddMethodToTargetClass(result.NewSourceRoot, "B", result.MovedMethod, result.Namespace);
-            var formatted = Formatter.Format(finalRoot, new AdhocWorkspace()).ToFullString();
+            var formatted = Formatter.Format(finalRoot, RefactoringHelpers.SharedWorkspace).ToFullString();
 
             Assert.Contains("A.C Method1()", formatted);
             Assert.Contains("new A.C", formatted);
@@ -461,7 +461,7 @@ public class B { }";
                 "field");
 
             var finalRoot = MoveMethodAst.AddMethodToTargetClass(result.NewSourceRoot, "B", result.MovedMethod, result.Namespace);
-            var formatted = Formatter.Format(finalRoot, new AdhocWorkspace()).ToFullString();
+            var formatted = Formatter.Format(finalRoot, RefactoringHelpers.SharedWorkspace).ToFullString();
 
             Assert.Contains("A.Nested GetNested()", formatted);
             Assert.Contains("new A.Nested()", formatted);
@@ -495,7 +495,7 @@ public class B { }";
                 "field");
 
             var finalRoot = MoveMethodAst.AddMethodToTargetClass(result.NewSourceRoot, "B", result.MovedMethod, result.Namespace);
-            var formatted = Formatter.Format(finalRoot, new AdhocWorkspace()).ToFullString();
+            var formatted = Formatter.Format(finalRoot, RefactoringHelpers.SharedWorkspace).ToFullString();
 
             Assert.Contains("A.Kind GetKind()", formatted);
             Assert.Contains("A.Kind.A", formatted);
@@ -525,7 +525,7 @@ public class Target { }";
                 "field");
 
             var finalRoot = MoveMethodAst.AddMethodToTargetClass(result.NewSourceRoot, "Target", result.MovedMethod, result.Namespace);
-            var formatted = Formatter.Format(finalRoot, new AdhocWorkspace()).ToFullString();
+            var formatted = Formatter.Format(finalRoot, RefactoringHelpers.SharedWorkspace).ToFullString();
 
             Assert.Contains("internal void Helper()", formatted);
         }
@@ -556,7 +556,7 @@ class Target { }";
                 "field");
 
             var finalRoot = MoveMethodAst.AddMethodToTargetClass(result.NewSourceRoot, "Target", result.MovedMethod, result.Namespace);
-            var formatted = Formatter.Format(finalRoot, new AdhocWorkspace()).ToFullString();
+            var formatted = Formatter.Format(finalRoot, RefactoringHelpers.SharedWorkspace).ToFullString();
 
             Assert.Contains("@this.GetName()", formatted);
         }
@@ -586,7 +586,7 @@ class Target { }";
                 "field");
 
             var finalRoot = MoveMethodAst.AddMethodToTargetClass(result.NewSourceRoot, "Target", result.MovedMethod, result.Namespace);
-            var formatted = Formatter.Format(finalRoot, new AdhocWorkspace()).ToFullString();
+            var formatted = Formatter.Format(finalRoot, RefactoringHelpers.SharedWorkspace).ToFullString();
 
             Assert.Contains("@this.Value", formatted);
         }
@@ -627,7 +627,7 @@ class Target { }";
                 "field");
 
             var finalRoot = MoveMethodAst.AddMethodToTargetClass(result.NewSourceRoot, "Target", result.MovedMethod, result.Namespace);
-            var formatted = Formatter.Format(finalRoot, new AdhocWorkspace()).ToFullString();
+            var formatted = Formatter.Format(finalRoot, RefactoringHelpers.SharedWorkspace).ToFullString();
 
             Assert.Contains("Username = @this.strCurrentOperatorCode", formatted);
             Assert.Contains("SiteId = @this.ConnectedSiteID", formatted);
