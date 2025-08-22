@@ -116,19 +116,19 @@ public static partial class MoveMethodAst
             nodes.Add(method.Body);
         if (method.ExpressionBody != null)
             nodes.Add(method.ExpressionBody);
-        
+
         var allNodes = nodes.SelectMany(n => n.DescendantNodes());
-        
+
         // Check for direct identifier usage
         var hasIdentifierUsage = allNodes
             .OfType<IdentifierNameSyntax>()
             .Any(id => id.Identifier.ValueText == parameterName);
-            
+
         // Check for usage in member access expressions (e.g., parameterName.SomeProperty)
         var hasMemberAccessUsage = allNodes
             .OfType<MemberAccessExpressionSyntax>()
             .Any(ma => ma.Expression is IdentifierNameSyntax id && id.Identifier.ValueText == parameterName);
-            
+
         return hasIdentifierUsage || hasMemberAccessUsage;
     }
 
@@ -831,9 +831,11 @@ public static partial class MoveMethodAst
 
         var targetCompilationUnit = targetRoot as CompilationUnitSyntax ?? throw new InvalidOperationException("Expected compilation unit");
         var targetUsingNames = targetCompilationUnit.Usings
+            .Where(u => u != null)
             .Select(u => u.Name.ToString())
             .ToHashSet();
         var missingUsings = sourceUsings
+            .Where(u => u != null)
             .Where(u => !targetUsingNames.Contains(u.Name.ToString()))
             .Where(u => namespaceName == null || u.Name.ToString() != namespaceName)
             .ToArray();

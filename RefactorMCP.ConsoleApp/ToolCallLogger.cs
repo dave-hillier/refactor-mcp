@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using ModelContextProtocol.Server;
@@ -43,7 +44,18 @@ internal static class ToolCallLogger
             Timestamp = DateTime.UtcNow
         };
         var json = JsonSerializer.Serialize(record);
-        File.AppendAllText(file, json + Environment.NewLine);
+        var logEntry = json + Environment.NewLine;
+
+            try
+            {
+                using StreamWriter writer = new StreamWriter(file, append: true);
+                writer.Write(logEntry);
+                writer.Flush();
+            }
+            catch (IOException ex)
+            {
+                Console.Error.WriteLine($"Warning: Failed to write to log file '{file}': {ex.Message}");
+            }
     }
 
     public static async Task Playback(string logFilePath)
@@ -114,6 +126,7 @@ internal static class ToolCallLogger
         else if (result is Task task)
         {
             await task;
+
             Console.WriteLine("Done");
         }
         else if (result != null)

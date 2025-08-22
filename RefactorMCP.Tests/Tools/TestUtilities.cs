@@ -40,6 +40,40 @@ public class TestClass
         var result = a + b;
         return result;
     }
+
+    public async System.Threading.Tasks.Task DoAsyncBoolTest()
+    {
+        var theBool = await GetBoolAsync();
+        System.Console.WriteLine(theBool);
+    }
+
+    public async System.Threading.Tasks.Task<bool> GetBoolAsync()
+    {
+        await Task.Delay(100);
+        return true;
+    }
+}
+""";
+
+    public static string GetSampleCodeForExtractAsyncMethod() => """
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+public class AsyncTestClass
+{
+    public async Task<List<int>> ProcessListAsync()
+    {
+        var numbers = new List<int> { 1, 2, 3 };
+        var processedNumbers = await GetListOfIntsAsync();
+        return processedNumbers;
+    }
+
+    private async Task<List<int>> GetListOfIntsAsync()
+    {
+        await Task.Delay(100);
+        return new List<int> { 4, 5, 6 };
+    }
 }
 """;
 

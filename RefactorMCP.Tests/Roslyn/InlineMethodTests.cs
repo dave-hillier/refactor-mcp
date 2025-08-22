@@ -22,6 +22,8 @@ public partial class RoslynTransformationTests
 }";
         var expected = "class InlineSample\n{\n\n    public void Call()\n    {\n        Console.WriteLine(\"Hi\");\n        Console.WriteLine(\"Done\");\n    }\n}";
         var output = InlineMethodTool.InlineMethodInSource(input, "Helper");
+        expected = expected.Replace("\r\n", "\n").Replace("\n", Environment.NewLine);
+        output = output.Replace("\r\n", "\n").Replace("\n", Environment.NewLine);
         Assert.Equal(expected, output.Trim());
     }
 }

@@ -45,8 +45,9 @@ public static class MakeFieldReadonlyTool
 
         var variable = fieldDeclaration.Declaration.Variables.First(v => v.Identifier.ValueText == fieldName);
         var initializer = variable.Initializer?.Value;
+        var isStaticField = fieldDeclaration.Modifiers.Any(SyntaxKind.StaticKeyword);
 
-        var rewriter = new ReadonlyFieldRewriter(fieldName, initializer);
+        var rewriter = new ReadonlyFieldRewriter(fieldName, initializer, isStaticField);
         var newRoot = rewriter.Visit(syntaxRoot);
 
         var formattedRoot = Formatter.Format(newRoot!, document.Project.Solution.Workspace);
@@ -56,18 +57,60 @@ public static class MakeFieldReadonlyTool
         await File.WriteAllTextAsync(document.FilePath!, newText.ToString(), encoding);
         RefactoringHelpers.UpdateSolutionCache(newDocument);
 
-        if (initializer != null)
-            return $"Successfully made field '{fieldName}' readonly and moved initialization to constructors in {document.FilePath}";
-
-        return $"Successfully made field '{fieldName}' readonly in {document.FilePath}";
+        if (isStaticField)
+        {
+            if (initializer != null)
+                return $"Successfully made static field '{fieldName}' readonly (initialization kept inline) in {document.FilePath}";
+            else
+                return $"Successfully made static field '{fieldName}' readonly in {document.FilePath}";
+        }
+        else
+        {
+            if (initializer != null)
+                return $"Successfully made field '{fieldName}' readonly and moved initialization to constructors in {document.FilePath}";
+            else
+                return $"Successfully made field '{fieldName}' readonly in {document.FilePath}";
+        }
     }
 
     private static Task<string> MakeFieldReadonlySingleFile(string filePath, string fieldName)
     {
+        // First, get the source text to determine if it's a static field
+        var originalSourceText = File.ReadAllText(filePath);
+        var syntaxTree = CSharpSyntaxTree.ParseText(originalSourceText);
+        var syntaxRoot = syntaxTree.GetRoot();
+
+        var fieldDeclaration = syntaxRoot.DescendantNodes()
+            .OfType<FieldDeclarationSyntax>()
+            .FirstOrDefault(f => f.Declaration.Variables.Any(v => v.Identifier.ValueText == fieldName));
+
+        if (fieldDeclaration == null)
+            throw new McpException($"Error: No field named '{fieldName}' found");
+
+        var variable = fieldDeclaration.Declaration.Variables.First(v => v.Identifier.ValueText == fieldName);
+        var initializer = variable.Initializer?.Value;
+        var isStaticField = fieldDeclaration.Modifiers.Any(SyntaxKind.StaticKeyword);
+
+        string successMessage;
+        if (isStaticField)
+        {
+            if (initializer != null)
+                successMessage = $"Successfully made static field '{fieldName}' readonly (initialization kept inline) in {filePath} (single file mode)";
+            else
+                successMessage = $"Successfully made static field '{fieldName}' readonly in {filePath} (single file mode)";
+        }
+        else
+        {
+            if (initializer != null)
+                successMessage = $"Successfully made field '{fieldName}' readonly and moved initialization to constructors in {filePath} (single file mode)";
+            else
+                successMessage = $"Successfully made field '{fieldName}' readonly in {filePath} (single file mode)";
+        }
+
         return RefactoringHelpers.ApplySingleFileEdit(
             filePath,
             text => MakeFieldReadonlyInSource(text, fieldName),
-            $"Successfully made field '{fieldName}' readonly in {filePath} (single file mode)");
+            successMessage);
     }
 
     public static string MakeFieldReadonlyInSource(string sourceText, string fieldName)
@@ -84,8 +127,9 @@ public static class MakeFieldReadonlyTool
 
         var variable = fieldDeclaration.Declaration.Variables.First(v => v.Identifier.ValueText == fieldName);
         var initializer = variable.Initializer?.Value;
+        var isStaticField = fieldDeclaration.Modifiers.Any(SyntaxKind.StaticKeyword);
 
-        var rewriter = new ReadonlyFieldRewriter(fieldName, initializer);
+        var rewriter = new ReadonlyFieldRewriter(fieldName, initializer, isStaticField);
         var newRoot = rewriter.Visit(syntaxRoot);
 
         var formattedRoot = Formatter.Format(newRoot!, RefactoringHelpers.SharedWorkspace);

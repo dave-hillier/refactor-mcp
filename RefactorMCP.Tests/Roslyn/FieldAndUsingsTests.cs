@@ -31,6 +31,21 @@ public partial class RoslynTransformationTests
     }
 
     [Fact]
+    public void MakeFieldReadonlyInSource_StaticFieldKeepsInitializerInline()
+    {
+        var input = @"class Config
+{
+    private static string defaultValue = ""Default"";
+}";
+        var expected = @"class Config
+{
+    private static readonly string defaultValue = ""Default"";
+}";
+        var output = MakeFieldReadonlyTool.MakeFieldReadonlyInSource(input, "defaultValue");
+        Assert.Equal(expected, output);
+    }
+
+    [Fact]
     public void CleanupUsingsInSource_RemovesUnusedUsings()
     {
         var input = @"using System;

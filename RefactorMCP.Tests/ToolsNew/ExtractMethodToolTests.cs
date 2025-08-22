@@ -35,12 +35,12 @@ public class Sample
 {
     public int Calc(int a, int b)
     {
-        ValidateInputs();
+        ValidateInputs(a, b);
         var result = a + b;
         return result;
     }
 
-    private void ValidateInputs()
+    private void ValidateInputs(int a, int b)
     {
         if (a < 0 || b < 0)
         {
@@ -62,7 +62,9 @@ public class Sample
 
         Assert.Contains("Successfully extracted method", result);
         var fileContent = await File.ReadAllTextAsync(testFile);
-        Assert.Equal(expectedCode, fileContent.Replace("\r\n", "\n"));
+        var expected = expectedCode.Replace("\r\n", "\n").Replace("\n", Environment.NewLine);
+        fileContent = fileContent.Replace("\r\n", "\n").Replace("\n", Environment.NewLine);
+        Assert.Equal(expected, fileContent);
     }
 
     [Fact]

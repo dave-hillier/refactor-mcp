@@ -1,4 +1,5 @@
 using ModelContextProtocol;
+using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using Xunit;
@@ -8,7 +9,7 @@ namespace RefactorMCP.Tests;
 public class ExtractMethodTests : TestBase
 {
     [Fact]
-    public async Task ExtractMethod_ValidSelection_ReturnsSuccess()
+    public async Task ExtractMethod_ValidSelectionOfAsyncCode_ReturnsMethodWithCorrectParameterType()
     {
         await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
         var testFile = Path.Combine(TestOutputPath, "ExtractMethodTest.cs");
@@ -17,12 +18,67 @@ public class ExtractMethodTests : TestBase
         var result = await ExtractMethodTool.ExtractMethod(
             SolutionPath,
             testFile,
-            "7:9-10:10",
+            "18:9-18:43",
+            "ExtractedWithBoolParam");
+
+        Assert.Contains("Successfully extracted method", result);
+        var fileContent = await File.ReadAllTextAsync(testFile);
+
+        // Should create a method that returns int (inferred from return statement and context)
+        Assert.Contains("private void ExtractedWithBoolParam(bool theBool)", fileContent);
+        // Should call it with the right return assignment
+        Assert.Contains("ExtractedWithBoolParam(theBool);", fileContent);
+    }
+
+    [Fact]
+    public async Task ExtractMethod_ValidSelection_ReturnsMethodWithCorrectReturnType()
+    {
+        await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
+        var testFile = Path.Combine(TestOutputPath, "ExtractMethodTest.cs");
+        await TestUtilities.CreateTestFile(testFile, TestUtilities.GetSampleCodeForExtractMethod());
+
+        // Extract the lines that calculate and return the result: "var result = a + b; return result;"
+        // Looking at the sample code:
+        // Line 11: "        var result = a + b;"
+        // Line 12: "        return result;"
+        var result = await ExtractMethodTool.ExtractMethod(
+            SolutionPath,
+            testFile,
+            "11:9-12:22",  // From start of "var result" to end of "return result;"
+            "CalculateInts");
+
+        Assert.Contains("Successfully extracted method", result);
+        var fileContent = await File.ReadAllTextAsync(testFile);
+
+        // Should create a method that returns int (inferred from return statement and context)
+        Assert.Contains("private int CalculateInts(int a, int b)", fileContent);
+        // Should call it with the right return assignment
+        Assert.Contains("return CalculateInts(a, b);", fileContent);
+    }
+
+    [Fact]
+    public async Task ExtractMethod_ValidSelection_ReturnsSuccess()
+    {
+        await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
+        var testFile = Path.Combine(TestOutputPath, "ExtractMethodTest.cs");
+        await TestUtilities.CreateTestFile(testFile, TestUtilities.GetSampleCodeForExtractMethod());
+
+        // Extract the validation block: lines 6-9 (if/throw block)
+        // Line 6: "        if (a < 0 || b < 0)"
+        // Line 7: "        {"
+        // Line 8: "            throw new ArgumentException(\"Negative numbers not allowed\");"
+        // Line 9: "        }"
+        var result = await ExtractMethodTool.ExtractMethod(
+            SolutionPath,
+            testFile,
+            "6:9-9:10",
             "ValidateInputs");
 
         Assert.Contains("Successfully extracted method", result);
         var fileContent = await File.ReadAllTextAsync(testFile);
-        Assert.Contains("ValidateInputs();", fileContent);
+
+        // Should call the validation method with parameters
+        Assert.Contains("ValidateInputs(a, b);", fileContent);
     }
 
     [Fact]
@@ -32,14 +88,17 @@ public class ExtractMethodTests : TestBase
         var testFile = Path.Combine(TestOutputPath, "ExtractPrivate.cs");
         await TestUtilities.CreateTestFile(testFile, TestUtilities.GetSampleCodeForExtractMethod());
 
+        // Extract the validation block: lines 6-9 (if/throw block)
         await ExtractMethodTool.ExtractMethod(
             SolutionPath,
             testFile,
-            "7:9-10:10",
+            "6:9-9:10",
             "ValidateInputs");
 
         var fileContent = await File.ReadAllTextAsync(testFile);
-        Assert.Contains("private void ValidateInputs()", fileContent);
+
+        // Should create a void method (validation that throws but doesn't return)
+        Assert.Contains("private void ValidateInputs(int a, int b)", fileContent);
     }
 
     [Fact]
@@ -94,5 +153,145 @@ public class ExtractMethodTests : TestBase
                 ExampleFilePath,
                 range,
                 methodName));
+    }
+
+    [Fact]
+    public async Task ExtractMethod_AsyncMethodWithTaskReturn_AvoidsDuplicateTaskWrapper()
+    {
+        await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
+        var testFile = Path.Combine(TestOutputPath, "ExtractAsyncMethodTest.cs");
+        await TestUtilities.CreateTestFile(testFile, TestUtilities.GetSampleCodeForExtractAsyncMethod());
+
+        // Extract the async method call that returns Task<List<int>>
+        // Line 10: "        var processedNumbers = await GetListOfIntsAsync();"
+        var result = await ExtractMethodTool.ExtractMethod(
+            SolutionPath,
+            testFile,
+            "10:9-10:63",  // Extract only the single await line
+            "GetProcessedNumbersAsync");
+
+        Assert.Contains("Successfully extracted method", result);
+        var fileContent = await File.ReadAllTextAsync(testFile);
+
+        // Should create an async method that returns Task<List<int>>, not Task<Task<List<int>>>
+        Assert.Contains("private async Task<List<int>> GetProcessedNumbersAsync()", fileContent);
+        // Should not contain the duplicate Task wrapper
+        Assert.DoesNotContain("Task<Task<", fileContent);
+        // The extracted method should contain the await call
+        Assert.Contains("var processedNumbers = await GetListOfIntsAsync();", fileContent);
+    }
+
+    [Fact]
+    public void ExtractMethod_AsyncTaskReturnType_SingleFileMode_AvoidsDuplicateTaskWrapper()
+    {
+        const string sourceCode = """
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+public class AsyncTestClass
+{
+    public async Task<List<int>> ProcessListAsync()
+    {
+        var numbers = new List<int> { 1, 2, 3 };
+        var processedNumbers = await GetListOfIntsAsync();
+        return processedNumbers;
+    }
+
+    private async Task<List<int>> GetListOfIntsAsync()
+    {
+        await Task.Delay(100);
+        return new List<int> { 4, 5, 6 };
+    }
+}
+""";
+
+        // Extract line 10: "var processedNumbers = await GetListOfIntsAsync();"
+        var result = ExtractMethodTool.ExtractMethodInSource(sourceCode, "10:9-10:63", "GetProcessedNumbersAsync");
+
+        // First, check if it contains any Task<Task< pattern (the issue we're trying to fix)
+        Assert.DoesNotContain("Task<Task<", result);
+        
+        // Let's be more flexible about the exact signature and just check the important parts
+        Assert.Contains("GetProcessedNumbersAsync", result);
+        Assert.Contains("private async", result);
+        Assert.Contains("Task<List<int>>", result);
+    }
+
+    [Fact]
+    public void ExtractMethod_LastParameterTypeInference_ShouldInferCorrectType()
+    {
+        const string sourceCode = """
+using System;
+
+public class TestClass
+{
+    public void TestMethod()
+    {
+        var first = 10;
+        var second = "hello";
+        var third = true;
+        DoSomething(first, second, third);
+    }
+    
+    private void DoSomething(int a, string b, bool c)
+    {
+        Console.WriteLine($"{a}, {b}, {c}");
+    }
+}
+""";
+
+        // Extract line with multiple parameters: "DoSomething(first, second, third);"
+        var result = ExtractMethodTool.ExtractMethodInSource(sourceCode, "10:9-10:43", "ExtractedMethod");
+
+        Console.WriteLine("=== EXTRACTED METHOD RESULT ===");
+        Console.WriteLine(result);
+        Console.WriteLine("=== END RESULT ===");
+
+        // Should create a method with all parameters having correct types
+        Assert.Contains("private void ExtractedMethod(int first, string second, bool third)", result);
+        // Should NOT have any 'object' parameters
+        Assert.DoesNotContain("object", result);
+    }
+
+    [Fact]
+    public void ExtractMethod_LastParameterTypeInference_WithFields_ShouldInferCorrectType()
+    {
+        const string sourceCode = """
+using System;
+
+public class TestClass
+{
+    private int _value = 42;
+    
+    public void TestMethod()
+    {
+        var first = GetString();
+        var second = _value;
+        var third = DateTime.Now;
+        ProcessData(first, second, third);
+    }
+    
+    private string GetString() => "test";
+    
+    private void ProcessData(string text, int number, DateTime date)
+    {
+        Console.WriteLine($"{text}, {number}, {date}");
+    }
+}
+""";
+
+        // Extract line with field access and method call: "ProcessData(first, second, third);"
+        var result = ExtractMethodTool.ExtractMethodInSource(sourceCode, "12:9-12:43", "ExtractProcessing");
+
+        Console.WriteLine("=== EXTRACTED METHOD WITH FIELDS RESULT ===");
+        Console.WriteLine(result);
+        Console.WriteLine("=== END RESULT ===");
+
+        // Should create a method with all parameters having correct types, not 'object'
+        Assert.Contains("ExtractProcessing", result);
+        
+        // The issue: should be (string first, int second, DateTime third) but currently is (object first, object second, object third)
+        Assert.Contains("private void ExtractProcessing(string first, int second, DateTime third)", result);
     }
 }
