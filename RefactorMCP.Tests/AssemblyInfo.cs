@@ -1,4 +1,5 @@
 using Xunit;
-// Enable test parallelization to speed up the suite. TestBase creates isolated
-// output directories for each test instance so parallel execution is safe.
-// The default xUnit settings will run tests in parallel within each assembly.
+
+// Tests share a single AdhocWorkspace via RefactoringHelpers.SharedWorkspace.
+// Running them in parallel causes interference, so we disable parallelization.
+[assembly: CollectionBehavior(DisableTestParallelization = true)]

@@ -60,7 +60,7 @@ public partial class RoslynTransformationTests
     {
         var invocation = SyntaxFactory.ParseExpression("M()") as InvocationExpressionSyntax;
         var expr = SyntaxFactory.IdentifierName("x");
-        var generator = SyntaxGenerator.GetGenerator(new AdhocWorkspace(), LanguageNames.CSharp);
+        var generator = SyntaxGenerator.GetGenerator(RefactoringHelpers.SharedWorkspace, LanguageNames.CSharp);
         var updated = AstTransformations.AddArgument(invocation!, expr, generator);
 
         Assert.Equal("M(x)", updated.NormalizeWhitespace().ToFullString());
