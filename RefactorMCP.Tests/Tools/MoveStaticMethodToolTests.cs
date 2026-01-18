@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using RefactorMCP.ConsoleApp.Move;
+using RefactorMCP.ConsoleApp.Tools;
 using Xunit;
 
 namespace RefactorMCP.Tests.Tools;

@@ -1,8 +1,8 @@
 using Xunit;
 using System.Collections.Generic;
-using RefactorMCP.ConsoleApp.Move;
+using RefactorMCP.ConsoleApp.Tools;
 
-namespace RefactorMCP.Tests;
+namespace RefactorMCP.Tests.Tools;
 
 public class MoveMethodsHelpersTests
 {

@@ -3,7 +3,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace RefactorMCP.Tests;
+namespace RefactorMCP.Tests.Tools;
 
 public class MetricsProviderTests : TestBase
 {

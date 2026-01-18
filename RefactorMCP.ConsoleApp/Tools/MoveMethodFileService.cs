@@ -12,7 +12,7 @@ using Microsoft.CodeAnalysis.Text;
 using System.IO;
 using System.Threading;
 
-namespace RefactorMCP.ConsoleApp.Move;
+namespace RefactorMCP.ConsoleApp.Tools;
 
 public static class MoveMethodFileService
 {

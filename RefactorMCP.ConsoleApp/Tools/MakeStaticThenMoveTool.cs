@@ -3,7 +3,7 @@ using ModelContextProtocol;
 using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
-using RefactorMCP.ConsoleApp.Move;
+using RefactorMCP.ConsoleApp.Tools;
 
 [McpServerToolType]
 public static class MakeStaticThenMoveTool

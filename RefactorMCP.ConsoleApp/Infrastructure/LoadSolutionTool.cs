@@ -3,7 +3,7 @@ using ModelContextProtocol;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.MSBuild;
 using Microsoft.Extensions.Caching.Memory;
-using RefactorMCP.ConsoleApp.Move;
+using RefactorMCP.ConsoleApp.Tools;
 using System.ComponentModel;
 using System.IO;
 using System.Collections.Generic;

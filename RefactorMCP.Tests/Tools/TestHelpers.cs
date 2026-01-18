@@ -1,6 +1,6 @@
 using System.IO;
 
-namespace RefactorMCP.Tests;
+namespace RefactorMCP.Tests.Tools;
 
 public static class TestHelpers
 {

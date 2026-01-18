@@ -1,7 +1,7 @@
 using Microsoft.CodeAnalysis.Text;
 using Xunit;
 
-namespace RefactorMCP.Tests;
+namespace RefactorMCP.Tests.Tools;
 
 public class RefactoringHelpersRangeTests
 {

@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 using System.Threading;
 using Microsoft.CodeAnalysis.Text;
 using RefactorMCP.ConsoleApp.SyntaxWalkers;
-using RefactorMCP.ConsoleApp.Move;
+using RefactorMCP.ConsoleApp.Tools;
 
 [McpServerToolType]
 public static partial class MoveMultipleMethodsTool

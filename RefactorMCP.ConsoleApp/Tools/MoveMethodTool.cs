@@ -14,7 +14,7 @@ using System.Text;
 using System.Threading;
 using RefactorMCP.ConsoleApp.SyntaxWalkers;
 
-namespace RefactorMCP.ConsoleApp.Move;
+namespace RefactorMCP.ConsoleApp.Tools;
 
 [McpServerToolType]
 public static class MoveMethodTool

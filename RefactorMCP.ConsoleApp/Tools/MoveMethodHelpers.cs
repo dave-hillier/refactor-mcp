@@ -12,7 +12,7 @@ using Microsoft.CodeAnalysis.Text;
 using System.IO;
 using RefactorMCP.ConsoleApp.SyntaxWalkers;
 
-namespace RefactorMCP.ConsoleApp.Move;
+namespace RefactorMCP.ConsoleApp.Tools;
 
 public static partial class MoveMethodAst
 {
