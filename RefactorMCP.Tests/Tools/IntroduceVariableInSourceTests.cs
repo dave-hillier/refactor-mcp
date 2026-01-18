@@ -1,8 +1,8 @@
 using Xunit;
 
-namespace RefactorMCP.Tests;
+namespace RefactorMCP.Tests.Tools;
 
-public partial class RoslynTransformationTests
+public class IntroduceVariableInSourceTests
 {
     [Fact]
     public void IntroduceVariableInSource_AddsVariable()

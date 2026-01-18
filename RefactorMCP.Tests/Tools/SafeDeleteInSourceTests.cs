@@ -4,9 +4,9 @@ using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace RefactorMCP.Tests;
+namespace RefactorMCP.Tests.Tools;
 
-public partial class RoslynTransformationTests
+public class SafeDeleteInSourceTests
 {
     [Fact]
     public void SafeDeleteFieldInSource_RemovesField()

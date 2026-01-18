@@ -5,9 +5,9 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Editing;
 using Xunit;
 
-namespace RefactorMCP.Tests;
+namespace RefactorMCP.Tests.Tools;
 
-public partial class RoslynTransformationTests
+public class AstTransformationsInSourceTests
 {
     [Fact]
     public void AddParameter_AddsParameterToMethod()

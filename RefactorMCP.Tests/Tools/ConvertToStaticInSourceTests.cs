@@ -1,8 +1,8 @@
 using Xunit;
 
-namespace RefactorMCP.Tests;
+namespace RefactorMCP.Tests.Tools;
 
-public partial class RoslynTransformationTests
+public class ConvertToStaticInSourceTests
 {
     [Fact]
     public void ConvertToExtensionMethodInSource_TransformsMethod()

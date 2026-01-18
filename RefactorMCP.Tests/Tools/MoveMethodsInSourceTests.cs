@@ -6,9 +6,9 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Formatting;
 using RefactorMCP.ConsoleApp.Move;
 
-namespace RefactorMCP.Tests.Roslyn
+namespace RefactorMCP.Tests.Tools
 {
-    public partial class MoveMethodsTests
+    public class MoveMethodsInSourceTests
     {
         private static string MoveMultipleMethodsInSource(
             string source,
