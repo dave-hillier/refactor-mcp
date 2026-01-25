@@ -11,7 +11,6 @@ using ModelContextProtocol.Server;
 using System;
 using System.ComponentModel;
 using System.Reflection;
-using System.Text;
 using System.Text.Json;
 using System.Runtime.CompilerServices;
 
@@ -76,7 +75,7 @@ static async Task RunJsonMode(string[] args)
         .Where(t => t.GetCustomAttributes(typeof(McpServerToolTypeAttribute), false).Length > 0)
         .SelectMany(t => t.GetMethods(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static))
         .FirstOrDefault(m => m.GetCustomAttributes(typeof(McpServerToolAttribute), false).Length > 0 &&
-                             m.Name.Equals(toolName, StringComparison.OrdinalIgnoreCase));
+                             ToolNameHelper.Matches(toolName, m));
 
     if (method == null)
     {
@@ -149,26 +148,12 @@ static string ListAvailableTools()
         .Where(t => t.GetCustomAttributes(typeof(McpServerToolTypeAttribute), false).Length > 0)
         .SelectMany(t => t.GetMethods(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static))
         .Where(m => m.GetCustomAttributes(typeof(McpServerToolAttribute), false).Length > 0)
-        .Select(m => ToKebabCase(m.Name))
+        .Select(m => ToolNameHelper.ToKebabCase(m.Name))
         .OrderBy(n => n)
         .ToArray();
 
     return "Available refactoring tools:\n" + string.Join("\n", toolNames);
 
-}
-
-
-static string ToKebabCase(string name)
-{
-    var sb = new StringBuilder();
-    for (int i = 0; i < name.Length; i++)
-    {
-        var c = name[i];
-        if (char.IsUpper(c) && i > 0)
-            sb.Append('-');
-        sb.Append(char.ToLowerInvariant(c));
-    }
-    return sb.ToString();
 }
 
 static object? ConvertInput(string value, Type targetType)
