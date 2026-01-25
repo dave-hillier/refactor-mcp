@@ -36,16 +36,7 @@ public static class IntroduceVariableTool
     {
         var sourceText = await document.GetTextAsync();
         var syntaxRoot = await document.GetSyntaxRootAsync();
-
-        if (!RefactoringHelpers.TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
-            throw new McpException("Error: Invalid selection range format");
-
-        if (!RefactoringHelpers.ValidateRange(sourceText, startLine, startColumn, endLine, endColumn, out var error))
-            throw new McpException(error);
-
-        var startPosition = sourceText.Lines[startLine - 1].Start + startColumn - 1;
-        var endPosition = sourceText.Lines[endLine - 1].Start + endColumn - 1;
-        var span = TextSpan.FromBounds(startPosition, endPosition);
+        var span = RefactoringHelpers.ParseSelectionRange(sourceText, selectionRange);
 
         var selectedExpression = syntaxRoot!.DescendantNodes()
             .OfType<ExpressionSyntax>()
@@ -85,13 +76,7 @@ public static class IntroduceVariableTool
         var newRoot = rewriter.Visit(syntaxRoot);
 
         var formattedRoot = Formatter.Format(newRoot, document.Project.Solution.Workspace);
-        var editor = await DocumentEditor.CreateAsync(document);
-        editor.ReplaceNode(syntaxRoot, formattedRoot);
-        var newDocument = editor.GetChangedDocument();
-        var newText = await newDocument.GetTextAsync();
-        var encoding = await RefactoringHelpers.GetFileEncodingAsync(document.FilePath!);
-        await File.WriteAllTextAsync(document.FilePath!, newText.ToString(), encoding);
-        RefactoringHelpers.UpdateSolutionCache(newDocument);
+        await RefactoringHelpers.WriteAndUpdateCachesAsync(document, formattedRoot);
 
         return $"Successfully introduced variable '{variableName}' from {selectionRange} in {document.FilePath} (solution mode)";
     }
@@ -114,17 +99,7 @@ public static class IntroduceVariableTool
         var syntaxTree = model?.SyntaxTree ?? CSharpSyntaxTree.ParseText(sourceText);
         var syntaxRoot = syntaxTree.GetRoot();
         var text = syntaxTree.GetText();
-        var textLines = text.Lines;
-
-        if (!RefactoringHelpers.TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
-            throw new McpException("Error: Invalid selection range format");
-
-        if (!RefactoringHelpers.ValidateRange(text, startLine, startColumn, endLine, endColumn, out var error))
-            throw new McpException(error);
-
-        var startPosition = textLines[startLine - 1].Start + startColumn - 1;
-        var endPosition = textLines[endLine - 1].Start + endColumn - 1;
-        var span = TextSpan.FromBounds(startPosition, endPosition);
+        var span = RefactoringHelpers.ParseSelectionRange(text, selectionRange);
 
         var selectedExpression = syntaxRoot.DescendantNodes()
             .OfType<ExpressionSyntax>()
