@@ -35,16 +35,7 @@ public static class ExtractMethodTool
     {
         var sourceText = await document.GetTextAsync();
         var syntaxRoot = await document.GetSyntaxRootAsync();
-
-        if (!RefactoringHelpers.TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
-            throw new McpException("Error: Invalid selection range format. Use 'startLine:startColumn-endLine:endColumn'");
-
-        if (!RefactoringHelpers.ValidateRange(sourceText, startLine, startColumn, endLine, endColumn, out var error))
-            throw new McpException(error);
-
-        var startPosition = sourceText.Lines[startLine - 1].Start + startColumn - 1;
-        var endPosition = sourceText.Lines[endLine - 1].Start + endColumn - 1;
-        var span = TextSpan.FromBounds(startPosition, endPosition);
+        var span = RefactoringHelpers.ParseSelectionRange(sourceText, selectionRange);
 
         var selectedNodes = syntaxRoot!.DescendantNodes()
             .Where(n => span.Contains(n.Span))
@@ -76,13 +67,7 @@ public static class ExtractMethodTool
         var newRoot = rewriter.Visit(syntaxRoot);
 
         var formattedRoot = Formatter.Format(newRoot!, document.Project.Solution.Workspace);
-        var newDocument = document.WithSyntaxRoot(formattedRoot);
-
-        // Write the changes back to the file
-        var newText = await newDocument.GetTextAsync();
-        var encoding = await RefactoringHelpers.GetFileEncodingAsync(document.FilePath!);
-        await File.WriteAllTextAsync(document.FilePath!, newText.ToString(), encoding);
-        RefactoringHelpers.UpdateSolutionCache(newDocument);
+        await RefactoringHelpers.WriteAndUpdateCachesAsync(document, formattedRoot);
 
         return $"Successfully extracted method '{methodName}' from {selectionRange} in {document.FilePath} (solution mode)";
     }
@@ -100,17 +85,7 @@ public static class ExtractMethodTool
         var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
         var syntaxRoot = syntaxTree.GetRoot();
         var text = SourceText.From(sourceText);
-        var textLines = text.Lines;
-
-        if (!RefactoringHelpers.TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
-            throw new McpException("Error: Invalid selection range format. Use 'startLine:startColumn-endLine:endColumn'");
-
-        if (!RefactoringHelpers.ValidateRange(text, startLine, startColumn, endLine, endColumn, out var error))
-            throw new McpException(error);
-
-        var startPosition = textLines[startLine - 1].Start + startColumn - 1;
-        var endPosition = textLines[endLine - 1].Start + endColumn - 1;
-        var span = TextSpan.FromBounds(startPosition, endPosition);
+        var span = RefactoringHelpers.ParseSelectionRange(text, selectionRange);
 
         var selectedNodes = syntaxRoot.DescendantNodes()
             .Where(n => span.Contains(n.Span))

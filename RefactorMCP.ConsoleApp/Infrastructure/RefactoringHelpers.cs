@@ -145,6 +145,36 @@ internal static class RefactoringHelpers
         return true;
     }
 
+    /// <summary>
+    /// Parses a selection range, validates it against the source text, and returns a TextSpan.
+    /// Consolidates the common pattern of TryParseRange + ValidateRange + span calculation.
+    /// </summary>
+    internal static TextSpan ParseSelectionRange(SourceText sourceText, string selectionRange)
+    {
+        if (!TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
+            throw new McpException("Error: Invalid selection range format. Use 'startLine:startColumn-endLine:endColumn'");
+
+        if (!ValidateRange(sourceText, startLine, startColumn, endLine, endColumn, out var error))
+            throw new McpException(error);
+
+        var startPosition = sourceText.Lines[startLine - 1].Start + startColumn - 1;
+        var endPosition = sourceText.Lines[endLine - 1].Start + endColumn - 1;
+        return TextSpan.FromBounds(startPosition, endPosition);
+    }
+
+    /// <summary>
+    /// Writes file content with encoding and updates all caches.
+    /// Consolidates the common pattern of GetFileEncoding + WriteAllText + UpdateSolutionCache.
+    /// </summary>
+    internal static async Task WriteAndUpdateCachesAsync(Document document, SyntaxNode newRoot)
+    {
+        var newDocument = document.WithSyntaxRoot(newRoot);
+        var newText = await newDocument.GetTextAsync();
+        var encoding = await GetFileEncodingAsync(document.FilePath!);
+        await File.WriteAllTextAsync(document.FilePath!, newText.ToString(), encoding);
+        UpdateSolutionCache(newDocument);
+    }
+
 
     internal static async Task<string> ApplySingleFileEdit(
         string filePath,

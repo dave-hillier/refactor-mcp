@@ -115,11 +115,7 @@ public static class SafeDeleteTool
         var newRoot = rewriter.Visit(root)!;
 
         var formatted = Formatter.Format(newRoot, document.Project.Solution.Workspace);
-        var newDoc = document.WithSyntaxRoot(formatted);
-        var text = await newDoc.GetTextAsync();
-        var encoding = await RefactoringHelpers.GetFileEncodingAsync(document.FilePath!);
-        await File.WriteAllTextAsync(document.FilePath!, text.ToString(), encoding);
-        RefactoringHelpers.UpdateSolutionCache(newDoc);
+        await RefactoringHelpers.WriteAndUpdateCachesAsync(document, formatted);
         return $"Successfully deleted field '{fieldName}' in {document.FilePath}";
     }
 
@@ -175,11 +171,7 @@ public static class SafeDeleteTool
         var rewriter = new MethodRemovalRewriter(methodName);
         var newRoot = rewriter.Visit(root)!;
         var formatted = Formatter.Format(newRoot, document.Project.Solution.Workspace);
-        var newDoc = document.WithSyntaxRoot(formatted);
-        var text = await newDoc.GetTextAsync();
-        var encoding = await RefactoringHelpers.GetFileEncodingAsync(document.FilePath!);
-        await File.WriteAllTextAsync(document.FilePath!, text.ToString(), encoding);
-        RefactoringHelpers.UpdateSolutionCache(newDoc);
+        await RefactoringHelpers.WriteAndUpdateCachesAsync(document, formatted);
         return $"Successfully deleted method '{methodName}' in {document.FilePath}";
     }
 
@@ -285,15 +277,7 @@ public static class SafeDeleteTool
     {
         var text = await document.GetTextAsync();
         var root = await document.GetSyntaxRootAsync();
-        if (!RefactoringHelpers.TryParseRange(selectionRange, out var sl, out var sc, out var el, out var ec))
-            throw new McpException("Error: Invalid selection range format");
-
-        if (!RefactoringHelpers.ValidateRange(text, sl, sc, el, ec, out var error))
-            throw new McpException(error);
-
-        var start = text.Lines[sl - 1].Start + sc - 1;
-        var end = text.Lines[el - 1].Start + ec - 1;
-        var span = TextSpan.FromBounds(start, end);
+        var span = RefactoringHelpers.ParseSelectionRange(text, selectionRange);
         var variable = root!.DescendantNodes(span).OfType<VariableDeclaratorSyntax>().FirstOrDefault();
         if (variable == null)
             throw new McpException("Error: No variable declaration found in range");
@@ -309,11 +293,7 @@ public static class SafeDeleteTool
         var newRoot = rewriter.Visit(root)!;
 
         var formatted = Formatter.Format(newRoot, document.Project.Solution.Workspace);
-        var newDoc = document.WithSyntaxRoot(formatted);
-        var newText = await newDoc.GetTextAsync();
-        var encoding = await RefactoringHelpers.GetFileEncodingAsync(document.FilePath!);
-        await File.WriteAllTextAsync(document.FilePath!, newText.ToString(), encoding);
-        RefactoringHelpers.UpdateSolutionCache(newDoc);
+        await RefactoringHelpers.WriteAndUpdateCachesAsync(document, formatted);
         return $"Successfully deleted variable '{variable.Identifier.ValueText}' in {document.FilePath}";
     }
 
@@ -330,16 +310,7 @@ public static class SafeDeleteTool
         var tree = CSharpSyntaxTree.ParseText(sourceText);
         var root = tree.GetRoot();
         var text = SourceText.From(sourceText);
-        var lines = text.Lines;
-        if (!RefactoringHelpers.TryParseRange(selectionRange, out var sl, out var sc, out var el, out var ec))
-            throw new McpException("Error: Invalid selection range format");
-
-        if (!RefactoringHelpers.ValidateRange(text, sl, sc, el, ec, out var error))
-            throw new McpException(error);
-
-        var start = lines[sl - 1].Start + sc - 1;
-        var end = lines[el - 1].Start + ec - 1;
-        var span = TextSpan.FromBounds(start, end);
+        var span = RefactoringHelpers.ParseSelectionRange(text, selectionRange);
         var variable = root.DescendantNodes(span).OfType<VariableDeclaratorSyntax>().FirstOrDefault();
         if (variable == null)
             throw new McpException("Error: No variable declaration found in range");

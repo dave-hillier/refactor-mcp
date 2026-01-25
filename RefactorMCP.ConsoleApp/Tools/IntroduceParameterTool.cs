@@ -16,7 +16,6 @@ public static class IntroduceParameterTool
     {
         var sourceText = await document.GetTextAsync();
         var syntaxRoot = await document.GetSyntaxRootAsync();
-        var textLines = sourceText.Lines;
 
         var method = syntaxRoot!.DescendantNodes()
             .OfType<MethodDeclarationSyntax>()
@@ -24,15 +23,7 @@ public static class IntroduceParameterTool
         if (method == null)
             return $"Error: No method named '{methodName}' found";
 
-        if (!RefactoringHelpers.TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
-            throw new McpException("Error: Invalid selection range format");
-
-        if (!RefactoringHelpers.ValidateRange(sourceText, startLine, startColumn, endLine, endColumn, out var error))
-            throw new McpException(error);
-
-        var startPosition = textLines[startLine - 1].Start + startColumn - 1;
-        var endPosition = textLines[endLine - 1].Start + endColumn - 1;
-        var span = TextSpan.FromBounds(startPosition, endPosition);
+        var span = RefactoringHelpers.ParseSelectionRange(sourceText, selectionRange);
 
         var selectedExpression = syntaxRoot.DescendantNodes(span).OfType<ExpressionSyntax>().FirstOrDefault();
         if (selectedExpression == null)
@@ -51,11 +42,7 @@ public static class IntroduceParameterTool
         var newRoot = rewriter.Visit(syntaxRoot);
 
         var formattedRoot = Formatter.Format(newRoot, document.Project.Solution.Workspace);
-        var newDocument = document.WithSyntaxRoot(formattedRoot);
-        var newText = await newDocument.GetTextAsync();
-        var encoding = await RefactoringHelpers.GetFileEncodingAsync(document.FilePath!);
-        await File.WriteAllTextAsync(document.FilePath!, newText.ToString(), encoding);
-        RefactoringHelpers.UpdateSolutionCache(newDocument);
+        await RefactoringHelpers.WriteAndUpdateCachesAsync(document, formattedRoot);
 
         return $"Successfully introduced parameter '{parameterName}' from {selectionRange} in method '{methodName}' in {document.FilePath} (solution mode)";
     }
@@ -73,7 +60,6 @@ public static class IntroduceParameterTool
         var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
         var syntaxRoot = syntaxTree.GetRoot();
         var text = SourceText.From(sourceText);
-        var textLines = text.Lines;
 
         var method = syntaxRoot.DescendantNodes()
             .OfType<MethodDeclarationSyntax>()
@@ -81,15 +67,7 @@ public static class IntroduceParameterTool
         if (method == null)
             return $"Error: No method named '{methodName}' found";
 
-        if (!RefactoringHelpers.TryParseRange(selectionRange, out var startLine, out var startColumn, out var endLine, out var endColumn))
-            throw new McpException("Error: Invalid selection range format");
-
-        if (!RefactoringHelpers.ValidateRange(text, startLine, startColumn, endLine, endColumn, out var error))
-            throw new McpException(error);
-
-        var startPosition = textLines[startLine - 1].Start + startColumn - 1;
-        var endPosition = textLines[endLine - 1].Start + endColumn - 1;
-        var span = TextSpan.FromBounds(startPosition, endPosition);
+        var span = RefactoringHelpers.ParseSelectionRange(text, selectionRange);
 
         var selectedExpression = syntaxRoot.DescendantNodes()
             .OfType<ExpressionSyntax>()
