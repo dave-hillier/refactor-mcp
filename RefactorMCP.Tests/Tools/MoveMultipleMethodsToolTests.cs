@@ -56,7 +56,7 @@ public class Target { }
         var solution = await RefactoringHelpers.GetOrLoadSolution(SolutionPath);
         var project = solution.Projects.First();
         RefactoringHelpers.AddDocumentToProject(project, testFile);
-        
+
         var result = await MoveMultipleMethodsTool.MoveMultipleMethodsStatic(
             SolutionPath,
             testFile,
