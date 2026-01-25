@@ -56,8 +56,15 @@ public static class ExtractMethodTool
         var containingMethod = selectedNodes.First().Ancestors().OfType<MethodDeclarationSyntax>().FirstOrDefault();
         if (containingMethod == null)
             throw new McpException("Error: Selected code is not within a method");
+        if (containingMethod.Body == null)
+        {
+            if (containingMethod.ExpressionBody != null)
+                throw new McpException("Error: Extraction from expression-bodied methods is not supported");
 
-        var statementsToExtract = containingMethod.Body!.Statements
+            throw new McpException("Error: Selected code is not within a block-bodied method");
+        }
+
+        var statementsToExtract = containingMethod.Body.Statements
             .Where(s => span.IntersectsWith(s.FullSpan))
             .ToList();
 
@@ -115,8 +122,15 @@ public static class ExtractMethodTool
         var containingMethod = selectedNodes.First().Ancestors().OfType<MethodDeclarationSyntax>().FirstOrDefault();
         if (containingMethod == null)
             throw new McpException("Error: Selected code is not within a method");
+        if (containingMethod.Body == null)
+        {
+            if (containingMethod.ExpressionBody != null)
+                throw new McpException("Error: Extraction from expression-bodied methods is not supported");
 
-        var statementsToExtract = containingMethod.Body!.Statements
+            throw new McpException("Error: Selected code is not within a block-bodied method");
+        }
+
+        var statementsToExtract = containingMethod.Body.Statements
             .Where(s => span.IntersectsWith(s.FullSpan))
             .ToList();
 

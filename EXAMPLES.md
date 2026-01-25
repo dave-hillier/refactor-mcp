@@ -27,6 +27,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --json ToolName '{"param":"value"
 ## 1. Extract Method
 
 **Purpose**: Extract selected code into a new private method and replace with a method call.
+**Note**: Expression-bodied methods are not supported for extraction.
 
 ### Example
 **Before** (in `ExampleCode.cs` lines 21-26):
@@ -53,6 +54,17 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli extract-method \
   "./RefactorMCP.Tests/ExampleCode.cs" \
   "22:9-25:34" \
   "ValidateInputs"
+```
+
+**JSON Example**:
+```json
+{
+  "tool": "extract-method",
+  "solutionPath": "./RefactorMCP.sln",
+  "filePath": "./RefactorMCP.Tests/ExampleCode.cs",
+  "selectionRange": "22:9-25:34",
+  "methodName": "ValidateInputs"
+}
 ```
 
 **After**:

@@ -14,7 +14,7 @@ For usage examples see [EXAMPLES.md](./EXAMPLES.md).
 
 ## Available Refactorings
 
-- **Extract Method** – create a new method from selected code and replace the original with a call.
+- **Extract Method** – create a new method from selected code and replace the original with a call (expression-bodied methods are not supported).
 - **Introduce Field/Parameter/Variable** – turn expressions into new members; fails if a field already exists.
 - **Convert to Static** – make instance methods static using parameters or an instance argument.
 - **Move Static Method** – relocate a static method and keep a wrapper in the original class.

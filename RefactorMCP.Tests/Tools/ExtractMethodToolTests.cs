@@ -148,4 +148,28 @@ public class A { public void M() { } }
                 range,
                 methodName));
     }
+
+    [Fact]
+    public async Task ExtractMethod_ExpressionBodiedMethod_ReturnsError()
+    {
+        const string initialCode = """
+public class Sample
+{
+    public int Calc(int a, int b) => a + b;
+}
+""";
+
+        await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
+        var testFile = Path.Combine(TestOutputPath, "ExpressionBodied.cs");
+        await TestUtilities.CreateTestFile(testFile, initialCode);
+
+        var exception = await Assert.ThrowsAsync<McpException>(async () =>
+            await ExtractMethodTool.ExtractMethod(
+                SolutionPath,
+                testFile,
+                "3:38-3:42",
+                "Extracted"));
+
+        Assert.Contains("Extraction from expression-bodied methods is not supported", exception.Message);
+    }
 }
