@@ -129,7 +129,7 @@ internal static class ToolCallLogger
             .Where(t => t.GetCustomAttributes(typeof(McpServerToolTypeAttribute), false).Length > 0)
             .SelectMany(t => t.GetMethods(BindingFlags.Public | BindingFlags.Static))
             .FirstOrDefault(m => m.GetCustomAttributes(typeof(McpServerToolAttribute), false).Length > 0 &&
-                                 m.Name.Equals(toolName, StringComparison.OrdinalIgnoreCase));
+                                 ToolNameHelper.Matches(toolName, m));
     }
 
     private static object? ConvertInput(string value, Type targetType)
@@ -152,4 +152,3 @@ internal static class ToolCallLogger
         public DateTime Timestamp { get; set; }
     }
 }
-
