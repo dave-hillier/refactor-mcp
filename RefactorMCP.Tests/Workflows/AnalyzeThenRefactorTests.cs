@@ -48,7 +48,7 @@ public class ServiceWithUnusedField
         Assert.Contains("safe-delete", analysis.ToLowerInvariant());
 
         // Step 3: Perform the safe-delete refactoring
-        var result = await SafeDeleteTool.SafeDelete(
+        var result = await SafeDeleteTool.SafeDeleteField(
             SolutionPath,
             testFile,
             "_unusedField");
@@ -132,10 +132,10 @@ public class MessyClass
         RefactoringHelpers.AddDocumentToProject(project, testFile);
 
         // Delete first unused field
-        await SafeDeleteTool.SafeDelete(SolutionPath, testFile, "_unusedField1");
+        await SafeDeleteTool.SafeDeleteField(SolutionPath, testFile, "_unusedField1");
 
         // Delete second unused field
-        await SafeDeleteTool.SafeDelete(SolutionPath, testFile, "_unusedField2");
+        await SafeDeleteTool.SafeDeleteField(SolutionPath, testFile, "_unusedField2");
 
         // Verify both fields are removed
         var fileContent = await File.ReadAllTextAsync(testFile);
