@@ -260,9 +260,9 @@ using System;
 
 public class Config
 {
-    public Config()
+    public int GetTimeout()
     {
-        Console.WriteLine("Default timeout: 30");
+        return 30;
     }
 }
 """;
@@ -274,13 +274,12 @@ public class Config
         var project = solution.Projects.First();
         RefactoringHelpers.AddDocumentToProject(project, testFile);
 
-        // Step 1: Introduce field for the magic number
+        // Step 1: Introduce field for the magic number 30 (line 8, columns 16-18)
         var introduceResult = await IntroduceFieldTool.IntroduceField(
             SolutionPath,
             testFile,
-            "30",
-            "_defaultTimeout",
-            "int");
+            "8:16-8:18",
+            "_defaultTimeout");
 
         Assert.Contains("introduced", introduceResult.ToLowerInvariant());
 

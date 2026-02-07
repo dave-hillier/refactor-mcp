@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Microsoft.CodeAnalysis.CSharp;
 using Xunit;
 
-namespace RefactorMCP.Tests.Roslyn.Rewriters;
+namespace RefactorMCP.Tests.SyntaxRewriters;
 
 public class NestedClassRewriterTests
 {
