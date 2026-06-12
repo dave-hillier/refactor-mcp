@@ -8,6 +8,10 @@ Using:
 - Microsoft.CodeAnalysis.CSharp.MSBuild
 - ModelContextProtocol (0.2.0-preview.3)
 
+## MCP Tool Layout
+
+The server advertises grouped MCP tools so clients do not have to choose from dozens of individual methods. Use `list-refactoring-operations` to discover operations, then call one of `manage-solution`, `analyze-code`, `introduce-code`, `transform-code`, `move-code`, `generate-pattern`, or `safe-delete` with an `operation` parameter.
+
 ## Available Refactorings
 
 These refactorings are focused on maintaining the public API and moving the code as little as possible from its original place to aid review.

@@ -24,6 +24,28 @@ All examples use JSON parameters:
 dotnet run --project RefactorMCP.ConsoleApp -- --json ToolName '{"param":"value"}'
 ```
 
+## Grouped MCP Tool Surface
+
+RefactorMCP keeps the MCP tool list short by exposing grouped tools. First list the available groups and operations:
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json list-refactoring-operations '{}'
+```
+
+Load a solution through the session-management group:
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json manage-solution '{"operation":"load-solution","solutionPath":"./RefactorMCP.sln"}'
+```
+
+Run a refactoring through the appropriate group and operation. For example, this uses the transform group to extract a method:
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json transform-code '{"operation":"extract-method","solutionPath":"./RefactorMCP.sln","filePath":"./RefactorMCP.Tests/Tools/ExampleCode.cs","selectionRange":"22:9-25:34","name":"ValidateInputs"}'
+```
+
+The original fine-grained JSON tool names are still accepted for compatibility, but MCP clients are only advertised the compact grouped surface.
+
 ## 1. Extract Method
 
 **Purpose**: Extract selected code into a new private method and replace with a method call.
