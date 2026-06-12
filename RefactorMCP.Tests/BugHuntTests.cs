@@ -44,7 +44,7 @@ class C
         // The result should be valid syntax (parseable without errors)
         var resultText = result.ToFullString();
         var reparsed = CSharpSyntaxTree.ParseText(resultText);
-        Assert.Empty(reparsed.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.DoesNotContain(reparsed.GetDiagnostics(), d => d.Severity == DiagnosticSeverity.Error);
     }
 
     [Fact]

@@ -34,7 +34,7 @@ builder.Logging.AddConsole(consoleLogOptions =>
 builder.Services
     .AddMcpServer()
     .WithStdioServerTransport()
-    .WithToolsFromAssembly()
+    .WithTools(RefactoringToolCatalog.ExposedToolTypes)
     .WithResourcesFromAssembly()
     .WithPromptsFromAssembly();
 
@@ -71,12 +71,13 @@ static async Task RunJsonMode(string[] args)
         return;
     }
 
-    var method = System.Reflection.Assembly.GetExecutingAssembly()
-        .GetTypes()
-        .Where(t => t.GetCustomAttributes(typeof(McpServerToolTypeAttribute), false).Length > 0)
-        .SelectMany(t => t.GetMethods(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static))
-        .FirstOrDefault(m => m.GetCustomAttributes(typeof(McpServerToolAttribute), false).Length > 0 &&
-                             m.Name.Equals(toolName, StringComparison.OrdinalIgnoreCase));
+    var method = RefactoringToolCatalog.GetExposedToolMethods()
+        .FirstOrDefault(m => IsRequestedTool(m, toolName));
+
+    // Keep JSON mode backward-compatible with the original fine-grained tool names,
+    // while the MCP server advertises only the grouped surface above.
+    method ??= RefactoringToolCatalog.GetLegacyToolMethods()
+        .FirstOrDefault(m => IsRequestedTool(m, toolName));
 
     if (method == null)
     {
@@ -142,34 +143,9 @@ static async Task RunJsonMode(string[] args)
     }
 }
 
-static string ListAvailableTools()
-{
-    var toolNames = System.Reflection.Assembly.GetExecutingAssembly()
-        .GetTypes()
-        .Where(t => t.GetCustomAttributes(typeof(McpServerToolTypeAttribute), false).Length > 0)
-        .SelectMany(t => t.GetMethods(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static))
-        .Where(m => m.GetCustomAttributes(typeof(McpServerToolAttribute), false).Length > 0)
-        .Select(m => ToKebabCase(m.Name))
-        .OrderBy(n => n)
-        .ToArray();
-
-    return "Available refactoring tools:\n" + string.Join("\n", toolNames);
-
-}
-
-
-static string ToKebabCase(string name)
-{
-    var sb = new StringBuilder();
-    for (int i = 0; i < name.Length; i++)
-    {
-        var c = name[i];
-        if (char.IsUpper(c) && i > 0)
-            sb.Append('-');
-        sb.Append(char.ToLowerInvariant(c));
-    }
-    return sb.ToString();
-}
+static bool IsRequestedTool(MethodInfo method, string toolName)
+    => method.Name.Equals(toolName, StringComparison.OrdinalIgnoreCase) ||
+       RefactoringToolCatalog.ToKebabCase(method.Name).Equals(toolName, StringComparison.OrdinalIgnoreCase);
 
 static object? ConvertInput(string value, Type targetType)
 {

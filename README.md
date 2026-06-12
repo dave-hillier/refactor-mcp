@@ -12,6 +12,30 @@ dotnet run --project RefactorMCP.ConsoleApp
 
 For usage examples see [EXAMPLES.md](./EXAMPLES.md).
 
+
+## Tool Surface
+
+To keep the MCP surface manageable, RefactorMCP now advertises a small set of grouped tools instead of every individual refactoring method. Use `list-refactoring-operations` to discover the operation names accepted by each group, then call the relevant group with an `operation` value. Legacy fine-grained tool methods remain available to the in-process test suite and JSON compatibility path, but MCP clients see the grouped surface.
+
+```json
+{
+  "tool": "manage-solution",
+  "operation": "load-solution",
+  "solutionPath": "./RefactorMCP.sln"
+}
+```
+
+```json
+{
+  "tool": "transform-code",
+  "operation": "extract-method",
+  "solutionPath": "./RefactorMCP.sln",
+  "filePath": "./RefactorMCP.Tests/Tools/ExampleCode.cs",
+  "selectionRange": "22:9-25:34",
+  "name": "ValidateInputs"
+}
+```
+
 ## Available Refactorings
 
 - **Extract Method** – create a new method from selected code and replace the original with a call (expression-bodied methods are not supported).
