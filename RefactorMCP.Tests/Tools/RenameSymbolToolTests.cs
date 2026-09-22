@@ -313,6 +313,45 @@ public class Sample
     }
 
     [Fact]
+    public async Task RenameSymbol_AmbiguousLocalVariable_ThrowsMcpException()
+    {
+        const string initialCode = """
+public class Sample
+{
+    public int First()
+    {
+        var shared = 10;
+        return shared;
+    }
+
+    public int Second()
+    {
+        var shared = 20;
+        return shared;
+    }
+}
+""";
+
+        await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
+        var testFile = Path.Combine(TestOutputPath, "RenameAmbiguousLocal.cs");
+        await TestUtilities.CreateTestFile(testFile, initialCode);
+        var solution = await RefactoringHelpers.GetOrLoadSolution(SolutionPath);
+        var project = solution.Projects.First();
+        RefactoringHelpers.AddDocumentToProject(project, testFile);
+
+        var exception = await Assert.ThrowsAsync<McpException>(() =>
+            RenameSymbolTool.RenameSymbol(
+                SolutionPath,
+                testFile,
+                "shared",
+                "renamed"));
+
+        Assert.Contains("Multiple", exception.Message);
+        var fileContent = await File.ReadAllTextAsync(testFile);
+        Assert.Contains("shared", fileContent);
+    }
+
+    [Fact]
     public async Task RenameSymbol_Interface_RenamesInterfaceAndImplementations()
     {
         const string initialCode = """
