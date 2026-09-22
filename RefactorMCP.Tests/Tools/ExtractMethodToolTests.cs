@@ -109,6 +109,66 @@ public class Sample
     }
 
     [Fact]
+    public async Task ExtractMethod_LocalUsedAfterBlock_ReturnsError()
+    {
+        const string initialCode = """
+using System;
+
+public class Sample
+{
+    public int Calc(int a)
+    {
+        var adjusted = a + 1;
+        Console.WriteLine(adjusted);
+        return adjusted;
+    }
+}
+""";
+
+        await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
+        var testFile = Path.Combine(TestOutputPath, "ExtractMethodLocalEscape.cs");
+        await TestUtilities.CreateTestFile(testFile, initialCode);
+
+        var exception = await Assert.ThrowsAsync<McpException>(async () =>
+            await ExtractMethodTool.ExtractMethod(
+                SolutionPath,
+                testFile,
+                "7:9-8:37",   // the local declaration and the statement that reads it
+                "WriteAdjusted"));
+
+        Assert.Equal(
+            "Error extracting method: Error: The extracted block declares 'adjusted', which is used at line 9. " +
+            "Include that code in the extraction, or narrow the selection.",
+            exception.Message);
+
+        // The refusal leaves the file as it was.
+        var fileContent = await File.ReadAllTextAsync(testFile);
+        Assert.Equal(initialCode, fileContent.Replace("\r\n", "\n"));
+    }
+
+    [Fact]
+    public async Task ExtractMethod_LocalUsedAfterBlockInSolution_ReturnsError()
+    {
+        await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
+
+        // The Calculate example declares a local on line 27 and goes on using it.
+        var exception = await Assert.ThrowsAsync<McpException>(async () =>
+            await ExtractMethodTool.ExtractMethod(
+                SolutionPath,
+                ExampleFilePath,
+                "27:13-28:33",
+                "AddResult"));
+
+        Assert.Equal(
+            "Error extracting method: Error: The extracted block declares 'result', which is used at line 29. " +
+            "Include that code in the extraction, or narrow the selection.",
+            exception.Message);
+
+        var fileContent = await File.ReadAllTextAsync(ExampleFilePath);
+        Assert.Contains("var result = a + b;", fileContent);
+    }
+
+    [Fact]
     public async Task ExtractMethod_InvalidRange_ReturnsError()
     {
         const string initialCode = """
