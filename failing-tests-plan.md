@@ -160,21 +160,11 @@ both modes.
       why the range above silently crossed a newline instead of failing. Reject
       columns past the end of a line so such a range is reported, not guessed at.
 
-## S9. CleanupUsings — `fix/cleanup-usings`
-
-- [ ] **Spans from other files are resolved against the current file.**
-      `CleanupUsingsTool.cs:50-53` uses project-wide `compilation.GetDiagnostics()`
-      and then `root.FindNode(span)`, which throws for another file's span. Fix:
-      filter to diagnostics whose `Location.SourceTree` is this document's tree.
-      Test: `AnalyzeThenRefactorTests.Workflow_RenameAndCleanup_RefactorsFieldConsistently`
-
-      Open PR **#304** is exactly this fix, from a contributor. Cherry-pick its
-      commit so the authorship is preserved and close our own.
-
 ## Open pull requests
 
-- **#304** — merge via cherry-pick (see S9). Needs your go-ahead to close the PR
-  on GitHub once the fix is in.
+- **#304** — done: cherry-picked into `fix/cleanup-usings` with the contributor's
+  authorship intact, and verified against the workflow test it unblocks. The PR
+  itself can be closed on GitHub once this branch lands, referencing the commit.
 - **#298** — superseded: the dispatcher normalises tool names in any spelling, and
   the playback path it patched no longer exists. Its other two changes are
   trailing-whitespace only. Recommend closing.
