@@ -78,7 +78,7 @@ internal class FeatureFlagRewriter : CSharpSyntaxRewriter
             visited = visited.AddMembers(fieldDecl);
             if (!HasInstanceConstructor(visited))
             {
-                visited = visited.AddMembers(CreateStrategyConstructor(node.Identifier.ValueText));
+                visited = visited.AddMembers(CreateStrategyConstructor(visited));
             }
             GeneratedMembers = GeneratedMembers.AddRange(CreateStrategyTypes());
         }
@@ -112,12 +112,30 @@ internal class FeatureFlagRewriter : CSharpSyntaxRewriter
             .Any(ctor => !ctor.Modifiers.Any(SyntaxKind.StaticKeyword));
     }
 
-    private ConstructorDeclarationSyntax CreateStrategyConstructor(string className)
+    private ConstructorDeclarationSyntax CreateStrategyConstructor(ClassDeclarationSyntax node)
     {
-        return SyntaxFactory.ConstructorDeclaration(className)
+        // A class with a primary constructor may only declare another one if it
+        // chains to the primary constructor, and the primary constructor's
+        // parameters are in scope nowhere else, so they are carried through.
+        var primaryParameters = node.ParameterList?.Parameters ?? default;
+
+        var constructor = SyntaxFactory.ConstructorDeclaration(node.Identifier.ValueText)
             .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
+            .AddParameterListParameters(primaryParameters.ToArray())
             .AddParameterListParameters(CreateStrategyParameter())
             .WithBody(SyntaxFactory.Block(CreateStrategyAssignment()));
+
+        if (primaryParameters.Count > 0)
+        {
+            constructor = constructor.WithInitializer(
+                SyntaxFactory.ConstructorInitializer(
+                    SyntaxKind.ThisConstructorInitializer,
+                    SyntaxFactory.ArgumentList(SyntaxFactory.SeparatedList(
+                        primaryParameters.Select(parameter =>
+                            SyntaxFactory.Argument(SyntaxFactory.IdentifierName(parameter.Identifier)))))));
+        }
+
+        return constructor;
     }
 
     private ParameterSyntax CreateStrategyParameter()
