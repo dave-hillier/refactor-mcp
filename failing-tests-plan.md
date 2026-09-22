@@ -45,20 +45,27 @@ Nothing here changed the plan in `plan.md` (the CLI, daemon and MCP surface).
 - **CleanupUsings** applied project-wide diagnostics to one document's tree
   (PR #304, cherry-picked with the contributor's authorship).
 
-## Open decisions
+## Decisions taken, and what was left
 
-Two defects were found by the agents that fixed the above, and neither is worth
-guessing at:
+Two defects the agents surfaced were the maintainer's to decide rather than theirs
+to guess at. Both are now settled and implemented:
 
-1. **ExtractMethod, local escaping the block.** A local declared inside the
-   extracted block and used *after* the call site now yields code that does not
-   compile. The old removal bug hid this by leaving the statements behind. The
-   choices are to refuse the extraction with an explanation, or to return the
-   local from the new method as well.
-2. **FeatureFlagRewriter, no constructor to inject into.** When the class holding
-   the flag check has no constructor at all, the generated strategy field is
-   never assigned (a warning, then null at runtime). The choices are to synthesise
-   a constructor or a default initialiser.
+1. **ExtractMethod refuses a block whose local escapes it.** A local declared
+   inside the selection and used after it would leave a use with no declaration,
+   so the tool refuses, naming the local and the line it is used on, and says to
+   include that code or narrow the selection. Both the solution and single-file
+   paths do this, comparing symbols, so a shadowed name cannot cause a false
+   refusal.
+2. **FeatureFlagRewriter synthesises the constructor** that takes the strategy
+   when the class has no instance constructor, rather than leaving the field
+   unassigned. A class with only a static constructor is the same case; a class
+   with a primary constructor gets `: this(...)` chained, without which the
+   generated code does not compile at all.
+
+Left alone deliberately, and worth knowing: the feature-flag rewriter matches any
+class whose span contains the flag check, so a nested class's outer class also
+receives the strategy field and constructor. Pre-existing, and separate from the
+sweep.
 
 ## Open pull requests
 
