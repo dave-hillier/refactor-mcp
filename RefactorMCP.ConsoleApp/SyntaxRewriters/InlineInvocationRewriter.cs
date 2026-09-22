@@ -54,7 +54,8 @@ internal class InlineInvocationRewriter : CSharpSyntaxRewriter
                     .ToDictionary(x => x.p.Identifier.ValueText, x => x.a.Expression);
 
                 var rewriter = new ParameterRewriter(argMap);
-                var stmts = _method.Body!.Statements.Select(s => (StatementSyntax)rewriter.Visit(s)!);
+                var stmts = InlinedStatements()
+                    .Select(s => (StatementSyntax)rewriter.Visit(s)!);
                 newStatements.AddRange(stmts);
             }
             else
@@ -64,6 +65,21 @@ internal class InlineInvocationRewriter : CSharpSyntaxRewriter
         }
 
         return node.WithStatements(SyntaxFactory.List(newStatements));
+    }
+
+    /// <summary>
+    /// What a call site is replaced with. An expression-bodied method has no
+    /// statements, so its expression becomes the one statement that runs there.
+    /// </summary>
+    private IEnumerable<StatementSyntax> InlinedStatements()
+    {
+        if (_method.Body is not null)
+            return _method.Body.Statements;
+
+        if (_method.ExpressionBody is not null)
+            return new[] { SyntaxFactory.ExpressionStatement(_method.ExpressionBody.Expression) };
+
+        return Enumerable.Empty<StatementSyntax>();
     }
 }
 

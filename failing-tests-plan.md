@@ -19,30 +19,6 @@ surface); that work is complete.
 Ordering is mechanical first, then the ones that change behaviour, so the suite
 is greener before the riskier changes land.
 
-## S3. Expression bodies and structural rewrites — `fix/expression-bodies`
-
-- [ ] **BodyOmitter crashes on expression-bodied members.** `BodyOmitter.cs:12-15`
-      returns a `Block` where the base rewriter casts back to
-      `ArrowExpressionClause`, so `summary://` throws for any file containing
-      `=>`. Decided: leave the expression intact (delete the override) rather
-      than invent a placeholder. `EXAMPLES.md` claims bodies render `// ...`;
-      block bodies actually render `{}`, so correct the doc. Tests:
-      `BugHuntTests.BodyOmitter_ExpressionBodiedMethod_ShouldNotThrow`, `..._Property_...`
-- [ ] **InlineInvocationRewriter crashes on expression-bodied methods.**
-      `:57` dereferences `_method.Body`. Fix: emit the expression as a single
-      statement when the target is arrow-bodied. Test:
-      `BugHuntTests.InlineInvocationRewriter_ExpressionBodiedMethod_ShouldNotThrow`
-- [ ] **ExtractInterface destroys the existing base list (data loss).**
-      `ExtractInterfaceTool.cs:95-99` builds a new `BaseList`, dropping a base
-      class and any other interfaces; skip when the interface is already listed,
-      or a second run emits CS0528. Test:
-      `BugHuntTests.ExtractInterface_ClassWithExistingBaseClass_ShouldPreserveIt`
-- [ ] **ExtractInterface emits an invalid accessor for arrow properties.**
-      Same file, `:57-61`: an arrow property yields `int Count { } => x;`. Fix:
-      synthesise a `get;` accessor and clear the expression body; the method
-      branch has the same latent defect. Test:
-      `BugHuntTests.ExtractInterface_ExpressionBodiedProperty_ShouldProduceValidAccessor`
-
 ## S4. Setter and field rewrites — `fix/setter-readonly`
 
 - [ ] **SetterToInitRewriter drops the setter's modifiers, attributes and body.**

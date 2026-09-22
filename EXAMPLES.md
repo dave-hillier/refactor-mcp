@@ -1384,7 +1384,9 @@ Retrieve a file with method bodies omitted using the `summary://` scheme:
 ```
 summary://RefactorMCP.Tests/ExampleCode.cs
 ```
-The returned text begins with `// summary://...` and shows each method body as `// ...`.
+The returned text begins with `// summary://...`, replaces each block body with
+`{}`, and leaves expression-bodied members as they are — an arrow clause has to
+hold an expression, so there is no placeholder that parses in its place.
 
 ## Tool Call Log
 
