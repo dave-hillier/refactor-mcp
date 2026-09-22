@@ -19,26 +19,6 @@ surface); that work is complete.
 Ordering is mechanical first, then the ones that change behaviour, so the suite
 is greener before the riskier changes land.
 
-## S5. FeatureFlagRewriter — `fix/feature-flag`
-
-- [ ] **Constructor injection depends on declaration order.**
-      `FeatureFlagRewriter.cs:73` guards on `_done`/`_targetIf`, which are not yet
-      set when the constructor is visited first, so the conventional layout
-      generates a class calling `.Apply()` on a field that is never assigned.
-      Fix: resolve the target `if` before visiting members. Test:
-      `FeatureFlagRewriterTests.FeatureFlagRewriter_AddsConstructorParameter`
-- [ ] **Generated `Apply` methods are private.** `:97` uses an empty modifier
-      list on a node shared with both strategy classes, so they do not implement
-      the interface (CS0535). Fix: add `public` to the two classes; leave the
-      interface member idiomatic. Test:
-      `BugHuntTests.FeatureFlagRewriter_StrategyClasses_ApplyMethodShouldBePublic`
-- [ ] **Five tests assert on unformatted text.** The rewriter builds trivia-free
-      nodes by design and the tool formats the result, so `ToFullString()` is
-      `publicinterfaceITestStrategy{...}`. Decided: normalise in the tests, as
-      `BugHuntTests` already does, rather than change what the rewriter emits.
-      Tests: `AddsStrategyField`, `GeneratesStrategyInterface`,
-      `GeneratesEnabledStrategy`, `GeneratesDisabledStrategy`, `HandlesNoElseBranch`
-
 ## S6. RenameSymbol locals and parameters — `fix/rename-locals`
 
 - [ ] **Name-only rename cannot reach a local or a parameter.**
