@@ -96,6 +96,59 @@ class Service
     }
 
     [Fact]
+    public void FeatureFlagRewriter_SynthesisesConstructorWhenClassHasNoConstructor()
+    {
+        var code = @"
+class Service
+{
+    void DoWork()
+    {
+        if (flags.IsEnabled(""CoolFeature""))
+        {
+            Console.WriteLine(""Cool"");
+        }
+    }
+}";
+        var tree = CSharpSyntaxTree.ParseText(code);
+        var rewriter = new FeatureFlagRewriter("CoolFeature");
+        var result = rewriter.Visit(tree.GetRoot());
+
+        var resultText = result.NormalizeWhitespace().ToFullString();
+        Assert.Contains("private readonly ICoolFeatureStrategy _coolFeatureStrategy", resultText);
+        Assert.Contains("public Service(ICoolFeatureStrategy coolFeatureStrategy)", resultText);
+        Assert.Contains("_coolFeatureStrategy = coolFeatureStrategy;", resultText);
+    }
+
+    [Fact]
+    public void FeatureFlagRewriter_SynthesisesConstructorWhenClassHasOnlyStaticConstructor()
+    {
+        var code = @"
+class Service
+{
+    static Service()
+    {
+    }
+
+    void DoWork()
+    {
+        if (flags.IsEnabled(""CoolFeature""))
+        {
+            Console.WriteLine(""Cool"");
+        }
+    }
+}";
+        var tree = CSharpSyntaxTree.ParseText(code);
+        var rewriter = new FeatureFlagRewriter("CoolFeature");
+        var result = rewriter.Visit(tree.GetRoot());
+
+        var resultText = result.NormalizeWhitespace().ToFullString();
+        Assert.Contains("static Service()", resultText);
+        Assert.DoesNotContain("static Service(ICoolFeatureStrategy", resultText);
+        Assert.Contains("public Service(ICoolFeatureStrategy coolFeatureStrategy)", resultText);
+        Assert.Contains("_coolFeatureStrategy = coolFeatureStrategy;", resultText);
+    }
+
+    [Fact]
     public void FeatureFlagRewriter_GeneratesStrategyInterface()
     {
         var code = @"
