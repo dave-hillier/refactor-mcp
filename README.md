@@ -1,14 +1,52 @@
 # RefactorMCP
 
-RefactorMCP is a Model Context Protocol server that exposes Roslyn-based refactoring tools for C#.
+RefactorMCP exposes Roslyn-based refactoring tools for C# over three entry
+points: a command line interface, a resident daemon that keeps a solution
+loaded, and a Model Context Protocol server.
+
+All three dispatch through the same tool dispatcher and session, so a tool
+behaves the same however it is called.
 
 ## Usage
 
-Run the console application directly or host it as an MCP server:
-
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp
+# Run a refactoring. Tool commands go to the daemon for that solution, which is
+# started on demand, so only the first call pays the MSBuild load.
+dotnet run --project RefactorMCP.ConsoleApp -- extract-method \
+    --solution ./RefactorMCP.sln --file ./src/Foo.cs \
+    --selection-range 10:5-20:6 --method-name ComputeTotal
+
+# The same call with JSON parameters, for scripting.
+dotnet run --project RefactorMCP.ConsoleApp -- --json extract-method \
+    '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Foo.cs","selectionRange":"10:5-20:6","methodName":"ComputeTotal"}'
+
+# Discover the tools, and what each one takes.
+dotnet run --project RefactorMCP.ConsoleApp -- list-tools --verbose
+dotnet run --project RefactorMCP.ConsoleApp -- extract-method --help
+
+# Keep a solution loaded and serve calls from it.
+dotnet run --project RefactorMCP.ConsoleApp -- serve --solution ./RefactorMCP.sln
+dotnet run --project RefactorMCP.ConsoleApp -- status
+dotnet run --project RefactorMCP.ConsoleApp -- stop --all
+
+# Serve the tools over MCP on stdio.
+dotnet run --project RefactorMCP.ConsoleApp -- mcp
 ```
+
+Options are named after the tool's parameters (`--method-names` for
+`methodNames`), a trailing `Path` may be dropped (`--file` for `filePath`), and
+anything left over is positional in parameter order. `--no-daemon` runs a call
+in the calling process instead. The daemon stops after ten minutes without a
+request, or when asked to with `stop`.
+
+A daemon follows the files it has loaded, so edits made in an editor are picked
+up rather than refactored on top of stale text: an edited file is replaced in
+place, and a change to a project file reloads the solution before the next
+call.
+
+Once built, the executable can be called directly
+(`RefactorMCP.ConsoleApp/bin/Debug/net9.0/RefactorMCP.ConsoleApp`), which skips
+the build check `dotnet run` performs.
 
 For usage examples see [EXAMPLES.md](./EXAMPLES.md).
 
@@ -27,7 +65,6 @@ For usage examples see [EXAMPLES.md](./EXAMPLES.md).
 - **Transform Setter to Init** – convert property setters to init-only and initialize in constructors.
 - **Constructor Injection** – convert method parameters to constructor-injected fields or properties.
 - **Safe Delete** – remove fields or variables only after dependency checks.
-- **Extract Class** – create a new class from selected members and compose it with the original.
 - **Inline Method** – replace calls with the method body and delete the original.
 - **Extract Decorator** – create a decorator class that delegates to an existing method.
 - **Create Adapter** – generate an adapter class wrapping an existing method.

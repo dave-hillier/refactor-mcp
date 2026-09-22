@@ -83,6 +83,8 @@ public static class IntroduceVariableTool
 
     private static async Task<string> IntroduceVariableSingleFile(string filePath, string selectionRange, string variableName)
     {
+        filePath = RefactoringHelpers.ResolvePath(filePath)!;
+
         if (!File.Exists(filePath))
             throw new McpException($"Error: File {filePath} not found");
 

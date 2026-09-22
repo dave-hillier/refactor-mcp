@@ -1,27 +1,51 @@
 # RefactorMCP Examples
 
-This document provides comprehensive examples for all refactoring tools available in RefactorMCP. Each example shows the before/after code and the JSON command needed to perform the refactoring.
+This document provides comprehensive examples for all refactoring tools available in RefactorMCP. Each example shows the before/after code and the command needed to perform the refactoring.
 
 Using the MCP tools is the preferred method for refactoring large C# files where manual edits become cumbersome.
 
 ## Getting Started
 
+Tools are named in kebab-case and every tool takes the solution and the file it
+should work on:
+
+```bash
+refactor extract-method --solution ./RefactorMCP.sln --file ./src/Foo.cs \
+    --selection-range 10:5-20:6 --method-name ComputeTotal
+```
+
+Options are named after the tool's parameters, so `--selection-range` is
+`selectionRange`; a trailing `Path` may be dropped, so `--file` is `filePath`.
+Any argument without an option is taken positionally in parameter order, which
+is what the `--cli` form in the examples below uses:
+
+```bash
+refactor --cli extract-method ./RefactorMCP.sln ./src/Foo.cs 10:5-20:6 ComputeTotal
+```
+
+Every example also works with a JSON object, which is easier to generate from
+another program:
+
+```bash
+refactor --json extract-method \
+    '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Foo.cs","selectionRange":"10:5-20:6","methodName":"ComputeTotal"}'
+```
+
+Run `refactor list-tools --verbose` for the tool list, and
+`refactor <tool> --help` for one tool's options. Steps that need the same
+solution repeatedly are faster if a daemon holds it: see
+[README.md](./README.md).
+
+Most examples below show only the arguments that matter for the tool being
+demonstrated; fill in the rest the same way.
+
 ### Loading a Solution
-Before performing any refactoring, you need to load a solution. This also clears any cached data so each load starts a fresh session:
+A solution is loaded on demand by the first tool that needs it. Loading it
+explicitly starts a fresh session, which clears cached data and the record of
+moved methods:
 
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --json load-solution '{"solutionPath":"./RefactorMCP.sln"}'
-```
-
-### JSON Example
-```json
-{"tool":"load-solution","solutionPath":"./RefactorMCP.sln"}
-```
-
-### JSON Mode Usage
-All examples use JSON parameters:
-```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --json ToolName '{"param":"value"}'
+refactor load-solution --solution ./RefactorMCP.sln
 ```
 
 ## 1. Extract Method
@@ -405,6 +429,7 @@ public class Logger
 ```
 The original method in `Calculator` now delegates to the static `Logger.LogOperation` method, preserving existing call sites.
 If you run `move-instance-method` again on this wrapper, an error will be reported. Use `inline-method` to remove the wrapper if desired.
+When the target class lives in another file, pass `--target-file`; without it the method is added to the file it came from.
 When a moved method references private fields from its original class, those values are passed as additional parameters.
 
 ## 10. Make Static Then Move
@@ -537,14 +562,14 @@ Because an access field didn't exist, the refactoring introduced a private reado
 
 ## 11. Batch Move Methods
 
-**Purpose**: Move several methods at once using a JSON description. This supersedes the older move commands.
+**Purpose**: Move several methods at once. Use `move-multiple-methods-static` to convert
+them to static with a `this` parameter, or `move-multiple-methods-instance` to keep them
+as instance methods with the source instance injected through the constructor.
 
 ### Example
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --cli batch-move-methods \
-  "./RefactorMCP.sln" \
-  "./RefactorMCP.Tests/ExampleCode.cs" \
-  "[{\"SourceClass\":\"Helper\",\"Method\":\"A\",\"TargetClass\":\"Target\",\"AccessMember\":\"t\"}]"
+dotnet run --project RefactorMCP.ConsoleApp -- --json move-multiple-methods-static \
+  '{"solutionPath":"./RefactorMCP.sln","filePath":"./RefactorMCP.Tests/ExampleCode.cs","sourceClass":"Helper","methodNames":["A","B"],"targetClass":"Target"}'
 ```
 
 ## 12. Move Type to Separate File
@@ -694,6 +719,32 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli safe-delete-field \
 // Field 'deprecatedCounter' removed from Calculator class
 ```
 
+## 14. Safe Delete Method
+
+**Purpose**: Remove an unused method and update call sites.
+
+### Example
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli safe-delete-method \
+  "./RefactorMCP.sln" \
+  "./RefactorMCP.Tests/ExampleCode.cs" \
+  FormatUserLegacy
+```
+
+## 15. Safe Delete Variable
+
+**Purpose**: Remove a local variable using a line range.
+
+### Example
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --cli safe-delete-variable \
+  "./RefactorMCP.sln" \
+  "./RefactorMCP.Tests/ExampleCode.cs" \
+  "12:9-12:31"
+```
+
 ## 12. Cleanup Usings
 
 **Purpose**: Remove unused using directives from a file.
@@ -807,27 +858,8 @@ Running the command again with the correct `sourceClass` succeeds.
 dotnet run --project RefactorMCP.ConsoleApp -- --json ListTools '{}'
 ```
 
-**Output**:
-```
-Available refactoring tools:
-load-solution - Start a new session and load a solution file
-unload-solution - Remove a loaded solution from cache
-clear-solution-cache - Clear all cached solutions
-extract-method - Extract selected code into a new method
-introduce-field - Create a new field from selected code
-introduce-variable - Create a new variable from selected code
-make-field-readonly - Make a field readonly and move initialization to constructors
-introduce-parameter - Create a new parameter from selected code
-convert-to-static-with-parameters - Transform instance method to static
-convert-to-static-with-instance - Transform instance method to static with instance parameter
-move-static-method - Move a static method to another class
-move-instance-method - Move an instance method to another class
-move-multiple-methods-instance - Move several methods and keep them as instance methods
-move-multiple-methods-static - Move several methods and convert them to static with a `this` parameter
-transform-setter-to-init - Convert property setter to init-only setter
-safe-delete - Safely delete a field, parameter, or variable
-
-```
+**Output**: one kebab-case tool name per line, e.g. `add-observer`, `extract-method`,
+`load-solution`. `refactor list-tools` prints the same names with their descriptions.
 
 ## 12. Version Info (Utility Command)
 
@@ -851,7 +883,7 @@ Version: 1.0.0.0 (Build 2024-01-01 00:00:00Z)
 ### Example
 **Command**:
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --cli analyze-refactoring-opportunities "./RefactorMCP.Tests/ExampleCode.cs" "./RefactorMCP.sln"
+dotnet run --project RefactorMCP.ConsoleApp -- --cli analyze-refactoring-opportunities "./RefactorMCP.sln" "./RefactorMCP.Tests/ExampleCode.cs"
 ```
 
 **Expected Output**:
@@ -1130,10 +1162,10 @@ class C
 
 **Command**:
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --cli constructor-injection \
+dotnet run --project RefactorMCP.ConsoleApp -- --cli convert-to-constructor-injection \
   "./RefactorMCP.sln" \
   "./RefactorMCP.Tests/ExampleCode.cs" \
-  "Add:a;Multiply:b"
+  '[{"methodName":"Add","parameterName":"a"},{"methodName":"Multiply","parameterName":"b"}]'
 ```
 
 **After**:
@@ -1280,7 +1312,7 @@ You can perform multiple refactorings in sequence:
 dotnet run --project RefactorMCP.ConsoleApp -- --cli extract-method "./RefactorMCP.sln" "./MyFile.cs" "10:5-15:20" "ExtractedMethod"
 
 # Then, make a field readonly
-dotnet run --project RefactorMCP.ConsoleApp -- --cli make-field-readonly "./RefactorMCP.sln" "./MyFile.cs" 25
+dotnet run --project RefactorMCP.ConsoleApp -- --cli make-field-readonly "./RefactorMCP.sln" "./MyFile.cs" "_cachedTotal"
 
 # Finally, introduce a variable
 dotnet run --project RefactorMCP.ConsoleApp -- --cli introduce-variable "./RefactorMCP.sln" "./MyFile.cs" "30:10-30:35" "tempValue"
@@ -1354,16 +1386,15 @@ summary://RefactorMCP.Tests/ExampleCode.cs
 ```
 The returned text begins with `// summary://...` and shows each method body as `// ...`.
 
-## Playback Log
+## Tool Call Log
 
-After each tool invocation in JSON mode (after running `load-solution`), the parameters are appended to a session log such as `.refactor-mcp/tool-call-log-YYYYMMDDHHMMSS.jsonl`. Replay them with:
+Recording the calls made in a session is opt in, because a plain command line
+call should leave nothing behind. Set `REFACTOR_MCP_LOG=1` to append to
+`<solution directory>/.refactor-mcp/tool-call-log-<timestamp>-<pid>.jsonl`, or
+set `REFACTOR_MCP_LOG` to a file path to choose the file yourself:
 
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --cli play-log ./.refactor-mcp/tool-call-log-YYYYMMDDHHMMSS.jsonl
+REFACTOR_MCP_LOG=1 dotnet run --project RefactorMCP.ConsoleApp -- --json cleanup-usings '{"solutionPath":"./RefactorMCP.sln","filePath":"./RefactorMCP.Tests/ExampleCode.cs"}'
 ```
 
-### JSON Logging Example
-Invoking tools in JSON mode is also recorded once `load-solution` has been run:
-```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --json cleanup-usings '{"solutionPath":"./RefactorMCP.sln","documentPath":"./RefactorMCP.Tests/ExampleCode.cs"}'
-```
+With `REFACTOR_MCP_LOG` unset nothing is written.

@@ -86,6 +86,9 @@ public static class ExtractInterfaceTool
                 .WithMembers(SyntaxFactory.SingletonList(interfaceNode))
                 .NormalizeWhitespace();
 
+            filePath = RefactoringHelpers.ResolvePath(filePath)!;
+            interfaceFilePath = RefactoringHelpers.ResolvePath(interfaceFilePath)!;
+
             var encoding = await RefactoringHelpers.GetFileEncodingAsync(filePath, cancellationToken);
             await File.WriteAllTextAsync(interfaceFilePath, ifaceUnit.ToFullString(), encoding, cancellationToken);
 
