@@ -26,11 +26,11 @@ using System.Linq;
 
 public class Sample
 {
-    private int _avg = values.Sum();
+    private double _avg = values.Sum() / (double)values.Length;
 
     public double GetAverage(int[] values)
     {
-        return _avg / (double)values.Length;
+        return _avg;
     }
 }
 """;
@@ -42,7 +42,7 @@ public class Sample
         var result = await IntroduceFieldTool.IntroduceField(
             SolutionPath,
             testFile,
-            "6:16-6:57",
+            "7:16-7:52",  // values.Sum() / (double)values.Length
             "_avg");
 
         Assert.Contains("Successfully introduced", result);
@@ -74,7 +74,7 @@ public class Sample
             var result = await IntroduceFieldTool.IntroduceField(
                 SolutionPath,
                 file,
-                "6:16-6:57",
+                "7:16-7:52",
                 $"_{modifier}Field",
                 modifier);
 
