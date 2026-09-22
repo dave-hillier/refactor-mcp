@@ -30,19 +30,13 @@ is greener before the riskier changes land.
       path a semantic model; update `ExtractMethodToolTests`' expected output.
       Test: `ExampleVerificationTests.ExtractMethodExample_RefactoringWorks`
 
-## S8. Test-only staleness — `fix/test-ranges`
+### Still open in this area
 
-- [ ] **MakeFieldReadonly workflow: the range is one line out.**
-      `AnalyzeThenRefactorTests.cs` uses `"8:16-8:18"` for `30` on line 7 of its
-      fixture. Fix the range and the comment. Test:
-      `AnalyzeThenRefactorTests.Workflow_IntroduceFieldThenMakeReadonly`
-- [ ] **IntroduceVariable example: the range straddles a line into an object
-      initializer.** Use `"20:35-21:96"`, which is exactly the
-      `transactions.Where(...)` chain. Test:
-      `ExampleVerificationTests.IntroduceVariableExample_RefactoringWorks`
-- [ ] **`ValidateRange` never bounds columns against the line length**, which is
-      why the range above silently crossed a newline instead of failing. Reject
-      columns past the end of a line so such a range is reported, not guessed at.
+`ValidateRange` bounds the *end* column but not the start column, so a range that
+starts past the end of its line is still accepted and resolves into the next line.
+`ExtractMethodToolTests.ExtractMethod_CreatesNewMethod` ("6:9-9:10", starting at
+column 9 of a five-character line) depends on that, so fixing it means correcting
+that range too.
 
 ## Open pull requests
 
