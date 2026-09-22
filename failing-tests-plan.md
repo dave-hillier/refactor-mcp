@@ -39,16 +39,6 @@ is greener before the riskier changes land.
       Tests: `AddsStrategyField`, `GeneratesStrategyInterface`,
       `GeneratesEnabledStrategy`, `GeneratesDisabledStrategy`, `HandlesNoElseBranch`
 
-## S6. RenameSymbol locals and parameters — `fix/rename-locals`
-
-- [ ] **Name-only rename cannot reach a local or a parameter.**
-      `RenameSymbolTool.cs:84` asks `FindDeclarationsAsync`, which returns
-      declarations of types and members only. Fix: fall back to a document-scoped
-      syntax search resolved through the semantic model, renaming when exactly
-      one match and otherwise asking for line/column. Tests:
-      `RenameSymbolToolTests.RenameSymbol_LocalVariable_RenamesVariableAndUsages`,
-      `..._Parameter_...`
-
 ## S7. ExtractMethod parameter and return inference — `fix/extract-method-inference`
 
 - [ ] **The extracted method takes no parameters and returns void.**
