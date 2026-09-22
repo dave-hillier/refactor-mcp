@@ -1,3 +1,4 @@
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Xunit;
 
@@ -60,7 +61,7 @@ class Service
         var rewriter = new FeatureFlagRewriter("CoolFeature");
         var result = rewriter.Visit(tree.GetRoot());
 
-        var resultText = result.ToFullString();
+        var resultText = result.NormalizeWhitespace().ToFullString();
         Assert.Contains("private readonly ICoolFeatureStrategy _coolFeatureStrategy", resultText);
     }
 
@@ -89,7 +90,7 @@ class Service
         var rewriter = new FeatureFlagRewriter("MyFeature");
         var result = rewriter.Visit(tree.GetRoot());
 
-        var resultText = result.ToFullString();
+        var resultText = result.NormalizeWhitespace().ToFullString();
         Assert.Contains("IMyFeatureStrategy myFeatureStrategy", resultText);
         Assert.Contains("_myFeatureStrategy = myFeatureStrategy", resultText);
     }
@@ -115,7 +116,7 @@ class Service
         var generated = rewriter.GeneratedMembers;
         Assert.NotEmpty(generated);
 
-        var generatedText = string.Join("\n", generated.Select(m => m.ToFullString()));
+        var generatedText = string.Join("\n", generated.Select(m => m.NormalizeWhitespace().ToFullString()));
         Assert.Contains("interface ITestStrategy", generatedText);
         Assert.Contains("void Apply()", generatedText);
     }
@@ -139,7 +140,7 @@ class Service
         rewriter.Visit(tree.GetRoot());
 
         var generated = rewriter.GeneratedMembers;
-        var generatedText = string.Join("\n", generated.Select(m => m.ToFullString()));
+        var generatedText = string.Join("\n", generated.Select(m => m.NormalizeWhitespace().ToFullString()));
 
         Assert.Contains("class FeatureStrategy", generatedText);
         Assert.Contains("IFeatureStrategy", generatedText);
@@ -169,7 +170,7 @@ class Service
         rewriter.Visit(tree.GetRoot());
 
         var generated = rewriter.GeneratedMembers;
-        var generatedText = string.Join("\n", generated.Select(m => m.ToFullString()));
+        var generatedText = string.Join("\n", generated.Select(m => m.NormalizeWhitespace().ToFullString()));
 
         Assert.Contains("class NoFeatureStrategy", generatedText);
         Assert.Contains("Console.WriteLine(\"Disabled\")", generatedText);
@@ -194,7 +195,7 @@ class Service
         rewriter.Visit(tree.GetRoot());
 
         var generated = rewriter.GeneratedMembers;
-        var generatedText = string.Join("\n", generated.Select(m => m.ToFullString()));
+        var generatedText = string.Join("\n", generated.Select(m => m.NormalizeWhitespace().ToFullString()));
 
         // NoFeatureStrategy should have empty body
         Assert.Contains("class NoFeatureStrategy", generatedText);
@@ -271,7 +272,7 @@ class Service
         rewriter.Visit(tree.GetRoot());
 
         var generated = rewriter.GeneratedMembers;
-        var generatedText = string.Join("\n", generated.Select(m => m.ToFullString()));
+        var generatedText = string.Join("\n", generated.Select(m => m.NormalizeWhitespace().ToFullString()));
 
         // Should wrap in block
         Assert.Contains("DoSomething()", generatedText);
