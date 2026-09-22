@@ -16,13 +16,19 @@ internal class ReadonlyFieldRewriter : CSharpSyntaxRewriter
         _initializer = initializer;
     }
 
+    /// <summary>
+    /// Takes the initializer off a field being made readonly, and assigns it in
+    /// each constructor instead. When no initializer is given there is nowhere
+    /// for the value to go, so it stays on the field: making the field readonly
+    /// must not drop what it was initialised to.
+    /// </summary>
     public override SyntaxNode? VisitFieldDeclaration(FieldDeclarationSyntax node)
     {
         var variable = node.Declaration.Variables.FirstOrDefault(v => v.Identifier.ValueText == _fieldName);
         if (variable == null)
             return base.VisitFieldDeclaration(node);
 
-        var newVariable = variable.WithInitializer(null);
+        var newVariable = _initializer == null ? variable : variable.WithInitializer(null);
         var newDecl = node.Declaration.ReplaceNode(variable, newVariable);
         var modifiers = node.Modifiers;
         if (!modifiers.Any(m => m.IsKind(SyntaxKind.ReadOnlyKeyword)))

@@ -44,7 +44,7 @@ public static class MakeFieldReadonlyTool
             throw new McpException($"Error: No field named '{fieldName}' found");
 
         var variable = fieldDeclaration.Declaration.Variables.First(v => v.Identifier.ValueText == fieldName);
-        var initializer = variable.Initializer?.Value;
+        var initializer = InitializerToRelocate(fieldDeclaration, variable);
 
         var rewriter = new ReadonlyFieldRewriter(fieldName, initializer);
         var newRoot = rewriter.Visit(syntaxRoot);
@@ -79,7 +79,7 @@ public static class MakeFieldReadonlyTool
             throw new McpException($"Error: No field named '{fieldName}' found");
 
         var variable = fieldDeclaration.Declaration.Variables.First(v => v.Identifier.ValueText == fieldName);
-        var initializer = variable.Initializer?.Value;
+        var initializer = InitializerToRelocate(fieldDeclaration, variable);
 
         var rewriter = new ReadonlyFieldRewriter(fieldName, initializer);
         var newRoot = rewriter.Visit(syntaxRoot);
@@ -88,4 +88,18 @@ public static class MakeFieldReadonlyTool
         return formattedRoot.ToFullString();
     }
 
+    /// <summary>
+    /// The initializer to move into a constructor, or null to leave it where it
+    /// is. A class with no constructor has nowhere to move it to, and a readonly
+    /// field that loses its value is worse than one that keeps it.
+    /// </summary>
+    private static ExpressionSyntax? InitializerToRelocate(FieldDeclarationSyntax field, VariableDeclaratorSyntax variable)
+    {
+        var containingType = field.Ancestors().OfType<TypeDeclarationSyntax>().FirstOrDefault();
+        var hasInstanceConstructor = containingType?.Members
+            .OfType<ConstructorDeclarationSyntax>()
+            .Any(constructor => !constructor.Modifiers.Any(SyntaxKind.StaticKeyword)) == true;
+
+        return hasInstanceConstructor ? variable.Initializer?.Value : null;
+    }
 }
