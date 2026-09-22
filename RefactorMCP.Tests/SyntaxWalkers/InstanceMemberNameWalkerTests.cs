@@ -148,9 +148,32 @@ class C
     }
 
     [Fact]
-    public void InstanceMemberNameWalker_IncludesStaticFields()
+    public void InstanceMemberNameWalker_ExcludesStaticMembers()
     {
-        // Note: This walker collects ALL fields, including static
+        // A static field or property has no instance, so qualifying one with
+        // @this would not compile.
+        var code = @"
+class C
+{
+    private static int staticField;
+    private const int constField = 1;
+    private static int StaticProperty { get; set; }
+    private int instanceField;
+    private int InstanceProperty { get; set; }
+}";
+        var tree = CSharpSyntaxTree.ParseText(code);
+        var walker = new InstanceMemberNameWalker();
+        walker.Visit(tree.GetRoot());
+
+        Assert.Equal(2, walker.Names.Count);
+        Assert.Contains("instanceField", walker.Names);
+        Assert.Contains("InstanceProperty", walker.Names);
+    }
+
+    [Fact]
+    public void InstanceMemberNameWalker_CanIncludeStaticMembers()
+    {
+        // The generated access member has to avoid colliding with any member.
         var code = @"
 class C
 {
@@ -158,7 +181,7 @@ class C
     private int instanceField;
 }";
         var tree = CSharpSyntaxTree.ParseText(code);
-        var walker = new InstanceMemberNameWalker();
+        var walker = new InstanceMemberNameWalker(includeStaticMembers: true);
         walker.Visit(tree.GetRoot());
 
         Assert.Equal(2, walker.Names.Count);

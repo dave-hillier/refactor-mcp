@@ -252,7 +252,9 @@ public static partial class MoveMethodAst
 
     private static bool MemberExists(ClassDeclarationSyntax classDecl, string memberName)
     {
-        var walker = new InstanceMemberNameWalker();
+        // A generated access member is declared next to the class's other
+        // members, so a static one blocks the name just as an instance one does.
+        var walker = new InstanceMemberNameWalker(includeStaticMembers: true);
         walker.Visit(classDecl);
         return walker.Names.Contains(memberName);
     }
