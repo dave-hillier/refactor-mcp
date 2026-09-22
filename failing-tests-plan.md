@@ -19,19 +19,6 @@ surface); that work is complete.
 Ordering is mechanical first, then the ones that change behaviour, so the suite
 is greener before the riskier changes land.
 
-## S4. Setter and field rewrites — `fix/setter-readonly`
-
-- [ ] **SetterToInitRewriter drops the setter's modifiers, attributes and body.**
-      `SetterToInitRewriter.cs:25-26` builds the init accessor from scratch.
-      Tests: `BugHuntTests.SetterToInitRewriter_PrivateSetter_ShouldPreserveAccessModifier`,
-      `..._ProtectedSetter_...`
-- [ ] **ReadonlyFieldRewriter drops the initializer when there is no
-      constructor.** `ReadonlyFieldRewriter.cs:22` strips it, and the constructor
-      visitor never puts it back, so `private int _x = 30;` becomes
-      `private readonly int _x;` (value lost) while the tool reports success.
-      Reached by the workflow in S8; tighten that test to assert the value
-      survives.
-
 ## S5. FeatureFlagRewriter — `fix/feature-flag`
 
 - [ ] **Constructor injection depends on declaration order.**

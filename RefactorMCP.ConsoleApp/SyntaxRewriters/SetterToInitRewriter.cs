@@ -22,8 +22,21 @@ internal class SetterToInitRewriter : CSharpSyntaxRewriter
         if (setter == null)
             return base.VisitPropertyDeclaration(node);
 
+        // Everything the setter carried comes along: an access modifier such as
+        // `private set;` or `protected set;` is part of the property's contract,
+        // and an attribute or a body belongs to the accessor being converted.
+        //
+        // The kind has to be set through AccessorDeclaration(kind) rather than by
+        // swapping the keyword on the setter, which would leave a set-accessor
+        // node that happens to print `init`.
         var initAccessor = SyntaxFactory.AccessorDeclaration(SyntaxKind.InitAccessorDeclaration)
+            .WithAttributeLists(setter.AttributeLists)
+            .WithModifiers(setter.Modifiers)
+            .WithKeyword(SyntaxFactory.Token(setter.Keyword.LeadingTrivia, SyntaxKind.InitKeyword, setter.Keyword.TrailingTrivia))
+            .WithBody(setter.Body)
+            .WithExpressionBody(setter.ExpressionBody)
             .WithSemicolonToken(setter.SemicolonToken);
+
         var newAccessorList = node.AccessorList!.ReplaceNode(setter, initAccessor);
         return node.WithAccessorList(newAccessorList);
     }
