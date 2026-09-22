@@ -57,7 +57,7 @@ public class Sample
         var result = await ExtractMethodTool.ExtractMethod(
             SolutionPath,
             testFile,
-            "6:9-9:10",
+            "7:9-10:10",   // the if statement, from `if` to one past its closing brace
             "ValidateInputs");
 
         Assert.Contains("Successfully extracted method", result);

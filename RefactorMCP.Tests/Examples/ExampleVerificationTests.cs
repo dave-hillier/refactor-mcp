@@ -50,7 +50,7 @@ public class ExampleVerificationTests : TestBase
         var result = await ExtractMethodTool.ExtractMethod(
             SolutionPath,
             testFile,
-            "26:9-49:10",  // The validation block
+            "27:9-53:10",  // The validation block between the EXTRACT markers
             "ValidateOrderAsync");
 
         Assert.Contains("Successfully extracted method", result);

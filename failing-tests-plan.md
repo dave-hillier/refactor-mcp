@@ -1,42 +1,64 @@
-# Plan: fixing the failing tests
+# The failing tests: what was wrong and what was done
 
-The suite is 422 tests with 31 failures. None of them were caused by the CLI and
-daemon work; they are pre-existing, and most are real defects in the refactoring
-tools rather than bad expectations. `BUG-REPORT.md` describes many of them, but
-it is neither complete nor always right — the notes below were checked against
-the code as it stands.
+The suite went from 422 tests with 31 failures to 433 with none. None of the 31
+were caused by the CLI and daemon work; they were pre-existing, and most were
+real defects in the refactoring tools rather than bad expectations.
+`BUG-REPORT.md` described many of them, but it was neither complete nor always
+right — every note here was checked against the code.
 
-This file is a worklist: delete an item when it lands, and delete a stream when
-it is empty.
+Each stream was done in its own worktree and branch (`fix/<stream>`) and merged
+back, so a stream's diff can still be read on its own with
+`git log --oneline fix/<stream>`.
 
-## How the work is organised
+Nothing here changed the plan in `plan.md` (the CLI, daemon and MCP surface).
 
-Streams group by the files they touch, so each one can be done in its own
-worktree and branch (`fix/<stream>`) and merged back without fighting over the
-same file. Nothing here changes the plan in `plan.md` (the CLI, daemon and MCP
-surface); that work is complete.
+## What was fixed
 
-Ordering is mechanical first, then the ones that change behaviour, so the suite
-is greener before the riskier changes land.
+- **SafeDelete** refused nothing when a symbol was referenced exactly once: the
+  declaration is not among `SymbolFinder`'s locations, so subtracting one
+  under-counted by one, and the single-file paths compared against one rather
+  than zero. `this.Helper()` was not counted at all.
+- **Member walkers** — `UnusedMembersWalker` scored a field's declaration as a
+  reference in reverse and ignored `this.Helper()`; `MethodAnalysisWalker` could
+  not see `this._field`; `InstanceMemberNameWalker` reported static and const
+  members as instance ones; `PrivateFieldInfoWalker` missed implicitly private
+  fields.
+- **Expression bodies** — `BodyOmitter` crashed the `summary://` resource on any
+  file containing `=>` (and the doc described output it never produced);
+  `InlineInvocationRewriter` crashed on an expression-bodied target;
+  `ExtractInterface` replaced the class's whole base list (data loss) and emitted
+  an invalid accessor for an expression-bodied property.
+- **Setter and field rewrites** — `SetterToInitRewriter` dropped an access
+  modifier such as `private set;`; `ReadonlyFieldRewriter` dropped a field's
+  initializer when the class had no constructor.
+- **FeatureFlagRewriter** — the strategy classes did not implement the interface
+  (`Apply` was private), and injection only happened when the flag check preceded
+  the constructor. Five tests asserted on unformatted rewriter output.
+- **RenameSymbol** could not reach a local or a parameter by name; it now does,
+  and asks for line and column when the name is ambiguous.
+- **ExtractMethod** produced a method with no parameters that always returned
+  void, so the documented example could not compile; it also dropped every
+  extracted statement but the first. It now infers parameters and the return.
+- **Selection ranges** that ran past the end of their line were accepted and
+  resolved into the next line. Both ends are now bounded, and the tests that
+  leaned on the old behaviour have honest ranges.
+- **CleanupUsings** applied project-wide diagnostics to one document's tree
+  (PR #304, cherry-picked with the contributor's authorship).
 
-## S7. ExtractMethod parameter and return inference — `fix/extract-method-inference`
+## Open decisions
 
-- [ ] **The extracted method takes no parameters and returns void.**
-      `ExtractMethodRewriter.cs:28-32` hardcodes `private void <name>()`, so the
-      extracted body references identifiers that no longer exist. The documented
-      example (`Examples/MethodTransformation/ExtractMethod.md`) promises
-      `private async Task<OrderResult?> ValidateOrderAsync(Order order)`. Fix:
-      infer parameters and a return type, which also means giving the single-file
-      path a semantic model; update `ExtractMethodToolTests`' expected output.
-      Test: `ExampleVerificationTests.ExtractMethodExample_RefactoringWorks`
+Two defects were found by the agents that fixed the above, and neither is worth
+guessing at:
 
-### Still open in this area
-
-`ValidateRange` bounds the *end* column but not the start column, so a range that
-starts past the end of its line is still accepted and resolves into the next line.
-`ExtractMethodToolTests.ExtractMethod_CreatesNewMethod` ("6:9-9:10", starting at
-column 9 of a five-character line) depends on that, so fixing it means correcting
-that range too.
+1. **ExtractMethod, local escaping the block.** A local declared inside the
+   extracted block and used *after* the call site now yields code that does not
+   compile. The old removal bug hid this by leaving the statements behind. The
+   choices are to refuse the extraction with an explanation, or to return the
+   local from the new method as well.
+2. **FeatureFlagRewriter, no constructor to inject into.** When the class holding
+   the flag check has no constructor at all, the generated strategy field is
+   never assigned (a warning, then null at runtime). The choices are to synthesise
+   a constructor or a default initialiser.
 
 ## Open pull requests
 

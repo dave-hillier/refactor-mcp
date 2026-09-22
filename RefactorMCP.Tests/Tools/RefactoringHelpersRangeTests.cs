@@ -76,4 +76,18 @@ public class RefactoringHelpersRangeTests
         Assert.True(valid);
         Assert.Equal(string.Empty, error);
     }
+
+    /// <summary>
+    /// A start column past its line resolves into the next line, which is how a
+    /// selection can silently mean something other than what was asked for.
+    /// </summary>
+    [Fact]
+    public void ValidateRange_StartColumnPastEndOfLine_ReturnsError()
+    {
+        var text = SourceText.From("one\ntwo\nthree");
+        var valid = RefactoringHelpers.ValidateRange(text, 1, 8, 3, 2, out var error);
+
+        Assert.False(valid);
+        Assert.Equal("Error: Range exceeds line length", error);
+    }
 }

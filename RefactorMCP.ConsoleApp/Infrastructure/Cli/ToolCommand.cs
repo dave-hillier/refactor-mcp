@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Sockets;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -191,9 +192,30 @@ internal static class ToolCommand
                     Params = new Dictionary<string, JsonElement>(arguments, StringComparer.OrdinalIgnoreCase)
                 };
 
-                var response = DaemonClient.TrySend(endpoint, request);
+                DaemonResponse? response;
+                try
+                {
+                    response = DaemonClient.TrySend(endpoint, request);
+                }
+                catch (Exception ex) when (ex is IOException or JsonException or SocketException)
+                {
+                    // The request was sent, so the daemon may have run the tool
+                    // before the exchange broke. Running it again here would
+                    // apply the refactoring twice.
+                    Console.Error.WriteLine(
+                        $"Error: the daemon for {solutionPath} did not answer ({ex.Message}).");
+                    Console.Error.WriteLine(
+                        "       The tool may or may not have run; check the files before retrying.");
+                    return 1;
+                }
+
                 if (response is not null)
                     return Report(response);
+
+                // Null means nothing was listening, so nothing was run: the call
+                // can safely be made here instead.
+                Console.Error.WriteLine(
+                    $"Warning: the daemon for {solutionPath} stopped; running the tool in this process.");
             }
             else
             {

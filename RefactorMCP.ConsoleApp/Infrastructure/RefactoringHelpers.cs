@@ -170,7 +170,14 @@ internal static class RefactoringHelpers
         }
         // The end offset is exclusive, so a column one past the last character of
         // its line is how a selection running to the end of a line is written.
-        // Anything further has crossed the newline into the next line.
+        // Anything further has crossed the newline into the next line, at either
+        // end of the range: a start column past its line resolves into the next
+        // line just as silently.
+        if (startColumn > text.Lines[startLine - 1].Span.Length + 1)
+        {
+            error = "Error: Range exceeds line length";
+            return false;
+        }
         if (endColumn > text.Lines[endLine - 1].Span.Length + 1)
         {
             error = "Error: Range exceeds line length";
