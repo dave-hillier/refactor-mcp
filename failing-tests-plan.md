@@ -19,35 +19,6 @@ surface); that work is complete.
 Ordering is mechanical first, then the ones that change behaviour, so the suite
 is greener before the riskier changes land.
 
-## S2. Member walkers — `fix/member-walkers`
-
-- [ ] **UnusedMembersWalker flags a field used once.** `:115` uses `count <= 1`
-      where the method check above it uses `== 0`. Tests:
-      `BugHuntTests.UnusedMembersWalker_FieldUsedOnce_ShouldNotBeFlaggedAsUnused`,
-      `UnusedMembersWalkerTests.UnusedMembersWalker_DoesNotFlagUsedField`,
-      `RefactoringOpportunityWalkerTests.RefactoringOpportunityWalker_NoSuggestionsForCleanCode`
-- [ ] **UnusedMembersWalker misses `this.Helper()`.** `:36-44` counts bare
-      invocations only. Test:
-      `BugHuntTests.UnusedMembersWalker_MethodCalledViaThis_ShouldNotBeFlaggedAsUnused`
-- [ ] **MethodAnalysisWalker misses `this._field`.** `:29-34` compares the
-      member access's `Expression` with the identifier, which is `this`, not the
-      name. Moved methods that use `this.` currently emit non-compiling code.
-      Tests: `MethodAnalysisWalker_ThisDotField_ShouldDetectInstanceMemberUsage`,
-      `..._ThisDotFieldRead_...`
-- [ ] **InstanceMemberNameWalker collects statics (and consts).** `:8-19` adds
-      every member, so a moved method can emit `@this.StaticMember` (CS0176). The
-      generated-access-member collision guard has to keep seeing static names, so
-      feed `MemberExists` instance plus static names. The existing test
-      `InstanceMemberNameWalker_IncludesStaticFields` asserts today's behaviour
-      and must be inverted. Tests:
-      `BugHuntTests.InstanceMemberNameWalker_ShouldExcludeStaticFields` and
-      `..._ShouldExcludeStaticProperties`
-- [ ] **PrivateFieldInfoWalker misses implicitly private fields.** `:14` looks
-      for the `private` keyword; a field with no modifier is private too, and
-      today it is not captured as a moved method's parameter. The existing test
-      `PrivateFieldInfoWalkerTests.cs:12-20` asserts the old behaviour. Test:
-      `BugHuntTests.PrivateFieldInfoWalker_ImplicitlyPrivateField_ShouldBeDetected`
-
 ## S3. Expression bodies and structural rewrites — `fix/expression-bodies`
 
 - [ ] **BodyOmitter crashes on expression-bodied members.** `BodyOmitter.cs:12-15`
