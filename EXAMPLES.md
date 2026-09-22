@@ -76,7 +76,7 @@ public int Calculate(int a, int b)
 dotnet run --project RefactorMCP.ConsoleApp -- --cli extract-method \
   "./RefactorMCP.sln" \
   "./RefactorMCP.Tests/ExampleCode.cs" \
-  "22:9-25:34" \
+  "22:9-25:13" \
   "ValidateInputs"
 ```
 
@@ -86,7 +86,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli extract-method \
   "tool": "extract-method",
   "solutionPath": "./RefactorMCP.sln",
   "filePath": "./RefactorMCP.Tests/ExampleCode.cs",
-  "selectionRange": "22:9-25:34",
+  "selectionRange": "22:9-25:13",
   "methodName": "ValidateInputs"
 }
 ```
@@ -95,15 +95,14 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli extract-method \
 ```csharp
 public int Calculate(int a, int b)
 {
-    ValidateInputs();
-    
+    ValidateInputs(a, b);
     var result = a + b;
     numbers.Add(result);
     Console.WriteLine($"Result: {result}");
     return result;
 }
 
-private void ValidateInputs()
+private void ValidateInputs(int a, int b)
 {
     if (a < 0 || b < 0)
     {

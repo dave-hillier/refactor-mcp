@@ -35,12 +35,12 @@ public class Sample
 {
     public int Calc(int a, int b)
     {
-        ValidateInputs();
+        ValidateInputs(a, b);
         var result = a + b;
         return result;
     }
 
-    private void ValidateInputs()
+    private void ValidateInputs(int a, int b)
     {
         if (a < 0 || b < 0)
         {
@@ -63,6 +63,49 @@ public class Sample
         Assert.Contains("Successfully extracted method", result);
         var fileContent = await File.ReadAllTextAsync(testFile);
         Assert.Equal(expectedCode, fileContent.Replace("\r\n", "\n"));
+    }
+
+    [Fact]
+    public async Task ExtractMethod_CapturesLocalsAndReturnsValue()
+    {
+        const string initialCode = """
+using System;
+
+public class Sample
+{
+    public int Calc(int a, int b)
+    {
+        int limit = 10;
+        if (a > limit)
+        {
+            return a + b;
+        }
+        return 0;
+    }
+}
+""";
+
+        await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
+        var testFile = Path.Combine(TestOutputPath, "ExtractMethodWithValue.cs");
+        await TestUtilities.CreateTestFile(testFile, initialCode);
+
+        var result = await ExtractMethodTool.ExtractMethod(
+            SolutionPath,
+            testFile,
+            "8:9-11:10",
+            "ExplainPositive");
+
+        Assert.Contains("Successfully extracted method", result);
+        var fileContent = await File.ReadAllTextAsync(testFile);
+
+        // The local and the parameters the statements read are passed in.
+        Assert.Contains("private int? ExplainPositive(int a, int limit, int b)", fileContent);
+        // The statements can fall out of the bottom without returning, so the caller
+        // only returns the result when the extracted method came back with one.
+        Assert.Contains("var explainPositiveResult = ExplainPositive(a, limit, b);", fileContent);
+        Assert.Contains("if (explainPositiveResult != null)", fileContent);
+        Assert.Contains("return explainPositiveResult.Value;", fileContent);
+        Assert.Contains("return 0;", fileContent);
     }
 
     [Fact]
