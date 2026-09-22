@@ -20,6 +20,8 @@ public static class MoveTypeToFileTool
     {
         try
         {
+            filePath = RefactoringHelpers.ResolvePath(filePath)!;
+
             var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath, cancellationToken);
             var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
 

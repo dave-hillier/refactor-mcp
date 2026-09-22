@@ -43,10 +43,15 @@
       "type": "object",
       "title": "Refactor MCP",
       "properties": {
+        "refactorMcp.executablePath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to the built RefactorMCP.ConsoleApp executable. Defaults to the Debug build in the workspace."
+        },
         "refactorMcp.dotnetPath": {
           "type": "string",
           "default": "dotnet",
-          "description": "Path to the dotnet executable used to run RefactorMCP"
+          "description": "Path to the dotnet executable, used when only the RefactorMCP.ConsoleApp dll is available"
         }
       }
     }

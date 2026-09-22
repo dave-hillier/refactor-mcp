@@ -12,8 +12,10 @@ using Xunit;
 namespace RefactorMCP.Tests;
 
 /// <summary>
-/// Failing tests that expose bugs found during code review.
-/// Each test documents a specific bug hypothesis and provides a minimal reproduction.
+/// Regression tests for the defects found in the review recorded in
+/// BUG-REPORT.md. Each test pins one defect with a minimal reproduction, and the
+/// numbered comments name it as it was when the test was written; the tests
+/// themselves are what has to keep passing.
 /// </summary>
 public class BugHuntTests
 {

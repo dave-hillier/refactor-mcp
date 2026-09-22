@@ -27,6 +27,9 @@ public static class MoveMethodFileService
         IProgress<string>? progress = null,
         CancellationToken cancellationToken = default)
     {
+        filePath = RefactoringHelpers.ResolvePath(filePath)!;
+        targetFilePath = RefactoringHelpers.ResolvePath(targetFilePath);
+
         MoveMethodTool.EnsureNotAlreadyMoved(filePath, methodName);
         ValidateFileExists(filePath);
 
@@ -109,6 +112,9 @@ public static class MoveMethodFileService
         IProgress<string>? progress = null,
         CancellationToken cancellationToken = default)
     {
+        filePath = RefactoringHelpers.ResolvePath(filePath)!;
+        targetFilePath = RefactoringHelpers.ResolvePath(targetFilePath);
+
         MoveMethodTool.EnsureNotAlreadyMoved(filePath, methodName);
         ValidateFileExists(filePath);
 

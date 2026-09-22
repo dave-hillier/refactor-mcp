@@ -7,34 +7,16 @@ This extension exposes [RefactorMCP](../README.md) tools to Visual Studio Code.
 - **Extract Method** – Right click a selection and run `RefactorMCP: Extract Method` to refactor the selected code using the `ExtractMethod` tool.
 - **Run Tool** – Command palette entry `RefactorMCP: Run Tool` lists all available refactoring tools and executes them with JSON parameters.
 
-### Available Tools
-
-Output of `ListTools`:
-
-```
-cleanup-usings
-clear-solution-cache
-convert-to-extension-method
-convert-to-static-with-instance
-convert-to-static-with-parameters
-inline-method
-introduce-parameter
-load-solution
-move-instance-method
-move-multiple-methods
-move-static-method
-safe-delete-field
-safe-delete-method
-safe-delete-parameter
-safe-delete-variable
-transform-setter-to-init
-unload-solution
-version
-```
-
 ## Requirements
 
-The extension requires that you open a workspace containing the `RefactorMCP.ConsoleApp` project. `dotnet` must also be available on your PATH. Use the setting `refactorMcp.dotnetPath` to override the path if necessary.
+The extension runs the `RefactorMCP.ConsoleApp` command line, so build it first
+with `dotnet build` in the workspace. It looks for the Debug build under
+`RefactorMCP.ConsoleApp/bin/Debug/net9.0`, and falls back to running
+`RefactorMCP.ConsoleApp.dll` with `dotnet` when only the dll is there. Use the
+settings `refactorMcp.executablePath` and `refactorMcp.dotnetPath` to point at
+another build.
+
+Run `RefactorMCP: Run Tool` and pick `list-tools` to see what the build offers.
 
 ## Development
 

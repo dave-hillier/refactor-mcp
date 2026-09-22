@@ -50,6 +50,8 @@ public static class ConstructorInjectionTool
 
     private static async Task<string> ConvertSingleFile(string filePath, MethodParameterPair[] methodParameters, bool useProperty)
     {
+        filePath = RefactoringHelpers.ResolvePath(filePath)!;
+
         if (!File.Exists(filePath))
             throw new McpException($"Error: File {filePath} not found");
         var (sourceText, encoding) = await RefactoringHelpers.ReadFileWithEncodingAsync(filePath);

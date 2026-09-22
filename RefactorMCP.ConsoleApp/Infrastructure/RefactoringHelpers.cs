@@ -18,17 +18,16 @@ using System.Collections.Generic;
 
 internal static class RefactoringHelpers
 {
-    // MemoryCache is thread-safe and Solution objects from Roslyn are immutable.
-    // This allows us to store and access Solution instances across threads
-    // without additional locking or synchronization.
-    internal static MemoryCache SolutionCache = new(new MemoryCacheOptions());
+    // Syntax trees and semantic models are keyed by absolute file path, so a
+    // single process wide cache serves every session. Solutions themselves are
+    // owned by the SolutionSession that loaded them.
     internal static MemoryCache SyntaxTreeCache = new(new MemoryCacheOptions());
     internal static MemoryCache ModelCache = new(new MemoryCacheOptions());
 
     internal static void ClearAllCaches()
     {
-        SolutionCache.Dispose();
-        SolutionCache = new MemoryCache(new MemoryCacheOptions());
+        SessionRegistry.Clear();
+
         SyntaxTreeCache.Dispose();
         SyntaxTreeCache = new MemoryCache(new MemoryCacheOptions());
         ModelCache.Dispose();
@@ -43,7 +42,12 @@ internal static class RefactoringHelpers
 
     internal static AdhocWorkspace SharedWorkspace => _workspace.Value;
 
-    private static void EnsureMsBuildRegistered()
+    /// <summary>
+    /// Registers the MSBuild assemblies. Called once at process start, because
+    /// MSBuildLocator must run before anything loads a Microsoft.Build type,
+    /// and called again lazily for hosts that do not go through Program.
+    /// </summary>
+    internal static void EnsureMsBuildRegistered()
     {
         if (_msbuildRegistered) return;
         lock (_msbuildLock)
@@ -68,17 +72,21 @@ internal static class RefactoringHelpers
         string solutionPath,
         CancellationToken cancellationToken = default)
     {
+        var session = SessionRegistry.GetOrCreate(solutionPath);
+        return await session.GetOrLoadAsync(progress: null, cancellationToken);
+    }
 
-        if (SolutionCache.TryGetValue(solutionPath, out Solution? cachedSolution))
-        {
-            Directory.SetCurrentDirectory(Path.GetDirectoryName(solutionPath)!);
-            return cachedSolution!;
-        }
-        using var workspace = CreateWorkspace();
-        var solution = await workspace.OpenSolutionAsync(solutionPath, progress: null, cancellationToken);
-        SolutionCache.Set(solutionPath, solution);
-        Directory.SetCurrentDirectory(Path.GetDirectoryName(solutionPath)!);
-        return solution;
+    /// <summary>
+    /// Resolves a file path against the loaded session's solution directory.
+    /// Absolute paths pass through unchanged, and callers that have loaded no
+    /// solution keep the process's current directory behaviour.
+    /// </summary>
+    internal static string? ResolvePath(string? filePath)
+    {
+        if (string.IsNullOrWhiteSpace(filePath))
+            return filePath;
+
+        return SessionRegistry.Current?.ResolvePath(filePath) ?? Path.GetFullPath(filePath);
     }
 
     // Solutions are immutable, so replacing the cached instance is safe even
@@ -88,7 +96,7 @@ internal static class RefactoringHelpers
         var solutionPath = updatedDocument.Project.Solution.FilePath;
         if (!string.IsNullOrEmpty(solutionPath))
         {
-            SolutionCache.Set(solutionPath!, updatedDocument.Project.Solution);
+            SessionRegistry.GetOrCreate(solutionPath!).Replace(updatedDocument.Project.Solution);
             if (!string.IsNullOrEmpty(updatedDocument.FilePath))
             {
                 _ = MetricsProvider.RefreshFileMetrics(solutionPath!, updatedDocument.FilePath!);
@@ -96,12 +104,30 @@ internal static class RefactoringHelpers
         }
     }
 
+    /// <summary>
+    /// Finds a document in a solution. Relative paths are resolved against the
+    /// solution's own directory, not the process's current directory.
+    /// </summary>
     internal static Document? GetDocumentByPath(Solution solution, string filePath)
     {
-        var normalizedPath = Path.GetFullPath(filePath);
+        var normalizedPath = NormalizeAgainstSolution(solution, filePath);
         return solution.Projects
             .SelectMany(p => p.Documents)
-            .FirstOrDefault(d => Path.GetFullPath(d.FilePath ?? "") == normalizedPath);
+            .FirstOrDefault(d => NormalizeAgainstSolution(solution, d.FilePath ?? "") == normalizedPath);
+    }
+
+    private static string NormalizeAgainstSolution(Solution solution, string filePath)
+    {
+        if (string.IsNullOrWhiteSpace(filePath))
+            return filePath;
+
+        if (Path.IsPathRooted(filePath))
+            return Path.GetFullPath(filePath);
+
+        var solutionDirectory = solution.FilePath is null ? null : Path.GetDirectoryName(solution.FilePath);
+        return solutionDirectory is null
+            ? Path.GetFullPath(filePath)
+            : Path.GetFullPath(Path.Combine(solutionDirectory, filePath));
     }
 
     internal static bool TryParseRange(string range, out int startLine, out int startColumn, out int endLine, out int endColumn)
@@ -140,6 +166,21 @@ internal static class RefactoringHelpers
         if (startLine > text.Lines.Count || endLine > text.Lines.Count)
         {
             error = "Error: Range exceeds file length";
+            return false;
+        }
+        // The end offset is exclusive, so a column one past the last character of
+        // its line is how a selection running to the end of a line is written.
+        // Anything further has crossed the newline into the next line, at either
+        // end of the range: a start column past its line resolves into the next
+        // line just as silently.
+        if (startColumn > text.Lines[startLine - 1].Span.Length + 1)
+        {
+            error = "Error: Range exceeds line length";
+            return false;
+        }
+        if (endColumn > text.Lines[endLine - 1].Span.Length + 1)
+        {
+            error = "Error: Range exceeds line length";
             return false;
         }
         return true;
@@ -181,6 +222,8 @@ internal static class RefactoringHelpers
         Func<string, string> transform,
         string successMessage)
     {
+        filePath = ResolvePath(filePath)!;
+
         if (!File.Exists(filePath))
             throw new McpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
 
@@ -203,7 +246,7 @@ internal static class RefactoringHelpers
         foreach (var doc in solution.Projects.SelectMany(p => p.Documents))
         {
             var docPath = doc.FilePath ?? string.Empty;
-            if (excludingFilePaths != null && excludingFilePaths.Any(p => Path.GetFullPath(docPath) == Path.GetFullPath(p)))
+            if (excludingFilePaths != null && excludingFilePaths.Any(p => NormalizeAgainstSolution(solution, docPath) == NormalizeAgainstSolution(solution, p)))
                 continue;
 
             var root = await doc.GetSyntaxRootAsync();
@@ -225,7 +268,7 @@ internal static class RefactoringHelpers
         foreach (var doc in solution.Projects.SelectMany(p => p.Documents))
         {
             var docPath = doc.FilePath ?? string.Empty;
-            if (excludingFilePaths != null && excludingFilePaths.Any(p => Path.GetFullPath(docPath) == Path.GetFullPath(p)))
+            if (excludingFilePaths != null && excludingFilePaths.Any(p => NormalizeAgainstSolution(solution, docPath) == NormalizeAgainstSolution(solution, p)))
                 continue;
 
             var root = await doc.GetSyntaxRootAsync();
@@ -253,7 +296,7 @@ internal static class RefactoringHelpers
         var solutionPath = project.Solution.FilePath;
         if (!string.IsNullOrEmpty(solutionPath))
         {
-            SolutionCache.Set(solutionPath!, newDoc.Project.Solution);
+            SessionRegistry.GetOrCreate(solutionPath!).Replace(newDoc.Project.Solution);
         }
     }
 
@@ -271,6 +314,8 @@ internal static class RefactoringHelpers
 
     internal static async Task<SyntaxTree> GetOrParseSyntaxTreeAsync(string filePath)
     {
+        filePath = ResolvePath(filePath)!;
+
         if (SyntaxTreeCache.TryGetValue(filePath, out SyntaxTree? cached))
             return cached!;
         var (text, _) = await ReadFileWithEncodingAsync(filePath);
@@ -281,6 +326,8 @@ internal static class RefactoringHelpers
 
     internal static async Task<SemanticModel> GetOrCreateSemanticModelAsync(string filePath)
     {
+        filePath = ResolvePath(filePath)!;
+
         if (ModelCache.TryGetValue(filePath, out SemanticModel? cached))
             return cached!;
         var tree = await GetOrParseSyntaxTreeAsync(filePath);
@@ -290,8 +337,18 @@ internal static class RefactoringHelpers
         return model;
     }
 
+    /// <summary>Drops the cached parse results for a file that changed on disk.</summary>
+    internal static void EvictFileCaches(string filePath)
+    {
+        filePath = ResolvePath(filePath)!;
+        SyntaxTreeCache.Remove(filePath);
+        ModelCache.Remove(filePath);
+    }
+
     internal static void UpdateFileCaches(string filePath, string newText)
     {
+        filePath = ResolvePath(filePath)!;
+
         var tree = CSharpSyntaxTree.ParseText(newText);
         SyntaxTreeCache.Set(filePath, tree);
         var compilation = CreateCompilation(tree);
@@ -303,6 +360,8 @@ internal static class RefactoringHelpers
         string filePath,
         CancellationToken cancellationToken = default)
     {
+        filePath = ResolvePath(filePath)!;
+
         var bytes = await File.ReadAllBytesAsync(filePath, cancellationToken);
         var encoding = DetectEncoding(bytes);
         var text = encoding.GetString(bytes);
@@ -313,6 +372,8 @@ internal static class RefactoringHelpers
         string filePath,
         CancellationToken cancellationToken = default)
     {
+        filePath = ResolvePath(filePath)!;
+
         var bytes = await File.ReadAllBytesAsync(filePath, cancellationToken);
         return DetectEncoding(bytes);
     }
@@ -344,6 +405,8 @@ internal static class RefactoringHelpers
         Encoding encoding,
         CancellationToken cancellationToken = default)
     {
+        filePath = ResolvePath(filePath)!;
+
         await File.WriteAllTextAsync(filePath, text, encoding, cancellationToken);
         UpdateFileCaches(filePath, text);
     }

@@ -50,7 +50,7 @@ public class ExampleVerificationTests : TestBase
         var result = await ExtractMethodTool.ExtractMethod(
             SolutionPath,
             testFile,
-            "26:9-49:10",  // The validation block
+            "27:9-53:10",  // The validation block between the EXTRACT markers
             "ValidateOrderAsync");
 
         Assert.Contains("Successfully extracted method", result);
@@ -96,7 +96,7 @@ public class ExampleVerificationTests : TestBase
         var result = await IntroduceVariableTool.IntroduceVariable(
             SolutionPath,
             testFile,
-            "19:30-19:97",  // The .Where expression
+            "20:35-21:96",  // The transactions.Where(...) chain on lines 20-21
             "monthlyTransactions");
 
         Assert.Contains("Successfully introduced variable", result);

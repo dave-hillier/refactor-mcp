@@ -82,6 +82,34 @@ public static class RenameSymbolTool
         }
 
         var decls = await SymbolFinder.FindDeclarationsAsync(document.Project, name, false, cancellationToken);
-        return decls.FirstOrDefault();
+        var declaration = decls.FirstOrDefault();
+        if (declaration != null)
+            return declaration;
+
+        // Locals, parameters and local functions are not declarations of the
+        // project, so the symbol finder cannot see them. Look in this document.
+        return FindLocalInDocument(model, root, name);
+    }
+
+    private static ISymbol? FindLocalInDocument(SemanticModel model, SyntaxNode root, string name)
+    {
+        var matches = root.DescendantNodes()
+            .Select(node => model.GetDeclaredSymbol(node))
+            .OfType<ISymbol>()
+            .Where(symbol => symbol.Name == name && IsLocalSymbol(symbol))
+            .Distinct(SymbolEqualityComparer.Default)
+            .ToList();
+
+        if (matches.Count > 1)
+            throw new McpException($"Error: Multiple symbols named '{name}' found in the document; pass line and column to choose one");
+
+        return matches.FirstOrDefault();
+    }
+
+    private static bool IsLocalSymbol(ISymbol symbol)
+    {
+        return symbol.Kind == SymbolKind.Local
+            || symbol.Kind == SymbolKind.Parameter
+            || symbol is IMethodSymbol { MethodKind: MethodKind.LocalFunction };
     }
 }

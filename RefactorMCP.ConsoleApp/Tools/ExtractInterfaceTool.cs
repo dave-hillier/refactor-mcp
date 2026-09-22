@@ -49,16 +49,27 @@ public static class ExtractInterfaceTool
                     switch (member)
                     {
                         case MethodDeclarationSyntax m:
+                            // An expression-bodied method has to lose its arrow:
+                            // an interface member declares the signature only.
                             members.Add(m.WithBody(null)
+                                .WithExpressionBody(null)
                                 .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken))
                                 .WithModifiers(new SyntaxTokenList()));
                             break;
                         case PropertyDeclarationSyntax p:
-                            var accessors = p.AccessorList ?? SyntaxFactory.AccessorList();
+                            // An expression-bodied property has no accessor list,
+                            // and an empty one would produce `int Count { } => x;`.
+                            var accessors = p.AccessorList ?? SyntaxFactory.AccessorList(
+                                SyntaxFactory.SingletonList(
+                                    SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
+                                        .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken))));
                             accessors = SyntaxFactory.AccessorList(SyntaxFactory.List(
                                 accessors.Accessors.Select(a => a.WithBody(null)
                                     .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)))));
-                            members.Add(p.WithAccessorList(accessors).WithModifiers(new SyntaxTokenList()));
+                            members.Add(p.WithAccessorList(accessors)
+                                .WithExpressionBody(null)
+                                .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.None))
+                                .WithModifiers(new SyntaxTokenList()));
                             break;
                     }
                 }
@@ -86,13 +97,29 @@ public static class ExtractInterfaceTool
                 .WithMembers(SyntaxFactory.SingletonList(interfaceNode))
                 .NormalizeWhitespace();
 
+            filePath = RefactoringHelpers.ResolvePath(filePath)!;
+            interfaceFilePath = RefactoringHelpers.ResolvePath(interfaceFilePath)!;
+
             var encoding = await RefactoringHelpers.GetFileEncodingAsync(filePath, cancellationToken);
             await File.WriteAllTextAsync(interfaceFilePath, ifaceUnit.ToFullString(), encoding, cancellationToken);
 
-            var baseList = SyntaxFactory.BaseList(
-                    SyntaxFactory.SingletonSeparatedList<BaseTypeSyntax>(
-                        SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName(interfaceName))))
-                .WithColonToken(SyntaxFactory.Token(SyntaxKind.ColonToken).WithTrailingTrivia(SyntaxFactory.Space));
+            if (classNode.BaseList?.Types.Any(t => SimpleTypeName(t.Type) == interfaceName) == true)
+            {
+                // The interface file has been refreshed and the class already
+                // says it implements it; listing it twice does not compile.
+                RefactoringHelpers.AddDocumentToProject(document.Project, interfaceFilePath);
+                return $"Successfully extracted interface '{interfaceName}' to {interfaceFilePath}";
+            }
+
+            // Add to whatever the class already inherits from rather than
+            // replacing the list: its base class and other interfaces are part
+            // of the class's contract.
+            var baseList = classNode.BaseList is { } existing
+                ? existing.AddTypes(SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName(interfaceName)))
+                : SyntaxFactory.BaseList(
+                        SyntaxFactory.SingletonSeparatedList<BaseTypeSyntax>(
+                            SyntaxFactory.SimpleBaseType(SyntaxFactory.ParseTypeName(interfaceName))))
+                    .WithColonToken(SyntaxFactory.Token(SyntaxKind.ColonToken).WithTrailingTrivia(SyntaxFactory.Space));
             var updatedClass = classNode.WithBaseList(baseList);
             var newRoot = root.ReplaceNode(classNode, updatedClass);
             var formatted = newRoot.NormalizeWhitespace().ToFullString();
@@ -106,4 +133,8 @@ public static class ExtractInterfaceTool
             throw new McpException($"Error extracting interface: {ex.Message}", ex);
         }
     }
+
+    /// <summary>A base type without its namespace, to compare against the interface name.</summary>
+    private static string SimpleTypeName(TypeSyntax type)
+        => type.ToString().Split('.').Last();
 }

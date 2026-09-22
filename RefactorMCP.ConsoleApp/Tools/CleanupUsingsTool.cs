@@ -43,11 +43,11 @@ public static class CleanupUsingsTool
         if (root == null)
             return $"No content in {document.FilePath}";
 
-        var compilation = await document.Project.GetCompilationAsync();
-        if (compilation == null)
-            return $"Could not compile project for {document.FilePath}";
+        var semanticModel = await document.GetSemanticModelAsync();
+        if (semanticModel == null)
+            return $"Could not get semantic model for {document.FilePath}";
 
-        var diagnostics = compilation.GetDiagnostics();
+        var diagnostics = semanticModel.GetDiagnostics();
         var unused = diagnostics
             .Where(d => d.Id == "CS8019")
             .Select(d => root.FindNode(d.Location.SourceSpan))

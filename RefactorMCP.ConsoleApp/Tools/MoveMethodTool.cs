@@ -19,28 +19,22 @@ namespace RefactorMCP.ConsoleApp.Tools;
 [McpServerToolType]
 public static class MoveMethodTool
 {
-    private static readonly HashSet<string> _movedMethods = new();
-
-    private static string GetKey(string filePath, string methodName) =>
-        $"{Path.GetFullPath(filePath)}::{methodName}";
-
+    // Move history belongs to the loaded session, so a method moved into one
+    // solution can still be moved in another.
     internal static void EnsureNotAlreadyMoved(string filePath, string methodName)
-    {
-        if (_movedMethods.Contains(GetKey(filePath, methodName)))
-        {
-            throw new McpException(
-                $"Error: Method '{methodName}' appears to have been moved already during this session. " +
-                "Consider using inline-method if you want to remove the wrapper.");
-        }
-    }
+        => SessionRegistry.Current?.EnsureNotAlreadyMoved(filePath, methodName);
 
     internal static void MarkMoved(string filePath, string methodName)
-        => _movedMethods.Add(GetKey(filePath, methodName));
+        => SessionRegistry.Current?.MarkMoved(filePath, methodName);
 
     [McpServerTool, Description("Clear the record of moved methods so they can be moved again. Do not use unless explicitly asked to.")]
     public static string ResetMoveHistory()
     {
-        _movedMethods.Clear();
+        foreach (var session in SessionRegistry.All)
+        {
+            session.ResetMoveHistory();
+        }
+
         return "Cleared move history";
     }
     [McpServerTool, Description("Move a static method to another class (preferred for large C# file refactoring). " +
@@ -242,9 +236,9 @@ public static class MoveMethodTool
     {
         try
         {
-            filePath = Path.GetFullPath(filePath);
+            filePath = RefactoringHelpers.ResolvePath(filePath)!;
             if (targetFilePath != null)
-                targetFilePath = Path.GetFullPath(targetFilePath);
+                targetFilePath = RefactoringHelpers.ResolvePath(targetFilePath);
 
             var methodList = methodNames;
             if (methodList.Length == 0)
@@ -359,6 +353,9 @@ public static class MoveMethodTool
         IProgress<string>? progress,
         CancellationToken cancellationToken)
     {
+        filePath = RefactoringHelpers.ResolvePath(filePath)!;
+        targetFilePath = RefactoringHelpers.ResolvePath(targetFilePath);
+
         if (!File.Exists(Path.GetFullPath(filePath)))
             throw new McpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
 

@@ -88,6 +88,8 @@ public static class IntroduceFieldTool
 
     private static async Task<string> IntroduceFieldSingleFile(string filePath, string selectionRange, string fieldName, string accessModifier)
     {
+        filePath = RefactoringHelpers.ResolvePath(filePath)!;
+
         if (!File.Exists(filePath))
             throw new McpException($"Error: File {filePath} not found");
 

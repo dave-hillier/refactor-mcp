@@ -1,5 +1,4 @@
 using ModelContextProtocol.Server;
-using Microsoft.Extensions.Caching.Memory;
 using System.ComponentModel;
 using System.IO;
 using System.Threading;
@@ -12,9 +11,8 @@ public static class UnloadSolutionTool
         [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         CancellationToken cancellationToken = default)
     {
-        if (RefactoringHelpers.SolutionCache.TryGetValue(solutionPath, out _))
+        if (SessionRegistry.Unload(solutionPath))
         {
-            RefactoringHelpers.SolutionCache.Remove(solutionPath);
             return $"Unloaded solution '{Path.GetFileName(solutionPath)}' from cache";
         }
 

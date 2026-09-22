@@ -63,7 +63,8 @@ public static class ExtractMethodTool
             throw new McpException("Error: Selected code does not contain extractable statements");
 
         var containingClass = containingMethod.Ancestors().OfType<ClassDeclarationSyntax>().FirstOrDefault();
-        var rewriter = new ExtractMethodRewriter(containingMethod, containingClass, statementsToExtract, methodName);
+        var semanticModel = await document.GetSemanticModelAsync();
+        var rewriter = new ExtractMethodRewriter(containingMethod, containingClass, statementsToExtract, methodName, semanticModel);
         var newRoot = rewriter.Visit(syntaxRoot);
 
         var formattedRoot = Formatter.Format(newRoot!, document.Project.Solution.Workspace);
@@ -72,19 +73,20 @@ public static class ExtractMethodTool
         return $"Successfully extracted method '{methodName}' from {selectionRange} in {document.FilePath} (solution mode)";
     }
 
-    private static Task<string> ExtractMethodSingleFile(string filePath, string selectionRange, string methodName)
+    private static async Task<string> ExtractMethodSingleFile(string filePath, string selectionRange, string methodName)
     {
-        return RefactoringHelpers.ApplySingleFileEdit(
+        var semanticModel = await RefactoringHelpers.GetOrCreateSemanticModelAsync(filePath);
+        return await RefactoringHelpers.ApplySingleFileEdit(
             filePath,
-            text => ExtractMethodInSource(text, selectionRange, methodName),
+            text => ExtractMethodInSource(text, selectionRange, methodName, semanticModel),
             $"Successfully extracted method '{methodName}' from {selectionRange} in {filePath} (single file mode)");
     }
 
-    public static string ExtractMethodInSource(string sourceText, string selectionRange, string methodName)
+    public static string ExtractMethodInSource(string sourceText, string selectionRange, string methodName, SemanticModel? model = null)
     {
-        var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
+        var syntaxTree = model?.SyntaxTree ?? CSharpSyntaxTree.ParseText(sourceText);
         var syntaxRoot = syntaxTree.GetRoot();
-        var text = SourceText.From(sourceText);
+        var text = syntaxTree.GetText();
         var span = RefactoringHelpers.ParseSelectionRange(text, selectionRange);
 
         var selectedNodes = syntaxRoot.DescendantNodes()
@@ -113,7 +115,7 @@ public static class ExtractMethodTool
             throw new McpException("Error: Selected code does not contain extractable statements");
 
         var containingClass = containingMethod.Ancestors().OfType<ClassDeclarationSyntax>().FirstOrDefault();
-        var rewriter = new ExtractMethodRewriter(containingMethod, containingClass, statementsToExtract, methodName);
+        var rewriter = new ExtractMethodRewriter(containingMethod, containingClass, statementsToExtract, methodName, model);
         var newRoot = rewriter.Visit(syntaxRoot);
 
         var formattedRoot = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);

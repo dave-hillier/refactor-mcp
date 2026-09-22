@@ -28,8 +28,16 @@ namespace RefactorMCP.ConsoleApp.SyntaxWalkers
             {
                 var parent = node.Parent;
                 if (parent is not MemberAccessExpressionSyntax ||
-                    (parent is MemberAccessExpressionSyntax ma && ma.Expression == node))
+                    (parent is MemberAccessExpressionSyntax ma &&
+                     (ma.Expression == node ||
+                      ma.Expression is ThisExpressionSyntax)))
                 {
+                    // A bare name, a receiver (member.Something), or an explicit
+                    // this. qualification all reach an instance member. A base.
+                    // qualification is deliberately not counted: treating it as
+                    // instance usage makes the move rewrite the receiver to the
+                    // injected parameter before the base call can be redirected
+                    // to the wrapper the move creates.
                     UsesInstanceMembers = true;
                 }
             }

@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { execFile } from 'child_process';
+import * as fs from 'fs';
 import * as path from 'path';
 
 function getWorkspaceFolder(): string | undefined {
@@ -11,20 +12,50 @@ function getWorkspaceFolder(): string | undefined {
     return folder.uri.fsPath;
 }
 
+const executableName = process.platform === 'win32' ? 'RefactorMCP.ConsoleApp.exe' : 'RefactorMCP.ConsoleApp';
 
+/// The built application, or the dotnet host with its dll when only that exists.
+function resolveApplication(workspaceFolder: string): { command: string; leadingArgs: string[] } | undefined {
+    const configured = vscode.workspace.getConfiguration().get<string>('refactorMcp.executablePath', '');
+    if (configured && configured.length > 0) {
+        return { command: configured, leadingArgs: [] };
+    }
+
+    const outputDirectory = path.join(workspaceFolder, 'RefactorMCP.ConsoleApp', 'bin', 'Debug', 'net9.0');
+    const appHost = path.join(outputDirectory, executableName);
+    if (fs.existsSync(appHost)) {
+        return { command: appHost, leadingArgs: [] };
+    }
+
+    const dll = path.join(outputDirectory, 'RefactorMCP.ConsoleApp.dll');
+    if (fs.existsSync(dll)) {
+        const dotnetPath = vscode.workspace.getConfiguration().get<string>('refactorMcp.dotnetPath', 'dotnet');
+        return { command: dotnetPath, leadingArgs: [dll] };
+    }
+
+    return undefined;
+}
+
+/// Runs a tool through the CLI, which serves the call from a daemon holding the
+/// solution rather than loading it again for every invocation.
 function runJson(toolName: string, json: string): Thenable<string> {
-    const config = vscode.workspace.getConfiguration();
-    const dotnetPath = config.get<string>('refactorMcp.dotnetPath', 'dotnet');
     const workspaceFolder = getWorkspaceFolder();
     if (!workspaceFolder) {
         return Promise.reject('No workspace');
     }
-    const projectPath = path.join(workspaceFolder, 'RefactorMCP.ConsoleApp');
-    const commandArgs = ['run', '--project', projectPath, '--', '--json', toolName, json];
+
+    const application = resolveApplication(workspaceFolder);
+    if (!application) {
+        vscode.window.showErrorMessage(
+            'RefactorMCP is not built. Run "dotnet build" in the workspace, or set refactorMcp.executablePath.');
+        return Promise.reject('RefactorMCP.ConsoleApp is not built');
+    }
+
+    const commandArgs = [...application.leadingArgs, '--json', toolName, json];
     return new Promise((resolve, reject) => {
-        execFile(dotnetPath, commandArgs, { cwd: workspaceFolder }, (err, stdout, stderr) => {
+        execFile(application.command, commandArgs, { cwd: workspaceFolder }, (err, stdout, stderr) => {
             if (err) {
-                reject(stderr || err.message);
+                reject((stderr || err.message).trim());
             } else {
                 resolve(stdout);
             }
@@ -62,13 +93,17 @@ export function activate(context: vscode.ExtensionContext) {
         const start = documentPosition(selection.start);
         const end = documentPosition(selection.end);
 
+        // Prefer the workspace solution, which lets the daemon serve the call;
+        // without one the tool works on the single file.
+        const solutionPath = (await findSolutionFile()) ?? '';
+
         const methodName = await vscode.window.showInputBox({ prompt: 'Name for the new method' });
         if (!methodName) {
             return;
         }
 
         const range = `${start}-${end}`;
-        const json = JSON.stringify({ solutionPath: '', filePath: document, selectionRange: range, methodName });
+        const json = JSON.stringify({ solutionPath, filePath: document, selectionRange: range, methodName });
 
         try {
             await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: 'RefactorMCP: Extract Method' }, async () => {
@@ -113,6 +148,16 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(runTool);
 
     context.subscriptions.push(disposable);
+}
+
+async function findSolutionFile(): Promise<string | undefined> {
+    const folder = vscode.workspace.workspaceFolders?.[0];
+    if (!folder) {
+        return undefined;
+    }
+
+    const matches = await vscode.workspace.findFiles('**/*.sln', '**/node_modules/**', 1);
+    return matches.length > 0 ? matches[0].fsPath : undefined;
 }
 
 function documentPosition(pos: vscode.Position): string {

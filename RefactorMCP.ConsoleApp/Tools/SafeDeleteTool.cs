@@ -107,7 +107,7 @@ public static class SafeDeleteTool
         var semanticModel = await document.GetSemanticModelAsync();
         var symbol = semanticModel!.GetDeclaredSymbol(variable) as IFieldSymbol;
         var refs = await SymbolFinder.FindReferencesAsync(symbol!, document.Project.Solution);
-        var count = refs.SelectMany(r => r.Locations).Count() - 1;
+        var count = refs.SelectMany(r => r.Locations).Count();
         if (count > 0)
             throw new McpException($"Error: Field '{fieldName}' is referenced {count} time(s)");
 
@@ -138,7 +138,7 @@ public static class SafeDeleteTool
             throw new McpException($"Error: Field '{fieldName}' not found. Verify the field name and ensure the file is part of the loaded solution.");
 
         var references = root.DescendantNodes().OfType<IdentifierNameSyntax>().Count(id => id.Identifier.ValueText == fieldName);
-        if (references > 1)
+        if (references > 0)
             throw new McpException($"Error: Field '{fieldName}' is referenced");
 
         SyntaxNode newRoot;
@@ -164,7 +164,7 @@ public static class SafeDeleteTool
         var semanticModel = await document.GetSemanticModelAsync();
         var symbol = semanticModel!.GetDeclaredSymbol(method)!;
         var refs = await SymbolFinder.FindReferencesAsync(symbol, document.Project.Solution);
-        var count = refs.SelectMany(r => r.Locations).Count() - 1;
+        var count = refs.SelectMany(r => r.Locations).Count();
         if (count > 0)
             throw new McpException($"Error: Method '{methodName}' is referenced {count} time(s)");
 
@@ -191,8 +191,12 @@ public static class SafeDeleteTool
         if (method == null)
             throw new McpException($"Error: Method '{methodName}' not found. Verify the method name and ensure the file is part of the loaded solution.");
 
-        var references = root.DescendantNodes().OfType<InvocationExpressionSyntax>()
-            .Count(inv => inv.Expression is IdentifierNameSyntax id && id.Identifier.ValueText == methodName);
+        // Any occurrence of the name counts, not just a bare call: the method may
+        // be called as this.Helper(), taken as a method group, or named in a
+        // string used by nameof. The declaration itself is a token rather than an
+        // identifier, so it is not counted.
+        var references = root.DescendantNodes().OfType<IdentifierNameSyntax>()
+            .Count(id => id.Identifier.ValueText == methodName);
         if (references > 0)
             throw new McpException($"Error: Method '{methodName}' is referenced");
 
@@ -285,7 +289,7 @@ public static class SafeDeleteTool
         var semanticModel = await document.GetSemanticModelAsync();
         var symbol = semanticModel!.GetDeclaredSymbol(variable)!;
         var refs = await SymbolFinder.FindReferencesAsync(symbol, document.Project.Solution);
-        var count = refs.SelectMany(r => r.Locations).Count() - 1;
+        var count = refs.SelectMany(r => r.Locations).Count();
         if (count > 0)
             throw new McpException($"Error: Variable '{variable.Identifier.ValueText}' is referenced {count} time(s)");
 
@@ -317,7 +321,7 @@ public static class SafeDeleteTool
 
         var name = variable.Identifier.ValueText;
         var references = root.DescendantNodes().OfType<IdentifierNameSyntax>().Count(id => id.Identifier.ValueText == name);
-        if (references > 1)
+        if (references > 0)
             throw new McpException($"Error: Variable '{name}' is referenced");
 
         var rewriter = new VariableRemovalRewriter(name, variable.Span);

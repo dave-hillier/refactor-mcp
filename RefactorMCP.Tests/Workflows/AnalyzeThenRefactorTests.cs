@@ -274,11 +274,11 @@ public class Config
         var project = solution.Projects.First();
         RefactoringHelpers.AddDocumentToProject(project, testFile);
 
-        // Step 1: Introduce field for the magic number 30 (line 8, columns 16-18)
+        // Step 1: Introduce field for the magic number 30 (line 7, columns 16-17)
         var introduceResult = await IntroduceFieldTool.IntroduceField(
             SolutionPath,
             testFile,
-            "8:16-8:18",
+            "7:16-7:18",
             "_defaultTimeout");
 
         Assert.Contains("introduced", introduceResult.ToLowerInvariant());
@@ -295,5 +295,7 @@ public class Config
         var fileContent = await File.ReadAllTextAsync(testFile);
         Assert.Contains("readonly", fileContent);
         Assert.Contains("_defaultTimeout", fileContent);
+        // Config has no constructor to move the value into, so it stays put
+        Assert.Contains("private readonly int _defaultTimeout = 30;", fileContent);
     }
 }
