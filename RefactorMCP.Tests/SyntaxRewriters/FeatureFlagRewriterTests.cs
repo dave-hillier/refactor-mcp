@@ -96,6 +96,87 @@ class Service
     }
 
     [Fact]
+    public void FeatureFlagRewriter_SynthesisesConstructorWhenClassHasNoConstructor()
+    {
+        var code = @"
+class Service
+{
+    void DoWork()
+    {
+        if (flags.IsEnabled(""CoolFeature""))
+        {
+            Console.WriteLine(""Cool"");
+        }
+    }
+}";
+        var tree = CSharpSyntaxTree.ParseText(code);
+        var rewriter = new FeatureFlagRewriter("CoolFeature");
+        var result = rewriter.Visit(tree.GetRoot());
+
+        var resultText = result.NormalizeWhitespace().ToFullString();
+        Assert.Contains("private readonly ICoolFeatureStrategy _coolFeatureStrategy", resultText);
+        Assert.Contains("public Service(ICoolFeatureStrategy coolFeatureStrategy)", resultText);
+        Assert.Contains("_coolFeatureStrategy = coolFeatureStrategy;", resultText);
+    }
+
+    [Fact]
+    public void FeatureFlagRewriter_SynthesisesConstructorWhenClassHasOnlyStaticConstructor()
+    {
+        var code = @"
+class Service
+{
+    static Service()
+    {
+    }
+
+    void DoWork()
+    {
+        if (flags.IsEnabled(""CoolFeature""))
+        {
+            Console.WriteLine(""Cool"");
+        }
+    }
+}";
+        var tree = CSharpSyntaxTree.ParseText(code);
+        var rewriter = new FeatureFlagRewriter("CoolFeature");
+        var result = rewriter.Visit(tree.GetRoot());
+
+        var resultText = result.NormalizeWhitespace().ToFullString();
+        Assert.Contains("static Service()", resultText);
+        Assert.DoesNotContain("static Service(ICoolFeatureStrategy", resultText);
+        Assert.Contains("public Service(ICoolFeatureStrategy coolFeatureStrategy)", resultText);
+        Assert.Contains("_coolFeatureStrategy = coolFeatureStrategy;", resultText);
+    }
+
+    /// <summary>
+    /// A type with a primary constructor may only declare another constructor if
+    /// it chains to that one, and the primary constructor's parameters are in
+    /// scope nowhere else.
+    /// </summary>
+    [Fact]
+    public void FeatureFlagRewriter_SynthesisedConstructorChainsToAPrimaryConstructor()
+    {
+        var code = @"
+class Service(int timeout)
+{
+    void DoWork()
+    {
+        if (flags.IsEnabled(""CoolFeature""))
+        {
+            Console.WriteLine(""Cool"");
+        }
+    }
+}";
+        var tree = CSharpSyntaxTree.ParseText(code);
+        var rewriter = new FeatureFlagRewriter("CoolFeature");
+        var result = rewriter.Visit(tree.GetRoot());
+
+        var resultText = result.NormalizeWhitespace().ToFullString();
+        Assert.Contains("public Service(int timeout, ICoolFeatureStrategy coolFeatureStrategy) : this(timeout)", resultText);
+        Assert.Contains("_coolFeatureStrategy = coolFeatureStrategy;", resultText);
+    }
+
+    [Fact]
     public void FeatureFlagRewriter_GeneratesStrategyInterface()
     {
         var code = @"

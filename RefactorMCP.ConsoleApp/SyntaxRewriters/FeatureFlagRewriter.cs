@@ -8,6 +8,7 @@ internal class FeatureFlagRewriter : CSharpSyntaxRewriter
     private readonly string _flagName;
     private readonly string _interfaceName;
     private readonly string _strategyField;
+    private string StrategyParameter => _strategyField.TrimStart('_');
     private bool _resolved;
     private IfStatementSyntax? _targetIf;
     public SyntaxList<MemberDeclarationSyntax> GeneratedMembers { get; private set; }
@@ -75,6 +76,10 @@ internal class FeatureFlagRewriter : CSharpSyntaxRewriter
                 .AddVariables(SyntaxFactory.VariableDeclarator(_strategyField)))
                 .AddModifiers(SyntaxFactory.Token(SyntaxKind.PrivateKeyword), SyntaxFactory.Token(SyntaxKind.ReadOnlyKeyword));
             visited = visited.AddMembers(fieldDecl);
+            if (!HasInstanceConstructor(visited))
+            {
+                visited = visited.AddMembers(CreateStrategyConstructor(visited));
+            }
             GeneratedMembers = GeneratedMembers.AddRange(CreateStrategyTypes());
         }
         return visited;
@@ -83,23 +88,69 @@ internal class FeatureFlagRewriter : CSharpSyntaxRewriter
     public override SyntaxNode VisitConstructorDeclaration(ConstructorDeclarationSyntax node)
     {
         var visited = (ConstructorDeclarationSyntax)base.VisitConstructorDeclaration(node)!;
-        if (_targetIf != null && node.Parent?.Span.Contains(_targetIf.Span) == true)
+        if (_targetIf != null &&
+            !node.Modifiers.Any(SyntaxKind.StaticKeyword) &&
+            node.Parent?.Span.Contains(_targetIf.Span) == true)
         {
-            var paramName = _strategyField.TrimStart('_');
-            var param = SyntaxFactory.Parameter(SyntaxFactory.Identifier(paramName))
-                .WithType(SyntaxFactory.IdentifierName(_interfaceName));
-            if (!visited.ParameterList.Parameters.Any(p => p.Identifier.ValueText == paramName))
+            if (!visited.ParameterList.Parameters.Any(p => p.Identifier.ValueText == StrategyParameter))
             {
-                visited = visited.AddParameterListParameters(param);
-                var assignment = SyntaxFactory.ExpressionStatement(
-                    SyntaxFactory.AssignmentExpression(
-                        SyntaxKind.SimpleAssignmentExpression,
-                        SyntaxFactory.IdentifierName(_strategyField),
-                        SyntaxFactory.IdentifierName(paramName)));
+                visited = visited.AddParameterListParameters(CreateStrategyParameter());
+                var assignment = CreateStrategyAssignment();
                 visited = visited.WithBody(visited.Body!.WithStatements(visited.Body!.Statements.Insert(0, assignment)));
             }
         }
         return visited;
+    }
+
+    // A class with no instance constructor cannot assign the injected strategy, so the
+    // constructor that takes it is generated. A static constructor does not count: an
+    // instance field cannot be assigned there.
+    private static bool HasInstanceConstructor(ClassDeclarationSyntax node)
+    {
+        return node.Members
+            .OfType<ConstructorDeclarationSyntax>()
+            .Any(ctor => !ctor.Modifiers.Any(SyntaxKind.StaticKeyword));
+    }
+
+    private ConstructorDeclarationSyntax CreateStrategyConstructor(ClassDeclarationSyntax node)
+    {
+        // A class with a primary constructor may only declare another one if it
+        // chains to the primary constructor, and the primary constructor's
+        // parameters are in scope nowhere else, so they are carried through.
+        var primaryParameters = node.ParameterList?.Parameters ?? default;
+
+        var constructor = SyntaxFactory.ConstructorDeclaration(node.Identifier.ValueText)
+            .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
+            .AddParameterListParameters(primaryParameters.ToArray())
+            .AddParameterListParameters(CreateStrategyParameter())
+            .WithBody(SyntaxFactory.Block(CreateStrategyAssignment()));
+
+        if (primaryParameters.Count > 0)
+        {
+            constructor = constructor.WithInitializer(
+                SyntaxFactory.ConstructorInitializer(
+                    SyntaxKind.ThisConstructorInitializer,
+                    SyntaxFactory.ArgumentList(SyntaxFactory.SeparatedList(
+                        primaryParameters.Select(parameter =>
+                            SyntaxFactory.Argument(SyntaxFactory.IdentifierName(parameter.Identifier)))))));
+        }
+
+        return constructor;
+    }
+
+    private ParameterSyntax CreateStrategyParameter()
+    {
+        return SyntaxFactory.Parameter(SyntaxFactory.Identifier(StrategyParameter))
+            .WithType(SyntaxFactory.IdentifierName(_interfaceName));
+    }
+
+    private ExpressionStatementSyntax CreateStrategyAssignment()
+    {
+        return SyntaxFactory.ExpressionStatement(
+            SyntaxFactory.AssignmentExpression(
+                SyntaxKind.SimpleAssignmentExpression,
+                SyntaxFactory.IdentifierName(_strategyField),
+                SyntaxFactory.IdentifierName(StrategyParameter)));
     }
 
     private SyntaxList<MemberDeclarationSyntax> CreateStrategyTypes()
