@@ -168,6 +168,14 @@ internal static class RefactoringHelpers
             error = "Error: Range exceeds file length";
             return false;
         }
+        // The end offset is exclusive, so a column one past the last character of
+        // its line is how a selection running to the end of a line is written.
+        // Anything further has crossed the newline into the next line.
+        if (endColumn > text.Lines[endLine - 1].Span.Length + 1)
+        {
+            error = "Error: Range exceeds line length";
+            return false;
+        }
         return true;
     }
 

@@ -38,7 +38,7 @@ public class Sample
         var result = await IntroduceVariableTool.IntroduceVariable(
             SolutionPath,
             testFile,
-            "4:24-4:37",
+            "5:16-5:43",
             "processedValue");
 
         Assert.Contains("Successfully introduced variable", result);

@@ -19,7 +19,7 @@ public class IntroduceParameterToolTests : RefactorMCP.Tests.TestBase
             SolutionPath,
             testFile,
             "FormatResult",
-            "1:48-1:61",
+            "42:20-42:66",  // The interpolated string in FormatResult's return
             "processedValue");
 
         Assert.Contains("Successfully introduced parameter", result);
