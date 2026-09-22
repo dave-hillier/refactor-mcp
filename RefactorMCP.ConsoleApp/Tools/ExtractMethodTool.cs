@@ -64,6 +64,7 @@ public static class ExtractMethodTool
 
         var containingClass = containingMethod.Ancestors().OfType<ClassDeclarationSyntax>().FirstOrDefault();
         var semanticModel = await document.GetSemanticModelAsync();
+        EnsureDeclaredLocalsStayInside(containingMethod, statementsToExtract, semanticModel);
         var rewriter = new ExtractMethodRewriter(containingMethod, containingClass, statementsToExtract, methodName, semanticModel);
         var newRoot = rewriter.Visit(syntaxRoot);
 
@@ -115,11 +116,71 @@ public static class ExtractMethodTool
             throw new McpException("Error: Selected code does not contain extractable statements");
 
         var containingClass = containingMethod.Ancestors().OfType<ClassDeclarationSyntax>().FirstOrDefault();
+        EnsureDeclaredLocalsStayInside(containingMethod, statementsToExtract, model);
         var rewriter = new ExtractMethodRewriter(containingMethod, containingClass, statementsToExtract, methodName, model);
         var newRoot = rewriter.Visit(syntaxRoot);
 
         var formattedRoot = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
         return formattedRoot.ToFullString();
+    }
+
+    /// <summary>
+    /// A local the selected statements declare and the rest of the method goes on to use
+    /// would be left behind with no declaration, so the extraction is refused rather than
+    /// emitting code that cannot compile. The statements move whole, so only references
+    /// outside them matter.
+    /// </summary>
+    private static void EnsureDeclaredLocalsStayInside(
+        MethodDeclarationSyntax containingMethod,
+        List<StatementSyntax> statements,
+        SemanticModel? semanticModel)
+    {
+        if (semanticModel == null)
+            return;
+
+        var extractedSpan = TextSpan.FromBounds(statements.First().SpanStart, statements.Last().Span.End);
+        var declared = new HashSet<ISymbol>(SymbolEqualityComparer.Default);
+        foreach (var node in statements.SelectMany(s => s.DescendantNodesAndSelf()))
+        {
+            var symbol = DeclaredLocal(node, semanticModel);
+            if (symbol != null)
+                declared.Add(symbol);
+        }
+
+        if (declared.Count == 0)
+            return;
+
+        foreach (var node in containingMethod.DescendantNodes())
+        {
+            if (node.SpanStart < extractedSpan.End || node is not SimpleNameSyntax name)
+                continue;
+
+            var symbol = semanticModel.GetSymbolInfo(node).Symbol;
+            if (symbol == null || !declared.Contains(symbol))
+                continue;
+
+            var line = node.GetLocation().GetLineSpan().StartLinePosition.Line + 1;
+            throw new McpException(
+                $"Error: The extracted block declares '{name.Identifier.ValueText}', which is used at line {line}. " +
+                "Include that code in the extraction, or narrow the selection.");
+        }
+    }
+
+    /// <summary>
+    /// The symbol a node declares, for the node kinds an extracted statement can declare a
+    /// local with: a local variable, a foreach variable, a pattern or deconstruction
+    /// designation, or a local function.
+    /// </summary>
+    private static ISymbol? DeclaredLocal(SyntaxNode node, SemanticModel semanticModel)
+    {
+        return node switch
+        {
+            VariableDeclaratorSyntax variable => semanticModel.GetDeclaredSymbol(variable),
+            ForEachStatementSyntax forEach => semanticModel.GetDeclaredSymbol(forEach),
+            SingleVariableDesignationSyntax designation => semanticModel.GetDeclaredSymbol(designation),
+            LocalFunctionStatementSyntax localFunction => semanticModel.GetDeclaredSymbol(localFunction),
+            _ => null,
+        };
     }
 
 }
