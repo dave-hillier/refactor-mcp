@@ -19,26 +19,6 @@ surface); that work is complete.
 Ordering is mechanical first, then the ones that change behaviour, so the suite
 is greener before the riskier changes land.
 
-## S1. SafeDelete soundness — `fix/safe-delete`
-
-The tool must never delete something that is still referenced. Today it can, in
-both modes.
-
-- [ ] **Field used once is deleted (single-file).** `SafeDeleteTool.cs:140-141`
-      counts `IdentifierNameSyntax` and refuses only when `references > 1`; the
-      declaration is a declarator token, so one real use scores 1 and passes.
-      Fix: refuse when `references > 0`. Test:
-      `BugHuntTests.SafeDeleteFieldInSource_FieldUsedOnce_ShouldNotDelete`
-- [ ] **Method called as `this.Helper()` is deleted.** `SafeDeleteTool.cs:194-196`
-      only recognises a bare `IdentifierNameSyntax` invocation. Fix: count name
-      occurrences, as the field path does. Test:
-      `BugHuntTests.SafeDeleteMethodInSource_MethodCalledViaThis_ShouldNotDelete`
-- [ ] **Solution mode has the same off-by-one.** `Count() - 1` at
-      `SafeDeleteTool.cs:110`, `:167`, `:288` assumes the declaration is among
-      `FindReferencesAsync`'s locations; it is not, so one reference scores 0.
-      Same at `:320` (`> 1` for variables). Measured, not inferred. Fix: drop the
-      subtraction. No test covers a one-reference refusal — add one.
-
 ## S2. Member walkers — `fix/member-walkers`
 
 - [ ] **UnusedMembersWalker flags a field used once.** `:115` uses `count <= 1`
