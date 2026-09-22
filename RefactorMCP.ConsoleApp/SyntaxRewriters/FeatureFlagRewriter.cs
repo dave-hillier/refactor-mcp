@@ -8,7 +8,7 @@ internal class FeatureFlagRewriter : CSharpSyntaxRewriter
     private readonly string _flagName;
     private readonly string _interfaceName;
     private readonly string _strategyField;
-    private bool _done;
+    private bool _resolved;
     private IfStatementSyntax? _targetIf;
     public SyntaxList<MemberDeclarationSyntax> GeneratedMembers { get; private set; }
 
@@ -18,6 +18,21 @@ internal class FeatureFlagRewriter : CSharpSyntaxRewriter
         _interfaceName = $"I{flagName}Strategy";
         _strategyField = $"_{char.ToLower(flagName[0])}{flagName.Substring(1)}Strategy";
         GeneratedMembers = new SyntaxList<MemberDeclarationSyntax>();
+    }
+
+    // The flag check is located before the tree is visited, so that members visited
+    // ahead of it (a constructor declared first, in particular) can still take part
+    // in the rewrite.
+    public override SyntaxNode Visit(SyntaxNode? node)
+    {
+        if (!_resolved && node != null)
+        {
+            _resolved = true;
+            _targetIf = node.DescendantNodesAndSelf()
+                .OfType<IfStatementSyntax>()
+                .FirstOrDefault(candidate => IsFlagCheck(candidate.Condition, _flagName));
+        }
+        return base.Visit(node)!;
     }
 
     private static bool IsFlagCheck(ExpressionSyntax condition, string flag)
@@ -36,10 +51,8 @@ internal class FeatureFlagRewriter : CSharpSyntaxRewriter
 
     public override SyntaxNode VisitIfStatement(IfStatementSyntax node)
     {
-        if (!_done && IsFlagCheck(node.Condition, _flagName))
+        if (node == _targetIf)
         {
-            _done = true;
-            _targetIf = node;
             var applyCall = SyntaxFactory.ExpressionStatement(
                 SyntaxFactory.InvocationExpression(
                     SyntaxFactory.MemberAccessExpression(
@@ -54,7 +67,7 @@ internal class FeatureFlagRewriter : CSharpSyntaxRewriter
     public override SyntaxNode VisitClassDeclaration(ClassDeclarationSyntax node)
     {
         var visited = (ClassDeclarationSyntax)base.VisitClassDeclaration(node)!;
-        if (_done && _targetIf != null && node.Span.Contains(_targetIf.Span))
+        if (_targetIf != null && node.Span.Contains(_targetIf.Span))
         {
             var fieldDecl = SyntaxFactory.FieldDeclaration(
                 SyntaxFactory.VariableDeclaration(
@@ -70,7 +83,7 @@ internal class FeatureFlagRewriter : CSharpSyntaxRewriter
     public override SyntaxNode VisitConstructorDeclaration(ConstructorDeclarationSyntax node)
     {
         var visited = (ConstructorDeclarationSyntax)base.VisitConstructorDeclaration(node)!;
-        if (_done && _targetIf != null && node.Parent?.Span.Contains(_targetIf.Span) == true)
+        if (_targetIf != null && node.Parent?.Span.Contains(_targetIf.Span) == true)
         {
             var paramName = _strategyField.TrimStart('_');
             var param = SyntaxFactory.Parameter(SyntaxFactory.Identifier(paramName))
@@ -96,6 +109,8 @@ internal class FeatureFlagRewriter : CSharpSyntaxRewriter
                 "Apply")
             .WithModifiers(SyntaxFactory.TokenList())
             .WithBody(GetTrueBlock());
+        var publicApplyMethod = applyMethod.WithModifiers(
+            SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)));
         var iface = SyntaxFactory.InterfaceDeclaration(_interfaceName)
             .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
             .AddMembers(applyMethod.WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)).WithBody(null));
@@ -103,13 +118,13 @@ internal class FeatureFlagRewriter : CSharpSyntaxRewriter
         var strat = SyntaxFactory.ClassDeclaration(_flagName + "Strategy")
             .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
             .AddBaseListTypes(SyntaxFactory.SimpleBaseType(SyntaxFactory.IdentifierName(_interfaceName)))
-            .AddMembers(applyMethod);
+            .AddMembers(publicApplyMethod);
 
         var noBody = GetFalseBlock();
         var noStrat = SyntaxFactory.ClassDeclaration("No" + _flagName + "Strategy")
             .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
             .AddBaseListTypes(SyntaxFactory.SimpleBaseType(SyntaxFactory.IdentifierName(_interfaceName)))
-            .AddMembers(applyMethod.WithBody(noBody));
+            .AddMembers(publicApplyMethod.WithBody(noBody));
 
         return new SyntaxList<MemberDeclarationSyntax>(new MemberDeclarationSyntax[] { iface, strat, noStrat });
     }
