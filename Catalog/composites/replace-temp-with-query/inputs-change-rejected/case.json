@@ -1,0 +1,9 @@
+{
+  "refactoring": "replace-temp-with-query",
+  "description": "Refuses when a parameter the initializer reads is assigned before the temp is used, since the query would see the new value",
+  "target": { "file": "Counter.cs", "caret": "marker" },
+  "arguments": { "name": "Doubled" },
+  "expect": "error",
+  "errorCode": "initializer-inputs-change",
+  "errorContains": "'count'"
+}

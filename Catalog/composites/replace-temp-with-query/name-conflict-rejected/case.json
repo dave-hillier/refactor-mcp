@@ -1,0 +1,9 @@
+{
+  "refactoring": "replace-temp-with-query",
+  "description": "Refuses a query name the class already uses for a member",
+  "target": { "file": "Order.cs", "caret": "marker" },
+  "arguments": { "name": "Quantity" },
+  "expect": "error",
+  "errorCode": "name-conflict",
+  "errorContains": "'Quantity'"
+}

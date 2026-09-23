@@ -1,0 +1,8 @@
+{
+  "refactoring": "extract-method",
+  "description": "Refuses a name the class already gives a member",
+  "target": { "file": "Sample.cs", "selection": "marker" },
+  "arguments": { "name": "Report" },
+  "expect": "error",
+  "errorCode": "name-conflict"
+}

@@ -1,0 +1,8 @@
+{
+  "refactoring": "replace-temp-with-query",
+  "description": "Refuses a temp in a property accessor, where Extract Method cannot create the query",
+  "target": { "file": "Order.cs", "caret": "marker" },
+  "arguments": { "name": "BasePrice" },
+  "expect": "error",
+  "errorCode": "not-in-method"
+}

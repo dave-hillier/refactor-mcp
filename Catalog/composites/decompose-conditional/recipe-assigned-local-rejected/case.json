@@ -1,0 +1,19 @@
+{
+  "refactoring": "decompose-conditional",
+  "description": "The recipe stops at its first step when Extract Method refuses a branch that assigns a local read afterwards, and nothing changes",
+  "steps": [
+    {
+      "refactoring": "extract-method",
+      "target": { "file": "Tariff.cs", "selection": "marker" },
+      "arguments": { "name": "SummerCharge" }
+    },
+    {
+      "refactoring": "extract-method",
+      "target": { "file": "Tariff.cs", "range": "16:17-16:49" },
+      "arguments": { "name": "WinterCharge" }
+    }
+  ],
+  "expect": "error",
+  "errorCode": "assigned-local-used-after",
+  "errorContains": "'charge'"
+}

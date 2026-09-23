@@ -1,0 +1,6 @@
+{
+  "refactoring": "extract-method",
+  "description": "A selection covering exactly one expression becomes a method returning its value, called in its place",
+  "target": { "file": "Sample.cs", "selection": "marker" },
+  "arguments": { "name": "IsStandardParcel" }
+}

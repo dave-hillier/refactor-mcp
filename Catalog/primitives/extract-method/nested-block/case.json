@@ -1,0 +1,6 @@
+{
+  "refactoring": "extract-method",
+  "description": "Statements inside the block of an if statement are extracted on their own, and a return ending the selection stays at the call site",
+  "target": { "file": "Sample.cs", "selection": "marker" },
+  "arguments": { "name": "LogRejection" }
+}

@@ -1,0 +1,6 @@
+{
+  "refactoring": "decompose-conditional",
+  "description": "Extracts the condition and both branches, which return values, as the recipe does",
+  "target": { "file": "Tariff.cs", "caret": "marker" },
+  "arguments": { "conditionName": "NotSummer", "thenName": "WinterCharge", "elseName": "SummerCharge" }
+}
