@@ -1,0 +1,8 @@
+{
+  "refactoring": "hide-delegate",
+  "description": "The delegate's method has an out parameter, which a forwarding method is not generated for",
+  "target": { "symbol": "P:Staff.Person.Ledger" },
+  "arguments": { "member": "TryBalance" },
+  "expect": "error",
+  "errorCode": "unsupported-member"
+}

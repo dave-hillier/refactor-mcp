@@ -192,6 +192,30 @@ internal sealed class StructuralCompositesMappings : ICatalogMappings
                 ("repeated-local-name", "more than once"),
                 ("name-conflict", "which would hide a field"),
                 ("instance-parameter-conflict", "which the constructor needs for the instance"))),
+
+        new CatalogMapping(
+            "hide-delegate",
+            "hide-delegate",
+            async context =>
+            {
+                var location = await context.SymbolLocationAsync();
+                var arguments = new Dictionary<string, JsonElement>
+                {
+                    ["solutionPath"] = Json(context.SolutionPath),
+                    ["filePath"] = Json(location.FilePath),
+                    ["delegateName"] = Json(location.Symbol.Name),
+                    ["line"] = Json(location.Line),
+                    ["memberName"] = context.RequiredArgument("member"),
+                };
+                CopyOptional(context, arguments, "name", "newMemberName");
+                return arguments;
+            },
+            Codes(
+                ("static-delegate", "is static, so there is no instance"),
+                ("member-not-found", "has no instance member named"),
+                ("name-conflict", "already has a member named"),
+                ("unsupported-member", "which a forwarding method does not reproduce"),
+                ("breaks-compilation", "would not compile"))),
     };
 
     private static void CopyOptional(

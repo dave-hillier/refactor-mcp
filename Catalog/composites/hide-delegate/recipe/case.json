@@ -1,0 +1,8 @@
+{
+  "refactoring": "hide-delegate",
+  "description": "Extracts the client's call through the person's department into a method, then moves that method onto Person through the person parameter, as the recipe of primitive steps",
+  "steps": [
+    { "refactoring": "extract-method", "target": { "file": "Payroll.cs", "selection": "marker" }, "arguments": { "name": "ApproveByManager" } },
+    { "refactoring": "move-instance-method", "target": { "symbol": "M:Staff.Payroll.ApproveByManager(Staff.Person,Staff.Invoice)" }, "arguments": { "via": "person", "stub": false } }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "refactoring": "hide-delegate",
+  "description": "The department has no member called Budget",
+  "target": { "symbol": "P:Staff.Person.Department" },
+  "arguments": { "member": "Budget" },
+  "expect": "error",
+  "errorCode": "member-not-found"
+}
