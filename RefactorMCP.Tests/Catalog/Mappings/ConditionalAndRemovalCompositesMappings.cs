@@ -64,7 +64,33 @@ internal sealed class ConditionalAndRemovalCompositesMappings : ICatalogMappings
                 ("no-common-fragments", "no common fragments to move"),
                 ("uses-branch-local", "its branch declares"),
                 ("condition-depends-on-fragment", "The conditions depend on"))),
+        new CatalogMapping(
+            "remove-middle-man",
+            "remove-middle-man",
+            async context =>
+            {
+                var arguments = await TypeArguments(context);
+                arguments["via"] = context.RequiredArgument("via");
+                return arguments;
+            },
+            Codes(
+                ("via-not-found", "to delegate through"),
+                ("no-delegating-members", "has no method or property that only delegates"),
+                ("via-not-accessible", "make the delegate accessible first"),
+                ("method-group-reference", "is used without being called"))),
     };
+
+    /// <summary>The file declaring the <c>target.symbol</c> type, and its name.</summary>
+    private static async Task<Dictionary<string, JsonElement>> TypeArguments(StepContext context)
+    {
+        var location = await context.SymbolLocationAsync();
+        return new Dictionary<string, JsonElement>
+        {
+            ["solutionPath"] = Json(context.SolutionPath),
+            ["filePath"] = Json(location.FilePath),
+            ["className"] = Json(location.Symbol.Name),
+        };
+    }
 
     /// <summary>The file and the 1-based position of the caret, for tools that act on the statement under it.</summary>
     private static Dictionary<string, JsonElement> CaretArguments(StepContext context)

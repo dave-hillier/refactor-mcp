@@ -1,0 +1,8 @@
+{
+  "refactoring": "remove-middle-man",
+  "description": "The via must name a field or property of the class",
+  "target": { "symbol": "T:Company.Person" },
+  "arguments": { "via": "Team" },
+  "expect": "error",
+  "errorCode": "via-not-found"
+}

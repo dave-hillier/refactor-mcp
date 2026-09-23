@@ -1,0 +1,8 @@
+{
+  "refactoring": "remove-middle-man",
+  "description": "Callers outside the class cannot reach a private delegate; expose it first",
+  "target": { "symbol": "T:Company.Person" },
+  "arguments": { "via": "_department" },
+  "expect": "error",
+  "errorCode": "via-not-accessible"
+}

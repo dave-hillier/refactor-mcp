@@ -1,0 +1,8 @@
+{
+  "refactoring": "remove-middle-man",
+  "description": "A class with no member that only delegates through the via has no middle man to remove",
+  "target": { "symbol": "T:Company.Person" },
+  "arguments": { "via": "Department" },
+  "expect": "error",
+  "errorCode": "no-delegating-members"
+}

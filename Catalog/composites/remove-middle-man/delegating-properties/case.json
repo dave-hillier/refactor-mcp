@@ -1,0 +1,6 @@
+{
+  "refactoring": "remove-middle-man",
+  "description": "A property that only delegates is removed too, including uses inside the class and through null-conditional access; members that do more, and an override, are kept",
+  "target": { "symbol": "T:Company.Person" },
+  "arguments": { "via": "Department" }
+}
