@@ -1,0 +1,5 @@
+{
+  "refactoring": "consolidate-conditional-expression",
+  "description": "Nested ifs without else become one if on their conditions joined by &&, in one step",
+  "target": { "file": "Shipping.cs", "caret": "marker" }
+}

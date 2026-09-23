@@ -1,0 +1,7 @@
+{
+  "refactoring": "consolidate-conditional-expression",
+  "description": "A condition that declares a pattern variable cannot be joined with ||, which would leave the variable unassigned",
+  "target": { "file": "Shapes.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "declares-variable"
+}

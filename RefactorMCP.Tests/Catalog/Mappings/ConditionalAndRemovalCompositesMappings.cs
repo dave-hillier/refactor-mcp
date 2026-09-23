@@ -36,6 +36,34 @@ internal sealed class ConditionalAndRemovalCompositesMappings : ICatalogMappings
                 ("not-an-if", "is not on an if statement"),
                 ("not-in-block", "is not in a block"),
                 ("no-guard-clause", "has no guard clause to become"))),
+        new CatalogMapping(
+            "consolidate-conditional-expression",
+            "consolidate-conditional-expression",
+            context =>
+            {
+                var arguments = CaretArguments(context);
+                if (context.HasArgument("name"))
+                    arguments["methodName"] = context.RequiredArgument("name");
+                return arguments;
+            },
+            Codes(
+                ("not-an-if", "is not on an if statement"),
+                ("nothing-to-consolidate", "has nothing to consolidate"),
+                ("body-falls-through", "share a body that can fall through"),
+                ("declares-variable", "declares"),
+                ("invalid-name", "is not a valid method name"),
+                ("name-conflict", "already has a member named"))),
+        new CatalogMapping(
+            "consolidate-duplicate-conditional-fragments",
+            "consolidate-duplicate-conditional-fragments",
+            CaretArguments,
+            Codes(
+                ("not-an-if", "is not on an if statement"),
+                ("not-in-block", "is not in a block"),
+                ("no-final-else", "has no final else"),
+                ("no-common-fragments", "no common fragments to move"),
+                ("uses-branch-local", "its branch declares"),
+                ("condition-depends-on-fragment", "The conditions depend on"))),
     };
 
     /// <summary>The file and the 1-based position of the caret, for tools that act on the statement under it.</summary>

@@ -1,0 +1,7 @@
+{
+  "refactoring": "consolidate-duplicate-conditional-fragments",
+  "description": "The caret must be on an if statement",
+  "target": { "file": "Deal.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "not-an-if"
+}

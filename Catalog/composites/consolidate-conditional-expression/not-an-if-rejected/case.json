@@ -1,0 +1,7 @@
+{
+  "refactoring": "consolidate-conditional-expression",
+  "description": "The caret must be on an if statement",
+  "target": { "file": "Disability.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "not-an-if"
+}

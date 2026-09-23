@@ -1,0 +1,7 @@
+{
+  "refactoring": "consolidate-duplicate-conditional-fragments",
+  "description": "Without a final else, a statement moved out of the branches would also run when no branch does",
+  "target": { "file": "Deal.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "no-final-else"
+}

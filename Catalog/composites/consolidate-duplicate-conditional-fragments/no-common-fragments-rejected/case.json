@@ -1,0 +1,7 @@
+{
+  "refactoring": "consolidate-duplicate-conditional-fragments",
+  "description": "Branches that neither start nor end with the same statement have nothing to move",
+  "target": { "file": "Deal.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "no-common-fragments"
+}

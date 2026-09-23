@@ -1,0 +1,7 @@
+{
+  "refactoring": "consolidate-conditional-expression",
+  "description": "Consecutive ifs with the same body that does not jump away both run it when both hold, where one combined if would run it once",
+  "target": { "file": "Alerts.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "body-falls-through"
+}

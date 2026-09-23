@@ -1,0 +1,5 @@
+{
+  "refactoring": "consolidate-duplicate-conditional-fragments",
+  "description": "Several common statements move at each end, keeping the first branch's comments, and a return common to every branch moves too",
+  "target": { "file": "Deal.cs", "caret": "marker" }
+}

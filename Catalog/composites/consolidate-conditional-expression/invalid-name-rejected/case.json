@@ -1,0 +1,8 @@
+{
+  "refactoring": "consolidate-conditional-expression",
+  "description": "The name for the extracted condition must be a valid identifier",
+  "target": { "file": "Disability.cs", "caret": "marker" },
+  "arguments": { "name": "not eligible" },
+  "expect": "error",
+  "errorCode": "invalid-name"
+}

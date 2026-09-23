@@ -1,0 +1,7 @@
+{
+  "refactoring": "consolidate-conditional-expression",
+  "description": "An if with no nested if, no else if and no following if with the same body has nothing to combine with",
+  "target": { "file": "Disability.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "nothing-to-consolidate"
+}

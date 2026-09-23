@@ -1,0 +1,5 @@
+{
+  "refactoring": "consolidate-duplicate-conditional-fragments",
+  "description": "A statement that ends every branch moves after the conditional",
+  "target": { "file": "Deal.cs", "caret": "marker" }
+}

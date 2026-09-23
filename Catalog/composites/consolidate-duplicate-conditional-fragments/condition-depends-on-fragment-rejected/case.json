@@ -1,0 +1,7 @@
+{
+  "refactoring": "consolidate-duplicate-conditional-fragments",
+  "description": "A common first statement that changes what a condition reads cannot move before the condition",
+  "target": { "file": "Counter.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "condition-depends-on-fragment"
+}
