@@ -1,0 +1,5 @@
+{
+  "refactoring": "push-down-method",
+  "description": "Copies a method no code calls into every direct subclass, so it is not lost",
+  "target": { "symbol": "M:Shop.Employee.Describe" }
+}

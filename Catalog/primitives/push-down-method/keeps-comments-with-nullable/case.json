@@ -1,0 +1,6 @@
+{
+  "refactoring": "push-down-method",
+  "description": "Moves the method's documentation and body comments with it, keeping nullable annotations",
+  "project": { "nullable": "enable" },
+  "target": { "symbol": "M:Shop.Employee.FindTerritory(System.String)" }
+}

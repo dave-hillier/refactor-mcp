@@ -1,0 +1,8 @@
+{
+  "refactoring": "push-down-method",
+  "description": "Refuses when the method uses a member private to the base class",
+  "target": { "symbol": "M:Shop.Employee.Bonus(System.Decimal)" },
+  "expect": "error",
+  "errorCode": "uses-base-private-members",
+  "errorContains": "_rate"
+}

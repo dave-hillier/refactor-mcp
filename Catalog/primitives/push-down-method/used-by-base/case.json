@@ -1,0 +1,8 @@
+{
+  "refactoring": "push-down-method",
+  "description": "Refuses when the base class itself calls the method",
+  "target": { "symbol": "M:Shop.Employee.Rate" },
+  "expect": "error",
+  "errorCode": "used-by-base",
+  "errorContains": "Employee"
+}

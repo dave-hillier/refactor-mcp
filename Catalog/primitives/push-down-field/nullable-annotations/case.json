@@ -1,0 +1,6 @@
+{
+  "refactoring": "push-down-field",
+  "description": "Keeps nullable annotations on the moved field",
+  "project": { "nullable": "enable" },
+  "target": { "symbol": "F:Shop.Employee.Territory" }
+}

@@ -1,0 +1,8 @@
+{
+  "refactoring": "push-down-method",
+  "description": "Refuses when code elsewhere calls the method through a base-typed reference",
+  "target": { "symbol": "M:Shop.Employee.Describe" },
+  "expect": "error",
+  "errorCode": "used-through-base",
+  "errorContains": "Directory.cs"
+}

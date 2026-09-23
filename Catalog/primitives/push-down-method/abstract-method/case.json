@@ -1,0 +1,5 @@
+{
+  "refactoring": "push-down-method",
+  "description": "Removes an abstract declaration, leaving each subclass's implementation as an ordinary method",
+  "target": { "symbol": "M:Shop.Employee.Commission" }
+}

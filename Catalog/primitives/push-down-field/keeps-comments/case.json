@@ -1,0 +1,5 @@
+{
+  "refactoring": "push-down-field",
+  "description": "Moves the field's documentation comment with it and leaves its neighbours' comments alone",
+  "target": { "symbol": "F:Shop.Employee.Territory" }
+}

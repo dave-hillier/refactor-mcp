@@ -89,6 +89,32 @@ internal sealed class TypesAndHierarchyMappings : ICatalogMappings
                 ("base-not-abstract", "is not abstract"),
                 ("sibling-lacks-implementation", "does not implement"),
                 ("breaks-compilation", "would break the build"))),
+
+        new CatalogMapping(
+            "push-down-field",
+            "push-down-field",
+            async context => await MemberArguments(context, "fieldName"),
+            Codes(
+                ("no-subclasses", "has no subclasses"),
+                ("used-by-base", "cannot move to the subclasses"),
+                ("used-through-base", "which would no longer have it"),
+                ("uses-base-private-members", "which is private to"),
+                ("member-exists-in-subclass", "already has a member named"),
+                ("breaks-compilation", "would break the build"))),
+
+        new CatalogMapping(
+            "push-down-method",
+            "push-down-method",
+            async context => await MemberArguments(context, "methodName", withLine: true),
+            Codes(
+                ("no-subclasses", "has no subclasses"),
+                ("used-by-base", "cannot move to the subclasses"),
+                ("used-through-base", "which would no longer have it"),
+                ("uses-base-private-members", "which is private to"),
+                ("member-exists-in-subclass", "already has a member named"),
+                ("method-is-overridden", "is overridden in"),
+                ("method-is-override", "so callers reach it without naming"),
+                ("breaks-compilation", "would break the build"))),
     };
 
     /// <summary>

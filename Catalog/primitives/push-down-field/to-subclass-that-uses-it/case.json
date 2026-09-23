@@ -1,0 +1,5 @@
+{
+  "refactoring": "push-down-field",
+  "description": "Moves a field into the one subclass that uses it, including through a subclass-typed reference in another file",
+  "target": { "symbol": "F:Shop.Employee.Quota" }
+}

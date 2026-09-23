@@ -1,0 +1,5 @@
+{
+  "refactoring": "push-down-method",
+  "description": "Moves one overload and leaves the other in the base class",
+  "target": { "symbol": "M:Shop.Employee.Report(System.Int32)" }
+}

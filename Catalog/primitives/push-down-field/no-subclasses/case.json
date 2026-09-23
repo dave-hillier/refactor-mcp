@@ -1,0 +1,7 @@
+{
+  "refactoring": "push-down-field",
+  "description": "Refuses when no class derives from the field's class",
+  "target": { "symbol": "F:Shop.Employee.Quota" },
+  "expect": "error",
+  "errorCode": "no-subclasses"
+}
