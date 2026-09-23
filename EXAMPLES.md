@@ -1398,6 +1398,97 @@ groups them. Each tool's fixtures are the fuller specification.
 
 <!-- Types and hierarchy: examples for this group's tools go below this line. -->
 
+#### Create Type
+
+Creates an empty class, interface, record or struct, in a new file or at the
+end of an existing one. The namespace defaults to the one the file, or the
+other files in its folder, already use.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json create-type \
+  '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Address.cs","name":"Address","kind":"class","baseType":"Entity"}'
+```
+
+#### Change Base Type
+
+Sets, replaces or removes (leave out `newBaseType`) a class's base class,
+refusing when the class or its callers rely on the old one.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json change-base-type \
+  '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Manager.cs","className":"Manager","newBaseType":"Employee"}'
+```
+
+#### Pull Up Field and Pull Up Method
+
+Moves a member into the base class. Identical copies in the other subclasses
+are removed; `makeAbstract` declares a method abstract in the base class and
+makes the subclasses' versions overrides. `line` picks one overload.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json pull-up-field \
+  '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Manager.cs","className":"Manager","fieldName":"_name"}'
+
+dotnet run --project RefactorMCP.ConsoleApp -- --json pull-up-method \
+  '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Manager.cs","className":"Manager","methodName":"Bonus","makeAbstract":true}'
+```
+
+#### Pull Up Constructor Body
+
+Moves the leading statements of a constructor that only set up the base class
+into a base constructor, and chains to it with `base(...)`.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json pull-up-constructor-body \
+  '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Manager.cs","className":"Manager","line":12}'
+```
+
+#### Push Down Field and Push Down Method
+
+Moves a member into the subclasses that use it, or every subclass when none
+does. An abstract method is removed and its overrides become ordinary methods.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json push-down-field \
+  '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Employee.cs","className":"Employee","fieldName":"Quota"}'
+
+dotnet run --project RefactorMCP.ConsoleApp -- --json push-down-method \
+  '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Employee.cs","className":"Employee","methodName":"QuotaReport"}'
+```
+
+#### Extract Interface
+
+Declares the named members, or every public instance member when
+`memberList` is empty, in a new interface and makes the class implement it.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json extract-interface \
+  '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Order.cs","className":"Order","memberList":"Total,Add","interfaceFilePath":"./src/IOrder.cs","interfaceName":"IOrder"}'
+```
+
+#### Change Type
+
+Changes the declared type of a local, parameter (`parameterName` with the
+method's name), field, property or method return value, refusing when a use
+would stop compiling or reach a different member. `line` and `column` pick
+between declarations with the same name.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json change-type \
+  '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Report.cs","name":"Print","parameterName":"writer","newType":"IWriter"}'
+```
+
+#### Introduce Generic Type Parameter
+
+Replaces a concrete type in a class, or in a method when `methodName` is
+given, with a new type parameter, constrained as the uses need. Every other
+use of the class or method passes the old type.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json introduce-generic-type-parameter \
+  '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Box.cs","className":"Box","typeToReplace":"Invoice","typeParameterName":"T"}'
+```
+
 <!-- End of Types and hierarchy. -->
 
 ### Type conversions
