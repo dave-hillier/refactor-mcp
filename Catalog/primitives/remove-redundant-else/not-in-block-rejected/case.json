@@ -1,0 +1,7 @@
+{
+  "refactoring": "remove-redundant-else",
+  "description": "Refuses an else if, which is the else of the if before it rather than a statement of a block, so nothing can follow it",
+  "target": { "file": "Grading.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "not-in-block"
+}

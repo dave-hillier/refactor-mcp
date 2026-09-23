@@ -1,0 +1,7 @@
+{
+  "refactoring": "remove-redundant-else",
+  "description": "Refuses a caret that is not on an if statement",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "not-an-if"
+}

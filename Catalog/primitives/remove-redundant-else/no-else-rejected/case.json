@@ -1,0 +1,7 @@
+{
+  "refactoring": "remove-redundant-else",
+  "description": "Refuses an if that has no else",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "no-else"
+}

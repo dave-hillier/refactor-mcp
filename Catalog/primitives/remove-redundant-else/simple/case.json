@@ -1,0 +1,5 @@
+{
+  "refactoring": "remove-redundant-else",
+  "description": "The else after a branch that always returns is removed, and its statements follow the if",
+  "target": { "file": "Payroll.cs", "caret": "marker" }
+}

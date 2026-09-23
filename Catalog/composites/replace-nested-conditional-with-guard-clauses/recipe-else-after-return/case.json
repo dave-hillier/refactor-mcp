@@ -1,0 +1,9 @@
+{
+  "refactoring": "replace-nested-conditional-with-guard-clauses",
+  "description": "The recipe for an else after a branch that returns: Remove Redundant Else on the outer if, then on each if it leaves behind",
+  "steps": [
+    { "refactoring": "remove-redundant-else", "target": { "file": "Payroll.cs", "caret": "marker" } },
+    { "refactoring": "remove-redundant-else", "target": { "file": "Payroll.cs", "range": "16:13-16:13" } },
+    { "refactoring": "remove-redundant-else", "target": { "file": "Payroll.cs", "range": "21:13-21:13" } }
+  ]
+}

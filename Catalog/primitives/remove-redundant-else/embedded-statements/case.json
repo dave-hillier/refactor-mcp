@@ -1,0 +1,5 @@
+{
+  "refactoring": "remove-redundant-else",
+  "description": "Without braces, the else's statement follows the if as it is",
+  "target": { "file": "Sign.cs", "caret": "marker" }
+}
