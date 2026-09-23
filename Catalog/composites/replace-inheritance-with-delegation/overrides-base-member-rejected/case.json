@@ -1,0 +1,8 @@
+{
+  "refactoring": "replace-inheritance-with-delegation",
+  "description": "The report overrides Title, which the document's Heading calls; a document held in a field would call its own Title instead",
+  "target": { "symbol": "T:Shop.Report" },
+  "expect": "error",
+  "errorCode": "overrides-base-member",
+  "errorContains": "Title"
+}

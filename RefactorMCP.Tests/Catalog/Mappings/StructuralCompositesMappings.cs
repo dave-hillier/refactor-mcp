@@ -216,6 +216,32 @@ internal sealed class StructuralCompositesMappings : ICatalogMappings
                 ("name-conflict", "already has a member named"),
                 ("unsupported-member", "which a forwarding method does not reproduce"),
                 ("breaks-compilation", "would not compile"))),
+
+        new CatalogMapping(
+            "replace-inheritance-with-delegation",
+            "replace-inheritance-with-delegation",
+            async context =>
+            {
+                var location = await context.SymbolLocationAsync();
+                var arguments = new Dictionary<string, JsonElement>
+                {
+                    ["solutionPath"] = Json(context.SolutionPath),
+                    ["filePath"] = Json(location.FilePath),
+                    ["className"] = Json(location.Symbol.Name),
+                };
+                CopyOptional(context, arguments, "field", "fieldName");
+                return arguments;
+            },
+            Codes(
+                ("not-a-class", "is not a class that derives from another"),
+                ("no-base-class", "has no base class to replace"),
+                ("name-conflict", "already has a member named"),
+                ("overrides-base-member", "would no longer call"),
+                ("partial-type", "is partial"),
+                ("uses-protected-member", "uses the protected member"),
+                ("unsupported-member", "which is not forwarded"),
+                ("unsupported-method", "are not forwarded"),
+                ("breaks-compilation", "would not compile"))),
     };
 
     private static void CopyOptional(

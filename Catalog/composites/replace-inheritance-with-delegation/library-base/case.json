@@ -1,0 +1,5 @@
+{
+  "refactoring": "replace-inheritance-with-delegation",
+  "description": "A stack that inherited from List<int> holds a list instead; its own code uses the list, and the count and indexer other code uses are forwarded",
+  "target": { "symbol": "T:Shop.Stack" }
+}

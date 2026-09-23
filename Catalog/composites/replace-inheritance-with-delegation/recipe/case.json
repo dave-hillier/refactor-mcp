@@ -1,0 +1,9 @@
+{
+  "refactoring": "replace-inheritance-with-delegation",
+  "description": "The recipe: a field of the base type, then removing the base class. No primitive delegates an inherited member, so removing the base class refuses while the stack still uses Add, Count, RemoveAt and the indexer",
+  "status": "unimplemented",
+  "steps": [
+    { "refactoring": "introduce-field", "target": { "symbol": "T:Shop.Stack" }, "arguments": { "type": "List<int>", "name": "_list" } },
+    { "refactoring": "change-base-type", "target": { "symbol": "T:Shop.Stack" } }
+  ]
+}

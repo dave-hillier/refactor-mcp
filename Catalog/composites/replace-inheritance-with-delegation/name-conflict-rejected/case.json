@@ -1,0 +1,8 @@
+{
+  "refactoring": "replace-inheritance-with-delegation",
+  "description": "The name asked for the field is already a member the playlist inherits",
+  "target": { "symbol": "T:Music.Playlist" },
+  "arguments": { "field": "Title" },
+  "expect": "error",
+  "errorCode": "name-conflict"
+}
