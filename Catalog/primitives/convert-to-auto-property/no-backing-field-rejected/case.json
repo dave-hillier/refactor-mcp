@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-to-auto-property",
+  "description": "Refuses a property that is already an auto-property",
+  "target": { "symbol": "P:Shop.Sample.Name" },
+  "expect": "error",
+  "errorCode": "no-backing-field"
+}

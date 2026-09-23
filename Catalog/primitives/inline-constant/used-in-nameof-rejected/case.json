@@ -1,0 +1,7 @@
+{
+  "refactoring": "inline-constant",
+  "description": "Refuses a constant that nameof names, since nameof needs a symbol rather than a value",
+  "target": { "symbol": "F:Shop.Settings.Retries" },
+  "expect": "error",
+  "errorCode": "used-in-nameof"
+}

@@ -1,0 +1,5 @@
+{
+  "refactoring": "encapsulate-field",
+  "description": "A readonly field gets a get-only property",
+  "target": { "symbol": "F:Shop.Product.Code" }
+}

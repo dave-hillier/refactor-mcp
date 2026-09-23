@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-auto-property-to-backing-field",
+  "description": "Refuses a property that already has accessor bodies",
+  "target": { "symbol": "P:Shop.Sample.Name" },
+  "expect": "error",
+  "errorCode": "not-auto-property"
+}

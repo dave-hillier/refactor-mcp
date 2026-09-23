@@ -1,0 +1,7 @@
+{
+  "refactoring": "encapsulate-field",
+  "description": "Refuses when code outside the type passes the field by reference, which a property cannot be",
+  "target": { "symbol": "F:Shop.Counter.Hits" },
+  "expect": "error",
+  "errorCode": "passed-by-reference"
+}

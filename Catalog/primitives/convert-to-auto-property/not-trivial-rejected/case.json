@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-to-auto-property",
+  "description": "Refuses a property whose setter does more than store the value",
+  "target": { "symbol": "P:Shop.Account.Balance" },
+  "expect": "error",
+  "errorCode": "not-trivial"
+}

@@ -1,0 +1,6 @@
+{
+  "refactoring": "convert-to-auto-property",
+  "description": "A nullable property of a type parameter keeps its annotation",
+  "target": { "symbol": "P:Shop.Box`1.Item" },
+  "project": { "nullable": "enable" }
+}

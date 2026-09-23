@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-auto-property-to-backing-field",
+  "description": "An auto-property gets a private backing field holding its initialiser, and accessors that read and write it",
+  "target": { "symbol": "P:Shop.Customer.Name" }
+}

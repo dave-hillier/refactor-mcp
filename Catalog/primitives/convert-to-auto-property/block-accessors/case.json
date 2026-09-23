@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-to-auto-property",
+  "description": "A property whose accessors only read and write a private field becomes an auto-property; the field is removed and its other uses read the property",
+  "target": { "symbol": "P:Shop.Basket.Count" }
+}

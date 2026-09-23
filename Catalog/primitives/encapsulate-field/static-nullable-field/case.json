@@ -1,0 +1,6 @@
+{
+  "refactoring": "encapsulate-field",
+  "description": "A static field with a nullable type gets a static property of the same type",
+  "target": { "symbol": "F:Shop.Registry.LastName" },
+  "project": { "nullable": "enable" }
+}

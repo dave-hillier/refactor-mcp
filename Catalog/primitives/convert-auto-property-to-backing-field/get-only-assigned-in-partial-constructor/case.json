@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-auto-property-to-backing-field",
+  "description": "A get-only auto-property gets a readonly field; the constructor, in another part of the partial type, assigns the field instead of the property",
+  "target": { "symbol": "P:Shop.Product.Code" }
+}

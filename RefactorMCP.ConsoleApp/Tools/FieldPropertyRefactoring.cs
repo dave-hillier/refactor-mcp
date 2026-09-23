@@ -229,18 +229,75 @@ internal static class FieldPropertyRefactoring
             foreach (var location in group)
             {
                 var name = editor.OriginalRoot.FindNode(location.Location.SourceSpan, getInnermostNodeForTie: true);
+                if (IsInNameOf(name))
+                    throw new McpException($"Error: '{field.Name}' is named by nameof at {location.Location.GetLineSpan()}, which needs a symbol rather than a value");
+
                 var reference = ReferenceExpression(name);
                 editor.ReplaceNode(reference, value.WithTriviaFrom(reference));
             }
             changed = editor.GetChangedDocument().Project.Solution;
         }
 
-        var document = changed.GetDocument(declaringDocument.Id)!;
+        return await RemoveFieldAsync(changed, field, declaringDocument.Id);
+    }
+
+    /// <summary>
+    /// Removes a field from the document that declares it, after other edits
+    /// may have moved it, by finding it by name in its type.
+    /// </summary>
+    internal static async Task<Solution> RemoveFieldAsync(Solution solution, IFieldSymbol field, DocumentId declaringDocument)
+    {
+        var document = solution.GetDocument(declaringDocument)!;
         var root = (await document.GetSyntaxRootAsync())!;
         var type = root.DescendantNodes().OfType<TypeDeclarationSyntax>()
             .First(t => t.Identifier.ValueText == field.ContainingType.Name && FieldVariables(t).Any(v => v.Identifier.ValueText == field.Name));
         return document.WithSyntaxRoot(root.ReplaceNode(type, RemoveField(type, field.Name))).Project.Solution;
     }
+
+    /// <summary>
+    /// Accessors that read and write a backing field, one to a line:
+    /// <c>get => _field;</c> and <c>set => _field = value;</c>, each keeping
+    /// the modifiers given for it.
+    /// </summary>
+    internal static AccessorListSyntax BackingAccessors(string fieldName, IEnumerable<(SyntaxKind Kind, string Modifiers)> accessors, SyntaxTrivia newLine)
+    {
+        var nl = newLine.ToString();
+        var lines = accessors.Select(accessor => accessor.Kind switch
+        {
+            SyntaxKind.GetAccessorDeclaration => $"{accessor.Modifiers}get => {fieldName};",
+            SyntaxKind.InitAccessorDeclaration => $"{accessor.Modifiers}init => {fieldName} = value;",
+            _ => $"{accessor.Modifiers}set => {fieldName} = value;",
+        });
+        var property = (PropertyDeclarationSyntax)SyntaxFactory.ParseMemberDeclaration(
+            $"int P{nl}{{{nl}{string.Join(nl, lines)}{nl}}}")!;
+        return property.AccessorList!
+            .WithLeadingTrivia(newLine)
+            .WithAdditionalAnnotations(Formatter.Annotation);
+    }
+
+    /// <summary>The modifiers of an accessor as source text, followed by a space when there are any.</summary>
+    internal static string AccessorModifiers(AccessorDeclarationSyntax accessor) =>
+        accessor.Modifiers.Count == 0 ? "" : accessor.Modifiers.ToString() + " ";
+
+    /// <summary>True when the node lies inside a declaration of the type, including nested types and other partial parts.</summary>
+    internal static bool IsInsideType(SyntaxNode node, SemanticModel model, INamedTypeSymbol type) =>
+        node.Ancestors().OfType<BaseTypeDeclarationSyntax>()
+            .Any(t => SymbolEqualityComparer.Default.Equals(model.GetDeclaredSymbol(t), type));
+
+    /// <summary><c>_title</c> and <c>m_title</c> become <c>Title</c>; <c>title</c> becomes <c>Title</c>.</summary>
+    internal static string PropertyNameFor(string fieldName)
+    {
+        var name = fieldName.StartsWith("m_", StringComparison.Ordinal) ? fieldName[2..] : fieldName.TrimStart('_');
+        return name.Length == 0 ? fieldName : char.ToUpperInvariant(name[0]) + name[1..];
+    }
+
+    /// <summary><c>Title</c> becomes <c>_title</c>.</summary>
+    internal static string FieldNameFor(string propertyName) =>
+        "_" + char.ToLowerInvariant(propertyName[0]) + propertyName[1..];
+
+    internal static bool IsInNameOf(SyntaxNode node) =>
+        node.Ancestors().OfType<InvocationExpressionSyntax>()
+            .Any(invocation => invocation.Expression is IdentifierNameSyntax { Identifier.ValueText: "nameof" });
 
     private static IEnumerable<VariableDeclaratorSyntax> FieldVariables(TypeDeclarationSyntax type) =>
         type.Members.OfType<FieldDeclarationSyntax>().SelectMany(f => f.Declaration.Variables);

@@ -1,0 +1,5 @@
+{
+  "refactoring": "encapsulate-field",
+  "description": "The field's documentation comment moves to the property, which is what callers now see; an ordinary comment stays with the field",
+  "target": { "symbol": "F:Shop.Account.Balance" }
+}

@@ -1,0 +1,9 @@
+{
+  "refactoring": "encapsulate-field",
+  "description": "Refuses a property name another member already has",
+  "target": { "symbol": "F:Shop.Sample._count" },
+  "arguments": { "name": "Total" },
+  "expect": "error",
+  "errorCode": "name-conflict",
+  "errorContains": "'Total'"
+}

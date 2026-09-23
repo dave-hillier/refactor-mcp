@@ -6,6 +6,7 @@ and removes the constant.
 ## Precondition
 
 - The target is a `const` field.
+- No use of it is inside `nameof`, which needs a symbol rather than a value.
 
 ## Transformation
 
@@ -26,7 +27,6 @@ and removes the constant.
 
 ## Limitations
 
-- A use inside `nameof` is replaced like any other, which does not compile.
 - Code outside the solution that uses a public constant is not updated.
 - Preprocessor directives in the constant's leading trivia are removed with
   it.
@@ -36,3 +36,4 @@ and removes the constant.
 | Code | Meaning |
 |---|---|
 | `not-a-constant` | the targeted field is not `const` |
+| `used-in-nameof` | a use of the constant is inside `nameof` |

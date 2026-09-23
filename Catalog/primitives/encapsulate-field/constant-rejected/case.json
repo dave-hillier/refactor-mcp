@@ -1,0 +1,7 @@
+{
+  "refactoring": "encapsulate-field",
+  "description": "Refuses a constant, which has no storage to encapsulate",
+  "target": { "symbol": "F:Shop.Sample.Limit" },
+  "expect": "error",
+  "errorCode": "constant-field"
+}

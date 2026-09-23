@@ -13,6 +13,7 @@ with that initialiser, across the solution, and removes the field.
   static readonly or constant fields, and built-in operators and casts. An
   initialiser that creates an object or calls a method is refused, because
   each use would get a new object or a new call.
+- No use of the field is inside `nameof`.
 
 ## Transformation
 
@@ -41,3 +42,4 @@ with that initialiser, across the solution, and removes the field.
 | `no-initializer` | the field has no initialiser |
 | `written-after-initialization` | the field is assigned somewhere other than its initialiser |
 | `initializer-not-inlinable` | the initialiser could give a different value or have side effects when evaluated again |
+| `used-in-nameof` | a use of the field is inside `nameof` |
