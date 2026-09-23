@@ -1,0 +1,7 @@
+{
+  "refactoring": "consolidate-conditional-expression",
+  "description": "The recipe for an else if chain: Merge Sibling Ifs joins the branches with the same body, and the chain continues with the else",
+  "steps": [
+    { "refactoring": "merge-sibling-ifs", "target": { "file": "Ticket.cs", "caret": "marker" } }
+  ]
+}

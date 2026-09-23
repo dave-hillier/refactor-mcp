@@ -1,0 +1,6 @@
+{
+  "refactoring": "extract-method",
+  "description": "A selected condition becomes a private method returning its value, after the containing method, taking the parameters it reads",
+  "target": { "file": "Tickets.cs", "selection": "marker" },
+  "arguments": { "name": "IsExempt" }
+}

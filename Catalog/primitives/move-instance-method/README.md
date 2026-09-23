@@ -2,7 +2,9 @@
 
 Moves an instance method onto the type of one of its class's fields or
 properties, or of one of its own parameters. That field, property or parameter
-(the "via") becomes `this` in the method's new home.
+(the "via") becomes `this` in the method's new home. Or, with `into`, moves it
+the other way: into the class that holds its class in a field or property (the
+"holder"), which it then reaches the rest of its old class through.
 
 ## Arguments
 
@@ -11,10 +13,13 @@ properties, or of one of its own parameters. That field, property or parameter
 | `target.symbol` | the method, such as `M:Shop.Customer.Label` |
 | `via` | the field, property or parameter to move through, such as `_address` |
 | `to` | instead of `via`: the target type's name; the one field, property or parameter of that type is used |
+| `into` | instead of `via` or `to`: the class that holds the method's class in a field or property, such as `Customer`; no stub is left |
 | `stub` | `true` (the default) leaves a delegating method behind; `false` removes it and updates every call |
 
 Composite recipes use the `via` form, for example
-`{ "refactoring": "move-instance-method", "target": { "symbol": "M:Shop.Customer.FormatAddress" }, "arguments": { "via": "_address" } }`.
+`{ "refactoring": "move-instance-method", "target": { "symbol": "M:Shop.Customer.FormatAddress" }, "arguments": { "via": "_address" } }`,
+and the `into` form to move a method back towards the class that holds its
+own, as in `{ "refactoring": "move-instance-method", "target": { "symbol": "M:Shop.Address.Format" }, "arguments": { "into": "Customer" } }`.
 
 ## Precondition
 
@@ -41,6 +46,22 @@ Without a stub, additionally:
   simple name, not an arbitrary expression.
 - No call passes `null` for a via parameter.
 
+With `into`:
+
+- The member is an instance member. The `into` class, declared in the
+  solution, has exactly one field or property whose type is the member's
+  class: the holder.
+- The holder is an instance field, or a get-only auto-property, that creates
+  its object in its initializer and is never assigned. Each instance of the
+  holding class then has exactly one instance of the member's class, from the
+  start, whose state the member can take over.
+- Every use of the member goes through the holder: `_address.Street`,
+  `this._address.Street` or `customer.Address.Street`. A use inside its own
+  class, or through any other instance, would have no holder to go through.
+- The holding class has no method of the same name and parameters.
+- The method uses no protected member of its class and does not call through
+  `base`.
+
 ## Transformation
 
 - The method is appended to the target type. Uses of the via become `this`:
@@ -61,6 +82,13 @@ Without a stub, additionally:
   `customer.Label()` becomes `customer.Address.Label(customer)`, and a call
   `warehouse.Track(parcel, "x")` through a via parameter becomes
   `parcel.Track("x")`.
+- With `into`, the method keeps its accessibility and is appended to the
+  holding class, and the original is removed. Uses of the rest of its old
+  class go through the holder: `Street` and `this.Street` become
+  `Address.Street`, and `this` becomes `Address`; private members it uses
+  there become `internal`. A call of the method itself stays as it is. Calls
+  through the holder become direct: `Address.Format()` becomes `Format()` and
+  `customer.Address.Format()` becomes `customer.Format()`.
 
 ## Preserved
 
@@ -100,3 +128,7 @@ Without a stub, additionally:
 | `null-argument` | without a stub, a call passes `null` for the via parameter |
 | `name-conflict` | the new instance parameter's name is already taken |
 | `target-cannot-see-source` | the target's project cannot see the method's class |
+| `holder-not-found` | with `into`, the class has no field or property of the member's class |
+| `several-holders` | with `into`, the class has several fields or properties of the member's class |
+| `holder-not-created` | with `into`, the holder is static, does not create its object in its initializer, or is assigned |
+| `used-outside-holder` | with `into`, a use of the member does not go through the holder |

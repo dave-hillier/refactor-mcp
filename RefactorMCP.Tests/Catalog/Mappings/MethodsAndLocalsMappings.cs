@@ -51,6 +51,9 @@ internal sealed class MethodsAndLocalsMappings : ICatalogMappings
                 ["name-conflict"] = "which is already used there",
                 ["unsupported-method"] = "is async or an iterator",
                 ["unsupported-call"] = "is not a statement of its own",
+                ["writable-property"] = "has a setter, so writes to it could not be inlined",
+                ["auto-property"] = "is an auto-property",
+                ["conditional-access"] = "nothing can follow the ?.",
             }),
         new CatalogMapping(
             "extract-local-variable",

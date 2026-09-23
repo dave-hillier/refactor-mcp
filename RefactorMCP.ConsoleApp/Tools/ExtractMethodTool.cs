@@ -79,11 +79,14 @@ public static class ExtractMethodTool
         var nameTaken = semanticModel.GetDeclaredSymbol(containingMethod)?.ContainingType.GetMembers(methodName).Any() == true;
 
         SyntaxNode newRoot;
+        ExpressionSyntax? extractedExpression = null;
         var expression = FieldPropertyRefactoring.SelectedExpression(syntaxRoot, sourceText, span);
         if (expression != null && expression.Parent is not ExpressionStatementSyntax && containingMethod.Body.Span.Contains(expression.Span))
         {
             EnsureExtractableExpression(expression, semanticModel);
             EnsureAssignedLocalsStayInside(containingMethod, expression.Span, semanticModel.AnalyzeDataFlow(expression), semanticModel);
+            if (!nameTaken)
+                extractedExpression = expression;
             newRoot = nameTaken
                 ? await ExistingMethodCall.ReplaceAsync(document, semanticModel, containingMethod, new[] { expression }, methodName)
                 : new ExtractMethodRewriter(containingMethod, containingClass, expression, methodName, semanticModel).Visit(syntaxRoot)!;
@@ -106,7 +109,50 @@ public static class ExtractMethodTool
                 : new ExtractMethodRewriter(containingMethod, containingClass, statementsToExtract, methodName, semanticModel, span).Visit(syntaxRoot)!;
         }
 
-        return Formatter.Format(newRoot, document.Project.Solution.Workspace);
+        var formatted = Formatter.Format(newRoot, document.Project.Solution.Workspace);
+        return extractedExpression is null ? formatted : KeepContinuationIndents(formatted, extractedExpression, methodName);
+    }
+
+    /// <summary>
+    /// An expression written over several lines keeps the indentation of its later
+    /// lines relative to the statement it is in, as it had where it came from; the
+    /// formatter would otherwise indent them from where it moved.
+    /// </summary>
+    private static SyntaxNode KeepContinuationIndents(SyntaxNode root, ExpressionSyntax original, string methodName)
+    {
+        var originalIndents = LineIndents(original).ToList();
+        if (originalIndents.Count == 0)
+            return root;
+
+        var moved = root.DescendantNodes().OfType<MethodDeclarationSyntax>()
+            .Where(m => m.Identifier.ValueText == methodName)
+            .Select(m => m.Body?.Statements.LastOrDefault() as ReturnStatementSyntax)
+            .LastOrDefault(r => r?.Expression is not null && SyntaxFactory.AreEquivalent(r.Expression, original));
+        if (moved is null)
+            return root;
+
+        var line = original.SyntaxTree.GetText().Lines.GetLineFromPosition(original.SpanStart).ToString();
+        var originalBase = line[..(line.Length - line.TrimStart().Length)];
+        var newBase = moved.GetLeadingTrivia().LastOrDefault(t => t.IsKind(SyntaxKind.WhitespaceTrivia)).ToString();
+
+        var replacements = LineIndents(moved.Expression!).Zip(originalIndents).ToDictionary(
+            pair => pair.First,
+            pair => SyntaxFactory.Whitespace(newBase + (pair.Second.ToString().StartsWith(originalBase, StringComparison.Ordinal)
+                ? pair.Second.ToString()[originalBase.Length..]
+                : "")));
+        return root.ReplaceTrivia(replacements.Keys, (trivia, _) => replacements[trivia]);
+    }
+
+    /// <summary>The whitespace that starts each line after the first, within a node.</summary>
+    private static IEnumerable<SyntaxTrivia> LineIndents(SyntaxNode node)
+    {
+        var previous = default(SyntaxTrivia);
+        foreach (var trivia in node.DescendantTrivia())
+        {
+            if (trivia.IsKind(SyntaxKind.WhitespaceTrivia) && previous.IsKind(SyntaxKind.EndOfLineTrivia))
+                yield return trivia;
+            previous = trivia;
+        }
     }
 
     /// <summary>

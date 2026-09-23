@@ -1,0 +1,8 @@
+{
+  "refactoring": "replace-nested-conditional-with-guard-clauses",
+  "description": "The recipe for an else if chain: Remove Redundant Else on the first if, which makes the else if an if of its own, then on that if",
+  "steps": [
+    { "refactoring": "remove-redundant-else", "target": { "file": "Grading.cs", "caret": "marker" } },
+    { "refactoring": "remove-redundant-else", "target": { "file": "Grading.cs", "range": "12:13-12:13" } }
+  ]
+}

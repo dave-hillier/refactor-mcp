@@ -1,0 +1,6 @@
+{
+  "refactoring": "extract-method",
+  "description": "An expression over several lines moves with the comments inside it",
+  "target": { "file": "Dispatch.cs", "selection": "marker" },
+  "arguments": { "name": "IsPriority" }
+}

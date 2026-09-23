@@ -1,11 +1,14 @@
 # Inline Method
 
 Replaces every call of a method with the method's body, across the solution,
-and deletes the method. The reverse of Extract Method.
+and deletes the method. The reverse of Extract Method. A read-only property
+whose getter computes its value is inlined the same way at every read.
 
 ## Target
 
-The method, by symbol. Overloads are told apart by their signature.
+The method, by symbol, such as `M:Shop.Order.Total(System.Int32)`; overloads
+are told apart by their signature. Or the property, such as
+`P:Shop.Order.Total`.
 
 ## Precondition
 
@@ -29,6 +32,21 @@ The method, by symbol. Overloads are told apart by their signature.
 - A call passes no `ref`, `out` or `in` argument and no `params` array, and a
   call on an object other than `this` names it with a simple expression when
   the method reaches `this` more than once.
+
+For a property:
+
+- It is not an auto-property, which stores its value, and has no setter or
+  `init` accessor, whose writes could not be inlined. Its getter, or its
+  expression body, is a single expression: `=> expression`, or
+  `get { return expression; }`.
+- It is not `virtual`, `abstract`, an override or an interface
+  implementation, and its getter does not read the property itself.
+- Every member and type the getter names is accessible at each read, and a
+  read on an object other than `this` names it with a simple expression when
+  the getter reaches `this` more than once.
+- A read through `?.` is of a getter that starts from a member of the object,
+  such as `Department.Manager`, and reaches `this` nowhere else, so that the
+  rest of the getter can follow the `?.`.
 
 ## Transformation
 
@@ -54,6 +72,11 @@ The method, by symbol. Overloads are told apart by their signature.
   compiles.
 - Calls nested in another call's arguments are inlined too.
 - The method is deleted, with its comments.
+- A property's getter expression replaces each read, parenthesised only where
+  precedence requires, with members it reaches through `this` reached through
+  the read's receiver: `order.Total` becomes `order.Subtotal + order.Tax` in
+  parentheses where needed, and `person?.Manager` becomes
+  `person?.Department.Manager`. The property is deleted, with its comments.
 
 ## Preserved
 
@@ -74,6 +97,8 @@ The method, by symbol. Overloads are told apart by their signature.
   the method changes before reading the parameter.
 - Only whole-method inlining is covered; inlining a single call site and
   keeping the method is not.
+- A property is only inlined when it cannot be written; a property with a
+  setter is refused rather than turned into a field.
 
 ## Error codes
 
@@ -88,3 +113,6 @@ The method, by symbol. Overloads are told apart by their signature.
 | `early-return` | a void method returns before its last statement |
 | `name-conflict` | a local the inlined code declares clashes with a name at the call site |
 | `unsupported-call` | a void method's call is not a statement of its own |
+| `writable-property` | the property has a setter or `init` accessor |
+| `auto-property` | the property is an auto-property, with no getter body to inline |
+| `conditional-access` | a read through `?.` is of a getter that does not start from one member of the object |

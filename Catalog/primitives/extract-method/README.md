@@ -28,7 +28,8 @@ a new private method, and replaces them with a call to it.
   extracts statements of that block. A statement an `if`, `else` or loop runs
   without braces is extracted on its own and replaced by the call.
 - An expression becomes a method returning it, with the expression's type,
-  and the call takes its place.
+  and the call takes its place. An expression over several lines keeps the
+  indentation of its later lines relative to the statement it is in.
 - A `return;`, `break;` or `continue;` ending the selection stays at the call
   site, after the call.
 - When the name is that of a method the class already has, whose body is the
@@ -51,7 +52,7 @@ a new private method, and replaces them with a call to it.
 ## Preserved
 
 - The behaviour of the containing method on every path.
-- Comments and blank lines inside the extracted statements.
+- Comments and blank lines inside the extracted statements or expression.
 - Comments and blank lines outside the selection: a comment above the first
   selected statement stays at the call site, and a blank line after the
   selection stays after the call.

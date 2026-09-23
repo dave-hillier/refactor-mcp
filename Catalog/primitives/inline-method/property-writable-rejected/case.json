@@ -1,0 +1,7 @@
+{
+  "refactoring": "inline-method",
+  "description": "Refuses a property with a setter, whose writes could not be inlined",
+  "target": { "symbol": "P:Shop.Order.Quantity" },
+  "expect": "error",
+  "errorCode": "writable-property"
+}

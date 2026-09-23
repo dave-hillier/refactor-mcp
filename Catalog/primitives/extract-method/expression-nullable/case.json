@@ -1,0 +1,7 @@
+{
+  "refactoring": "extract-method",
+  "description": "With nullable annotations, a parameter keeps its annotation and the method returns a non-nullable type when the value cannot be null",
+  "project": { "nullable": "enable" },
+  "target": { "file": "Greeter.cs", "selection": "marker" },
+  "arguments": { "name": "NameOrGuest" }
+}

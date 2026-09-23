@@ -1,0 +1,5 @@
+{
+  "refactoring": "merge-sibling-ifs",
+  "description": "An else if with the same body joins the if with ||, and the chain continues with its else",
+  "target": { "file": "Ticket.cs", "caret": "marker" }
+}

@@ -166,9 +166,10 @@ internal sealed class MovingMembersAndTypesMappings : ICatalogMappings
 
     /// <summary>
     /// The four moves share one tool: <c>via</c> names the field, property or
-    /// parameter to move through, <c>to</c> the target type, <c>stub</c> whether
-    /// a moved method leaves a delegating stub (default true), and <c>file</c> the
-    /// file for a target type that has to be created.
+    /// parameter to move through, <c>to</c> the target type, <c>into</c> the class
+    /// holding the member's class, <c>stub</c> whether a moved method leaves a
+    /// delegating stub (default true), and <c>file</c> the file for a target type
+    /// that has to be created.
     /// </summary>
     private static CatalogMapping MoveMapping(string refactoring, string kind) => new(
         refactoring,
@@ -181,6 +182,8 @@ internal sealed class MovingMembersAndTypesMappings : ICatalogMappings
                 arguments["via"] = context.RequiredArgument("via");
             if (context.HasArgument("to"))
                 arguments["targetType"] = context.RequiredArgument("to");
+            if (context.HasArgument("into"))
+                arguments["into"] = context.RequiredArgument("into");
             if (context.HasArgument("stub"))
                 arguments["keepStub"] = context.RequiredArgument("stub");
             if (context.HasArgument("file"))
@@ -215,7 +218,11 @@ internal sealed class MovingMembersAndTypesMappings : ICatalogMappings
         ("null-argument", "passes null for"),
         ("name-conflict", "already has a parameter or local named"),
         ("target-cannot-see-source", "which cannot see"),
-        ("readonly-assigned", "is readonly and assigned"));
+        ("readonly-assigned", "is readonly and assigned"),
+        ("holder-not-found", "holds no instance of"),
+        ("several-holders", "in several fields or properties"),
+        ("holder-not-created", "creates the object in its initializer"),
+        ("used-outside-holder", "other than through"));
 
     /// <summary><see cref="MemberArguments"/> for tools that call the member a method.</summary>
     private static async Task<Dictionary<string, JsonElement>> MethodArguments(StepContext context)

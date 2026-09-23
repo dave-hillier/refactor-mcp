@@ -1,0 +1,5 @@
+{
+  "refactoring": "inline-method",
+  "description": "A read-only property is inlined at every read, in its class and through a receiver in another file, parenthesised where precedence needs it, and deleted",
+  "target": { "symbol": "P:Shop.Order.Total" }
+}

@@ -1,0 +1,5 @@
+{
+  "refactoring": "remove-redundant-else",
+  "description": "Comments before the else keyword and inside the else move with its statements, and a blank line inside it is kept",
+  "target": { "file": "Stock.cs", "caret": "marker" }
+}

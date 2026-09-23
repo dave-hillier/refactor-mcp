@@ -1,0 +1,7 @@
+{
+  "refactoring": "remove-redundant-else",
+  "description": "Refuses an if whose branch can run on past its end, since the else's statements would then run after it",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "branch-falls-through"
+}

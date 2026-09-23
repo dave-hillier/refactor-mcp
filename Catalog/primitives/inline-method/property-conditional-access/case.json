@@ -1,0 +1,5 @@
+{
+  "refactoring": "inline-method",
+  "description": "A read through ?. of a property whose getter starts from a member of the object keeps the ?. before that member",
+  "target": { "symbol": "P:Company.Person.Manager" }
+}

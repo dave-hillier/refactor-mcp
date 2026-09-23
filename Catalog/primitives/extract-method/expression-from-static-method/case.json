@@ -1,0 +1,6 @@
+{
+  "refactoring": "extract-method",
+  "description": "An expression in a static method is extracted into a static method; a constant it reads stays reachable and is not passed",
+  "target": { "file": "Tax.cs", "selection": "marker" },
+  "arguments": { "name": "Levy" }
+}

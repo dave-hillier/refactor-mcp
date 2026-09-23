@@ -1,0 +1,6 @@
+{
+  "refactoring": "merge-sibling-ifs",
+  "description": "With nullable annotations, a null test short-circuits the condition after it as the separate ifs did",
+  "project": { "nullable": "enable" },
+  "target": { "file": "Names.cs", "caret": "marker" }
+}

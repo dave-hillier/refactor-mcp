@@ -1,0 +1,5 @@
+{
+  "refactoring": "remove-redundant-else",
+  "description": "An else if after a branch that always throws becomes an if of its own, keeping the rest of the chain",
+  "target": { "file": "Grading.cs", "caret": "marker" }
+}

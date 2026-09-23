@@ -16,19 +16,26 @@ public static class InlineMethodTool
     private static async Task<string> InlineMethodWithSolution(Document document, string methodName, int? line)
     {
         var root = await document.GetSyntaxRootAsync();
-        var candidates = root!.DescendantNodes().OfType<MethodDeclarationSyntax>()
-            .Where(m => m.Identifier.ValueText == methodName)
+        var candidates = root!.DescendantNodes()
+            .Select(node => node switch
+            {
+                MethodDeclarationSyntax method => (Declaration: (MemberDeclarationSyntax)method, Name: method.Identifier),
+                PropertyDeclarationSyntax property => (Declaration: property, Name: property.Identifier),
+                _ => (Declaration: null!, Name: default),
+            })
+            .Where(c => c.Declaration is not null && c.Name.ValueText == methodName)
             .ToList();
         if (line.HasValue)
-            candidates = candidates.Where(m => m.Identifier.GetLocation().GetLineSpan().StartLinePosition.Line + 1 == line.Value).ToList();
+            candidates = candidates.Where(c => c.Name.GetLocation().GetLineSpan().StartLinePosition.Line + 1 == line.Value).ToList();
 
         if (candidates.Count == 0)
             throw new McpException($"Error: Method '{methodName}' not found");
         if (candidates.Count > 1)
             throw new McpException($"Error: '{methodName}' has overloads; pass the line of the one to inline");
 
-        var calls = await MethodInliner.InlineAsync(document, candidates[0], CancellationToken.None);
-        return $"Successfully inlined method '{methodName}' at {calls} call(s) in {document.FilePath} (solution mode)";
+        var uses = await MethodInliner.InlineAsync(document, candidates[0].Declaration, CancellationToken.None);
+        var kind = candidates[0].Declaration is PropertyDeclarationSyntax ? "property" : "method";
+        return $"Successfully inlined {kind} '{methodName}' at {uses} use(s) in {document.FilePath} (solution mode)";
     }
 
     private static Task<string> InlineMethodSingleFile(string filePath, string methodName)
@@ -58,12 +65,12 @@ public static class InlineMethodTool
         return formatted.ToFullString();
     }
 
-    [McpServerTool, Description("Inline a method and remove its declaration (preferred for large C# file refactoring)")]
+    [McpServerTool, Description("Inline a method, or a read-only property whose getter computes its value, at every use and remove its declaration (preferred for large C# file refactoring)")]
     public static async Task<string> InlineMethod(
         [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file containing the method")] string filePath,
-        [Description("Name of the method to inline")] string methodName,
-        [Description("Line of the method's declaration, to choose between overloads (1-based, optional)")] int? line = null)
+        [Description("Name of the method or property to inline")] string methodName,
+        [Description("Line of the member's declaration, to choose between overloads (1-based, optional)")] int? line = null)
     {
         try
         {

@@ -6,23 +6,27 @@ Class.
 
 ## Recipe
 
-The plan's recipe is Move Field and Move Instance Method into the using class,
-then Safe Delete Type. The move primitives move a member along a field or
-parameter of its own class, and the class being inlined has no reference back
-to the class holding it, so they cannot move its members there. The recipe
-that the primitives can express covers a class without state:
-
-1. Make Method Static on each method, which no longer needs the instance:
-   `{ "refactoring": "make-method-static", "target": { "symbol": "M:Shop.PriceCalculator.Discounted(System.Decimal)" } }`.
-2. Move Static Method into the holding class, without a stub:
-   `{ "refactoring": "move-static-method", "target": { "symbol": "M:Shop.PriceCalculator.Discounted(System.Decimal)" }, "arguments": { "to": "Order", "stub": false } }`.
-3. Safe Delete Member on the field that held the instance, now unused:
-   `{ "refactoring": "safe-delete-member", "target": { "symbol": "F:Shop.Order._calculator" } }`.
+1. Move each member into the holding class with the `into` form of the move
+   primitives, which rewrites its uses through the holder to be direct. A
+   method moves before the members it uses, since until then its uses of
+   them are inside the class being inlined, with no holder to go through; it
+   reaches them through the holder meanwhile.
+   `{ "refactoring": "move-instance-method", "target": { "symbol": "M:Shop.Address.Format" }, "arguments": { "into": "Customer" } }`,
+   `{ "refactoring": "move-property", "target": { "symbol": "P:Shop.Address.Street" }, "arguments": { "into": "Customer" } }`,
+   `{ "refactoring": "move-field", "target": { "symbol": "F:Shop.Address._country" }, "arguments": { "into": "Customer" } }`.
+2. Change Accessibility back to `private` on each private member that a moved
+   method made `internal` so it could reach it through the holder:
+   `{ "refactoring": "change-accessibility", "target": { "symbol": "F:Shop.Customer._country" }, "arguments": { "accessibility": "private" } }`.
+3. Safe Delete Member on the holder, now unused:
+   `{ "refactoring": "safe-delete-member", "target": { "symbol": "F:Shop.Customer._address" } }`.
 4. Safe Delete Type on the class:
-   `{ "refactoring": "safe-delete-type", "target": { "symbol": "T:Shop.PriceCalculator" } }`.
+   `{ "refactoring": "safe-delete-type", "target": { "symbol": "T:Shop.Address" } }`.
 
-The recipe leaves the moved methods static. The dedicated implementation keeps
-them as instance methods, and also moves fields and properties.
+The moves place fields after the holding class's last field and other members
+at its end in the order they move, so the result matches the dedicated
+implementation when the members are moved in their declared order. A class
+whose methods follow the members they use, as is usual, ends up with those
+methods first.
 
 ## Target
 

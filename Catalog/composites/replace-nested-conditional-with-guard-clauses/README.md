@@ -5,20 +5,22 @@ clause that leaves early, and the normal path runs unindented after them.
 
 ## Recipe
 
-Invert If, repeated from the outermost `if` inwards, while the `if` has no
-`else` and ends a method or loop body, so it becomes an early `return` or
-`continue`:
+Starting with the outermost `if` and repeating on the `if` that each step
+leaves last, one of these steps, chosen by the shape of the `if`:
 
-1. `{ "refactoring": "invert-if", "target": { "file": "Shipping.cs", "caret": "marker" } }`
-2. `{ "refactoring": "invert-if", "target": { "file": "Shipping.cs", "range": "22:13-22:13" } }`
+- It has an `else`, and its branch always jumps away: Remove Redundant Else,
+  so the `else`'s statements follow it.
+  `{ "refactoring": "remove-redundant-else", "target": { "file": "Payroll.cs", "caret": "marker" } }`
+- It has an `else` that always jumps away, and its branch does not: Invert If,
+  which swaps the branches, then Remove Redundant Else on the same `if`.
+  `{ "refactoring": "invert-if", "target": { "file": "Shipping.cs", "caret": "marker" } }`,
+  `{ "refactoring": "remove-redundant-else", "target": { "file": "Shipping.cs", "range": "9:13-9:13" } }`
+- It has no `else` and ends a method or loop body: Invert If, which turns it
+  into an early `return` or `continue` with the old branch after it.
+  `{ "refactoring": "invert-if", "target": { "file": "Shipping.cs", "range": "22:13-22:13" } }`
 
-and so on for each nested `if`. A later step cannot use a marker, so it gives
-the caret as a `range` whose start is the caret, on the `if` as the previous
-steps left it.
-
-The recipe covers nested `if` statements without `else`. Removing an `else`
-after a branch that always jumps away has no primitive, so the cases that do
-it run the dedicated implementation only.
+A later step cannot use a marker, so it gives the caret as a `range` whose
+start is the caret, on the `if` as the previous steps left it.
 
 ## Target
 

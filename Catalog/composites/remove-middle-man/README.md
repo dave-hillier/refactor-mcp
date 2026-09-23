@@ -6,15 +6,14 @@ Delegate.
 
 ## Recipe
 
-1. Inline Method on each method that only delegates, which replaces every call
-   with the delegating expression reached through the caller's receiver, then
-   deletes the method:
-   `{ "refactoring": "inline-method", "target": { "symbol": "M:Company.Person.GetManager" } }`.
+1. Inline Method on each method or property that only delegates, which
+   replaces every call or read with the delegating expression reached through
+   the caller's receiver, then deletes the member:
+   `{ "refactoring": "inline-method", "target": { "symbol": "M:Company.Person.GetManager" } }`,
+   `{ "refactoring": "inline-method", "target": { "symbol": "P:Company.Person.Manager" } }`.
 
 The plan's recipe ends with Safe Delete Member; Inline Method already deletes
-the method once its calls are inlined, so that step has nothing left to do.
-Delegating properties have no primitive that inlines them, so they are only
-removed by the dedicated implementation.
+the member once its uses are inlined, so that step has nothing left to do.
 
 ## Target and arguments
 

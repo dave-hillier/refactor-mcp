@@ -1,0 +1,9 @@
+{
+  "refactoring": "move-field",
+  "description": "Refuses to move into the holding class a field its own class still uses",
+  "target": { "symbol": "F:Shop.Address._country" },
+  "arguments": { "into": "Customer" },
+  "expect": "error",
+  "errorCode": "used-outside-holder",
+  "errorContains": "Address.cs"
+}

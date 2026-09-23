@@ -1,0 +1,8 @@
+{
+  "refactoring": "replace-nested-conditional-with-guard-clauses",
+  "description": "The recipe when only the else jumps away: Invert If swaps the branches, then Remove Redundant Else lets the normal path follow the guard clause",
+  "steps": [
+    { "refactoring": "invert-if", "target": { "file": "Shipping.cs", "caret": "marker" } },
+    { "refactoring": "remove-redundant-else", "target": { "file": "Shipping.cs", "range": "9:13-9:13" } }
+  ]
+}

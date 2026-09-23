@@ -1,0 +1,5 @@
+{
+  "refactoring": "merge-sibling-ifs",
+  "description": "The comment above the absorbed if moves above the merged if, and the first body is kept with its comments",
+  "target": { "file": "Disability.cs", "caret": "marker" }
+}

@@ -1,0 +1,8 @@
+{
+  "refactoring": "move-property",
+  "description": "Refuses a class that holds the property's class in several fields, each of which would need its own copy",
+  "target": { "symbol": "P:Shop.Address.Street" },
+  "arguments": { "into": "Customer" },
+  "expect": "error",
+  "errorCode": "several-holders"
+}

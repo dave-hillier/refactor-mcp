@@ -3,14 +3,9 @@
 Moves statements that every branch of a conditional starts or ends with out of
 the conditional, so they are written once.
 
-## Recipe
-
-Move the statements common to every branch out of the conditional: those
-every branch ends with go after it, and those every branch starts with go
-before it.
-
-No primitive moves a statement out of a conditional, so the recipe has no
-primitive steps and every case runs the dedicated implementation.
+This is a primitive rather than a recipe: moving a statement out of every
+branch at once is the smallest step that preserves behaviour, since taking it
+out of one branch alone changes what that branch does.
 
 ## Target
 

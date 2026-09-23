@@ -1,0 +1,7 @@
+{
+  "refactoring": "merge-sibling-ifs",
+  "description": "Refuses an if whose next if has a different body",
+  "target": { "file": "Disability.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "no-sibling-if"
+}

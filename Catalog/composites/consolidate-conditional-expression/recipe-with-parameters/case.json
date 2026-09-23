@@ -1,0 +1,8 @@
+{
+  "refactoring": "consolidate-conditional-expression",
+  "description": "The recipe with locals and parameters: Merge Sibling Ifs joins the conditions, and Extract Method passes what they read to a static method",
+  "steps": [
+    { "refactoring": "merge-sibling-ifs", "target": { "file": "Tickets.cs", "caret": "marker" } },
+    { "refactoring": "extract-method", "target": { "file": "Tickets.cs", "range": "8:17-8:45" }, "arguments": { "name": "IsExempt" } }
+  ]
+}

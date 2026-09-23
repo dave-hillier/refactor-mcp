@@ -1,0 +1,5 @@
+{
+  "refactoring": "remove-redundant-else",
+  "description": "A branch that continues a loop jumps away too, and the if can sit in a switch section",
+  "target": { "file": "Batch.cs", "caret": "marker" }
+}

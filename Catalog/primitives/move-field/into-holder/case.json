@@ -1,0 +1,6 @@
+{
+  "refactoring": "move-field",
+  "description": "Into the class holding the field's class: the field joins its fields, keeping its accessibility and comments, and uses through the holder become direct, with this where a parameter hides it",
+  "target": { "symbol": "F:Shop.Address.city" },
+  "arguments": { "into": "Customer" }
+}

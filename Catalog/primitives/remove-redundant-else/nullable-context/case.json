@@ -1,0 +1,6 @@
+{
+  "refactoring": "remove-redundant-else",
+  "description": "With nullable annotations, the statements that follow the if keep the null state the else had",
+  "project": { "nullable": "enable" },
+  "target": { "file": "Names.cs", "caret": "marker" }
+}

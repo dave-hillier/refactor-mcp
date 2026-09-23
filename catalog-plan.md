@@ -208,8 +208,8 @@ implemented today.
 
 #### Methods and locals
 
-- Extract Method
-- Inline Method
+- Extract Method (a run of statements, or an expression)
+- Inline Method (or a read-only property)
 - Extract Local Variable (Introduce Variable)
 - Inline Local Variable
 - Split Temporary Variable
@@ -252,10 +252,11 @@ implemented today.
 
 #### Moving members and types
 
-- Move Instance Method (with and without a delegating stub)
+- Move Instance Method (with and without a delegating stub, or into the
+  class that holds its class)
 - Move Static Method
-- Move Field
-- Move Property
+- Move Field (or into the class that holds its class)
+- Move Property (or into the class that holds its class)
 - Move Member to Another Partial File
 - Move Type to File
 - Move Type to Namespace
@@ -301,8 +302,13 @@ implemented today.
 #### Conditionals
 
 - Invert If
+- Remove Redundant Else (after a branch that always jumps away)
 - Merge Nested If
+- Merge Sibling Ifs (an `if` and the `else if` or `if` after it with the
+  same body, joined with `||`)
 - Split If (on `&&` or `||`)
+- Consolidate Duplicate Conditional Fragments (move statements common to
+  every branch out of the conditional)
 - Invert Boolean (method, property or field, updating every use)
 - Convert If Chain to Switch Statement
 - Convert Switch Statement to Switch Expression
@@ -339,8 +345,10 @@ defines the expected result.
 
 - **Extract Class**: Create Type, Introduce Field of the new type, Move Field
   and Move Instance Method through it.
-- **Inline Class**: Move Field and Move Instance Method into the using class,
-  Safe Delete Type.
+- **Inline Class**: Move Instance Method, Move Property and Move Field into
+  the class holding it, each method before the members it uses, Change
+  Accessibility back on members a moved method raised, Safe Delete Member on
+  the holder, Safe Delete Type.
 - **Extract Superclass**: Create Type, Change Base Type, Pull Up Field and
   Pull Up Method.
 - **Collapse Hierarchy**: Pull Up or Push Down every member, retarget
@@ -351,18 +359,18 @@ defines the expected result.
   Variable.
 - **Decompose Conditional**: Extract Method on the condition and on each
   branch.
-- **Consolidate Conditional Expression**: merge conditions with identical
-  bodies, Extract Method on the combined condition.
-- **Consolidate Duplicate Conditional Fragments**: move statements common to
-  every branch out of the conditional.
-- **Replace Nested Conditional with Guard Clauses**: Invert If and early
-  return, repeated.
+- **Consolidate Conditional Expression**: Merge Sibling Ifs or Merge Nested
+  If on conditions with identical bodies, Extract Method on the combined
+  condition.
+- **Replace Nested Conditional with Guard Clauses**: Invert If into an early
+  return, or Remove Redundant Else (after Invert If when only the `else`
+  jumps away), repeated.
 - **Convert If to Switch Expression**: Convert If Chain to Switch Statement,
   Convert Switch Statement to Switch Expression.
 - **Hide Delegate**: Extract Method on the delegate call, Move Instance Method
   onto the server, repoint callers.
-- **Remove Middle Man**: Inline Method at each delegating call site, Safe
-  Delete Member.
+- **Remove Middle Man**: Inline Method on each delegating method or
+  property, which deletes it.
 - **Introduce Parameter Object**: Create Type, Change Signature to take it,
   rewrite parameter uses.
 - **Preserve Whole Object**: Change Signature to take the source object,

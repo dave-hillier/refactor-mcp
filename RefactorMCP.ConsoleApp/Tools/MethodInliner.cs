@@ -10,50 +10,60 @@ using Microsoft.CodeAnalysis.Simplification;
 using System.Threading;
 
 /// <summary>
-/// Inlines every call of a method across the solution and deletes the method. Every
-/// call is checked and rewritten before anything is written, so a refusal changes
-/// nothing.
+/// Inlines every call of a method, or every read of a property whose getter computes
+/// its value, across the solution and deletes the member. Every use is checked and
+/// rewritten before anything is written, so a refusal changes nothing.
 /// </summary>
 internal sealed class MethodInliner
 {
-    private readonly MethodDeclarationSyntax _method;
+    private readonly MemberDeclarationSyntax _declaration;
+    private readonly ISymbol _member;
+
+    // The method, or the property's getter, whose code is inlined.
     private readonly IMethodSymbol _symbol;
     private readonly SemanticModel _model;
 
-    // A method that produces a value is inlined as its one expression; a void method
-    // as its statements. A method that computes its value in several statements has
-    // both: the statements before its final return, and the expression it returns.
+    // A method that produces a value, or a getter, is inlined as its one expression; a
+    // void method as its statements. A method that computes its value in several
+    // statements has both: the statements before its final return, and the expression
+    // it returns.
     private readonly ExpressionSyntax? _expression;
     private readonly IReadOnlyList<StatementSyntax> _statements;
 
-    private MethodInliner(MethodDeclarationSyntax method, IMethodSymbol symbol, SemanticModel model)
+    private MethodInliner(MemberDeclarationSyntax declaration, ISymbol member, SemanticModel model)
     {
-        _method = method;
-        _symbol = symbol;
+        _declaration = declaration;
+        _member = member;
         _model = model;
+        _symbol = member as IMethodSymbol
+            ?? ((IPropertySymbol)member).GetMethod
+            ?? throw new McpException($"Error: '{member.Name}' has no getter to inline");
         EnsureInlinable();
         (_expression, _statements) = Body();
     }
 
-    public static async Task<int> InlineAsync(Document document, MethodDeclarationSyntax method, CancellationToken cancellationToken)
+    private bool IsProperty => _member is IPropertySymbol;
+
+    public static async Task<int> InlineAsync(Document document, MemberDeclarationSyntax member, CancellationToken cancellationToken)
     {
-        var (inlined, calls) = await InlineInSolutionAsync(document, method, cancellationToken);
+        var (inlined, uses) = await InlineInSolutionAsync(document, member, cancellationToken);
         await SolutionEdits.WriteAsync(document.Project.Solution, inlined, cancellationToken);
-        return calls;
+        return uses;
     }
 
     /// <summary>
-    /// The solution with every call of the method inlined and the method
-    /// deleted, not yet written, and the number of calls inlined.
+    /// The solution with every call of the method, or read of the property,
+    /// inlined and the member deleted, not yet written, and the number of uses
+    /// inlined.
     /// </summary>
     public static async Task<(Solution Solution, int Calls)> InlineInSolutionAsync(
         Document document,
-        MethodDeclarationSyntax method,
+        MemberDeclarationSyntax member,
         CancellationToken cancellationToken)
     {
         var model = (await document.GetSemanticModelAsync(cancellationToken))!;
-        var symbol = model.GetDeclaredSymbol(method, cancellationToken)!;
-        var inliner = new MethodInliner(method, symbol, model);
+        var symbol = model.GetDeclaredSymbol(member, cancellationToken)!;
+        var inliner = new MethodInliner(member, symbol, model);
 
         var solution = document.Project.Solution;
         var references = await SymbolFinder.FindReferencesAsync(symbol, solution, cancellationToken);
@@ -70,6 +80,18 @@ internal sealed class MethodInliner
             var root = (await callDocument.GetSyntaxRootAsync(cancellationToken))!;
             var callModel = (await callDocument.GetSemanticModelAsync(cancellationToken))!;
             var editor = await DocumentEditor.CreateAsync(callDocument, cancellationToken);
+
+            if (inliner.IsProperty)
+            {
+                foreach (var location in group)
+                {
+                    inliner.InlineRead((SimpleNameSyntax)root.FindNode(location.Location.SourceSpan, getInnermostNodeForTie: true), callModel, editor);
+                    calls++;
+                }
+
+                editors[callDocument.Id] = editor;
+                continue;
+            }
 
             // Innermost first, so a call nested in another's arguments is already
             // inlined when the outer call is rebuilt from its current arguments.
@@ -91,7 +113,7 @@ internal sealed class MethodInliner
             editors[document.Id] = declaringEditor;
         }
 
-        RemoveMethod(declaringEditor, method);
+        RemoveMember(declaringEditor, member);
 
         var inlined = solution;
         foreach (var (id, editor) in editors)
@@ -105,18 +127,30 @@ internal sealed class MethodInliner
         return (inlined, calls);
     }
 
-    private string Name => _symbol.Name;
+    private string Name => _member.Name;
+
+    private MethodDeclarationSyntax Method => (MethodDeclarationSyntax)_declaration;
+
+    /// <summary>The code whose names the inlined copies must be able to reach.</summary>
+    private SyntaxNode Code => _declaration switch
+    {
+        MethodDeclarationSyntax method => (SyntaxNode?)method.Body ?? method.ExpressionBody!,
+        _ => _expression!,
+    };
 
     private (ExpressionSyntax? Expression, IReadOnlyList<StatementSyntax> Statements) Body()
     {
-        if (_method.ExpressionBody is { } arrow)
+        if (_declaration is PropertyDeclarationSyntax property)
+            return (Getter(property), Array.Empty<StatementSyntax>());
+
+        if (Method.ExpressionBody is { } arrow)
         {
             return _symbol.ReturnsVoid
                 ? (null, new StatementSyntax[] { SyntaxFactory.ExpressionStatement(arrow.Expression) })
                 : (arrow.Expression, Array.Empty<StatementSyntax>());
         }
 
-        if (_method.Body is not { } body)
+        if (Method.Body is not { } body)
             throw new McpException($"Error: '{Name}' has no body to inline");
 
         if (!_symbol.ReturnsVoid)
@@ -147,6 +181,30 @@ internal sealed class MethodInliner
         return (null, statements);
     }
 
+    /// <summary>
+    /// The one expression a property's getter returns. A property that can be
+    /// written, or that stores its value, has no such expression.
+    /// </summary>
+    private ExpressionSyntax Getter(PropertyDeclarationSyntax property)
+    {
+        if (property.ExpressionBody is { } arrow)
+            return arrow.Expression;
+
+        var accessors = property.AccessorList!.Accessors;
+        if (accessors.Any(a => !a.IsKind(SyntaxKind.GetAccessorDeclaration)))
+            throw new McpException($"Error: '{Name}' has a setter, so writes to it could not be inlined");
+
+        var getter = accessors.Single();
+        if (getter.ExpressionBody is { } getterArrow)
+            return getterArrow.Expression;
+        if (getter.Body is null)
+            throw new McpException($"Error: '{Name}' is an auto-property, whose value is stored rather than computed");
+        if (getter.Body.Statements is [ReturnStatementSyntax { Expression: { } returned }])
+            return returned;
+
+        throw MultipleStatements();
+    }
+
     private static ReturnStatementSyntax? ReturnsIn(IEnumerable<StatementSyntax> statements) =>
         statements
             .SelectMany(s => s.DescendantNodesAndSelf(n => n is not AnonymousFunctionExpressionSyntax and not LocalFunctionStatementSyntax))
@@ -158,26 +216,28 @@ internal sealed class MethodInliner
 
     private void EnsureInlinable()
     {
-        if (_symbol.IsVirtual || _symbol.IsAbstract || _symbol.IsOverride || ImplementsInterfaceMember())
+        if (_member.IsVirtual || _member.IsAbstract || _member.IsOverride || ImplementsInterfaceMember())
         {
             throw new McpException(
                 $"Error: '{Name}' is virtual, an override or an interface implementation, so a call to it may run other code");
         }
 
-        if (_symbol.IsAsync || _method.DescendantNodes().Any(n => n is YieldStatementSyntax))
+        if (_symbol.IsAsync || _declaration.DescendantNodes().Any(n => n is YieldStatementSyntax))
             throw new McpException($"Error: '{Name}' is async or an iterator, which cannot be inlined");
 
-        var recursive = _method.DescendantNodes()
-            .OfType<InvocationExpressionSyntax>()
-            .Any(i => SymbolEqualityComparer.Default.Equals(_model.GetSymbolInfo(i).Symbol?.OriginalDefinition, _symbol));
+        var recursive = IsProperty
+            ? _declaration.DescendantNodes().OfType<IdentifierNameSyntax>()
+                .Any(n => SymbolEqualityComparer.Default.Equals(_model.GetSymbolInfo(n).Symbol?.OriginalDefinition, _member))
+            : _declaration.DescendantNodes().OfType<InvocationExpressionSyntax>()
+                .Any(i => SymbolEqualityComparer.Default.Equals(_model.GetSymbolInfo(i).Symbol?.OriginalDefinition, _symbol));
         if (recursive)
-            throw new McpException($"Error: '{Name}' calls itself, so inlining it would never end");
+            throw new McpException($"Error: '{Name}' {(IsProperty ? "reads" : "calls")} itself, so inlining it would never end");
     }
 
     private bool ImplementsInterfaceMember() =>
-        _symbol.ContainingType.AllInterfaces
-            .SelectMany(i => i.GetMembers().OfType<IMethodSymbol>())
-            .Any(m => SymbolEqualityComparer.Default.Equals(_symbol.ContainingType.FindImplementationForInterfaceMember(m), _symbol));
+        _member.ContainingType.AllInterfaces
+            .SelectMany(i => i.GetMembers())
+            .Any(m => SymbolEqualityComparer.Default.Equals(_member.ContainingType.FindImplementationForInterfaceMember(m), _member));
 
     /// <summary>The call a reference to the method belongs to, or a refusal when it is not a call.</summary>
     private InvocationExpressionSyntax InvocationAt(SyntaxNode reference)
@@ -348,11 +408,89 @@ internal sealed class MethodInliner
         if (access.Expression is ThisExpressionSyntax or BaseExpressionSyntax)
             return null;
 
-        var uses = _method.DescendantNodes().Count(n => n is ThisExpressionSyntax || (n is SimpleNameSyntax name && IsImplicitInstanceMember(name)));
-        if (uses > 1 && !ExpressionFacts.IsSimple(access.Expression))
+        if (InstanceUses() > 1 && !ExpressionFacts.IsSimple(access.Expression))
             throw new McpException($"Error: The call at {Where(invocation)} is made on an expression that would be evaluated more than once");
 
         return access.Expression.WithoutTrivia();
+    }
+
+    /// <summary>How many times the inlined code reaches <c>this</c>, written or implied.</summary>
+    private int InstanceUses() =>
+        Code.DescendantNodesAndSelf().Count(n => n is ThisExpressionSyntax || (n is SimpleNameSyntax name && IsImplicitInstanceMember(name)));
+
+    /// <summary>
+    /// Replaces a read of the property with its getter's expression, with
+    /// members it reaches through <c>this</c> reached through the object read
+    /// from: <c>person.Code</c> becomes <c>person.Department.Code</c>. Read with
+    /// <c>?.</c>, the getter must start from a member of the object, which then
+    /// follows the <c>?.</c>: <c>person?.Manager</c> becomes
+    /// <c>person?.Department.Manager</c>.
+    /// </summary>
+    private void InlineRead(SimpleNameSyntax name, SemanticModel callModel, DocumentEditor editor)
+    {
+        EnsureAccessible(name, callModel);
+        var noArguments = Array.Empty<InlinedArgument>();
+        var noTypeArguments = new Dictionary<ITypeParameterSymbol, TypeSyntax>(SymbolEqualityComparer.Default);
+
+        if (name.Parent is MemberBindingExpressionSyntax binding)
+        {
+            var bound = BoundFromMember((ExpressionSyntax)new BodyRewriter(this, noArguments, noTypeArguments, null).Visit(_expression!)!)
+                ?? throw new McpException(
+                    $"Error: '{Name}' is read with ?. at {Where(name)}, and its getter does not start from a member of the object, so nothing can follow the ?.");
+            editor.ReplaceNode(binding, (current, _) => bound.WithTriviaFrom(current).WithAdditionalAnnotations(Formatter.Annotation));
+            return;
+        }
+
+        var access = name.Parent is MemberAccessExpressionSyntax memberAccess && memberAccess.Name == name ? memberAccess : null;
+        var receiver = access?.Expression is null or ThisExpressionSyntax or BaseExpressionSyntax || _symbol.IsStatic ? null : access.Expression;
+        if (receiver is not null && InstanceUses() > 1 && !ExpressionFacts.IsSimple(receiver))
+            throw new McpException($"Error: The read at {Where(name)} is made on an expression that would be evaluated more than once");
+
+        editor.ReplaceNode((SyntaxNode?)access ?? name, (current, _) =>
+        {
+            var currentReceiver = receiver is null ? null : ((MemberAccessExpressionSyntax)current).Expression.WithoutTrivia();
+            var rewriter = new BodyRewriter(this, noArguments, noTypeArguments, currentReceiver);
+            return SyntaxFactory.ParenthesizedExpression((ExpressionSyntax)rewriter.Visit(_expression!)!)
+                .WithTriviaFrom(current)
+                .WithAdditionalAnnotations(Simplifier.Annotation, Formatter.Annotation);
+        });
+    }
+
+    /// <summary>
+    /// The getter's expression rewritten to follow <c>?.</c>: its leftmost name,
+    /// a member reached through <c>this</c>, becomes the member binding, when
+    /// that is its only use of <c>this</c>. Null when it has another shape.
+    /// </summary>
+    private ExpressionSyntax? BoundFromMember(ExpressionSyntax rewritten)
+    {
+        var start = Leftmost(_expression!);
+        var startsFromMember = start is MemberAccessExpressionSyntax { Expression: ThisExpressionSyntax }
+            || start is SimpleNameSyntax name && IsImplicitInstanceMember(name);
+        if (!startsFromMember || InstanceUses() != 1)
+            return null;
+
+        var leftmost = Leftmost(rewritten);
+        var member = leftmost is MemberAccessExpressionSyntax thisAccess ? thisAccess.Name : (SimpleNameSyntax)leftmost;
+        var bound = SyntaxFactory.MemberBindingExpression(member.WithoutTrivia());
+        return leftmost == rewritten ? bound : rewritten.ReplaceNode(leftmost, bound);
+    }
+
+    /// <summary>The expression a chain of member accesses, calls and indexers starts from.</summary>
+    private static ExpressionSyntax Leftmost(ExpressionSyntax expression)
+    {
+        while (true)
+        {
+            var inner = expression switch
+            {
+                MemberAccessExpressionSyntax { Expression: not ThisExpressionSyntax } access => access.Expression,
+                InvocationExpressionSyntax invocation => invocation.Expression,
+                ElementAccessExpressionSyntax element => element.Expression,
+                _ => null,
+            };
+            if (inner is null)
+                return expression;
+            expression = inner;
+        }
     }
 
     private List<InlinedArgument> Arguments(InvocationExpressionSyntax invocation, IInvocationOperation operation, bool statementForm)
@@ -372,7 +510,7 @@ internal sealed class MethodInliner
             var index = -1;
             if (argument.ArgumentKind == ArgumentKind.DefaultValue)
             {
-                expression = _method.ParameterList.Parameters[ordinal].Default!.Value;
+                expression = Method.ParameterList.Parameters[ordinal].Default!.Value;
             }
             else
             {
@@ -396,16 +534,15 @@ internal sealed class MethodInliner
     }
 
     private IEnumerable<IdentifierNameSyntax> ReferencesTo(IParameterSymbol parameter) =>
-        _method.DescendantNodes()
+        _declaration.DescendantNodes()
             .OfType<IdentifierNameSyntax>()
             .Where(n => n.Identifier.ValueText == parameter.Name &&
                         SymbolEqualityComparer.Default.Equals(_model.GetSymbolInfo(n).Symbol, parameter));
 
-    /// <summary>Every member and type the method names must be accessible where it is called.</summary>
-    private void EnsureAccessible(InvocationExpressionSyntax invocation, SemanticModel callModel)
+    /// <summary>Every member and type the inlined code names must be accessible where it is used.</summary>
+    private void EnsureAccessible(ExpressionSyntax invocation, SemanticModel callModel)
     {
-        var body = (SyntaxNode?)_method.Body ?? _method.ExpressionBody!;
-        foreach (var name in body.DescendantNodes().OfType<SimpleNameSyntax>())
+        foreach (var name in Code.DescendantNodesAndSelf().OfType<SimpleNameSyntax>())
         {
             var symbol = _model.GetSymbolInfo(name).Symbol;
             if (symbol is null or ILocalSymbol or IParameterSymbol or ITypeParameterSymbol or INamespaceSymbol or IRangeVariableSymbol or ILabelSymbol)
@@ -479,11 +616,11 @@ internal sealed class MethodInliner
     }
 
     /// <summary>
-    /// Deletes the method with its comments. The blank line that separated it from the
+    /// Deletes the member with its comments. The blank line that separated it from the
     /// member before goes with it; when it was the first member, the blank line after it
     /// goes instead.
     /// </summary>
-    private static void RemoveMethod(SyntaxEditor editor, MethodDeclarationSyntax method)
+    private static void RemoveMember(SyntaxEditor editor, MemberDeclarationSyntax method)
     {
         if (method.Parent is TypeDeclarationSyntax type && type.Members.IndexOf(method) == 0 && type.Members.Count > 1)
         {

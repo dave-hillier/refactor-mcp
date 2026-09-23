@@ -1,0 +1,7 @@
+{
+  "refactoring": "inline-method",
+  "description": "Refuses a read through ?. of a property whose getter does not start from one member of the object",
+  "target": { "symbol": "P:Company.Person.Initials" },
+  "expect": "error",
+  "errorCode": "conditional-access"
+}

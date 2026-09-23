@@ -1,0 +1,7 @@
+{
+  "refactoring": "merge-sibling-ifs",
+  "description": "Refuses conditions that declare a pattern variable, which would be unassigned when the other condition holds",
+  "target": { "file": "Shapes.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "declares-variable"
+}
