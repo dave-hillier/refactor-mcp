@@ -1,0 +1,5 @@
+{
+  "refactoring": "replace-error-code-with-exception",
+  "description": "Changes only the targeted overload and the calls that bind to it",
+  "target": { "symbol": "M:Shop.Mailer.Send(System.String)" }
+}

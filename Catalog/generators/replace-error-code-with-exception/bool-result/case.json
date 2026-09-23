@@ -1,0 +1,5 @@
+{
+  "refactoring": "replace-error-code-with-exception",
+  "description": "Treats true as success for a bool result; a check with an else puts the success branch in the try and the failure branch in the catch",
+  "target": { "symbol": "M:Shop.Store.Add(System.String)" }
+}

@@ -1,0 +1,7 @@
+{
+  "refactoring": "replace-error-code-with-exception",
+  "description": "Refuses a method returning something other than an int or bool code",
+  "target": { "symbol": "M:Shop.Account.Withdraw(System.Decimal)" },
+  "expect": "error",
+  "errorCode": "unsupported-return-type"
+}

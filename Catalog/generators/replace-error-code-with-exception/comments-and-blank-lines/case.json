@@ -1,0 +1,5 @@
+{
+  "refactoring": "replace-error-code-with-exception",
+  "description": "Keeps comments on the returns it replaces and on the caller's check, and the final return when a comment sits on it",
+  "target": { "symbol": "M:Shop.Door.Close" }
+}

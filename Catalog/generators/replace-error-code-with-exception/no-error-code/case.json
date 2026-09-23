@@ -1,0 +1,7 @@
+{
+  "refactoring": "replace-error-code-with-exception",
+  "description": "Refuses a method that only ever returns success",
+  "target": { "symbol": "M:Shop.Account.Deposit(System.Decimal)" },
+  "expect": "error",
+  "errorCode": "no-error-code"
+}
