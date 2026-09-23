@@ -1,8 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Text;
 using static RefactorMCP.Tests.Catalog.CatalogMapping;
 
 namespace RefactorMCP.Tests.Catalog.Mappings;
@@ -28,7 +33,45 @@ internal sealed class SignaturesMappings : ICatalogMappings
                 ["external-member"] = "which is declared outside the solution",
                 ["extension-this-moved"] = "of an extension method must stay first",
             }),
+        new CatalogMapping(
+            "introduce-parameter",
+            "introduce-parameter",
+            context => new Dictionary<string, JsonElement>
+            {
+                ["solutionPath"] = Json(context.SolutionPath),
+                ["filePath"] = Json(context.TargetFilePath()),
+                ["methodName"] = Json(MethodAroundSelection(context)),
+                ["selectionRange"] = Json(context.SelectionRange()),
+                ["parameterName"] = context.RequiredArgument("name"),
+            },
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["not-an-expression"] = "Selected code is not a valid expression",
+                ["references-local"] = "uses the local",
+                ["references-instance-member"] = "uses the instance member",
+                ["references-type-parameter"] = "type parameter",
+                ["name-conflict"] = "is already in use in",
+            }),
     };
+
+    /// <summary>
+    /// The name of the method or constructor containing the selection, which
+    /// the tool takes as well as the selection.
+    /// </summary>
+    private static string MethodAroundSelection(StepContext context)
+    {
+        var text = SourceText.From(File.ReadAllText(context.TargetFilePath()));
+        var root = CSharpSyntaxTree.ParseText(text).GetRoot();
+        var range = context.SelectionRange().Split('-', ':');
+        var start = text.Lines[int.Parse(range[0]) - 1].Start + int.Parse(range[1]) - 1;
+
+        return root.FindToken(start).Parent!.AncestorsAndSelf().OfType<BaseMethodDeclarationSyntax>().FirstOrDefault() switch
+        {
+            MethodDeclarationSyntax method => method.Identifier.ValueText,
+            ConstructorDeclarationSyntax constructor => constructor.Identifier.ValueText,
+            _ => throw new InvalidOperationException("The selection is not inside a method"),
+        };
+    }
 
     /// <summary>
     /// The file, name and line of the declaration <c>target.symbol</c> names.

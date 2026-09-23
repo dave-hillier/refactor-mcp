@@ -1,0 +1,6 @@
+{
+  "refactoring": "introduce-parameter",
+  "description": "Turns an expression over the method's parameters into a parameter; calls in another file pass it with their own arguments substituted",
+  "target": { "file": "Order.cs", "selection": "marker" },
+  "arguments": { "name": "total" }
+}

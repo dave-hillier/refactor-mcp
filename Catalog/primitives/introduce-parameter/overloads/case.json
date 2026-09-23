@@ -1,0 +1,6 @@
+{
+  "refactoring": "introduce-parameter",
+  "description": "Changes only the overload the selection is in, and only its calls",
+  "target": { "file": "Rounding.cs", "selection": "marker" },
+  "arguments": { "name": "decimals" }
+}

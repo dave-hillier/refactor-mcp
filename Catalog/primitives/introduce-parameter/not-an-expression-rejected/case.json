@@ -1,0 +1,8 @@
+{
+  "refactoring": "introduce-parameter",
+  "description": "Refuses a selection that is a statement rather than an expression",
+  "target": { "file": "Tax.cs", "selection": "marker" },
+  "arguments": { "name": "result" },
+  "expect": "error",
+  "errorCode": "not-an-expression"
+}

@@ -1,0 +1,6 @@
+{
+  "refactoring": "introduce-parameter",
+  "description": "Places the new parameter before an optional one, naming the argument after an omitted default",
+  "target": { "file": "Banner.cs", "selection": "marker" },
+  "arguments": { "name": "width" }
+}

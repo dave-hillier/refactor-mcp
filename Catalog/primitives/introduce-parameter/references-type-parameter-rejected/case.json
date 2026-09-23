@@ -1,0 +1,8 @@
+{
+  "refactoring": "introduce-parameter",
+  "description": "Refuses an expression whose type uses the method's type parameter, which calls cannot name",
+  "target": { "file": "Boxes.cs", "selection": "marker" },
+  "arguments": { "name": "items" },
+  "expect": "error",
+  "errorCode": "references-type-parameter"
+}

@@ -103,6 +103,24 @@ internal static class SolutionEdits
     }
 
     /// <summary>
+    /// Finds a symbol again in another version of the solution, such as one
+    /// where its declaring document has been annotated or its body edited.
+    /// </summary>
+    public static async Task<TSymbol> ResolveAsync<TSymbol>(
+        Solution solution,
+        ProjectId project,
+        TSymbol symbol,
+        CancellationToken cancellationToken = default)
+        where TSymbol : class, ISymbol
+    {
+        var id = symbol.OriginalDefinition.GetDocumentationCommentId()
+            ?? throw new McpException($"Error: '{symbol.Name}' cannot be found again after an edit");
+        var compilation = await solution.GetProject(project)!.GetCompilationAsync(cancellationToken);
+        return DocumentationCommentId.GetFirstSymbolForDeclarationId(id, compilation!) as TSymbol
+            ?? throw new McpException($"Error: '{symbol.Name}' cannot be found again after an edit");
+    }
+
+    /// <summary>
     /// Diagnostics the changed solution reports that the original did not, in
     /// every changed project and the projects that depend on them.
     /// </summary>
