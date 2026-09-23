@@ -200,9 +200,8 @@ internal static class SignatureChange
                 var bound = call is null ? null : model!.GetSymbolInfo(call, cancellationToken).Symbol as IMethodSymbol;
                 if (call is null || bound is null || !keys.Contains(MethodFamily.Key(bound)))
                 {
-                    var position = location.Location.GetLineSpan();
                     throw new McpException(
-                        $"Error: '{member.Name}' is used as a method group at {Path.GetFileName(position.Path)}({position.StartLinePosition.Line + 1},{position.StartLinePosition.Character + 1}), which a new signature would break");
+                        $"Error: '{member.Name}' is used as a method group at {SolutionEdits.Describe(location.Location)}, which a new signature would break");
                 }
 
                 sites.Add(new SignatureCallSite(document, model!, call, bound, MapArguments(call, bound)));
