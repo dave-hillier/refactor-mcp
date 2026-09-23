@@ -1,0 +1,6 @@
+{
+  "refactoring": "extract-decorator",
+  "description": "Delegates events, properties, indexers and methods with out, ref, params and default parameters, under a chosen name",
+  "target": { "symbol": "T:Shop.IStore" },
+  "arguments": { "name": "AuditedStore" }
+}

@@ -1,0 +1,5 @@
+{
+  "refactoring": "extract-decorator",
+  "description": "Generates a decorator for an interface that delegates its one method to the wrapped instance",
+  "target": { "symbol": "T:Shop.IGreeter" }
+}

@@ -1,0 +1,5 @@
+{
+  "refactoring": "extract-decorator",
+  "description": "Gives the decorator of a generic interface its type parameters and constraints, restates a generic method's constraints, and follows the file-scoped namespace style",
+  "target": { "symbol": "T:Shop.IRepository`1" }
+}
