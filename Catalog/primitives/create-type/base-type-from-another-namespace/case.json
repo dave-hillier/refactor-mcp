@@ -1,0 +1,5 @@
+{
+  "refactoring": "create-type",
+  "description": "Derives the new class from a class in another namespace and imports that namespace",
+  "arguments": { "name": "Address", "file": "Address.cs", "baseType": "Entity" }
+}

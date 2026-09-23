@@ -1,0 +1,8 @@
+{
+  "refactoring": "create-type",
+  "description": "Refuses a base type that names no type in the solution",
+  "arguments": { "name": "Address", "file": "Address.cs", "baseType": "Location" },
+  "expect": "error",
+  "errorCode": "type-not-found",
+  "errorContains": "Location"
+}

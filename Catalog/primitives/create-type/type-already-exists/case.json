@@ -1,0 +1,8 @@
+{
+  "refactoring": "create-type",
+  "description": "Refuses when the namespace already has a type of that name",
+  "arguments": { "name": "Address", "file": "Location.cs" },
+  "expect": "error",
+  "errorCode": "type-already-exists",
+  "errorContains": "Shop.Address"
+}

@@ -1,0 +1,5 @@
+{
+  "refactoring": "create-type",
+  "description": "Creates an empty public class in a new file, in the namespace the project's other files use",
+  "arguments": { "name": "Address", "file": "Address.cs" }
+}

@@ -1,0 +1,5 @@
+{
+  "refactoring": "create-type",
+  "description": "Creates an interface in a subfolder and a given namespace, following the project's file-scoped namespace style",
+  "arguments": { "name": "IPriced", "file": "Pricing/IPriced.cs", "kind": "interface", "namespace": "Shop.Pricing" }
+}

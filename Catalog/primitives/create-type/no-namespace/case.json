@@ -1,0 +1,5 @@
+{
+  "refactoring": "create-type",
+  "description": "Creates the class in the global namespace when the project's files declare none",
+  "arguments": { "name": "Address", "file": "Address.cs" }
+}

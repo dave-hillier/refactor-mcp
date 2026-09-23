@@ -1,0 +1,9 @@
+{
+  "refactoring": "create-type",
+  "description": "Creates the class in the project whose folder holds the file, in that project's namespace",
+  "projects": [
+    { "name": "Core" },
+    { "name": "App", "references": ["Core"] }
+  ],
+  "arguments": { "name": "Address", "file": "Core/Address.cs" }
+}
