@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -53,7 +54,6 @@ internal sealed class DelegatingMemberAdder
 
     private readonly Solution _solution;
     private readonly INamedTypeSymbol _type;
-    private readonly string _via;
     private readonly IFieldSymbol? _field;
     private readonly ITypeSymbol _target;
 
@@ -64,7 +64,6 @@ internal sealed class DelegatingMemberAdder
 
         _solution = solution;
         _type = type;
-        _via = via;
         if (via == Base)
         {
             _target = type.TypeKind == TypeKind.Class && type.BaseType is { SpecialType: not SpecialType.System_Object } baseType
@@ -166,7 +165,7 @@ internal sealed class DelegatingMemberAdder
         // Every reference to a member of the same name is marked, so that once
         // the member is added it can be checked still to mean the same thing.
         var edits = new SyntaxEdits();
-        var references = await ReferencesAsync(name, member, edits, cancellationToken);
+        var references = await ReferencesAsync(name, edits, cancellationToken);
 
         var added = new SyntaxAnnotation();
         var index = InsertionIndex(declaration, model);
@@ -186,7 +185,7 @@ internal sealed class DelegatingMemberAdder
     private static string DisplayName(ISymbol member) => member is IPropertySymbol { IsIndexer: true } ? "this" : member.Name;
 
     /// <summary>A property or field is forwarded with a setter when the class could set it.</summary>
-    private bool Settable(ISymbol member) => member switch
+    private static bool Settable(ISymbol member) => member switch
     {
         IPropertySymbol property => property.SetMethod is { IsInitOnly: false } setter
             && setter.DeclaredAccessibility == property.DeclaredAccessibility,
@@ -213,7 +212,7 @@ internal sealed class DelegatingMemberAdder
         return index;
     }
 
-    private System.Func<ExpressionSyntax, bool> IsReceiver(SemanticModel model) => expression => _field is null
+    private Func<ExpressionSyntax, bool> IsReceiver(SemanticModel model) => expression => _field is null
         ? expression is BaseExpressionSyntax
         : SymbolEqualityComparer.Default.Equals(model.GetSymbolInfo(expression).Symbol, _field);
 
@@ -223,7 +222,7 @@ internal sealed class DelegatingMemberAdder
     /// Marks every reference to a member of the class, or one it inherits,
     /// with the same name as the new member.
     /// </summary>
-    private async Task<List<Reference>> ReferencesAsync(string name, ISymbol member, SyntaxEdits edits, CancellationToken cancellationToken)
+    private async Task<List<Reference>> ReferencesAsync(string name, SyntaxEdits edits, CancellationToken cancellationToken)
     {
         var symbols = new List<ISymbol>();
         for (var current = _type; current is not null; current = current.BaseType)

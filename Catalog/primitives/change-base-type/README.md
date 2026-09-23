@@ -31,6 +31,9 @@ The target is the class, by symbol: `"target": { "symbol": "T:Shop.Manager" }`.
   base class was all the list held.
 - When the new base class only binds with a using directive, the directive is
   added, and a qualified name the usings already cover is shortened.
+- A `new` modifier on a member of the class that no longer hides anything,
+  such as a forwarding member once the base class it hid is removed, is
+  dropped.
 
 ## Preserved
 

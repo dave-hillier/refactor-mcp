@@ -271,6 +271,14 @@ implemented today.
 
 - Create Type
 - Change Base Type
+- Add Delegating Member (forward to the same member of a field or the base
+  class)
+- Remove Delegating Member (one that only forwards to the inherited member
+  through `base`)
+- Replace Base Uses with Field (reach inherited members through a field
+  holding a new instance of the base class)
+- Replace Field Uses with Base (reach a field's members through the
+  inherited ones, and remove the field)
 - Pull Up Field
 - Pull Up Method
 - Pull Up Constructor Body
@@ -366,9 +374,10 @@ defines the expected result.
 - **Separate Query from Modifier**: Extract Method for the query, Extract
   Method for the modifier, redirect callers.
 - **Replace Inheritance with Delegation**: Introduce Field of the base type,
-  delegate each used inherited member, Change Base Type.
-- **Replace Delegation with Inheritance**: Change Base Type, Inline Method
-  for each delegating member, Inline Field.
+  Add Delegating Member to the base for each inherited member other code
+  uses, Replace Base Uses with Field, Change Base Type.
+- **Replace Delegation with Inheritance**: Change Base Type, Replace Field
+  Uses with Base, Remove Delegating Member for each forwarding member.
 - **Introduce Interface for Dependency**: Extract Interface, Change Type on
   the field or parameter.
 - **Constructor Injection**: Change Signature on the constructor to add the

@@ -2380,6 +2380,54 @@ dotnet run --project RefactorMCP.ConsoleApp -- --json create-adapter '{"solution
 
 <!-- End of Generators. -->
 
+### Recipe primitives
+
+<!-- Recipe primitives: examples for this group's tools go below this line. -->
+
+#### Add Delegating Member
+
+Adds to a class a member forwarding to the member of the same name of one of
+its fields, or of its base class when `via` is `base`. `memberName` is the
+member's name, `this` for an indexer, or its documentation comment id when
+overloads share the name. A member forwarding to the base class is declared
+`new`, and the class's own uses of the member it hides are written with
+`base`.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json add-delegating-member \
+  '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Order.cs","className":"Order","memberName":"Greeting","via":"_customer"}'
+dotnet run --project RefactorMCP.ConsoleApp -- --json add-delegating-member \
+  '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Stack.cs","className":"Stack","memberName":"Count","via":"base"}'
+```
+
+#### Remove Delegating Member
+
+Removes a member that only forwards, through `base`, to the inherited member
+it hides or overrides, so callers reach the inherited member. `line` chooses
+between overloads; an indexer is named `this`.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json remove-delegating-member \
+  '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Employee.cs","className":"Employee","memberName":"LastName"}'
+```
+
+#### Replace Base Uses with Field and Replace Field Uses with Base
+
+For a class holding a new instance of its base class in a private field,
+`replace-base-uses-with-field` makes the class reach its inherited members
+through the field, so its base class part is unused and the base class can be
+removed. `replace-field-uses-with-base` goes the other way: uses of the
+field's members reach the inherited members, and the field is removed.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json replace-base-uses-with-field \
+  '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Stack.cs","className":"Stack","fieldName":"_list"}'
+dotnet run --project RefactorMCP.ConsoleApp -- --json replace-field-uses-with-base \
+  '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Employee.cs","className":"Employee","fieldName":"_person"}'
+```
+
+<!-- End of Recipe primitives. -->
+
 ## Metrics Resource
 
 Metrics can be queried using the resource scheme:
