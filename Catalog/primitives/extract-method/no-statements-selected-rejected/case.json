@@ -1,0 +1,8 @@
+{
+  "refactoring": "extract-method",
+  "description": "Refuses a selection inside the method that covers no statement of its body",
+  "target": { "file": "Sample.cs", "selection": "marker" },
+  "arguments": { "name": "Extracted" },
+  "expect": "error",
+  "errorCode": "no-statements-selected"
+}

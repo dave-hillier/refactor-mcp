@@ -2,6 +2,5 @@
   "refactoring": "extract-method",
   "description": "Comments inside and around the extracted statements travel with them",
   "target": { "file": "Sample.cs", "selection": "marker" },
-  "arguments": { "name": "Log" },
-  "status": "unimplemented"
+  "arguments": { "name": "Log" }
 }

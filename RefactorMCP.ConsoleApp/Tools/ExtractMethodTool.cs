@@ -65,7 +65,8 @@ public static class ExtractMethodTool
         var containingClass = containingMethod.Ancestors().OfType<ClassDeclarationSyntax>().FirstOrDefault();
         var semanticModel = await document.GetSemanticModelAsync();
         EnsureDeclaredLocalsStayInside(containingMethod, statementsToExtract, semanticModel);
-        var rewriter = new ExtractMethodRewriter(containingMethod, containingClass, statementsToExtract, methodName, semanticModel);
+        EnsureAssignedLocalsStayInside(containingMethod, statementsToExtract, semanticModel);
+        var rewriter = new ExtractMethodRewriter(containingMethod, containingClass, statementsToExtract, methodName, semanticModel, span);
         var newRoot = rewriter.Visit(syntaxRoot);
 
         var formattedRoot = Formatter.Format(newRoot!, document.Project.Solution.Workspace);
@@ -117,7 +118,8 @@ public static class ExtractMethodTool
 
         var containingClass = containingMethod.Ancestors().OfType<ClassDeclarationSyntax>().FirstOrDefault();
         EnsureDeclaredLocalsStayInside(containingMethod, statementsToExtract, model);
-        var rewriter = new ExtractMethodRewriter(containingMethod, containingClass, statementsToExtract, methodName, model);
+        EnsureAssignedLocalsStayInside(containingMethod, statementsToExtract, model);
+        var rewriter = new ExtractMethodRewriter(containingMethod, containingClass, statementsToExtract, methodName, model, span);
         var newRoot = rewriter.Visit(syntaxRoot);
 
         var formattedRoot = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
@@ -162,6 +164,40 @@ public static class ExtractMethodTool
             var line = node.GetLocation().GetLineSpan().StartLinePosition.Line + 1;
             throw new McpException(
                 $"Error: The extracted block declares '{name.Identifier.ValueText}', which is used at line {line}. " +
+                "Include that code in the extraction, or narrow the selection.");
+        }
+    }
+
+    /// <summary>
+    /// A value the selected statements assign to a local or parameter from outside them,
+    /// and that the rest of the method reads, would be assigned to a copy in the new
+    /// method and lost, so the extraction is refused.
+    /// </summary>
+    private static void EnsureAssignedLocalsStayInside(
+        MethodDeclarationSyntax containingMethod,
+        List<StatementSyntax> statements,
+        SemanticModel? semanticModel)
+    {
+        if (semanticModel == null)
+            return;
+
+        var dataFlow = semanticModel.AnalyzeDataFlow(statements.First(), statements.Last());
+        if (dataFlow == null || !dataFlow.Succeeded || dataFlow.DataFlowsOut.IsEmpty)
+            return;
+
+        var extractedSpan = TextSpan.FromBounds(statements.First().SpanStart, statements.Last().Span.End);
+        foreach (var node in containingMethod.DescendantNodes())
+        {
+            if (node.SpanStart < extractedSpan.End || node is not SimpleNameSyntax name)
+                continue;
+
+            var symbol = semanticModel.GetSymbolInfo(node).Symbol;
+            if (symbol == null || !dataFlow.DataFlowsOut.Contains(symbol, SymbolEqualityComparer.Default))
+                continue;
+
+            var line = node.GetLocation().GetLineSpan().StartLinePosition.Line + 1;
+            throw new McpException(
+                $"Error: The extracted block assigns '{name.Identifier.ValueText}', which is used at line {line}. " +
                 "Include that code in the extraction, or narrow the selection.");
         }
     }

@@ -24,6 +24,7 @@ internal sealed class MethodsAndLocalsMappings : ICatalogMappings
             {
                 ["expression-bodied-member"] = "Extraction from expression-bodied methods is not supported",
                 ["declared-local-used-after"] = "The extracted block declares",
+                ["assigned-local-used-after"] = "The extracted block assigns",
                 ["not-in-method"] = "Selected code is not within a method",
                 ["no-statements-selected"] = "does not contain extractable statements",
             }),

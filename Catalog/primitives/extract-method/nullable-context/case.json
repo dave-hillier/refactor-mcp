@@ -1,0 +1,7 @@
+{
+  "refactoring": "extract-method",
+  "description": "Parameters keep their nullable annotations, and a local known not to be null is passed as non-nullable",
+  "project": { "nullable": "enable" },
+  "target": { "file": "Sample.cs", "selection": "marker" },
+  "arguments": { "name": "Log" }
+}

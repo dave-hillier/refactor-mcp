@@ -1,0 +1,8 @@
+{
+  "refactoring": "extract-method",
+  "description": "Refuses a selection inside a property accessor, which is not a method",
+  "target": { "file": "Sample.cs", "selection": "marker" },
+  "arguments": { "name": "Compute" },
+  "expect": "error",
+  "errorCode": "not-in-method"
+}

@@ -1,0 +1,9 @@
+{
+  "refactoring": "extract-method",
+  "description": "Refuses when the block assigns a local declared before it that the rest of the method reads",
+  "target": { "file": "Sample.cs", "selection": "marker" },
+  "arguments": { "name": "AddAll" },
+  "expect": "error",
+  "errorCode": "assigned-local-used-after",
+  "errorContains": "'total'"
+}

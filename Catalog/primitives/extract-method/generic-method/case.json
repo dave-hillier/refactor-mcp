@@ -1,6 +1,6 @@
 {
   "refactoring": "extract-method",
-  "description": "Extracting from a static method creates a static method, callable without an instance",
+  "description": "Statements that use a method type parameter produce a generic method with the same constraint",
   "target": { "file": "Sample.cs", "selection": "marker" },
   "arguments": { "name": "Report" }
 }
