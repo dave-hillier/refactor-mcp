@@ -1,0 +1,6 @@
+{
+  "refactoring": "extract-interface",
+  "description": "Writes the interface to the given file, keeping the members' documentation comments and only the usings the signatures need",
+  "target": { "symbol": "T:Shop.Billing" },
+  "arguments": { "name": "IBilling", "file": "Contracts/IBilling.cs" }
+}

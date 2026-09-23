@@ -1,0 +1,6 @@
+{
+  "refactoring": "extract-interface",
+  "description": "Adds the new interface after the base class and interfaces the class already has",
+  "target": { "symbol": "T:Shop.Order" },
+  "arguments": { "name": "IOrder", "members": ["Describe"] }
+}

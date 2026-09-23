@@ -1,0 +1,6 @@
+{
+  "refactoring": "extract-interface",
+  "description": "Takes every overload of a named method",
+  "target": { "symbol": "T:Shop.Cart" },
+  "arguments": { "name": "ICart", "members": ["Add"] }
+}

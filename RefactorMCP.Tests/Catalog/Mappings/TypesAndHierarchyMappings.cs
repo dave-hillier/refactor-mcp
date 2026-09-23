@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using static RefactorMCP.Tests.Catalog.CatalogMapping;
@@ -110,6 +112,36 @@ internal sealed class TypesAndHierarchyMappings : ICatalogMappings
                 ("already-chains", "already calls"),
                 ("nothing-to-pull-up", "nothing can move"),
                 ("base-constructor-exists", "already has a constructor taking these parameters"),
+                ("breaks-compilation", "would break the build"))),
+
+        new CatalogMapping(
+            "extract-interface",
+            "extract-interface",
+            async context =>
+            {
+                var location = await context.SymbolLocationAsync();
+                var name = context.RequiredString("name");
+                var members = context.HasArgument("members")
+                    ? string.Join(",", context.RequiredArgument("members").EnumerateArray().Select(m => m.GetString()))
+                    : "";
+                var interfaceFile = context.OptionalString("file") is { } file
+                    ? context.WorkspacePath(file)
+                    : Path.Combine(Path.GetDirectoryName(location.FilePath)!, name + ".cs");
+                return new Dictionary<string, JsonElement>
+                {
+                    ["solutionPath"] = Json(context.SolutionPath),
+                    ["filePath"] = Json(location.FilePath),
+                    ["className"] = Json(location.Symbol.Name),
+                    ["memberList"] = Json(members),
+                    ["interfaceFilePath"] = Json(interfaceFile),
+                    ["interfaceName"] = Json(name),
+                };
+            },
+            Codes(
+                ("member-not-found", "No member named"),
+                ("member-not-eligible", "is not a public instance member"),
+                ("no-members", "No matching members found"),
+                ("type-already-exists", "already exists"),
                 ("breaks-compilation", "would break the build"))),
 
         new CatalogMapping(

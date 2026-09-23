@@ -1,0 +1,6 @@
+{
+  "refactoring": "extract-interface",
+  "description": "Gives the interface the class's type parameters and constraints, in the file-scoped namespace style of the class",
+  "target": { "symbol": "T:Shop.Repository`1" },
+  "arguments": { "name": "IRepository" }
+}

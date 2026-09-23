@@ -1,0 +1,6 @@
+{
+  "refactoring": "extract-interface",
+  "description": "Takes every public instance member when none are named, including events and indexers, and imports what their signatures need",
+  "target": { "symbol": "T:Shop.Customer" },
+  "arguments": { "name": "ICustomer" }
+}

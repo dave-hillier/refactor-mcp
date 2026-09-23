@@ -84,17 +84,10 @@ public static class ChangeBaseTypeTool
         {
             updated = declaration.ReplaceNode(current.Type, parsed.WithTriviaFrom(current.Type));
         }
-        else if (declaration.BaseList is { } list)
-        {
-            // The new base class goes first, as C# requires, ahead of the interfaces.
-            var types = new[] { (BaseTypeSyntax)SyntaxFactory.SimpleBaseType(parsed) }.Concat(list.Types);
-            var separators = new[] { SyntaxFactory.Token(SyntaxKind.CommaToken).WithTrailingTrivia(SyntaxFactory.Space) }
-                .Concat(list.Types.GetSeparators());
-            updated = declaration.WithBaseList(list.WithTypes(SyntaxFactory.SeparatedList(types, separators)));
-        }
         else
         {
-            updated = WithFirstBaseList(declaration, parsed);
+            // The new base class goes first, as C# requires, ahead of the interfaces.
+            updated = TypeRefactoringHelpers.AddBaseType(declaration, parsed, first: true);
         }
 
         var root = await document.GetSyntaxRootAsync(cancellationToken);
@@ -119,22 +112,6 @@ public static class ChangeBaseTypeTool
             throw new McpException($"Error: {resolved.ToDisplayString()} already derives from {type.Name}, so it cannot be its base class");
 
         return changed;
-    }
-
-    /// <summary><c>class Manager</c> becomes <c>class Manager : Employee</c>, keeping what followed the name.</summary>
-    private static TypeDeclarationSyntax WithFirstBaseList(TypeDeclarationSyntax declaration, TypeSyntax baseType)
-    {
-        var before = declaration.ParameterList?.CloseParenToken
-            ?? declaration.TypeParameterList?.GreaterThanToken
-            ?? declaration.Identifier;
-        var list = SyntaxFactory.BaseList(
-                SyntaxFactory.SingletonSeparatedList<BaseTypeSyntax>(
-                    SyntaxFactory.SimpleBaseType(baseType.WithTrailingTrivia(before.TrailingTrivia))))
-            .WithColonToken(SyntaxFactory.Token(SyntaxKind.ColonToken).WithTrailingTrivia(SyntaxFactory.Space));
-
-        return declaration
-            .ReplaceToken(before, before.WithTrailingTrivia(SyntaxFactory.Space))
-            .WithBaseList(list);
     }
 
     private static TypeDeclarationSyntax WithoutBase(TypeDeclarationSyntax declaration, BaseTypeSyntax current)

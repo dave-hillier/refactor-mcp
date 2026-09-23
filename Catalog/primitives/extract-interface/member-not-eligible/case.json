@@ -1,0 +1,9 @@
+{
+  "refactoring": "extract-interface",
+  "description": "Refuses a member that is not public, which could not implement the interface",
+  "target": { "symbol": "T:Shop.Order" },
+  "arguments": { "name": "IOrder", "members": ["Total", "Recalculate"] },
+  "expect": "error",
+  "errorCode": "member-not-eligible",
+  "errorContains": "Recalculate"
+}

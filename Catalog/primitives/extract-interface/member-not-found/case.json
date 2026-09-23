@@ -1,0 +1,9 @@
+{
+  "refactoring": "extract-interface",
+  "description": "Refuses a member name the class does not declare",
+  "target": { "symbol": "T:Shop.Order" },
+  "arguments": { "name": "IOrder", "members": ["Total", "Cancel"] },
+  "expect": "error",
+  "errorCode": "member-not-found",
+  "errorContains": "Cancel"
+}

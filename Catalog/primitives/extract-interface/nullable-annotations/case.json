@@ -1,0 +1,7 @@
+{
+  "refactoring": "extract-interface",
+  "description": "Keeps nullable annotations in the signatures",
+  "project": { "nullable": "enable" },
+  "target": { "symbol": "T:Shop.Directory" },
+  "arguments": { "name": "IDirectory" }
+}

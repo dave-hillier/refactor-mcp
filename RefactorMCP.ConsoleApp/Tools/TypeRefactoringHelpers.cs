@@ -246,6 +246,44 @@ internal static class TypeRefactoringHelpers
         return byRank != 0 ? byRank : string.CompareOrdinal(left, right);
     }
 
+    /// <summary>
+    /// Adds a type to a declaration's base list, first (where a base class
+    /// goes) or last, creating the list when there is none. What followed the
+    /// name, such as the line break before the brace, follows the list.
+    /// </summary>
+    internal static TypeDeclarationSyntax AddBaseType(TypeDeclarationSyntax declaration, TypeSyntax type, bool first)
+    {
+        var comma = SyntaxFactory.Token(SyntaxKind.CommaToken).WithTrailingTrivia(SyntaxFactory.Space);
+        if (declaration.BaseList is { } list)
+        {
+            var entry = (BaseTypeSyntax)SyntaxFactory.SimpleBaseType(type);
+            if (first)
+            {
+                return declaration.WithBaseList(list.WithTypes(SyntaxFactory.SeparatedList(
+                    list.Types.Prepend(entry),
+                    list.Types.GetSeparators().Prepend(comma))));
+            }
+
+            var last = list.Types.Last();
+            var types = list.Types.Replace(last, last.WithoutTrailingTrivia());
+            return declaration.WithBaseList(list.WithTypes(SyntaxFactory.SeparatedList(
+                types.Append(entry.WithTrailingTrivia(last.GetTrailingTrivia())),
+                types.GetSeparators().Append(comma))));
+        }
+
+        var before = declaration.ParameterList?.CloseParenToken
+            ?? declaration.TypeParameterList?.GreaterThanToken
+            ?? declaration.Identifier;
+        var created = SyntaxFactory.BaseList(
+                SyntaxFactory.SingletonSeparatedList<BaseTypeSyntax>(
+                    SyntaxFactory.SimpleBaseType(type.WithTrailingTrivia(before.TrailingTrivia))))
+            .WithColonToken(SyntaxFactory.Token(SyntaxKind.ColonToken).WithTrailingTrivia(SyntaxFactory.Space));
+
+        return declaration
+            .ReplaceToken(before, before.WithTrailingTrivia(SyntaxFactory.Space))
+            .WithBaseList(created);
+    }
+
     /// <summary>The line ending a file already uses.</summary>
     internal static SyntaxTrivia EndOfLine(SyntaxNode root) =>
         SyntaxFactory.EndOfLine(root.ToFullString().Contains("\r\n") ? "\r\n" : "\n");
@@ -268,19 +306,26 @@ internal static class TypeRefactoringHelpers
     /// <summary>
     /// The errors <paramref name="after"/> has that <paramref name="before"/>
     /// did not, compared by code and message so that moved code is not
-    /// mistaken for new errors.
+    /// mistaken for new errors. Only the projects the change touched, and the
+    /// projects that depend on them, are compiled.
     /// </summary>
     internal static async Task<IReadOnlyList<Diagnostic>> NewErrorsAsync(
         Solution before,
         Solution after,
         CancellationToken cancellationToken)
     {
+        var graph = after.GetProjectDependencyGraph();
+        var affected = after.GetChanges(before).GetProjectChanges()
+            .Select(c => c.ProjectId)
+            .SelectMany(id => graph.GetProjectsThatTransitivelyDependOnThisProject(id).Prepend(id))
+            .ToHashSet();
+
         var existing = new Dictionary<string, int>(StringComparer.Ordinal);
-        foreach (var error in await ErrorsAsync(before, cancellationToken))
+        foreach (var error in await ErrorsAsync(before, affected, cancellationToken))
             existing[Key(error)] = existing.GetValueOrDefault(Key(error)) + 1;
 
         var added = new List<Diagnostic>();
-        foreach (var error in await ErrorsAsync(after, cancellationToken))
+        foreach (var error in await ErrorsAsync(after, affected, cancellationToken))
         {
             var key = Key(error);
             if (existing.GetValueOrDefault(key) > 0)
@@ -294,10 +339,13 @@ internal static class TypeRefactoringHelpers
         static string Key(Diagnostic d) => $"{d.Id}:{d.GetMessage()}";
     }
 
-    private static async Task<IReadOnlyList<Diagnostic>> ErrorsAsync(Solution solution, CancellationToken cancellationToken)
+    private static async Task<IReadOnlyList<Diagnostic>> ErrorsAsync(
+        Solution solution,
+        IReadOnlySet<ProjectId> projects,
+        CancellationToken cancellationToken)
     {
         var errors = new List<Diagnostic>();
-        foreach (var project in solution.Projects)
+        foreach (var project in solution.Projects.Where(p => projects.Contains(p.Id)))
         {
             var compilation = await project.GetCompilationAsync(cancellationToken);
             if (compilation is not null)
