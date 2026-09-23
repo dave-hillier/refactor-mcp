@@ -1,0 +1,10 @@
+{
+  "refactoring": "redirect-calls-with-constant-argument",
+  "description": "A call in a project that references the method's project is redirected",
+  "target": { "symbol": "M:Shapes.Box.SetValue(System.String,System.Int32)" },
+  "arguments": { "parameter": "name", "value": "\"height\"", "method": "SetHeight" },
+  "projects": [
+    { "name": "Core" },
+    { "name": "App", "references": [ "Core" ] }
+  ]
+}

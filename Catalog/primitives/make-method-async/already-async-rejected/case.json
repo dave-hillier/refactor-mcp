@@ -1,0 +1,7 @@
+{
+  "refactoring": "make-method-async",
+  "description": "Refuses a method that already returns a task",
+  "target": { "symbol": "M:Stock.Inventory.Available(System.String)" },
+  "expect": "error",
+  "errorCode": "already-async"
+}

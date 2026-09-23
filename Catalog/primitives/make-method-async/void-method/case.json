@@ -1,0 +1,5 @@
+{
+  "refactoring": "make-method-async",
+  "description": "A void method that waits on a task returns Task, and a caller that is a statement blocks on it",
+  "target": { "symbol": "M:Data.Repository.Save(System.String)" }
+}

@@ -1,0 +1,7 @@
+{
+  "refactoring": "make-method-async",
+  "description": "Refuses an iterator, which returns a sequence rather than running when called",
+  "target": { "symbol": "M:Stock.Inventory.Available(System.String)" },
+  "expect": "error",
+  "errorCode": "iterator"
+}

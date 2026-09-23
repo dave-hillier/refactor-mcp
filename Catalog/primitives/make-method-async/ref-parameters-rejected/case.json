@@ -1,0 +1,7 @@
+{
+  "refactoring": "make-method-async",
+  "description": "Refuses a method with an out parameter, which an async method cannot have",
+  "target": { "symbol": "M:Stock.Inventory.Available(System.String,System.Boolean@)" },
+  "expect": "error",
+  "errorCode": "ref-parameters"
+}

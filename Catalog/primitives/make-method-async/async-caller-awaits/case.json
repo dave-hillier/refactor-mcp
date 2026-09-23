@@ -1,0 +1,5 @@
+{
+  "refactoring": "make-method-async",
+  "description": "A wait written as GetAwaiter().GetResult() is awaited, and a caller that is already async awaits the call instead of blocking",
+  "target": { "symbol": "M:Data.Loader.Load" }
+}

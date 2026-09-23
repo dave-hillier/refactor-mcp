@@ -1,0 +1,5 @@
+{
+  "refactoring": "make-method-async",
+  "description": "An expression-bodied generic method awaits in its expression body and returns Task<T>; a caller passing a type argument blocks",
+  "target": { "symbol": "M:Data.Settings.Load``1(System.String)" }
+}

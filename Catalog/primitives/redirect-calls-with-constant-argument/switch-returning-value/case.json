@@ -1,0 +1,6 @@
+{
+  "refactoring": "redirect-calls-with-constant-argument",
+  "description": "A switch on an enum whose case returns the named method's result; a call passing the enum member as a constant, with no receiver, calls the method directly",
+  "target": { "symbol": "M:Billing.Rates.Postage(Billing.Zone,System.Decimal)" },
+  "arguments": { "parameter": "zone", "value": "Zone.Europe", "method": "Europe" }
+}

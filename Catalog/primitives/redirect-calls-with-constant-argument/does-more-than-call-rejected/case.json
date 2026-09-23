@@ -1,0 +1,8 @@
+{
+  "refactoring": "redirect-calls-with-constant-argument",
+  "description": "Refuses when the branch for the value does more than call the named method, since the call would skip the rest",
+  "target": { "symbol": "M:Shapes.Box.SetValue(System.String,System.Int32)" },
+  "arguments": { "parameter": "name", "value": "\"height\"", "method": "SetHeight" },
+  "expect": "error",
+  "errorCode": "does-more-than-call"
+}

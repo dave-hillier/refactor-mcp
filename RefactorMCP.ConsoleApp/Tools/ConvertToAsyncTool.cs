@@ -24,14 +24,8 @@ public static class ConvertToAsyncTool
         {
             var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath, cancellationToken);
             var method = (await SolutionEdits.FindMethodAsync(solution, filePath, methodName, line, cancellationToken)).OriginalDefinition;
-            var plan = await Plan.MakeAsync(solution, method, cancellationToken);
-
-            var changed = await plan.ApplyAsync(solution, cancellationToken);
-            await SolutionEdits.EnsureCompilesAsync(solution, changed, cancellationToken);
-            await SolutionEdits.WriteAsync(solution, changed, cancellationToken);
-
-            var callers = plan.Converted.Count - 1;
-            return $"Successfully made '{methodName}' async, with {callers} caller(s) made async and {plan.Blocking.Count} call(s) left blocking";
+            var (converted, blocking) = await MakeAsyncAsync(solution, method, convertCallers: true, cancellationToken);
+            return $"Successfully made '{methodName}' async, with {converted - 1} caller(s) made async and {blocking} call(s) left blocking";
         }
         catch (McpException)
         {
@@ -44,9 +38,29 @@ public static class ConvertToAsyncTool
     }
 
     /// <summary>
+    /// Makes the method async and writes the change. With <paramref name="convertCallers"/>,
+    /// each caller that can be async awaits the call and becomes async in turn; without it,
+    /// only calls in async methods are awaited and every other call blocks on the task.
+    /// Returns how many methods became async and how many calls block.
+    /// </summary>
+    internal static async Task<(int Converted, int Blocking)> MakeAsyncAsync(
+        Solution solution,
+        IMethodSymbol method,
+        bool convertCallers,
+        CancellationToken cancellationToken)
+    {
+        var plan = await Plan.MakeAsync(solution, method, convertCallers, cancellationToken);
+        var changed = await plan.ApplyAsync(solution, cancellationToken);
+        await SolutionEdits.EnsureCompilesAsync(solution, changed, cancellationToken);
+        await SolutionEdits.WriteAsync(solution, changed, cancellationToken);
+        return (plan.Converted.Count, plan.Blocking.Count);
+    }
+
+    /// <summary>
     /// Which methods become async and how each call of them changes. The method
-    /// awaits the tasks it blocked on; each caller that can be async awaits the call
-    /// and becomes async itself; a call where no await can go blocks on the task.
+    /// awaits the tasks it blocked on; a call in an async method is awaited; when
+    /// callers are converted, each caller that can be async awaits the call and
+    /// becomes async itself; any other call blocks on the task.
     /// </summary>
     private sealed class Plan
     {
@@ -62,7 +76,7 @@ public static class ConvertToAsyncTool
 
         public List<ExpressionSyntax> Waits { get; } = new();
 
-        public static async Task<Plan> MakeAsync(Solution solution, IMethodSymbol method, CancellationToken cancellationToken)
+        public static async Task<Plan> MakeAsync(Solution solution, IMethodSymbol method, bool convertCallers, CancellationToken cancellationToken)
         {
             var plan = new Plan(method);
             var reason = await WhyNotAsyncAsync(solution, method, cancellationToken);
@@ -95,7 +109,7 @@ public static class ConvertToAsyncTool
                         continue;
                     }
 
-                    if (await WhyNotAsyncAsync(solution, caller, cancellationToken) != null)
+                    if (!convertCallers || await WhyNotAsyncAsync(solution, caller, cancellationToken) != null)
                     {
                         plan.Blocking.Add(invocation);
                         continue;

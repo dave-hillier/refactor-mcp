@@ -1,0 +1,6 @@
+{
+  "refactoring": "redirect-calls-with-constant-argument",
+  "description": "Only calls of the targeted overload are redirected; a call binding to the overload taking a double keeps calling it",
+  "target": { "symbol": "M:Shapes.Box.SetValue(System.String,System.Int32)" },
+  "arguments": { "parameter": "name", "value": "\"height\"", "method": "SetHeight" }
+}

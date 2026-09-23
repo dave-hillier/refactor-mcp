@@ -1,0 +1,8 @@
+{
+  "refactoring": "redirect-calls-with-constant-argument",
+  "description": "Refuses when a redirected call could not reach the named method, which is private",
+  "target": { "symbol": "M:Shapes.Box.SetValue(System.String,System.Int32)" },
+  "arguments": { "parameter": "name", "value": "\"height\"", "method": "SetHeight" },
+  "expect": "error",
+  "errorCode": "does-not-compile"
+}

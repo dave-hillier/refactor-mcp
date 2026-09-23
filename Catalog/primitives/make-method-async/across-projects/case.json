@@ -1,0 +1,9 @@
+{
+  "refactoring": "make-method-async",
+  "description": "A caller in a project that references the method's project blocks on the task, and gets no using directive it does not need",
+  "target": { "symbol": "M:Stock.Inventory.Available(System.String)" },
+  "projects": [
+    { "name": "Core" },
+    { "name": "App", "references": [ "Core" ] }
+  ]
+}
