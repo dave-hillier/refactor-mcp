@@ -133,6 +133,33 @@ internal sealed class StructuralCompositesMappings : ICatalogMappings
                 ("member-exists", "already has a"),
                 ("target-not-class", "cannot move into it"),
                 ("uses-protected-member", "uses the protected member"))),
+
+        new CatalogMapping(
+            "move-multiple-methods",
+            "move-multiple-methods",
+            async context =>
+            {
+                var location = await context.SymbolLocationAsync();
+                var arguments = new Dictionary<string, JsonElement>
+                {
+                    ["solutionPath"] = Json(context.SolutionPath),
+                    ["filePath"] = Json(location.FilePath),
+                    ["className"] = Json(location.Symbol.Name),
+                    ["methodNames"] = context.RequiredArgument("methods"),
+                };
+                CopyOptional(context, arguments, "via", "via");
+                CopyOptional(context, arguments, "to", "targetType");
+                CopyOptional(context, arguments, "stub", "keepStubs");
+                return arguments;
+            },
+            Codes(
+                ("method-not-found", "has no method named"),
+                ("via-not-found", "to move through"),
+                ("no-reference-to-target", "has no field, property or parameter of type"),
+                ("polymorphic-method", "callers rely on dispatch through the instance"),
+                ("uses-protected-member", "uses the protected member"),
+                ("via-not-accessible", "is not accessible where"),
+                ("member-exists", "already has a"))),
     };
 
     private static void CopyOptional(

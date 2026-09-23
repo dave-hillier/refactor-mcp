@@ -1,0 +1,6 @@
+{
+  "refactoring": "move-multiple-methods",
+  "description": "Named caller first, the methods still move callee first, with the same result as the recipe",
+  "target": { "symbol": "T:Shop.Customer" },
+  "arguments": { "methods": ["Label", "Street"], "via": "_address" }
+}

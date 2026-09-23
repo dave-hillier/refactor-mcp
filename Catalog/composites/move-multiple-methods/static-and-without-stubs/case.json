@@ -1,0 +1,6 @@
+{
+  "refactoring": "move-multiple-methods",
+  "description": "A static helper moves to the via's type by name, before the instance method that calls it moves through the via; without stubs every call is updated",
+  "target": { "symbol": "T:Shop.Order" },
+  "arguments": { "methods": ["UnitPrice", "Round"], "via": "_pricing", "stub": false }
+}
