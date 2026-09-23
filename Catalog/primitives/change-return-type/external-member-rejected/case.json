@@ -1,0 +1,9 @@
+{
+  "refactoring": "change-return-type",
+  "description": "Refuses an override of a method declared outside the solution",
+  "target": { "symbol": "M:Shop.Item.GetHashCode" },
+  "arguments": { "type": "long" },
+  "expect": "error",
+  "errorCode": "external-member",
+  "errorContains": "GetHashCode"
+}

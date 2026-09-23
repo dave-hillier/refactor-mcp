@@ -1,0 +1,6 @@
+{
+  "refactoring": "change-return-type",
+  "description": "Changes the return type of an interface method and of every implementation",
+  "target": { "symbol": "M:Shop.IScores.Top" },
+  "arguments": { "type": "IReadOnlyList<int>" }
+}

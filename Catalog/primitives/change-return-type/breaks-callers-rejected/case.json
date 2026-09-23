@@ -1,0 +1,9 @@
+{
+  "refactoring": "change-return-type",
+  "description": "Refuses when a caller stores the result somewhere the new type does not fit",
+  "target": { "symbol": "M:Shop.Counter.Count(System.Int32[])" },
+  "arguments": { "type": "long" },
+  "expect": "error",
+  "errorCode": "breaks-callers",
+  "errorContains": "Counter.cs(12,"
+}

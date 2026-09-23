@@ -1,0 +1,9 @@
+{
+  "refactoring": "change-return-type",
+  "description": "Refuses a type that does not exist",
+  "target": { "symbol": "M:Shop.Counter.Count(System.Int32[])" },
+  "arguments": { "type": "Tally" },
+  "expect": "error",
+  "errorCode": "unknown-type",
+  "errorContains": "Tally"
+}

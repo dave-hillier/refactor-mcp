@@ -115,6 +115,19 @@ internal sealed class SignaturesMappings : ICatalogMappings
                 ["already-named"] = "that can be named already is",
                 ["changes-overload"] = "would no longer bind to",
             }),
+        new CatalogMapping(
+            "change-return-type",
+            "change-return-type",
+            async context => With(await MemberArguments(context, "methodName"), ("returnType", context.RequiredArgument("type"))),
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["breaks-callers"] = "A caller would not compile with the new return type",
+                ["return-value-incompatible"] = "The method's body does not fit the new return type",
+                ["unknown-type"] = "The new return type does not resolve",
+                ["changes-overload-resolution"] = "would bind to",
+                ["introduces-nullable-warnings"] = "would give callers nullable warnings",
+                ["external-member"] = "which is declared outside the solution",
+            }),
     };
 
     /// <summary>

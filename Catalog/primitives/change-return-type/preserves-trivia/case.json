@@ -1,0 +1,6 @@
+{
+  "refactoring": "change-return-type",
+  "description": "Keeps the documentation comment, attribute, modifiers and a comment next to the return type",
+  "target": { "symbol": "M:Shop.Counter.Count(System.Int32[])" },
+  "arguments": { "type": "long" }
+}

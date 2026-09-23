@@ -1,0 +1,9 @@
+{
+  "refactoring": "change-return-type",
+  "description": "Refuses to make a return type nullable when a caller dereferences the result",
+  "target": { "symbol": "M:Shop.Directory.Find(System.String)" },
+  "project": { "nullable": "enable" },
+  "arguments": { "type": "string?" },
+  "expect": "error",
+  "errorCode": "introduces-nullable-warnings"
+}

@@ -1,0 +1,6 @@
+{
+  "refactoring": "change-return-type",
+  "description": "Changes an async method from Task to ValueTask; awaiting callers are unaffected",
+  "target": { "symbol": "M:Shop.Stock.LoadAsync" },
+  "arguments": { "type": "ValueTask<int>" }
+}

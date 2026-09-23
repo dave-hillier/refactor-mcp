@@ -1,0 +1,6 @@
+{
+  "refactoring": "change-return-type",
+  "description": "Widens int to long where the only caller already stores a long",
+  "target": { "symbol": "M:Shop.Counter.Count(System.Int32[])" },
+  "arguments": { "type": "long" }
+}
