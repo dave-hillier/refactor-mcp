@@ -1,0 +1,8 @@
+{
+  "refactoring": "introduce-null-object",
+  "description": "Refuses a null check whose meaning a null object cannot take over, such as a guard that returns early",
+  "target": { "symbol": "F:Shop.Order._logger" },
+  "expect": "error",
+  "errorCode": "unsupported-null-check",
+  "errorContains": "Order.cs(20"
+}

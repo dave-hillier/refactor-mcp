@@ -1,0 +1,6 @@
+{
+  "refactoring": "replace-array-with-object",
+  "description": "Replaces a local array whose elements mean different things with a class that names them",
+  "target": { "file": "Report.cs", "caret": "marker" },
+  "arguments": { "name": "Performance", "members": ["Club", "Wins"] }
+}

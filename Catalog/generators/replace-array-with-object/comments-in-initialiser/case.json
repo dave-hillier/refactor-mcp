@@ -1,0 +1,6 @@
+{
+  "refactoring": "replace-array-with-object",
+  "description": "Keeps the layout and comments of a multi-line initialiser and of the element uses",
+  "target": { "file": "Fixture.cs", "caret": "marker" },
+  "arguments": { "name": "Teams", "members": ["Home", "Away"] }
+}

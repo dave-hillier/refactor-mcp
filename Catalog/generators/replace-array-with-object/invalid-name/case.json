@@ -1,0 +1,9 @@
+{
+  "refactoring": "replace-array-with-object",
+  "description": "Refuses a member name that is not a valid identifier",
+  "target": { "file": "Report.cs", "caret": "marker" },
+  "arguments": { "name": "Performance", "members": ["Club", "2nd"] },
+  "expect": "error",
+  "errorCode": "invalid-name",
+  "errorContains": "2nd"
+}

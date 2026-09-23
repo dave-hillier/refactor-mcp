@@ -1,0 +1,9 @@
+{
+  "refactoring": "replace-array-with-object",
+  "description": "Refuses a class name the namespace already uses",
+  "target": { "file": "Report.cs", "caret": "marker" },
+  "arguments": { "name": "Performance", "members": ["Club", "Wins"] },
+  "expect": "error",
+  "errorCode": "type-already-exists",
+  "errorContains": "Performance"
+}
