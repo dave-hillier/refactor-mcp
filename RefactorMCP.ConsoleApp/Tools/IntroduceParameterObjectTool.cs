@@ -4,6 +4,7 @@ using System.ComponentModel;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using RefactorMCP.ConsoleApp.Tools.Composites;
 
 [McpServerToolType]
 public static class IntroduceParameterObjectTool
@@ -22,60 +23,63 @@ public static class IntroduceParameterObjectTool
     {
         try
         {
-            return await CompositeRefactoring.RunAsync(solutionPath, async () =>
+            var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath, cancellationToken);
+            var method = await SolutionEdits.FindMethodAsync(solution, filePath, methodName, line, cancellationToken);
+            if (method.MethodKind != MethodKind.Ordinary)
+                throw new McpException($"Error: '{methodName}' is not an ordinary method, so its parameters cannot become a record");
+
+            var grouped = Grouped(method, parameters, parameterName);
+            var location = method.Locations.First(l => l.IsInSource);
+            var model = (await solution.GetDocument(location.SourceTree)!.GetSemanticModelAsync(cancellationToken))!;
+
+            await CompositeRecipe.RunAsync(solutionPath, async recipe =>
             {
-                var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath, cancellationToken);
-                var method = await SolutionEdits.FindMethodAsync(solution, filePath, methodName, line, cancellationToken);
-                if (method.MethodKind != MethodKind.Ordinary)
-                    throw new McpException($"Error: '{methodName}' is not an ordinary method, so its parameters cannot become a record");
-
-                var grouped = Grouped(method, parameters, parameterName);
-                var location = method.Locations.First(l => l.IsInSource);
-                var model = (await solution.GetDocument(location.SourceTree)!.GetSemanticModelAsync(cancellationToken))!;
-
                 // The group first becomes a tuple, read element by element in the body
                 // and built from each call's own arguments.
-                var tupleType = "(" + string.Join(", ", grouped.Select(p =>
-                    $"{p.Type.ToMinimalDisplayString(model, location.SourceSpan.Start)} {p.Name}")) + ")";
-                var replacements = grouped.ToDictionary(
-                    p => p.Ordinal,
-                    p => (ExpressionSyntax)SyntaxFactory.MemberAccessExpression(
-                        SyntaxKind.SimpleMemberAccessExpression,
-                        SyntaxFactory.IdentifierName(parameterName),
-                        SyntaxFactory.IdentifierName(p.Name)));
-
-                var (replaced, resolved) = await ChangeSignatureTool.ReplaceParameterUsesAsync(solution, method, replacements, cancellationToken);
-                var declaration = ParameterSlot.ParseDeclaration(tupleType, parameterName, null);
-                // The new parameter takes the place of the first of the group.
-                var first = grouped.Min(p => p.Ordinal);
-                var slots = new List<ParameterSlot>();
-                foreach (var parameter in resolved.Parameters)
+                await recipe.StepAsync("change-signature", async () =>
                 {
-                    if (parameter.Ordinal == first)
-                        slots.Add(ParameterSlot.Added(declaration, site => Tuple(site, grouped)));
-                    else if (grouped.All(g => g.Ordinal != parameter.Ordinal))
-                        slots.Add(ParameterSlot.Existing(parameter.Ordinal));
-                }
+                    var tupleType = "(" + string.Join(", ", grouped.Select(p =>
+                        $"{p.Type.ToMinimalDisplayString(model, location.SourceSpan.Start)} {p.Name}")) + ")";
+                    var replacements = grouped.ToDictionary(
+                        p => p.Ordinal,
+                        p => (ExpressionSyntax)SyntaxFactory.MemberAccessExpression(
+                            SyntaxKind.SimpleMemberAccessExpression,
+                            SyntaxFactory.IdentifierName(parameterName),
+                            SyntaxFactory.IdentifierName(p.Name)));
 
-                var changed = await SignatureChange.ApplyAsync(replaced, resolved, slots, cancellationToken);
-                await SolutionEdits.EnsureCompilesAsync(solution, changed, cancellationToken);
-                await SolutionEdits.WriteAsync(solution, changed, cancellationToken);
+                    var (replaced, resolved) = await ChangeSignatureTool.ReplaceParameterUsesAsync(solution, method, replacements, cancellationToken);
+                    var declaration = ParameterSlot.ParseDeclaration(tupleType, parameterName, null);
+
+                    // The new parameter takes the place of the first of the group.
+                    var first = grouped.Min(p => p.Ordinal);
+                    var slots = new List<ParameterSlot>();
+                    foreach (var parameter in resolved.Parameters)
+                    {
+                        if (parameter.Ordinal == first)
+                            slots.Add(ParameterSlot.Added(declaration, site => Tuple(site, grouped)));
+                        else if (grouped.All(g => g.Ordinal != parameter.Ordinal))
+                            slots.Add(ParameterSlot.Existing(parameter.Ordinal));
+                    }
+
+                    var changed = await SignatureChange.ApplyAsync(replaced, resolved, slots, cancellationToken);
+                    await SolutionEdits.EnsureCompilesAsync(solution, changed, cancellationToken);
+                    await SolutionEdits.WriteAsync(solution, changed, cancellationToken);
+                });
 
                 // Convert Tuple to Named Type then turns the tuple into the record. The
                 // declaration still starts on the line it did.
-                var declarationLine = location.GetLineSpan().StartLinePosition.Line + 1;
-                await ConvertTupleToNamedTypeTool.ConvertTupleToNamedType(
+                await recipe.StepAsync("convert-tuple-to-named-type", () => ConvertTupleToNamedTypeTool.ConvertTupleToNamedType(
                     solutionPath,
                     location.SourceTree!.FilePath,
                     method.Name,
                     typeName,
                     parameterName,
                     kind,
-                    declarationLine,
-                    cancellationToken);
-
-                return $"Successfully replaced ({string.Join(", ", parameters)}) of '{methodName}' with '{typeName} {parameterName}'";
+                    location.GetLineSpan().StartLinePosition.Line + 1,
+                    cancellationToken));
             }, cancellationToken);
+
+            return $"Successfully replaced ({string.Join(", ", parameters)}) of '{methodName}' with '{typeName} {parameterName}'";
         }
         catch (McpException)
         {

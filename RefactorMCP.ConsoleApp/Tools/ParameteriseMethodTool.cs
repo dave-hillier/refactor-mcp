@@ -5,6 +5,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
+using RefactorMCP.ConsoleApp.Tools.Composites;
 
 [McpServerToolType]
 public static class ParameteriseMethodTool
@@ -27,7 +28,7 @@ public static class ParameteriseMethodTool
                 throw new McpException(
                     $"Error: {positions.Count} literal(s) differ between the methods, but {parameterNames.Length} parameter name(s) were given");
 
-            return await CompositeRefactoring.RunAsync(solutionPath, async () =>
+            await CompositeRecipe.RunAsync(solutionPath, async recipe =>
             {
                 // Introduce Parameter on each differing literal of the first method. A
                 // literal becomes a name, one token for another, so positions hold.
@@ -35,14 +36,17 @@ public static class ParameteriseMethodTool
                 for (var i = 0; i < positions.Count; i++)
                 {
                     var literal = await TokenAsync(solutionPath, filePath, first, positions[i], cancellationToken);
-                    await IntroduceParameterTool.IntroduceParameter(solutionPath, filePath, first, Range(literal.Parent!), parameterNames[i]);
+                    var parameterName = parameterNames[i];
+                    await recipe.StepAsync("introduce-parameter", () =>
+                        IntroduceParameterTool.IntroduceParameter(solutionPath, filePath, first, Range(literal.Parent!), parameterName));
                 }
 
                 if (name != first)
                 {
                     var identifier = (await DeclarationAsync(solutionPath, filePath, first, cancellationToken)).Identifier;
                     var start = identifier.GetLocation().GetLineSpan().StartLinePosition;
-                    await RenameSymbolTool.RenameSymbol(solutionPath, filePath, first, name, start.Line + 1, start.Character + 1, cancellationToken);
+                    await recipe.StepAsync("rename", () =>
+                        RenameSymbolTool.RenameSymbol(solutionPath, filePath, first, name, start.Line + 1, start.Character + 1, cancellationToken));
                 }
 
                 // Extract Method onto the parameterised method makes each other method
@@ -52,14 +56,15 @@ public static class ParameteriseMethodTool
                 {
                     var body = (await DeclarationAsync(solutionPath, filePath, other, cancellationToken)).Body!;
                     var statements = TextSpan.FromBounds(body.Statements.First().SpanStart, body.Statements.Last().Span.End);
-                    await ExtractMethodTool.ExtractMethod(solutionPath, filePath, Range(body.SyntaxTree, statements), name);
+                    await recipe.StepAsync("extract-method", () =>
+                        ExtractMethodTool.ExtractMethod(solutionPath, filePath, Range(body.SyntaxTree, statements), name));
 
                     var line = (await DeclarationAsync(solutionPath, filePath, other, cancellationToken)).Identifier.GetLocation().GetLineSpan().StartLinePosition.Line + 1;
-                    await InlineMethodTool.InlineMethod(solutionPath, filePath, other, line);
+                    await recipe.StepAsync("inline-method", () => InlineMethodTool.InlineMethod(solutionPath, filePath, other, line));
                 }
-
-                return $"Successfully parameterised {string.Join(", ", methods)} as '{name}({string.Join(", ", parameterNames)})'";
             }, cancellationToken);
+
+            return $"Successfully parameterised {string.Join(", ", methods)} as '{name}({string.Join(", ", parameterNames)})'";
         }
         catch (McpException)
         {
