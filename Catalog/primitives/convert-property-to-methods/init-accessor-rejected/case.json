@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-property-to-methods",
+  "description": "Refuses a property with an init accessor, whose object-initialiser uses a method cannot replace",
+  "target": { "symbol": "P:Shop.Sample.Name" },
+  "expect": "error",
+  "errorCode": "init-accessor"
+}

@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-method-to-property",
+  "description": "Refuses an override, which only its base declaration can convert",
+  "target": { "symbol": "M:Shop.Book.GetLabel" },
+  "expect": "error",
+  "errorCode": "is-override"
+}

@@ -85,6 +85,33 @@ internal sealed class FieldsPropertiesAndConstantsMappings : ICatalogMappings
             Codes(
                 ("not-auto-property", "is not an auto-property"),
                 ("name-conflict", "already has a member named"))),
+        new CatalogMapping(
+            "convert-method-to-property",
+            "convert-method-to-property",
+            context => MemberArguments(context, "methodName", ("name", "propertyName")),
+            Codes(
+                ("has-parameters", "takes parameters"),
+                ("returns-void", "returns void"),
+                ("generic-method", "is generic"),
+                ("async-method", "is async"),
+                ("is-override", "is an override"),
+                ("implements-interface", "implements an interface member"),
+                ("used-as-method-group", "is used without being called"),
+                ("name-conflict", "already has a member named"))),
+        new CatalogMapping(
+            "convert-property-to-methods",
+            "convert-property-to-methods",
+            context => MemberArguments(context, "propertyName"),
+            Codes(
+                ("in-hierarchy", "so its hierarchy would have to change too"),
+                ("init-accessor", "has an init accessor"),
+                ("name-conflict", "already has a member named"),
+                ("used-in-nameof", "is named by nameof"),
+                ("used-in-object-initializer", "is set in an object initializer"),
+                ("assignment-used-as-value", "The value of an assignment"),
+                ("increment-used-as-value", "The value of an increment"),
+                ("unsupported-assignment", "cannot be written as a call"),
+                ("receiver-evaluated-twice", "twice"))),
     };
 
     /// <summary>
@@ -118,7 +145,8 @@ internal sealed class FieldsPropertiesAndConstantsMappings : ICatalogMappings
 
     /// <summary>
     /// A symbol-targeted step as the tools that take a member name expect it,
-    /// with any optional catalog arguments passed on under the tool's names.
+    /// qualified by its type to tell apart types in one file, with any
+    /// optional catalog arguments passed on under the tool's names.
     /// </summary>
     private static async Task<Dictionary<string, JsonElement>> MemberArguments(
         StepContext context,
@@ -130,7 +158,7 @@ internal sealed class FieldsPropertiesAndConstantsMappings : ICatalogMappings
         {
             ["solutionPath"] = Json(context.SolutionPath),
             ["filePath"] = Json(location.FilePath),
-            [memberParameter] = Json(location.Symbol.Name),
+            [memberParameter] = Json($"{location.Symbol.ContainingType.Name}.{location.Symbol.Name}"),
         };
 
         foreach (var (argument, parameter) in optional)

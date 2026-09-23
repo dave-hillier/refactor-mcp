@@ -17,6 +17,7 @@ public static class InlineConstantTool
         {
             var document = await FieldPropertyRefactoring.GetDocumentAsync(solutionPath, filePath);
             var field = await FieldPropertyRefactoring.FindFieldAsync(document, constantName);
+            constantName = field.Name;
             if (!field.IsConst)
                 throw new McpException($"Error: '{constantName}' is not a constant");
 

@@ -23,6 +23,7 @@ public static class ConvertAutoPropertyToBackingFieldTool
         {
             var document = await FieldPropertyRefactoring.GetDocumentAsync(solutionPath, filePath);
             var property = await FieldPropertyRefactoring.FindPropertyAsync(document, propertyName);
+            propertyName = property.Name;
             var declaration = await FieldPropertyRefactoring.DeclarationAsync<PropertyDeclarationSyntax>(property);
             if (!IsAutoProperty(property, declaration))
                 throw new McpException($"Error: Property '{propertyName}' is not an auto-property");

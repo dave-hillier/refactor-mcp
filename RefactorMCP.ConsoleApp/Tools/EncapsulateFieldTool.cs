@@ -23,6 +23,7 @@ public static class EncapsulateFieldTool
         {
             var document = await FieldPropertyRefactoring.GetDocumentAsync(solutionPath, filePath);
             var field = await FieldPropertyRefactoring.FindFieldAsync(document, fieldName);
+            fieldName = field.Name;
             if (field.IsConst)
                 throw new McpException($"Error: '{fieldName}' is a constant, which has no storage to encapsulate");
 

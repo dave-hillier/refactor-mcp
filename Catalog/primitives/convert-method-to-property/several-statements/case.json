@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-method-to-property",
+  "description": "A method body of several statements becomes the property's get accessor",
+  "target": { "symbol": "M:Shop.Customer.GetSummary" }
+}

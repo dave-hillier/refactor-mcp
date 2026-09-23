@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-method-to-property",
+  "description": "Refuses a method used without being called, such as a delegate",
+  "target": { "symbol": "M:Shop.Counter.GetCount" },
+  "expect": "error",
+  "errorCode": "used-as-method-group"
+}

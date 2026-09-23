@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-method-to-property",
+  "description": "An abstract method becomes an abstract get-only property, and its implementations become properties",
+  "target": { "symbol": "M:Shop.Product.GetKind" }
+}

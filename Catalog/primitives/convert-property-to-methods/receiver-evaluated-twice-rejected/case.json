@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-property-to-methods",
+  "description": "Refuses a compound assignment through a receiver that is a call, which would run twice",
+  "target": { "symbol": "P:Shop.Counter.Value" },
+  "expect": "error",
+  "errorCode": "receiver-evaluated-twice"
+}

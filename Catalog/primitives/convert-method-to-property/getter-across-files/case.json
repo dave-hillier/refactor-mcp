@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-method-to-property",
+  "description": "A parameterless Get method becomes a property without the prefix, and calls in other files read the property",
+  "target": { "symbol": "M:Shop.Order.GetTotal" }
+}

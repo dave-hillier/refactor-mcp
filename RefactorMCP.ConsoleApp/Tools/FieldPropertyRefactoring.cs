@@ -44,14 +44,24 @@ internal static class FieldPropertyRefactoring
             : throw new McpException($"Error: No method named '{methodName}' found");
     }
 
+    /// <summary>
+    /// Members declared in the document with the name, which may be qualified
+    /// by the containing type's name, as <c>Book.GetLabel</c>, to choose
+    /// between types in the same file.
+    /// </summary>
     private static async Task<IReadOnlyList<ISymbol>> DeclaredSymbolsAsync(Document document, string name)
     {
+        var separator = name.LastIndexOf('.');
+        var typeName = separator < 0 ? null : name[..separator];
+        var memberName = name[(separator + 1)..];
+
         var root = await document.GetSyntaxRootAsync();
         var model = await document.GetSemanticModelAsync();
         return root!.DescendantNodes()
             .Where(node => node is MemberDeclarationSyntax or VariableDeclaratorSyntax)
             .Select(node => model!.GetDeclaredSymbol(node))
-            .Where(symbol => symbol is not null && symbol.Name == name)
+            .Where(symbol => symbol is not null && symbol.Name == memberName
+                && (typeName is null || symbol.ContainingType?.Name == typeName))
             .Select(symbol => symbol!)
             .ToList();
     }

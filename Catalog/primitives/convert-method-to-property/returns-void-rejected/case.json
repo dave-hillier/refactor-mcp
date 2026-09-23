@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-method-to-property",
+  "description": "Refuses a method that returns nothing",
+  "target": { "symbol": "M:Shop.Sample.Reset" },
+  "expect": "error",
+  "errorCode": "returns-void"
+}

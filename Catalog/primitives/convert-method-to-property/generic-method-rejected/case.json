@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-method-to-property",
+  "description": "Refuses a generic method, since a property cannot have type parameters",
+  "target": { "symbol": "M:Shop.Sample.GetEmpty``1" },
+  "expect": "error",
+  "errorCode": "generic-method"
+}

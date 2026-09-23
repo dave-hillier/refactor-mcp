@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-property-to-methods",
+  "description": "Refuses a virtual property, whose overrides would have to change too",
+  "target": { "symbol": "P:Shop.Product.Label" },
+  "expect": "error",
+  "errorCode": "in-hierarchy"
+}

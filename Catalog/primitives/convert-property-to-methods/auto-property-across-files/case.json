@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-property-to-methods",
+  "description": "An auto-property becomes a backing field with Get and Set methods; reads, assignments, compound assignments and increments in other files call them",
+  "target": { "symbol": "P:Shop.Order.Quantity" }
+}

@@ -21,6 +21,7 @@ public static class ConvertToAutoPropertyTool
         {
             var document = await FieldPropertyRefactoring.GetDocumentAsync(solutionPath, filePath);
             var property = await FieldPropertyRefactoring.FindPropertyAsync(document, propertyName);
+            propertyName = property.Name;
             var declaration = await FieldPropertyRefactoring.DeclarationAsync<PropertyDeclarationSyntax>(property);
             var solution = document.Project.Solution;
             var propertyDocument = solution.GetDocument(declaration.SyntaxTree)!;

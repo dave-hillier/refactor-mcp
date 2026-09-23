@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-method-to-property",
+  "description": "Refuses a method that takes parameters",
+  "target": { "symbol": "M:Shop.Sample.GetScaled(System.Int32)" },
+  "expect": "error",
+  "errorCode": "has-parameters"
+}

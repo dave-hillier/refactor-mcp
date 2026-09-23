@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-property-to-methods",
+  "description": "Accessor bodies become method bodies, block for block, and the setter keeps its own accessibility",
+  "target": { "symbol": "P:Shop.Customer.Name" }
+}

@@ -20,6 +20,7 @@ public static class InlineFieldTool
         {
             var document = await FieldPropertyRefactoring.GetDocumentAsync(solutionPath, filePath);
             var field = await FieldPropertyRefactoring.FindFieldAsync(document, fieldName);
+            fieldName = field.Name;
             var variable = await FieldPropertyRefactoring.DeclarationAsync<VariableDeclaratorSyntax>(field);
             if (variable.Initializer is null)
                 throw new McpException($"Error: Field '{fieldName}' has no initializer to inline");

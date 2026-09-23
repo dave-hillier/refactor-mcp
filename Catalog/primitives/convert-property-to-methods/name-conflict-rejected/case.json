@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-property-to-methods",
+  "description": "Refuses when a method name the conversion needs is taken",
+  "target": { "symbol": "P:Shop.Sample.Count" },
+  "expect": "error",
+  "errorCode": "name-conflict",
+  "errorContains": "'GetCount'"
+}

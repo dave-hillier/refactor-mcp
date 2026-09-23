@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-method-to-property",
+  "description": "Refuses a property name another member already has",
+  "target": { "symbol": "M:Shop.Sample.GetTotal" },
+  "expect": "error",
+  "errorCode": "name-conflict",
+  "errorContains": "'Total'"
+}
