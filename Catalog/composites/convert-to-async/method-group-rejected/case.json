@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-to-async",
+  "description": "Refuses a method used as a method group, where a method returning a task would no longer fit the delegate",
+  "target": { "symbol": "M:Stock.Inventory.Available(System.String)" },
+  "expect": "error",
+  "errorCode": "method-group-reference"
+}

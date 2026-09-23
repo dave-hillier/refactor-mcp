@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-to-async",
+  "description": "A method reading a task's Result awaits it and returns a task; callers in methods await it and become async in turn, and a constructor, which cannot be async, blocks on it",
+  "target": { "symbol": "M:Stock.Inventory.Available(System.String)" }
+}

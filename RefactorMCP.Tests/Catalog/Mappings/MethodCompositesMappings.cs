@@ -223,6 +223,20 @@ internal sealed class MethodCompositesMappings : ICatalogMappings
                 ["duplicate-parameter"] = "The constructor already has a parameter named",
                 ["not-a-local"] = "There is no local variable",
             }),
+        new CatalogMapping(
+            "convert-to-async",
+            "convert-to-async",
+            MethodArguments,
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["nothing-to-await"] = "does not block on a task, so it has nothing to await",
+                ["already-async"] = "already returns a task",
+                ["not-a-method"] = "is not an ordinary method",
+                ["polymorphic-method"] = "is virtual, an override or an interface implementation",
+                ["ref-parameters"] = "has ref, out or in parameters",
+                ["iterator"] = "is an iterator",
+                ["method-group-reference"] = "is used as a method group",
+            }),
     };
 
     /// <summary>
