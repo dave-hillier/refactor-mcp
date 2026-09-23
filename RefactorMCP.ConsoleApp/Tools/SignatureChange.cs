@@ -155,7 +155,7 @@ internal static class SignatureChange
             var document = updated.GetDocument(documentId)!;
             var root = await document.GetSyntaxRootAsync(cancellationToken);
             var newRoot = root!.ReplaceNodes(replacements.Keys, (original, current) => replacements[original](current));
-            updated = updated.WithDocumentSyntaxRoot(documentId, newRoot);
+            updated = updated.WithDocumentSyntaxRoot(documentId, ListLayout.PlaceCarriedComments(newRoot));
         }
 
         return updated;
@@ -315,7 +315,8 @@ internal static class SignatureChange
             }
         }
 
-        return list.WithParameters(ListLayout.Rearrange(list.Parameters, items));
+        var (parameters, comment) = ListLayout.Rearrange(list.Parameters, items);
+        return list.WithParameters(parameters).WithCloseParenToken(ListLayout.CarryComment(list.CloseParenToken, comment));
     }
 
     private static SyntaxNode RewriteCall(
@@ -371,7 +372,9 @@ internal static class SignatureChange
             }
         }
 
-        var rewritten = arguments.WithArguments(ListLayout.Rearrange(arguments.Arguments, items));
+        var (list, comment) = ListLayout.Rearrange(arguments.Arguments, items);
+        var rewritten = arguments.WithArguments(list)
+            .WithCloseParenToken(ListLayout.CarryComment(arguments.CloseParenToken, comment));
         return current switch
         {
             InvocationExpressionSyntax invocation => invocation.WithArgumentList(rewritten),
@@ -571,7 +574,14 @@ internal static class ParameterUsage
 /// </summary>
 internal static class ListLayout
 {
-    public static SeparatedSyntaxList<T> Rearrange<T>(
+    private const string CarriedCommentKind = "RefactorMCP.CarriedComment";
+
+    /// <summary>
+    /// The list in its new order, and the comment that followed the comma of
+    /// the element now last. That comment has no comma to follow any more, so
+    /// the caller carries it past the closing parenthesis with <see cref="CarryComment"/>.
+    /// </summary>
+    public static (SeparatedSyntaxList<T> List, SyntaxTriviaList CommentAfterLast) Rearrange<T>(
         SeparatedSyntaxList<T> original,
         IReadOnlyList<(T Node, int? From)> items)
         where T : SyntaxNode
@@ -590,10 +600,16 @@ internal static class ListLayout
         var commentAfter = new SyntaxTriviaList[separators];
         var separatorLayout = new SyntaxTriviaList[separators];
         for (var i = 0; i < separators; i++)
-            (commentAfter[i], separatorLayout[i]) = SplitTrailing(original.GetSeparator(i).TrailingTrivia);
+        {
+            SyntaxTriviaList commentBeforeNext;
+            (commentAfter[i], commentBeforeNext, separatorLayout[i]) = SplitTrailing(original.GetSeparator(i).TrailingTrivia);
+            if (i + 1 < count)
+                leadingContent[i + 1] = commentBeforeNext.AddRange(leadingContent[i + 1]);
+        }
 
         var nodes = new List<T>();
         var newSeparators = new List<SyntaxToken>();
+        var commentAfterLast = default(SyntaxTriviaList);
         for (var j = 0; j < items.Count; j++)
         {
             var (node, from) = items[j];
@@ -617,16 +633,53 @@ internal static class ListLayout
                     : separatorLayout[Math.Min(j, separators - 1)];
                 newSeparators.Add(SyntaxFactory.Token(SyntaxKind.CommaToken).WithTrailingTrivia(after.AddRange(layout)));
             }
-            else if (after.Count > 0)
+            else
             {
-                // A line comment cannot end a list, or it would swallow the parenthesis.
-                node = node.WithTrailingTrivia(node.GetTrailingTrivia().AddRange(after).AddRange(separatorLayout[from!.Value]));
+                commentAfterLast = after;
             }
 
             nodes.Add(node);
         }
 
-        return SyntaxFactory.SeparatedList(nodes, newSeparators);
+        return (SyntaxFactory.SeparatedList(nodes, newSeparators), commentAfterLast);
+    }
+
+    /// <summary>
+    /// Marks a closing token to carry a comment to the end of its line, where
+    /// <see cref="PlaceCarriedComments"/> puts it once the whole line is known.
+    /// </summary>
+    public static SyntaxToken CarryComment(SyntaxToken closeToken, SyntaxTriviaList comment) =>
+        comment.Count == 0
+            ? closeToken
+            : closeToken.WithAdditionalAnnotations(new SyntaxAnnotation(CarriedCommentKind, comment.ToFullString()));
+
+    /// <summary>
+    /// Puts each carried comment before the end of the line its closing token
+    /// is on, so a line comment cannot swallow the code after the token.
+    /// </summary>
+    public static SyntaxNode PlaceCarriedComments(SyntaxNode root)
+    {
+        var comments = new Dictionary<SyntaxToken, string>();
+        foreach (var token in root.GetAnnotatedTokens(CarriedCommentKind))
+        {
+            var end = token;
+            while (!end.TrailingTrivia.Any(SyntaxKind.EndOfLineTrivia)
+                && end.GetNextToken() is { RawKind: not 0 } next
+                && !next.LeadingTrivia.Any(SyntaxKind.EndOfLineTrivia))
+            {
+                end = next;
+            }
+
+            var comment = string.Concat(token.GetAnnotations(CarriedCommentKind).Select(a => a.Data));
+            comments[end] = comments.TryGetValue(end, out var earlier) ? earlier + comment : comment;
+        }
+
+        return comments.Count == 0
+            ? root
+            : root.ReplaceTokens(
+                comments.Keys,
+                (original, current) => current.WithTrailingTrivia(
+                    SyntaxFactory.ParseTrailingTrivia(comments[original]).AddRange(current.TrailingTrivia)));
     }
 
     private static bool IsLayout(SyntaxTriviaList trivia) =>
@@ -639,16 +692,31 @@ internal static class ListLayout
         return (SyntaxFactory.TriviaList(trivia.Take(layout)), SyntaxFactory.TriviaList(trivia.Skip(layout)));
     }
 
-    /// <summary>A comment after a comma belongs to the element before it; the rest is layout.</summary>
-    private static (SyntaxTriviaList Comment, SyntaxTriviaList Layout) SplitTrailing(SyntaxTriviaList trivia)
+    /// <summary>
+    /// A comment after a comma that ends the line belongs to the element
+    /// before the comma; one followed by more code on the same line belongs
+    /// to the element after it. The rest is layout.
+    /// </summary>
+    private static (SyntaxTriviaList Previous, SyntaxTriviaList Next, SyntaxTriviaList Layout) SplitTrailing(SyntaxTriviaList trivia)
     {
+        var firstComment = -1;
         var lastComment = -1;
         for (var i = 0; i < trivia.Count; i++)
         {
             if (trivia[i].IsKind(SyntaxKind.SingleLineCommentTrivia) || trivia[i].IsKind(SyntaxKind.MultiLineCommentTrivia))
+            {
+                if (firstComment < 0)
+                    firstComment = i;
                 lastComment = i;
+            }
         }
 
-        return (SyntaxFactory.TriviaList(trivia.Take(lastComment + 1)), SyntaxFactory.TriviaList(trivia.Skip(lastComment + 1)));
+        if (lastComment < 0)
+            return (default, default, trivia);
+
+        if (trivia.Skip(lastComment).Any(t => t.IsKind(SyntaxKind.EndOfLineTrivia)))
+            return (SyntaxFactory.TriviaList(trivia.Take(lastComment + 1)), default, SyntaxFactory.TriviaList(trivia.Skip(lastComment + 1)));
+
+        return (default, SyntaxFactory.TriviaList(trivia.Skip(firstComment)), SyntaxFactory.TriviaList(trivia.Take(firstComment)));
     }
 }

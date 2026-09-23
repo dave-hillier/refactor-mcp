@@ -1,0 +1,6 @@
+{
+  "refactoring": "add-parameter-default-value",
+  "description": "Gives the last parameter a default, leaving calls as they are",
+  "target": { "symbol": "M:Shop.Money.Format(System.Decimal,System.String)" },
+  "arguments": { "parameter": "currency", "value": "\"GBP\"" }
+}

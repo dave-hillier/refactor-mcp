@@ -1,0 +1,8 @@
+{
+  "refactoring": "add-parameter-default-value",
+  "description": "Refuses an out parameter, which cannot have a default",
+  "target": { "symbol": "M:Shop.Parser.TryRead(System.String,System.Int32@)" },
+  "arguments": { "parameter": "value", "value": "0" },
+  "expect": "error",
+  "errorCode": "ref-or-out-parameter"
+}

@@ -1,0 +1,6 @@
+{
+  "refactoring": "inline-parameter",
+  "description": "Inlines a value passed by calls in another file into every use in the body",
+  "target": { "symbol": "M:Shop.Discount.Describe(System.Decimal,System.Decimal)" },
+  "arguments": { "parameter": "rate" }
+}

@@ -13,10 +13,10 @@ public class Invoice
 
     public string Print()
     {
-        // a single line item
+        // two line items
         return Line(
             "pen", // product
             2,
-            1.5m);
+            1.5m) + Line("cup", /* count */ 1, 2m);
     }
 }

@@ -1,0 +1,7 @@
+{
+  "refactoring": "add-parameter-default-value",
+  "description": "Gives a nullable reference parameter a null default in a nullable context and drops null arguments",
+  "target": { "symbol": "M:Shop.Notes.Add(System.String,System.String)" },
+  "project": { "nullable": "enable" },
+  "arguments": { "parameter": "author", "value": "null", "removeFromCallSites": true }
+}

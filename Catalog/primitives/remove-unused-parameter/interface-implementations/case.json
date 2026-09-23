@@ -1,0 +1,6 @@
+{
+  "refactoring": "remove-unused-parameter",
+  "description": "Removes a parameter no implementation reads from the interface, every implementation and every call",
+  "target": { "symbol": "M:Shop.IAudit.Record(System.String,System.Int32)" },
+  "arguments": { "parameter": "severity" }
+}

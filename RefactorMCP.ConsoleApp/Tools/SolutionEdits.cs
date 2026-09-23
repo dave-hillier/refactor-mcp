@@ -31,6 +31,14 @@ internal static class SolutionEdits
         return (IMethodSymbol)symbol;
     }
 
+    public static IParameterSymbol FindParameter(IMethodSymbol method, string name) =>
+        method.Parameters.FirstOrDefault(p => p.Name == name)
+        ?? throw new McpException($"Error: '{method.ToDisplayString(SymbolDisplayFormat.CSharpShortErrorMessageFormat)}' has no parameter named '{name}'");
+
+    /// <summary>The project that declares a symbol.</summary>
+    public static ProjectId ProjectOf(Solution solution, ISymbol symbol) =>
+        solution.GetDocument(symbol.Locations.First(l => l.IsInSource).SourceTree)!.Project.Id;
+
     /// <summary>The type or member named <paramref name="name"/> in a file.</summary>
     public static Task<ISymbol> FindMemberAsync(
         Solution solution,
@@ -159,11 +167,15 @@ internal static class SolutionEdits
 
     public static string Describe(Diagnostic diagnostic)
     {
-        var position = diagnostic.Location.GetLineSpan();
-        var where = position.IsValid
-            ? $"{Path.GetFileName(position.Path)}({position.StartLinePosition.Line + 1},{position.StartLinePosition.Character + 1}): "
-            : "";
+        var where = diagnostic.Location.IsInSource ? $"{Describe(diagnostic.Location)}: " : "";
         return $"{where}{diagnostic.Id} {diagnostic.GetMessage()}";
+    }
+
+    /// <summary>A location as <c>File.cs(line,column)</c>.</summary>
+    public static string Describe(Location location)
+    {
+        var position = location.GetLineSpan();
+        return $"{Path.GetFileName(position.Path)}({position.StartLinePosition.Line + 1},{position.StartLinePosition.Character + 1})";
     }
 
     /// <summary>Writes every changed document to disk and makes the changed solution current.</summary>

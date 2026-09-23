@@ -1,0 +1,9 @@
+{
+  "refactoring": "remove-unused-parameter",
+  "description": "Refuses when the method does not read the parameter but an override does",
+  "target": { "symbol": "M:Shop.Notifier.Format(System.String,System.Int32)" },
+  "arguments": { "parameter": "level" },
+  "expect": "error",
+  "errorCode": "parameter-in-use",
+  "errorContains": "LoudNotifier"
+}

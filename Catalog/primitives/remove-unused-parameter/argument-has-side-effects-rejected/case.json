@@ -1,0 +1,9 @@
+{
+  "refactoring": "remove-unused-parameter",
+  "description": "Refuses when a call's argument does work that removing it would lose",
+  "target": { "symbol": "M:Shop.Report.Title(System.String,System.Int32)" },
+  "arguments": { "parameter": "width" },
+  "expect": "error",
+  "errorCode": "argument-has-side-effects",
+  "errorContains": "NextWidth()"
+}

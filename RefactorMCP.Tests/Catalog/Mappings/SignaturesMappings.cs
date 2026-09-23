@@ -52,6 +52,48 @@ internal sealed class SignaturesMappings : ICatalogMappings
                 ["references-type-parameter"] = "type parameter",
                 ["name-conflict"] = "is already in use in",
             }),
+        new CatalogMapping(
+            "inline-parameter",
+            "inline-parameter",
+            async context => With(await MemberArguments(context, "methodName"), ("parameterName", context.RequiredArgument("parameter"))),
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["values-differ"] = "Calls pass different values for",
+                ["not-constant"] = "which is not a constant",
+                ["parameter-assigned"] = "is assigned in the body",
+                ["no-calls"] = "so there is no value to inline",
+                ["part-of-hierarchy"] = "is part of an inheritance or interface hierarchy",
+                ["method-group-reference"] = "is used as a method group",
+            }),
+        new CatalogMapping(
+            "remove-unused-parameter",
+            "remove-unused-parameter",
+            async context => With(await MemberArguments(context, "methodName"), ("parameterName", context.RequiredArgument("parameter"))),
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["parameter-in-use"] = "so it cannot be removed",
+                ["argument-has-side-effects"] = "may have side effects",
+                ["method-group-reference"] = "is used as a method group",
+                ["external-member"] = "which is declared outside the solution",
+            }),
+        new CatalogMapping(
+            "add-parameter-default-value",
+            "add-parameter-default-value",
+            async context => With(
+                await MemberArguments(context, "methodName"),
+                ("parameterName", context.RequiredArgument("parameter")),
+                ("value", context.RequiredArgument("value")),
+                ("removeFromCallSites", context.HasArgument("removeFromCallSites")
+                    ? context.RequiredArgument("removeFromCallSites")
+                    : Json(false))),
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["already-optional"] = "already has a default value",
+                ["ref-or-out-parameter"] = "which cannot have a default value",
+                ["later-parameter-required"] = "has no default value, so",
+                ["not-constant"] = "is not a compile-time constant",
+                ["incompatible-value"] = "cannot be converted to the type of",
+            }),
     };
 
     /// <summary>

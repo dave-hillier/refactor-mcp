@@ -179,10 +179,7 @@ public static class IntroduceParameterTool
             (original, _) =>
             {
                 var argument = ArgumentAt(site, uses.First(u => u.Identifier == original).Ordinal, method);
-                var substituted = original == expression || !NeedsParentheses(argument)
-                    ? argument
-                    : SyntaxFactory.ParenthesizedExpression(argument);
-                return substituted.WithTriviaFrom(original);
+                return original == expression ? argument : ExpressionPlacement.Fit(argument, original);
             });
         return value.WithoutTrivia();
     }
@@ -202,11 +199,6 @@ public static class IntroduceParameterTool
         return defaultValue?.WithoutTrivia()
             ?? throw new McpException($"Error: A call passes no single value for '{parameter.Name}', so the expression cannot be computed there");
     }
-
-    private static bool NeedsParentheses(ExpressionSyntax expression) => expression is not (
-        IdentifierNameSyntax or LiteralExpressionSyntax or MemberAccessExpressionSyntax or InvocationExpressionSyntax
-        or ElementAccessExpressionSyntax or ParenthesizedExpressionSyntax or ThisExpressionSyntax
-        or BaseObjectCreationExpressionSyntax or InterpolatedStringExpressionSyntax or GenericNameSyntax);
 
     private static Task<string> IntroduceParameterSingleFile(string filePath, string methodName, string selectionRange, string parameterName)
     {

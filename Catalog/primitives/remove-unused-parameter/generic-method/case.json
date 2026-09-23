@@ -1,0 +1,6 @@
+{
+  "refactoring": "remove-unused-parameter",
+  "description": "Removes an unused parameter from a generic method called with inferred and explicit type arguments",
+  "target": { "symbol": "M:Shop.Lists.First``1(System.Collections.Generic.List{``0},System.Boolean)" },
+  "arguments": { "parameter": "cached" }
+}

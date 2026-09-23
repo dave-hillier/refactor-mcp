@@ -1,0 +1,6 @@
+{
+  "refactoring": "remove-unused-parameter",
+  "description": "Removes the last parameter of a list laid out one per line; the comment after the new last element moves past the parenthesis",
+  "target": { "symbol": "M:Shop.Mailer.Send(System.String,System.String,System.Boolean)" },
+  "arguments": { "parameter": "legacy" }
+}

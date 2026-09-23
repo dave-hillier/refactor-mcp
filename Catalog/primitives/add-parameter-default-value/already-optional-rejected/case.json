@@ -1,0 +1,8 @@
+{
+  "refactoring": "add-parameter-default-value",
+  "description": "Refuses a parameter that already has a default, since changing it would change what calls that leave it out pass",
+  "target": { "symbol": "M:Shop.Money.Format(System.Decimal,System.String)" },
+  "arguments": { "parameter": "currency", "value": "\"EUR\"" },
+  "expect": "error",
+  "errorCode": "already-optional"
+}

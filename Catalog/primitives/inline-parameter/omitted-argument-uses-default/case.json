@@ -1,0 +1,6 @@
+{
+  "refactoring": "inline-parameter",
+  "description": "A call that leaves an optional parameter out passes its default, which matches the calls that pass it explicitly",
+  "target": { "symbol": "M:Shop.Columns.Pad(System.String,System.Int32)" },
+  "arguments": { "parameter": "width" }
+}
