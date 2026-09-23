@@ -1,0 +1,7 @@
+{
+  "refactoring": "replace-inheritance-with-delegation",
+  "description": "The report derives only from object, so there is no inheritance to replace",
+  "target": { "symbol": "T:Shop.Report" },
+  "expect": "error",
+  "errorCode": "no-base-class"
+}

@@ -1,0 +1,8 @@
+{
+  "refactoring": "make-static-then-move",
+  "description": "Makes Describe static, taking the order, then moves it to a new Receipts class and points every call at it, as the recipe of primitive steps",
+  "steps": [
+    { "refactoring": "make-method-static", "target": { "symbol": "M:Shop.Order.Describe(System.String)" } },
+    { "refactoring": "move-static-method", "target": { "symbol": "M:Shop.Order.Describe(Shop.Order,System.String)" }, "arguments": { "to": "Receipts", "stub": false } }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "refactoring": "introduce-interface-for-dependency",
+  "description": "A nullable method parameter becomes the nullable interface, which declares every public member of the class",
+  "project": { "nullable": "enable" },
+  "target": { "symbol": "M:Shop.Report.Print(Shop.FileWriter)" },
+  "arguments": { "parameter": "writer", "name": "IWriter" }
+}

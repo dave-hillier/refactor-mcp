@@ -1,0 +1,8 @@
+{
+  "refactoring": "replace-delegation-with-inheritance",
+  "description": "Person is sealed, so Employee cannot derive from it",
+  "target": { "symbol": "T:Staff.Employee" },
+  "arguments": { "field": "_person" },
+  "expect": "error",
+  "errorCode": "invalid-base-type"
+}

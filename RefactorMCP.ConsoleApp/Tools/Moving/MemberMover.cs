@@ -80,7 +80,11 @@ internal sealed class MemberMover
 
         var declaration = await DeclarationAsync(cancellationToken);
         var document = solution.GetDocument(declaration.SyntaxTree)!;
-        var model = (await document.GetSemanticModelAsync(cancellationToken))!;
+
+        // Read the member against the solution its symbols come from. Creating
+        // the target only adds a file, but it makes a new compilation whose
+        // symbols would not compare equal to the source type.
+        var model = (await _solution.GetDocument(declaration.SyntaxTree)!.GetSemanticModelAsync(cancellationToken))!;
 
         var moved = BuildMovedMember(declaration, model);
         EnsureNoConflict();
@@ -189,6 +193,11 @@ internal sealed class MemberMover
             throw new McpException($"Error: Name the type to move {_member.Name} to");
 
         var found = await FindTypesAsync(targetType, cancellationToken);
+
+        // A library type sharing the name, such as System.Xml.Formatting, is not
+        // what a caller moving code into the solution means.
+        if (found.Count > 1 && found.Count(t => t.Locations.Any(l => l.IsInSource)) == 1)
+            found = found.Where(t => t.Locations.Any(l => l.IsInSource)).ToList();
         if (found.Count > 1)
             throw new McpException($"Error: Several types are named {targetType}; qualify it with its namespace");
         if (found.Count == 1)
@@ -281,7 +290,8 @@ internal sealed class MemberMover
             ? (MemberDeclarationSyntax)variable.Parent!.Parent!
             : (MemberDeclarationSyntax)declaration;
 
-        if (IsMethod)
+        // Only an instance method can come to need its old instance as a parameter.
+        if (IsMethod && !_member.IsStatic)
         {
             _sourceParameter = MovingSupport.CamelCase(_source.Name);
             var taken = member.DescendantNodes().OfType<ParameterSyntax>().Select(p => p.Identifier.ValueText)

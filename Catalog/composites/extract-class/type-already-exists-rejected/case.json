@@ -1,0 +1,9 @@
+{
+  "refactoring": "extract-class",
+  "description": "A class with the new name already exists, so the first step refuses",
+  "target": { "symbol": "T:Shop.Customer" },
+  "arguments": { "name": "Address", "members": ["_street", "_town", "FormatAddress"] },
+  "expect": "error",
+  "errorCode": "type-already-exists",
+  "errorContains": "step 1 (create-type)"
+}

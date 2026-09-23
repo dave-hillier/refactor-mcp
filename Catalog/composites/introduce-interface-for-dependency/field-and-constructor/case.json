@@ -1,0 +1,6 @@
+{
+  "refactoring": "introduce-interface-for-dependency",
+  "description": "Given the field, extracts the interface and changes the field and the constructor parameter stored in it, with the same result as the recipe",
+  "target": { "symbol": "F:Shop.Report._writer" },
+  "arguments": { "name": "IWriter", "members": ["Write"] }
+}

@@ -1,0 +1,9 @@
+{
+  "refactoring": "replace-method-with-method-object",
+  "description": "The method reads a protected member, which the method object cannot reach",
+  "target": { "symbol": "M:Shop.Order.Tax(System.Decimal)" },
+  "arguments": { "name": "TaxCalculation" },
+  "expect": "error",
+  "errorCode": "uses-protected-member",
+  "errorContains": "Rate"
+}

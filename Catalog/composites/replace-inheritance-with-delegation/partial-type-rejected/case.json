@@ -1,0 +1,7 @@
+{
+  "refactoring": "replace-inheritance-with-delegation",
+  "description": "The stack is declared in two parts, which are refused rather than rewritten separately",
+  "target": { "symbol": "T:Shop.Stack" },
+  "expect": "error",
+  "errorCode": "partial-type"
+}

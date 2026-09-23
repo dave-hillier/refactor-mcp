@@ -1,0 +1,6 @@
+{
+  "refactoring": "replace-delegation-with-inheritance",
+  "description": "Employee derives from Person instead of holding one; the name property and LastName method that only forwarded are removed, and the badge calls the inherited members",
+  "target": { "symbol": "T:Staff.Employee" },
+  "arguments": { "field": "_person" }
+}

@@ -1,0 +1,8 @@
+{
+  "refactoring": "replace-inheritance-with-delegation",
+  "description": "The report calls a protected method of its base class, which it cannot call through a field",
+  "target": { "symbol": "T:Shop.Report" },
+  "expect": "error",
+  "errorCode": "uses-protected-member",
+  "errorContains": "Footer"
+}

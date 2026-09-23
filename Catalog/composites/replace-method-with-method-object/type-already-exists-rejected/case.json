@@ -1,0 +1,8 @@
+{
+  "refactoring": "replace-method-with-method-object",
+  "description": "A type with the method object's name already exists",
+  "target": { "symbol": "M:Shop.Order.Price(System.Int32,System.Decimal)" },
+  "arguments": { "name": "PriceCalculation", "file": "Pricing/PriceCalculation.cs" },
+  "expect": "error",
+  "errorCode": "type-already-exists"
+}

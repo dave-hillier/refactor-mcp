@@ -1,0 +1,9 @@
+{
+  "refactoring": "extract-superclass",
+  "description": "Payslip uses Bonus, which stays in Manager, so pulling it up refuses after the superclass was created and made the base, and every file is put back",
+  "target": { "symbol": "T:Staff.Manager" },
+  "arguments": { "name": "Employee", "members": ["_name", "Payslip"] },
+  "expect": "error",
+  "errorCode": "uses-subclass-members",
+  "errorContains": "step 4 (pull-up-method)"
+}

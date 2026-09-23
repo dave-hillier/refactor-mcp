@@ -1,0 +1,6 @@
+{
+  "refactoring": "extract-superclass",
+  "description": "The new superclass derives from the class's old base class, the class keeps its interfaces, and a pulled-up method still reaches inherited members",
+  "target": { "symbol": "T:Staff.Manager" },
+  "arguments": { "name": "Employee", "members": ["_salary", "Greeting"] }
+}

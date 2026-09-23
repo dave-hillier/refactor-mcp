@@ -1,0 +1,8 @@
+{
+  "refactoring": "replace-method-with-method-object",
+  "description": "An instance method of a struct would run against a copy of it in the method object",
+  "target": { "symbol": "M:Shop.Point.Distance(Shop.Point)" },
+  "arguments": { "name": "DistanceCalculation" },
+  "expect": "error",
+  "errorCode": "not-a-class"
+}

@@ -1,0 +1,6 @@
+{
+  "refactoring": "hide-delegate",
+  "description": "Person gains a method under a new name that forwards to its department's Describe, and the client calling Describe through the department calls it instead; the other chain is left alone",
+  "target": { "symbol": "P:Staff.Person.Department" },
+  "arguments": { "member": "Describe", "name": "DescribeDepartment" }
+}

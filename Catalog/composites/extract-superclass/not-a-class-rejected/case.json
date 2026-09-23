@@ -1,0 +1,8 @@
+{
+  "refactoring": "extract-superclass",
+  "description": "A struct cannot derive from a class",
+  "target": { "symbol": "T:Staff.Manager" },
+  "arguments": { "name": "Employee", "members": ["Name"] },
+  "expect": "error",
+  "errorCode": "not-a-class"
+}

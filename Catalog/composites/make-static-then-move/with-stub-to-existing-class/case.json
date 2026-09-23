@@ -1,0 +1,6 @@
+{
+  "refactoring": "make-static-then-move",
+  "description": "Moves the method into an existing class under a chosen instance parameter name, leaving a static stub so the order's callers only change to pass the instance",
+  "target": { "symbol": "M:Shop.Order.Describe(System.String)" },
+  "arguments": { "to": "Formatting", "name": "sale" }
+}

@@ -1,0 +1,11 @@
+{
+  "refactoring": "extract-class",
+  "description": "Moves the address fields and their formatting into a new Address class reached through a field, as the recipe of primitive steps",
+  "steps": [
+    { "refactoring": "create-type", "arguments": { "name": "Address", "file": "Address.cs" } },
+    { "refactoring": "introduce-field", "target": { "symbol": "T:Shop.Customer" }, "arguments": { "type": "Address", "name": "_address" } },
+    { "refactoring": "move-field", "target": { "symbol": "F:Shop.Customer._street" }, "arguments": { "via": "_address" } },
+    { "refactoring": "move-field", "target": { "symbol": "F:Shop.Customer._town" }, "arguments": { "via": "_address" } },
+    { "refactoring": "move-instance-method", "target": { "symbol": "M:Shop.Customer.FormatAddress" }, "arguments": { "via": "_address" } }
+  ]
+}

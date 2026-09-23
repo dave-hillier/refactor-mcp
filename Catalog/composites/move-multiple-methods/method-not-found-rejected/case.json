@@ -1,0 +1,9 @@
+{
+  "refactoring": "move-multiple-methods",
+  "description": "A named method does not exist in the class",
+  "target": { "symbol": "T:Shop.Customer" },
+  "arguments": { "methods": ["Street", "Postcode"], "via": "_address" },
+  "expect": "error",
+  "errorCode": "method-not-found",
+  "errorContains": "Postcode"
+}

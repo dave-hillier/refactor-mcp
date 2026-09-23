@@ -1,0 +1,6 @@
+{
+  "refactoring": "hide-delegate",
+  "description": "Person gains a Manager property forwarding to its department's manager, and every client that read the manager through the department uses it; an assignment through the department is left alone",
+  "target": { "symbol": "P:Staff.Person.Department" },
+  "arguments": { "member": "Manager" }
+}

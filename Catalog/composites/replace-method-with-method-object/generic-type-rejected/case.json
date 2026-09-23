@@ -1,0 +1,8 @@
+{
+  "refactoring": "replace-method-with-method-object",
+  "description": "The method's class is generic, so the method object would need its type parameters",
+  "target": { "symbol": "M:Shop.Box`1.Describe(System.String)" },
+  "arguments": { "name": "Description" },
+  "expect": "error",
+  "errorCode": "generic-type"
+}

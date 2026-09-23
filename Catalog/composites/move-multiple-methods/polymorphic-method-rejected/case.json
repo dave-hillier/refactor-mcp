@@ -1,0 +1,9 @@
+{
+  "refactoring": "move-multiple-methods",
+  "description": "Label is virtual and cannot move, so its move refuses after Street has moved, and every file is put back",
+  "target": { "symbol": "T:Shop.Customer" },
+  "arguments": { "methods": ["Label", "Street"], "via": "_address" },
+  "expect": "error",
+  "errorCode": "polymorphic-method",
+  "errorContains": "step 2 (move-instance-method)"
+}

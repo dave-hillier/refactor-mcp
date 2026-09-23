@@ -1,0 +1,9 @@
+{
+  "refactoring": "make-static-then-move",
+  "description": "A virtual method's callers rely on dispatch through the instance, so making it static refuses",
+  "target": { "symbol": "M:Shop.Order.Describe(System.String)" },
+  "arguments": { "to": "Receipts" },
+  "expect": "error",
+  "errorCode": "polymorphic-method",
+  "errorContains": "step 1 (make-method-static)"
+}

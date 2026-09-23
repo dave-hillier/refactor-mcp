@@ -1,0 +1,11 @@
+{
+  "refactoring": "replace-method-with-method-object",
+  "description": "Moves Price onto a PriceCalculation object held by the order and turns its locals into fields of that object, as the recipe of primitive steps",
+  "steps": [
+    { "refactoring": "create-type", "arguments": { "name": "PriceCalculation", "file": "PriceCalculation.cs" } },
+    { "refactoring": "introduce-field", "target": { "symbol": "T:Shop.Order" }, "arguments": { "type": "PriceCalculation", "name": "_priceCalculation" } },
+    { "refactoring": "move-instance-method", "target": { "symbol": "M:Shop.Order.Price(System.Int32,System.Decimal)" }, "arguments": { "via": "_priceCalculation" } },
+    { "refactoring": "convert-local-to-field", "target": { "symbol": "M:Shop.PriceCalculation.Price(Shop.Order,System.Int32,System.Decimal)" }, "arguments": { "local": "basePrice" } },
+    { "refactoring": "convert-local-to-field", "target": { "symbol": "M:Shop.PriceCalculation.Price(Shop.Order,System.Int32,System.Decimal)" }, "arguments": { "local": "discount" } }
+  ]
+}
