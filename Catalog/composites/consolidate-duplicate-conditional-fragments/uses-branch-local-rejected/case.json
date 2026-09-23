@@ -1,0 +1,7 @@
+{
+  "refactoring": "consolidate-duplicate-conditional-fragments",
+  "description": "A common last statement that uses a local its branch declares cannot move out of the branch",
+  "target": { "file": "Deal.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "uses-branch-local"
+}

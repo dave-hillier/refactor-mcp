@@ -1,0 +1,10 @@
+{
+  "refactoring": "inline-class",
+  "description": "The recipe, for a class without state: each method is made static and moved into the class that holds it, then the holding field and the class are deleted",
+  "steps": [
+    { "refactoring": "make-method-static", "target": { "symbol": "M:Shop.PriceCalculator.Discounted(System.Decimal)" } },
+    { "refactoring": "move-static-method", "target": { "symbol": "M:Shop.PriceCalculator.Discounted(System.Decimal)" }, "arguments": { "to": "Order", "stub": false } },
+    { "refactoring": "safe-delete-member", "target": { "symbol": "F:Shop.Order._calculator" } },
+    { "refactoring": "safe-delete-type", "target": { "symbol": "T:Shop.PriceCalculator" } }
+  ]
+}

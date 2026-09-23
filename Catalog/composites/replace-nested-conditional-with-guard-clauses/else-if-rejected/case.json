@@ -1,0 +1,7 @@
+{
+  "refactoring": "replace-nested-conditional-with-guard-clauses",
+  "description": "An else if is not a statement of a block, so nothing can follow it as a guard clause; start from the first if of the chain",
+  "target": { "file": "Grading.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "not-in-block"
+}

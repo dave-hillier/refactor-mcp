@@ -1,0 +1,5 @@
+{
+  "refactoring": "replace-nested-conditional-with-guard-clauses",
+  "description": "Nested ifs ending a void method become a guard clause each, in one step",
+  "target": { "file": "Shipping.cs", "caret": "marker" }
+}

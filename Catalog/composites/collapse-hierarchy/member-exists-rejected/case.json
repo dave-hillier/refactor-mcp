@@ -1,0 +1,7 @@
+{
+  "refactoring": "collapse-hierarchy",
+  "description": "A member moving up must not share its name with a member of the base class or of another subclass",
+  "target": { "symbol": "T:Staff.Salesman" },
+  "expect": "error",
+  "errorCode": "member-exists"
+}

@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-if-to-switch-expression",
+  "description": "The caret must be on the first if of the chain",
+  "target": { "file": "Shipping.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "not-an-if"
+}

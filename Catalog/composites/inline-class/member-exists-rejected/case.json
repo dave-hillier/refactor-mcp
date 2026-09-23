@@ -1,0 +1,7 @@
+{
+  "refactoring": "inline-class",
+  "description": "A member of the inlined class whose name the holding class already uses would clash",
+  "target": { "symbol": "T:Shop.Address" },
+  "expect": "error",
+  "errorCode": "member-exists"
+}

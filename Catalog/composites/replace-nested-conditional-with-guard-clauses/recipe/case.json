@@ -1,0 +1,8 @@
+{
+  "refactoring": "replace-nested-conditional-with-guard-clauses",
+  "description": "The recipe: Invert If on the outer if and then on the inner one, each becoming an early return",
+  "steps": [
+    { "refactoring": "invert-if", "target": { "file": "Shipping.cs", "caret": "marker" } },
+    { "refactoring": "invert-if", "target": { "file": "Shipping.cs", "range": "22:13-22:13" } }
+  ]
+}

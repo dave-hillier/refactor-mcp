@@ -1,0 +1,8 @@
+{
+  "refactoring": "remove-middle-man",
+  "description": "A delegating method used as a method group has no call to redirect, and nothing is changed, including the members that could be removed",
+  "target": { "symbol": "T:Company.Person" },
+  "arguments": { "via": "Department" },
+  "expect": "error",
+  "errorCode": "method-group-reference"
+}

@@ -139,9 +139,18 @@ internal sealed class StepContext
         throw Missing("target.selection or target.range");
     }
 
-    /// <summary>The caret's 1-based line and column.</summary>
+    /// <summary>
+    /// The caret's 1-based line and column. A later step of a composite cannot
+    /// use a marker, so it gives <c>target.range</c> and the caret is its start.
+    /// </summary>
     public (int Line, int Column) Caret()
     {
+        if (Step.Target?.Caret is null && Step.Target?.Range is { } range)
+        {
+            var start = range.Split('-')[0].Split(':');
+            return (int.Parse(start[0]), int.Parse(start[1]));
+        }
+
         if (Step.Target?.Caret != "marker")
             throw Missing("target.caret");
 

@@ -1,0 +1,7 @@
+{
+  "refactoring": "collapse-hierarchy",
+  "description": "Without into, the class is merged into its base class, which it must have",
+  "target": { "symbol": "T:Staff.Employee" },
+  "expect": "error",
+  "errorCode": "no-base-class"
+}

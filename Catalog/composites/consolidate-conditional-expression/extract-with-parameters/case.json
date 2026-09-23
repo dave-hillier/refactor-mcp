@@ -1,0 +1,6 @@
+{
+  "refactoring": "consolidate-conditional-expression",
+  "description": "The extracted condition takes the locals and parameters it reads, in the order it first reads them, and is static when the containing method is",
+  "target": { "file": "Tickets.cs", "caret": "marker" },
+  "arguments": { "name": "IsExempt" }
+}

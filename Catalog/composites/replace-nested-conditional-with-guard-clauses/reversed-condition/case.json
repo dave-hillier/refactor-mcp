@@ -1,0 +1,5 @@
+{
+  "refactoring": "replace-nested-conditional-with-guard-clauses",
+  "description": "When only the else always jumps away, the condition is negated so the else becomes the guard clause and the normal path follows it",
+  "target": { "file": "Shipping.cs", "caret": "marker" }
+}

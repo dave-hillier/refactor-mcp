@@ -1,0 +1,7 @@
+{
+  "refactoring": "collapse-hierarchy",
+  "description": "Moving an override up would replace what the base class itself does for its own instances",
+  "target": { "symbol": "T:Staff.Salesman" },
+  "expect": "error",
+  "errorCode": "overrides-member"
+}

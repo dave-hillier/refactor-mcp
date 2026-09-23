@@ -1,0 +1,7 @@
+{
+  "refactoring": "inline-class",
+  "description": "A class that other code names, here as a parameter type, cannot be deleted",
+  "target": { "symbol": "T:Shop.Address" },
+  "expect": "error",
+  "errorCode": "type-referenced"
+}

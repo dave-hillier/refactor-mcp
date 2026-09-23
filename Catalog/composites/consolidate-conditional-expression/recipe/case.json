@@ -1,0 +1,8 @@
+{
+  "refactoring": "consolidate-conditional-expression",
+  "description": "The recipe: Merge Nested If, repeated on the same if, joins three nested conditions with &&",
+  "steps": [
+    { "refactoring": "merge-nested-if", "target": { "file": "Shipping.cs", "caret": "marker" } },
+    { "refactoring": "merge-nested-if", "target": { "file": "Shipping.cs", "range": "18:13-18:13" } }
+  ]
+}

@@ -22,41 +22,7 @@ public static class ConvertSwitchStatementToExpressionTool
         {
             var caret = await CaretDocument.FindAsync(solutionPath, filePath, line, column, cancellationToken);
             var statement = caret.SwitchStatement();
-            var arms = statement.Sections.Select(Arm).ToList();
-
-            var values = arms.Where(a => a.Kind != ArmKind.Throw).ToList();
-            if (values.Count == 0 || values.Any(a => a.Kind != values[0].Kind))
-                throw new McpException("Error: A section does more than return a value or assign one variable, so it cannot become an arm");
-
-            var target = values[0].Target;
-            if (target is not null && values.Any(a => !SyntaxFactory.AreEquivalent(a.Target, target)))
-                throw new McpException("Error: The sections assign different variables, so no single assignment can take the switch expression");
-
-            // A switch statement with no default does nothing for an unmatched
-            // value, where a switch expression would throw. A return after the
-            // switch runs exactly then, so it becomes the discard arm.
-            var replaced = new List<StatementSyntax> { statement };
-            if (!arms.Any(a => a.IsDefault))
-            {
-                var following = FollowingStatement(statement);
-                if (values[0].Kind != ArmKind.Return || following is not (ReturnStatementSyntax { Expression: not null } or ThrowStatementSyntax))
-                    throw new McpException("Error: The switch has no default, so a switch expression would throw where the statement does nothing");
-
-                arms.Add(Arm(following, new[] { SyntaxFactory.DefaultSwitchLabel() }, following));
-                replaced.Add(following);
-            }
-
-            var prefix = target is null ? "return " : $"{target.WithoutTrivia()} = ";
-            var expression = SwitchExpressionText(prefix, statement, arms.Where(a => !a.IsDefault).Concat(arms.Where(a => a.IsDefault)).ToList());
-            var converted = SyntaxFactory.ParseStatement(expression)
-                .WithLeadingTrivia(statement.GetLeadingTrivia())
-                .WithTrailingTrivia(replaced[^1].GetTrailingTrivia());
-
-            var newRoot = caret.Root.TrackNodes(replaced);
-            newRoot = newRoot.ReplaceNode(newRoot.GetCurrentNode(statement)!, converted);
-            if (replaced.Count > 1)
-                newRoot = newRoot.RemoveNode(newRoot.GetCurrentNode(replaced[1])!, SyntaxRemoveOptions.KeepNoTrivia)!;
-
+            var newRoot = ToSwitchExpression(caret.Root, statement);
             await caret.ApplyAsync(newRoot, cancellationToken);
             return $"Successfully converted the switch statement to a switch expression in {filePath}";
         }
@@ -64,6 +30,50 @@ public static class ConvertSwitchStatementToExpressionTool
         {
             throw new McpException($"Error converting switch statement to expression: {ex.Message}", ex);
         }
+    }
+
+    /// <summary>
+    /// <paramref name="root"/> with the switch statement, and the return that
+    /// becomes its discard arm, replaced by a statement using a switch expression.
+    /// </summary>
+    internal static SyntaxNode ToSwitchExpression(SyntaxNode root, SwitchStatementSyntax statement)
+    {
+        var arms = statement.Sections.Select(Arm).ToList();
+
+        var values = arms.Where(a => a.Kind != ArmKind.Throw).ToList();
+        if (values.Count == 0 || values.Any(a => a.Kind != values[0].Kind))
+            throw new McpException("Error: A section does more than return a value or assign one variable, so it cannot become an arm");
+
+        var target = values[0].Target;
+        if (target is not null && values.Any(a => !SyntaxFactory.AreEquivalent(a.Target, target)))
+            throw new McpException("Error: The sections assign different variables, so no single assignment can take the switch expression");
+
+        // A switch statement with no default does nothing for an unmatched
+        // value, where a switch expression would throw. A return after the
+        // switch runs exactly then, so it becomes the discard arm.
+        var replaced = new List<StatementSyntax> { statement };
+        if (!arms.Any(a => a.IsDefault))
+        {
+            var following = FollowingStatement(statement);
+            if (values[0].Kind != ArmKind.Return || following is not (ReturnStatementSyntax { Expression: not null } or ThrowStatementSyntax))
+                throw new McpException("Error: The switch has no default, so a switch expression would throw where the statement does nothing");
+
+            arms.Add(Arm(following, new[] { SyntaxFactory.DefaultSwitchLabel() }, following));
+            replaced.Add(following);
+        }
+
+        var prefix = target is null ? "return " : $"{target.WithoutTrivia()} = ";
+        var expression = SwitchExpressionText(prefix, statement, arms.Where(a => !a.IsDefault).Concat(arms.Where(a => a.IsDefault)).ToList());
+        var converted = SyntaxFactory.ParseStatement(expression)
+            .WithLeadingTrivia(statement.GetLeadingTrivia())
+            .WithTrailingTrivia(replaced[^1].GetTrailingTrivia());
+
+        var newRoot = root.TrackNodes(replaced);
+        newRoot = newRoot.ReplaceNode(newRoot.GetCurrentNode(statement)!, converted);
+        if (replaced.Count > 1)
+            newRoot = newRoot.RemoveNode(newRoot.GetCurrentNode(replaced[1])!, SyntaxRemoveOptions.KeepNoTrivia)!;
+
+        return newRoot;
     }
 
     private enum ArmKind

@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-if-to-switch-expression",
+  "description": "A chain whose branches each return a value becomes a returned switch expression",
+  "target": { "file": "Shipping.cs", "caret": "marker" }
+}

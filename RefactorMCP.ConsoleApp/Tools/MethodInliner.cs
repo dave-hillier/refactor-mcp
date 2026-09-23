@@ -36,6 +36,20 @@ internal sealed class MethodInliner
 
     public static async Task<int> InlineAsync(Document document, MethodDeclarationSyntax method, CancellationToken cancellationToken)
     {
+        var (inlined, calls) = await InlineInSolutionAsync(document, method, cancellationToken);
+        await SolutionEdits.WriteAsync(document.Project.Solution, inlined, cancellationToken);
+        return calls;
+    }
+
+    /// <summary>
+    /// The solution with every call of the method inlined and the method
+    /// deleted, not yet written, and the number of calls inlined.
+    /// </summary>
+    public static async Task<(Solution Solution, int Calls)> InlineInSolutionAsync(
+        Document document,
+        MethodDeclarationSyntax method,
+        CancellationToken cancellationToken)
+    {
         var model = (await document.GetSemanticModelAsync(cancellationToken))!;
         var symbol = model.GetDeclaredSymbol(method, cancellationToken)!;
         var inliner = new MethodInliner(method, symbol, model);
@@ -78,15 +92,16 @@ internal sealed class MethodInliner
 
         RemoveMethod(declaringEditor, method);
 
+        var inlined = solution;
         foreach (var (id, editor) in editors)
         {
             var changed = solution.GetDocument(id)!.WithSyntaxRoot(editor.GetChangedRoot());
             changed = await Simplifier.ReduceAsync(changed, Simplifier.Annotation, cancellationToken: cancellationToken);
             changed = await Formatter.FormatAsync(changed, Formatter.Annotation, cancellationToken: cancellationToken);
-            await RefactoringHelpers.WriteAndUpdateCachesAsync(solution.GetDocument(id)!, (await changed.GetSyntaxRootAsync(cancellationToken))!);
+            inlined = inlined.WithDocumentSyntaxRoot(id, (await changed.GetSyntaxRootAsync(cancellationToken))!);
         }
 
-        return calls;
+        return (inlined, calls);
     }
 
     private string Name => _symbol.Name;

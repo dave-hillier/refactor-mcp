@@ -1,0 +1,7 @@
+{
+  "refactoring": "consolidate-duplicate-conditional-fragments",
+  "description": "An else if is not a statement of a block, so nothing can move before or after it; start from the first if of the chain",
+  "target": { "file": "Deal.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "not-in-block"
+}

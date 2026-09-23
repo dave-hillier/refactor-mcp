@@ -1,0 +1,5 @@
+{
+  "refactoring": "replace-nested-conditional-with-guard-clauses",
+  "description": "An else if chain whose branches return becomes a run of separate ifs",
+  "target": { "file": "Grading.cs", "caret": "marker" }
+}

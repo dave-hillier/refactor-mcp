@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-if-to-switch-expression",
+  "description": "Every condition must test the same value",
+  "target": { "file": "Shipping.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "different-values"
+}

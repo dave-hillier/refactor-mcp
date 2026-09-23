@@ -1,0 +1,5 @@
+{
+  "refactoring": "collapse-hierarchy",
+  "description": "Documentation and comments move with the members, and a subclass declared in the same file as its base is removed from it",
+  "target": { "symbol": "T:Staff.Salesman" }
+}

@@ -1,0 +1,5 @@
+{
+  "refactoring": "consolidate-duplicate-conditional-fragments",
+  "description": "A statement that starts every branch of an else if chain moves before it, since the conditions do not depend on it",
+  "target": { "file": "Ticket.cs", "caret": "marker" }
+}

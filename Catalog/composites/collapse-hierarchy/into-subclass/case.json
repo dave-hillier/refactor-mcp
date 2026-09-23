@@ -1,0 +1,6 @@
+{
+  "refactoring": "collapse-hierarchy",
+  "description": "An abstract base class is merged into its only subclass: abstract members go, the subclass's overrides become ordinary members, the rest move down, and every reference names the subclass",
+  "target": { "symbol": "T:Drawing.Shape" },
+  "arguments": { "into": "Circle" }
+}

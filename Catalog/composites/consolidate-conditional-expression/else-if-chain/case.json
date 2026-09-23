@@ -1,0 +1,5 @@
+{
+  "refactoring": "consolidate-conditional-expression",
+  "description": "Branches of an else if chain with the same body become one branch on their conditions joined by ||, whether or not the body jumps away",
+  "target": { "file": "Ticket.cs", "caret": "marker" }
+}

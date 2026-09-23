@@ -1,0 +1,5 @@
+{
+  "refactoring": "consolidate-conditional-expression",
+  "description": "Consecutive ifs with the same body, which always returns, become one if on their conditions joined by ||",
+  "target": { "file": "Disability.cs", "caret": "marker" }
+}

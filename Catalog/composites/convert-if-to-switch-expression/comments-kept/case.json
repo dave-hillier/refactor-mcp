@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-if-to-switch-expression",
+  "description": "A comment above the chain stays above the statement, and comments in the branches go with their arms",
+  "target": { "file": "Shipping.cs", "caret": "marker" }
+}

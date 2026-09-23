@@ -1,0 +1,8 @@
+{
+  "refactoring": "remove-middle-man",
+  "description": "The recipe: Inline Method on each method that only delegates, which rewrites its callers to use the delegate and deletes it",
+  "steps": [
+    { "refactoring": "inline-method", "target": { "symbol": "M:Company.Person.GetManager" } },
+    { "refactoring": "inline-method", "target": { "symbol": "M:Company.Person.Budget(System.Int32)" } }
+  ]
+}

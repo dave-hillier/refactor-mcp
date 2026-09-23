@@ -1,0 +1,5 @@
+{
+  "refactoring": "consolidate-conditional-expression",
+  "description": "Comments above each merged if are kept above the combined one, and a blank line after the last stays",
+  "target": { "file": "Disability.cs", "caret": "marker" }
+}

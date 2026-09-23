@@ -123,7 +123,7 @@ public static class InvertIfTool
     /// The jump that running off the end of the block makes, when the block is
     /// the body of a method or function returning nothing, or of a loop.
     /// </summary>
-    private static StatementSyntax? ImplicitExit(BlockSyntax block, SemanticModel model)
+    internal static StatementSyntax? ImplicitExit(BlockSyntax block, SemanticModel model)
     {
         switch (block.Parent)
         {

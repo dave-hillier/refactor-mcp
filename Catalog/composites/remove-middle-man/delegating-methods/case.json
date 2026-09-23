@@ -1,0 +1,6 @@
+{
+  "refactoring": "remove-middle-man",
+  "description": "Every method that only delegates through the named property is removed, and its callers use the delegate directly",
+  "target": { "symbol": "T:Company.Person" },
+  "arguments": { "via": "Department" }
+}

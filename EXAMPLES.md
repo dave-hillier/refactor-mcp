@@ -2281,6 +2281,77 @@ dotnet run --project RefactorMCP.ConsoleApp -- --json replace-inheritance-with-d
 dotnet run --project RefactorMCP.ConsoleApp -- --json replace-delegation-with-inheritance '{"solutionPath":"./Staff.sln","filePath":"./Staff/Employee.cs","className":"Employee","fieldName":"_person"}'
 ```
 
+#### Conditionals and removal
+
+Each of these composites runs its recipe as one tool call, and refuses without
+changing anything when any part of it would fail. The conditional ones take
+the line and column of the first `if`; the others take the class by file and
+name.
+
+##### Convert If to Switch Expression
+
+Turns an `if` / `else if` chain comparing one value, whose branches each
+return a value or assign one variable, into a switch expression.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json convert-if-to-switch-expression '{"solutionPath":"./RefactorMCP.sln","filePath":"./Shop/Shipping.cs","line":7,"column":13}'
+```
+
+##### Replace Nested Conditional with Guard Clauses
+
+Flattens nested ifs into early returns or continues, and removes an `else`
+after a branch that always jumps away, repeatedly.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json replace-nested-conditional-with-guard-clauses '{"solutionPath":"./RefactorMCP.sln","filePath":"./Shop/Shipping.cs","line":16,"column":13}'
+```
+
+##### Consolidate Conditional Expression
+
+Joins nested ifs with `&&`, and consecutive ifs or `else if` branches with the
+same body with `||`. `methodName` extracts the combined condition into a
+method.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json consolidate-conditional-expression '{"solutionPath":"./RefactorMCP.sln","filePath":"./Staff/Disability.cs","line":12,"column":13,"methodName":"IsNotEligible"}'
+```
+
+##### Consolidate Duplicate Conditional Fragments
+
+Moves statements every branch ends with after the conditional, and statements
+every branch starts with before it.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json consolidate-duplicate-conditional-fragments '{"solutionPath":"./RefactorMCP.sln","filePath":"./Shop/Deal.cs","line":9,"column":13}'
+```
+
+##### Remove Middle Man
+
+Removes the members of a class that only delegate through `via`, and makes
+their callers use the delegate directly.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json remove-middle-man '{"solutionPath":"./RefactorMCP.sln","filePath":"./Company/Person.cs","className":"Person","via":"Department"}'
+```
+
+##### Inline Class
+
+Moves a class's members into the one class that holds and creates an instance
+of it, and deletes it.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json inline-class '{"solutionPath":"./RefactorMCP.sln","filePath":"./Shop/Address.cs","className":"Address"}'
+```
+
+##### Collapse Hierarchy
+
+Merges a subclass into its base class, or, with `into`, a base class into its
+only subclass, and deletes the class removed.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json collapse-hierarchy '{"solutionPath":"./RefactorMCP.sln","filePath":"./Drawing/Shape.cs","className":"Shape","into":"Circle"}'
+```
+
 <!-- End of Composites. -->
 
 ### Generators

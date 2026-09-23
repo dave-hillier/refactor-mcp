@@ -1,0 +1,6 @@
+{
+  "refactoring": "consolidate-conditional-expression",
+  "description": "With a name, the combined condition is extracted into a private method after the containing one",
+  "target": { "file": "Disability.cs", "caret": "marker" },
+  "arguments": { "name": "IsNotEligible" }
+}

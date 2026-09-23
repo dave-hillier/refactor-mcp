@@ -1,0 +1,5 @@
+{
+  "refactoring": "inline-class",
+  "description": "A get-only property can hold the inlined class; uses through it in other files go to the holding class directly, and the usings the moved members need are added",
+  "target": { "symbol": "T:Shop.Address" }
+}

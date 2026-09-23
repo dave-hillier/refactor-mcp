@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-if-to-switch-expression",
+  "description": "The recipe: the chain becomes a switch statement, which becomes a returned switch expression",
+  "steps": [
+    { "refactoring": "convert-if-chain-to-switch", "target": { "file": "Shipping.cs", "caret": "marker" } },
+    { "refactoring": "convert-switch-statement-to-expression", "target": { "file": "Shipping.cs", "range": "7:13-7:13" } }
+  ]
+}
