@@ -799,7 +799,7 @@ internal sealed class MemberMover
     /// and <c>customer.Address.Street</c> becomes <c>customer.Street</c>. Any
     /// other use has no holder to go through.
     /// </summary>
-    private void RewriteUseThroughHolder(MemberReference reference, DocumentId document, string file)
+    private void RewriteUseThroughHolder(MemberReference reference, DocumentId document, string? file)
     {
         var receiver = reference.Receiver;
         var holderName = receiver switch
