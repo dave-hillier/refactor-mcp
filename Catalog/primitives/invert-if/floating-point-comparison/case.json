@@ -1,0 +1,5 @@
+{
+  "refactoring": "invert-if",
+  "description": "A comparison of values that may be NaN or null is negated with ! rather than flipped",
+  "target": { "file": "Gauge.cs", "caret": "marker" }
+}

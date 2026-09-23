@@ -1,0 +1,5 @@
+{
+  "refactoring": "invert-if",
+  "description": "An if with no else that ends a loop body becomes an early continue",
+  "target": { "file": "Batch.cs", "caret": "marker" }
+}

@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-switch-statement-to-expression",
+  "description": "Refuses sections that assign different variables",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "different-targets"
+}

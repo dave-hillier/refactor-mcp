@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-switch-expression-to-statement",
+  "description": "Without a discard arm, the default section throws the exception the switch expression would have thrown",
+  "target": { "file": "Sign.cs", "caret": "marker" }
+}

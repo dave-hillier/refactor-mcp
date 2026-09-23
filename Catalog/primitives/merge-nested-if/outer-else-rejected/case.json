@@ -1,0 +1,7 @@
+{
+  "refactoring": "merge-nested-if",
+  "description": "Refuses an outer if with an else, which would then run when only the inner condition fails",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "outer-has-else"
+}
