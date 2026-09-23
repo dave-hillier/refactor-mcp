@@ -1,0 +1,6 @@
+{
+  "refactoring": "make-method-static",
+  "description": "Each instance member the method reads becomes a parameter, in order of first use, and every call passes those members",
+  "target": { "symbol": "M:Shop.Order.Describe(System.String)" },
+  "arguments": { "pass": "parameters" }
+}

@@ -1,0 +1,7 @@
+{
+  "refactoring": "make-method-instance",
+  "description": "Refuses when the method assigns the parameter, since this cannot be reassigned",
+  "target": { "symbol": "M:Shop.Order.Latest(Shop.Order,Shop.Order)" },
+  "expect": "error",
+  "errorCode": "parameter-assigned"
+}

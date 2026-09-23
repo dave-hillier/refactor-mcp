@@ -1,0 +1,7 @@
+{
+  "refactoring": "make-method-static",
+  "description": "Refuses a method that is already static",
+  "target": { "symbol": "M:Shop.Order.Tax(System.Decimal)" },
+  "expect": "error",
+  "errorCode": "already-static"
+}

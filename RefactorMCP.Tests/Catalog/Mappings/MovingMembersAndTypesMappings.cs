@@ -94,9 +94,7 @@ internal sealed class MovingMembersAndTypesMappings : ICatalogMappings
             "convert-to-extension-method",
             async context =>
             {
-                var arguments = await MemberArguments(context);
-                arguments["methodName"] = arguments["memberName"];
-                arguments.Remove("memberName");
+                var arguments = await MethodArguments(context);
                 if (context.HasArgument("to"))
                     arguments["extensionClass"] = context.RequiredArgument("to");
                 return arguments;
@@ -111,18 +109,64 @@ internal sealed class MovingMembersAndTypesMappings : ICatalogMappings
         new CatalogMapping(
             "convert-extension-method-to-static",
             "convert-extension-method-to-static",
-            async context =>
-            {
-                var arguments = await MemberArguments(context);
-                arguments["methodName"] = arguments["memberName"];
-                arguments.Remove("memberName");
-                return arguments;
-            },
+            MethodArguments,
             Codes(
                 ("not-extension", "is not an extension method"),
                 ("conditional-access", "null-conditional access"),
                 ("method-group", "is used as a method group"))),
+
+        new CatalogMapping(
+            "make-method-static",
+            "make-method-static",
+            async context =>
+            {
+                var arguments = await MethodArguments(context);
+                if (context.HasArgument("pass"))
+                    arguments["pass"] = context.RequiredArgument("pass");
+                if (context.HasArgument("name"))
+                    arguments["parameterName"] = context.RequiredArgument("name");
+                return arguments;
+            },
+            Codes(
+                ("already-static", "is already static"),
+                ("polymorphic-method", "callers rely on dispatch through the instance"),
+                ("not-a-class", "is not a class"),
+                ("uses-base", "calls through base"),
+                ("assigns-instance-member", "assigns the instance member"),
+                ("uses-instance", "pass the instance instead"),
+                ("inaccessible-member", "is not accessible where"),
+                ("complex-receiver", "would be evaluated once per parameter"),
+                ("method-group", "is used as a method group"),
+                ("conditional-access", "null-conditional access"),
+                ("name-conflict", "already has a parameter or local named"))),
+
+        new CatalogMapping(
+            "make-method-instance",
+            "make-method-instance",
+            async context =>
+            {
+                var arguments = await MethodArguments(context);
+                if (context.HasArgument("parameter"))
+                    arguments["parameterName"] = context.RequiredArgument("parameter");
+                return arguments;
+            },
+            Codes(
+                ("not-static", "is not static"),
+                ("no-parameter-of-type", "has no parameter of its own type"),
+                ("by-reference-parameter", "is passed by reference"),
+                ("parameter-assigned", "and this cannot be reassigned"),
+                ("null-argument", "passes null for"),
+                ("method-group", "is used as a method group"))),
     };
+
+    /// <summary><see cref="MemberArguments"/> for tools that call the member a method.</summary>
+    private static async Task<Dictionary<string, JsonElement>> MethodArguments(StepContext context)
+    {
+        var arguments = await MemberArguments(context);
+        arguments["methodName"] = arguments["memberName"];
+        arguments.Remove("memberName");
+        return arguments;
+    }
 
     /// <summary>The file, name and line of <c>target.symbol</c>, as the member tools take them.</summary>
     private static async Task<Dictionary<string, JsonElement>> MemberArguments(StepContext context)

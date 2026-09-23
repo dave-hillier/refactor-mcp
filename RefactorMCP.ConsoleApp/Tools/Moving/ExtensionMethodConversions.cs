@@ -33,7 +33,7 @@ internal static class ExtensionMethodConversions
         if (method.Parameters[0] is { RefKind: RefKind.Out } or { IsParams: true } || method.Parameters[0].Type is IPointerTypeSymbol)
             throw new McpException($"Error: The first parameter of {method.Name} cannot become the extended value");
 
-        var edits = new Dictionary<DocumentId, Dictionary<SyntaxNode, Func<SyntaxNode, SyntaxNode>>>();
+        var edits = new SyntaxEdits();
         foreach (var (document, invocation, model) in await InvocationsAsync(solution, method, cancellationToken))
         {
             if (model.GetOperation(invocation, cancellationToken) is not Microsoft.CodeAnalysis.Operations.IInvocationOperation operation
@@ -42,7 +42,7 @@ internal static class ExtensionMethodConversions
                 continue;
             }
 
-            EditsFor(edits, document.Id)[invocation] = rewritten =>
+            edits.Replace(document.Id, invocation, rewritten =>
             {
                 var call = (InvocationExpressionSyntax)rewritten;
                 var arguments = call.ArgumentList.Arguments;
@@ -53,16 +53,16 @@ internal static class ExtensionMethodConversions
                             MethodName(call.Expression).WithoutTrivia()),
                         call.ArgumentList.WithArguments(arguments.RemoveAt(0)))
                     .WithTriviaFrom(call);
-            };
+            });
         }
 
         var declaration = await DeclarationAsync(method, cancellationToken);
         var first = declaration.ParameterList.Parameters[0];
         var withThis = first.WithModifiers(first.Modifiers.Insert(0, SyntaxFactory.Token(SyntaxKind.ThisKeyword).WithTrailingTrivia(SyntaxFactory.Space)));
         var declaringDocument = solution.GetDocument(declaration.SyntaxTree)!;
-        EditsFor(edits, declaringDocument.Id)[first] = _ => withThis;
+        edits.Replace(declaringDocument.Id, first, _ => withThis);
 
-        await ApplyEditsAsync(solution, edits, cancellationToken);
+        await MovingSupport.ApplyAsync(solution, await edits.ApplyAsync(solution, cancellationToken), cancellationToken);
         return $"Successfully converted {method.Name} to an extension method";
     }
 
@@ -71,7 +71,7 @@ internal static class ExtensionMethodConversions
         if (!method.IsExtensionMethod)
             throw new McpException($"Error: {method.Name} is not an extension method");
 
-        var edits = new Dictionary<DocumentId, Dictionary<SyntaxNode, Func<SyntaxNode, SyntaxNode>>>();
+        var edits = new SyntaxEdits();
         foreach (var (document, invocation, model) in await InvocationsAsync(solution, method, cancellationToken))
         {
             if (invocation.Expression is not MemberAccessExpressionSyntax access
@@ -80,7 +80,7 @@ internal static class ExtensionMethodConversions
                 continue;
             }
 
-            EditsFor(edits, document.Id)[invocation] = rewritten =>
+            edits.Replace(document.Id, invocation, rewritten =>
             {
                 var call = (InvocationExpressionSyntax)rewritten;
                 var member = (MemberAccessExpressionSyntax)call.Expression;
@@ -97,9 +97,9 @@ internal static class ExtensionMethodConversions
                     target = target.WithAdditionalAnnotations(Simplifier.Annotation);
                 return SyntaxFactory.InvocationExpression(
                         target,
-                        call.ArgumentList.WithArguments(WithFirst(call.ArgumentList.Arguments, SyntaxFactory.Argument(receiver.WithoutTrivia()))))
+                        call.ArgumentList.WithArguments(SyntaxEdits.Prepend(call.ArgumentList.Arguments, new[] { SyntaxFactory.Argument(receiver.WithoutTrivia()) })))
                     .WithTriviaFrom(call);
-            };
+            });
         }
 
         foreach (var reference in await ReferencesAsync(solution, method, cancellationToken))
@@ -123,9 +123,9 @@ internal static class ExtensionMethodConversions
         if (withoutThis.Modifiers.Count == 0)
             withoutThis = withoutThis.WithLeadingTrivia(first.GetLeadingTrivia());
         var declaringDocument = solution.GetDocument(declaration.SyntaxTree)!;
-        EditsFor(edits, declaringDocument.Id)[first] = _ => withoutThis;
+        edits.Replace(declaringDocument.Id, first, _ => withoutThis);
 
-        await ApplyEditsAsync(solution, edits, cancellationToken);
+        await MovingSupport.ApplyAsync(solution, await edits.ApplyAsync(solution, cancellationToken), cancellationToken);
         return $"Successfully converted {method.Name} to a static method";
     }
 
@@ -185,17 +185,8 @@ internal static class ExtensionMethodConversions
         return usings.Any(u => u.Alias is null && u.StaticKeyword.RawKind == 0 && u.Name?.ToString() == name);
     }
 
-    /// <summary>The arguments with <paramref name="first"/> in front, separated as written.</summary>
-    private static SeparatedSyntaxList<ArgumentSyntax> WithFirst(SeparatedSyntaxList<ArgumentSyntax> arguments, ArgumentSyntax first)
-    {
-        var separators = arguments.GetSeparators().ToList();
-        if (arguments.Count > 0)
-            separators.Insert(0, SyntaxFactory.Token(SyntaxKind.CommaToken).WithTrailingTrivia(SyntaxFactory.Space));
-        return SyntaxFactory.SeparatedList(new[] { first }.Concat(arguments), separators);
-    }
-
     /// <summary>A receiver for member access: parenthesized unless it already binds tighter.</summary>
-    private static ExpressionSyntax Receiver(ExpressionSyntax expression)
+    internal static ExpressionSyntax Receiver(ExpressionSyntax expression)
     {
         var bare = expression.WithoutTrivia();
         return bare is IdentifierNameSyntax or GenericNameSyntax or MemberAccessExpressionSyntax or InvocationExpressionSyntax
@@ -240,29 +231,5 @@ internal static class ExtensionMethodConversions
         }
 
         return calls;
-    }
-
-    private static Dictionary<SyntaxNode, Func<SyntaxNode, SyntaxNode>> EditsFor(Dictionary<DocumentId, Dictionary<SyntaxNode, Func<SyntaxNode, SyntaxNode>>> edits, DocumentId id) =>
-        edits.TryGetValue(id, out var existing) ? existing : edits[id] = new Dictionary<SyntaxNode, Func<SyntaxNode, SyntaxNode>>();
-
-    /// <summary>
-    /// Replaces nodes document by document. Each edit is applied to the node
-    /// with its nested edits already made, so chained calls convert together.
-    /// </summary>
-    private static async Task ApplyEditsAsync(
-        Solution solution,
-        Dictionary<DocumentId, Dictionary<SyntaxNode, Func<SyntaxNode, SyntaxNode>>> edits,
-        CancellationToken cancellationToken)
-    {
-        var updated = solution;
-        foreach (var (id, replacements) in edits)
-        {
-            var root = await solution.GetDocument(id)!.GetSyntaxRootAsync(cancellationToken);
-            root = root!.ReplaceNodes(replacements.Keys, (original, rewritten) => replacements[original](rewritten));
-            updated = updated.WithDocumentSyntaxRoot(id, root);
-        }
-
-        updated = await MovingSupport.TidyChangedDocumentsAsync(solution, updated, cancellationToken);
-        await MovingSupport.ApplyAsync(solution, updated, cancellationToken);
     }
 }

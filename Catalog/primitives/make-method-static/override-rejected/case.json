@@ -1,0 +1,7 @@
+{
+  "refactoring": "make-method-static",
+  "description": "Refuses an override, whose callers rely on virtual dispatch",
+  "target": { "symbol": "M:Shop.Order.ToString" },
+  "expect": "error",
+  "errorCode": "polymorphic-method"
+}
