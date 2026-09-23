@@ -1,0 +1,5 @@
+{
+  "refactoring": "inline-field",
+  "description": "A static readonly field used from another file is inlined there too, with names in its value qualified for the new location",
+  "target": { "symbol": "F:Shop.Rates.Standard" }
+}

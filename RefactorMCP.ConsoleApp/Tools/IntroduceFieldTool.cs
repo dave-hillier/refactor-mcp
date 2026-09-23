@@ -44,9 +44,9 @@ public static class IntroduceFieldTool
         var sourceText = await document.GetTextAsync();
         var syntaxRoot = (await document.GetSyntaxRootAsync())!;
         var model = (await document.GetSemanticModelAsync())!;
-        var span = TrimWhitespace(sourceText, RefactoringHelpers.ParseSelectionRange(sourceText, selectionRange));
+        var span = RefactoringHelpers.ParseSelectionRange(sourceText, selectionRange);
 
-        var expression = SelectedExpression(syntaxRoot, span)
+        var expression = FieldPropertyRefactoring.SelectedExpression(syntaxRoot, sourceText, span)
             ?? throw new McpException("Error: The selection is not an expression");
         if (FieldPropertyRefactoring.IsWrite(expression))
             throw new McpException("Error: The selected expression is assigned to, so it cannot be replaced by a field");
@@ -145,27 +145,6 @@ public static class IntroduceFieldTool
 
         await FieldPropertyRefactoring.WriteChangesAsync(document.Project.Solution, editor.GetChangedDocument().Project.Solution);
         return $"Successfully added {accessModifier} field '{fieldName}' of type {fieldType} to {typeSymbol.Name} in {document.FilePath}";
-    }
-
-    private static TextSpan TrimWhitespace(SourceText text, TextSpan span)
-    {
-        var start = span.Start;
-        var end = span.End;
-        while (start < end && char.IsWhiteSpace(text[start]))
-            start++;
-        while (end > start && char.IsWhiteSpace(text[end - 1]))
-            end--;
-        return TextSpan.FromBounds(start, end);
-    }
-
-    /// <summary>The expression the selection covers exactly, or null when it covers anything else.</summary>
-    private static ExpressionSyntax? SelectedExpression(SyntaxNode root, TextSpan span)
-    {
-        var node = root.FindNode(span, getInnermostNodeForTie: true);
-        return node.AncestorsAndSelf()
-            .TakeWhile(n => n.Span == span)
-            .OfType<ExpressionSyntax>()
-            .FirstOrDefault();
     }
 
     private static bool UsesMethodTypeParameter(ITypeSymbol type) => type switch

@@ -1,0 +1,7 @@
+{
+  "refactoring": "inline-field",
+  "description": "Refuses a field whose initialiser creates an object or calls a method, since each use would get a new value",
+  "target": { "symbol": "F:Shop.Basket._items" },
+  "expect": "error",
+  "errorCode": "initializer-not-inlinable"
+}

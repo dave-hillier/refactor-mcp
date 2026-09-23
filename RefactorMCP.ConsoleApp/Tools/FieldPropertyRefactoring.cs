@@ -3,7 +3,10 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
+using Microsoft.CodeAnalysis.Editing;
+using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Simplification;
+using Microsoft.CodeAnalysis.Text;
 using System.IO;
 using System.Linq;
 
@@ -51,6 +54,27 @@ internal static class FieldPropertyRefactoring
             .Where(symbol => symbol is not null && symbol.Name == name)
             .Select(symbol => symbol!)
             .ToList();
+    }
+
+    /// <summary>
+    /// The expression a selection covers exactly, ignoring whitespace at
+    /// either end, or null when it covers anything else.
+    /// </summary>
+    internal static ExpressionSyntax? SelectedExpression(SyntaxNode root, SourceText text, TextSpan selection)
+    {
+        var start = selection.Start;
+        var end = selection.End;
+        while (start < end && char.IsWhiteSpace(text[start]))
+            start++;
+        while (end > start && char.IsWhiteSpace(text[end - 1]))
+            end--;
+
+        var span = TextSpan.FromBounds(start, end);
+        return root.FindNode(span, getInnermostNodeForTie: true)
+            .AncestorsAndSelf()
+            .TakeWhile(n => n.Span == span)
+            .OfType<ExpressionSyntax>()
+            .FirstOrDefault();
     }
 
     /// <summary>The syntax that declares a symbol in source, such as its variable declarator or property.</summary>
@@ -185,6 +209,90 @@ internal static class FieldPropertyRefactoring
             .WithAdditionalAnnotations(Formatter.Annotation);
         return type.WithMembers(type.Members.Insert(0, firstPlaced));
     }
+
+    /// <summary>
+    /// Replaces every reference to a field with its initialiser, qualified and
+    /// parenthesised as each use needs, then removes the field.
+    /// </summary>
+    internal static async Task<Solution> InlineFieldValueAsync(Solution solution, IFieldSymbol field, IEnumerable<ReferencedSymbol> references)
+    {
+        var variable = await DeclarationAsync<VariableDeclaratorSyntax>(field);
+        var declaringDocument = solution.GetDocument(variable.SyntaxTree)!;
+        var declaringModel = (await declaringDocument.GetSemanticModelAsync())!;
+        var value = Inlinable(variable.Initializer!.Value, declaringModel, solution.Workspace);
+
+        var locations = references.SelectMany(r => r.Locations).GroupBy(l => l.Document.Id);
+        var changed = solution;
+        foreach (var group in locations)
+        {
+            var editor = await DocumentEditor.CreateAsync(changed.GetDocument(group.Key)!);
+            foreach (var location in group)
+            {
+                var name = editor.OriginalRoot.FindNode(location.Location.SourceSpan, getInnermostNodeForTie: true);
+                var reference = ReferenceExpression(name);
+                editor.ReplaceNode(reference, value.WithTriviaFrom(reference));
+            }
+            changed = editor.GetChangedDocument().Project.Solution;
+        }
+
+        var document = changed.GetDocument(declaringDocument.Id)!;
+        var root = (await document.GetSyntaxRootAsync())!;
+        var type = root.DescendantNodes().OfType<TypeDeclarationSyntax>()
+            .First(t => t.Identifier.ValueText == field.ContainingType.Name && FieldVariables(t).Any(v => v.Identifier.ValueText == field.Name));
+        return document.WithSyntaxRoot(root.ReplaceNode(type, RemoveField(type, field.Name))).Project.Solution;
+    }
+
+    private static IEnumerable<VariableDeclaratorSyntax> FieldVariables(TypeDeclarationSyntax type) =>
+        type.Members.OfType<FieldDeclarationSyntax>().SelectMany(f => f.Declaration.Variables);
+
+    /// <summary>
+    /// Removes a field from a type. A field declared alongside others leaves
+    /// the declaration with the rest; a field declared alone takes its
+    /// comments with it, and the blank lines around it close up as if it had
+    /// never been there.
+    /// </summary>
+    internal static TypeDeclarationSyntax RemoveField(TypeDeclarationSyntax type, string fieldName)
+    {
+        var variable = FieldVariables(type).First(v => v.Identifier.ValueText == fieldName);
+        var declaration = (FieldDeclarationSyntax)variable.Parent!.Parent!;
+        if (declaration.Declaration.Variables.Count > 1)
+        {
+            var remaining = declaration.Declaration.WithVariables(declaration.Declaration.Variables.Remove(variable));
+            return type.ReplaceNode(declaration, declaration.WithDeclaration(remaining));
+        }
+
+        return RemoveMember(type, declaration);
+    }
+
+    /// <summary>
+    /// Removes a member with its leading comments. The member that follows
+    /// keeps a blank line above it when the removed member had one, or when
+    /// it had one itself and does not become the first member.
+    /// </summary>
+    internal static TypeDeclarationSyntax RemoveMember(TypeDeclarationSyntax type, MemberDeclarationSyntax member)
+    {
+        var index = type.Members.IndexOf(member);
+        var members = type.Members.RemoveAt(index);
+        if (index < members.Count)
+        {
+            var next = members[index];
+            var blank = StartsWithBlankLine(member) || (StartsWithBlankLine(next) && index > 0);
+            var leading = next.GetLeadingTrivia().SkipWhile(t => t.IsKind(SyntaxKind.WhitespaceTrivia) || t.IsKind(SyntaxKind.EndOfLineTrivia));
+            var kept = next.GetLeadingTrivia().TakeWhile(t => t.IsKind(SyntaxKind.WhitespaceTrivia) || t.IsKind(SyntaxKind.EndOfLineTrivia)).LastOrDefault(t => t.IsKind(SyntaxKind.WhitespaceTrivia));
+            var trivia = new List<SyntaxTrivia>();
+            if (blank)
+                trivia.Add(NewLine(type));
+            if (kept.IsKind(SyntaxKind.WhitespaceTrivia))
+                trivia.Add(kept);
+            trivia.AddRange(leading);
+            members = members.Replace(next, next.WithLeadingTrivia(trivia));
+        }
+
+        return type.WithMembers(members);
+    }
+
+    private static bool StartsWithBlankLine(SyntaxNode node) =>
+        node.GetLeadingTrivia().SkipWhile(t => t.IsKind(SyntaxKind.WhitespaceTrivia)).FirstOrDefault().IsKind(SyntaxKind.EndOfLineTrivia);
 
     /// <summary>The line ending a node already uses, so inserted lines match it.</summary>
     internal static SyntaxTrivia NewLine(SyntaxNode node)

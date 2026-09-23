@@ -1,0 +1,6 @@
+{
+  "refactoring": "introduce-constant",
+  "description": "A string literal in a generic type becomes a string constant of that type",
+  "target": { "file": "Repository.cs", "selection": "marker" },
+  "arguments": { "name": "Separator" }
+}

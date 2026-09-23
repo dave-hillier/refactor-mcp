@@ -1,0 +1,6 @@
+{
+  "refactoring": "introduce-constant",
+  "description": "A constant expression made of several literals becomes one constant, and the comments around it stay put",
+  "target": { "file": "Schedule.cs", "selection": "marker" },
+  "arguments": { "name": "MinutesPerDay" }
+}

@@ -1,0 +1,6 @@
+{
+  "refactoring": "introduce-constant",
+  "description": "With replaceAll, every occurrence of the same value of the same type in the type is replaced, and different values are left alone",
+  "target": { "file": "Clock.cs", "selection": "marker" },
+  "arguments": { "name": "SecondsPerMinute", "replaceAll": true }
+}

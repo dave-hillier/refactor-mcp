@@ -1,0 +1,5 @@
+{
+  "refactoring": "inline-field",
+  "description": "Replaces every read of a field assigned only by its initialiser with the initialiser, and removes the field",
+  "target": { "symbol": "F:Shop.Greeter._greeting" }
+}

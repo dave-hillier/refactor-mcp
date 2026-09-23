@@ -25,6 +25,35 @@ internal sealed class FieldsPropertiesAndConstantsMappings : ICatalogMappings
                 ("not-in-block", "is not in a block"),
                 ("assigned-expression", "is assigned to"),
                 ("unknown-type", "No type named"))),
+        new CatalogMapping(
+            "inline-field",
+            "inline-field",
+            context => MemberArguments(context, "fieldName"),
+            Codes(
+                ("no-initializer", "has no initializer"),
+                ("written-after-initialization", "is assigned outside its initializer"),
+                ("initializer-not-inlinable", "may give a different value"))),
+        new CatalogMapping(
+            "introduce-constant",
+            "introduce-constant",
+            context => new Dictionary<string, JsonElement>
+            {
+                ["solutionPath"] = Json(context.SolutionPath),
+                ["filePath"] = Json(context.TargetFilePath()),
+                ["selectionRange"] = Json(context.SelectionRange()),
+                ["constantName"] = context.RequiredArgument("name"),
+                ["replaceAll"] = context.HasArgument("replaceAll") ? context.RequiredArgument("replaceAll") : Json(false),
+            },
+            Codes(
+                ("not-an-expression", "The selection is not an expression"),
+                ("not-constant", "is not a compile-time constant"),
+                ("references-local", "uses the local constant"),
+                ("name-conflict", "already has a member named"))),
+        new CatalogMapping(
+            "inline-constant",
+            "inline-constant",
+            context => MemberArguments(context, "constantName"),
+            Codes(("not-a-constant", "is not a constant"))),
     };
 
     /// <summary>

@@ -1,0 +1,8 @@
+{
+  "refactoring": "introduce-constant",
+  "description": "Refuses a constant expression that uses a local constant, which the new constant could not see",
+  "target": { "file": "Sample.cs", "selection": "marker" },
+  "arguments": { "name": "Limit" },
+  "expect": "error",
+  "errorCode": "references-local"
+}

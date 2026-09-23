@@ -1,0 +1,8 @@
+{
+  "refactoring": "introduce-constant",
+  "description": "Refuses an expression whose value is not known at compile time",
+  "target": { "file": "Sample.cs", "selection": "marker" },
+  "arguments": { "name": "Doubled" },
+  "expect": "error",
+  "errorCode": "not-constant"
+}
