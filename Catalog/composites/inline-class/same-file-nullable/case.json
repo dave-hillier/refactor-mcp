@@ -1,0 +1,6 @@
+{
+  "refactoring": "inline-class",
+  "description": "A class declared in the same file as its holder is removed from it, and nullable annotations move with its members",
+  "target": { "symbol": "T:Shop.Address" },
+  "project": { "nullable": "enable" }
+}

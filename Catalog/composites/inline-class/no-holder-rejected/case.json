@@ -1,0 +1,7 @@
+{
+  "refactoring": "inline-class",
+  "description": "A class that no field or property holds has no class to be inlined into",
+  "target": { "symbol": "T:Shop.Address" },
+  "expect": "error",
+  "errorCode": "no-holder"
+}

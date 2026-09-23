@@ -1,0 +1,5 @@
+{
+  "refactoring": "inline-class",
+  "description": "A class without state moves into the class holding it; its methods stay instance methods and are called directly",
+  "target": { "symbol": "T:Shop.PriceCalculator" }
+}

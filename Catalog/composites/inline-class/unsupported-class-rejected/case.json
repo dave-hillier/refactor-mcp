@@ -1,0 +1,7 @@
+{
+  "refactoring": "inline-class",
+  "description": "A class with a constructor, a base class or interfaces carries behaviour that plain members of the holding class would not",
+  "target": { "symbol": "T:Shop.Address" },
+  "expect": "error",
+  "errorCode": "unsupported-class"
+}

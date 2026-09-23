@@ -1,0 +1,7 @@
+{
+  "refactoring": "inline-class",
+  "description": "A use of the holding field other than to reach a member of the inlined class has nothing to become once the object is gone",
+  "target": { "symbol": "T:Shop.Address" },
+  "expect": "error",
+  "errorCode": "holder-escapes"
+}

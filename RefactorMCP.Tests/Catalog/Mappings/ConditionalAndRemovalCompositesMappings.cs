@@ -78,6 +78,18 @@ internal sealed class ConditionalAndRemovalCompositesMappings : ICatalogMappings
                 ("no-delegating-members", "has no method or property that only delegates"),
                 ("via-not-accessible", "make the delegate accessible first"),
                 ("method-group-reference", "is used without being called"))),
+        new CatalogMapping(
+            "inline-class",
+            "inline-class",
+            TypeArguments,
+            Codes(
+                ("unsupported-class", "cannot be inlined because it"),
+                ("type-referenced", "would be left naming a class that no longer exists"),
+                ("no-holder", "No field or property holds an instance"),
+                ("several-holders", "is held by several fields or properties"),
+                ("holder-not-created", "creates the object in its initializer"),
+                ("member-exists", "already has a member named"),
+                ("holder-escapes", "other than to reach a member of"))),
     };
 
     /// <summary>The file declaring the <c>target.symbol</c> type, and its name.</summary>

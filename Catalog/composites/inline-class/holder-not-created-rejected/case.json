@@ -1,0 +1,7 @@
+{
+  "refactoring": "inline-class",
+  "description": "The holding field must create the object in its initializer, so there is exactly one for each instance of the holding class from the start",
+  "target": { "symbol": "T:Shop.Address" },
+  "expect": "error",
+  "errorCode": "holder-not-created"
+}

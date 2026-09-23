@@ -1,0 +1,7 @@
+{
+  "refactoring": "inline-class",
+  "description": "A class held by several fields would need a copy of its members for each",
+  "target": { "symbol": "T:Shop.Address" },
+  "expect": "error",
+  "errorCode": "several-holders"
+}

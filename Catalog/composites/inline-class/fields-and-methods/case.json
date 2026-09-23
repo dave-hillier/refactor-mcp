@@ -1,0 +1,5 @@
+{
+  "refactoring": "inline-class",
+  "description": "Fields, properties and methods move into the class holding the inlined one, uses through the holding field become direct, and the class and its file are deleted",
+  "target": { "symbol": "T:Shop.Address" }
+}
