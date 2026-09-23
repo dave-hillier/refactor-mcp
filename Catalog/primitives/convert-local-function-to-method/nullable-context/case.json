@@ -1,0 +1,6 @@
+{
+  "refactoring": "convert-local-function-to-method",
+  "description": "A captured nullable parameter keeps its annotation as a parameter of the method",
+  "project": { "nullable": "enable" },
+  "target": { "file": "Sample.cs", "caret": "marker" }
+}

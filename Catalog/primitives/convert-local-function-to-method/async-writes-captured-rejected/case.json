@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-local-function-to-method",
+  "description": "Refuses an async function that assigns a captured variable, which an async method cannot take by ref",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "ref-in-async"
+}

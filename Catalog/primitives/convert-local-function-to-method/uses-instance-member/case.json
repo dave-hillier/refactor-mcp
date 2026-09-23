@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-local-function-to-method",
+  "description": "A local function reading a field becomes an instance method",
+  "target": { "file": "Sample.cs", "caret": "marker" }
+}

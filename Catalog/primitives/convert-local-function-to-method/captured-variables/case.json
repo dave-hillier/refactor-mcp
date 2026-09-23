@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-local-function-to-method",
+  "description": "A parameter and a local the function reads become parameters of the method, passed at each call",
+  "target": { "file": "Sample.cs", "caret": "marker" }
+}

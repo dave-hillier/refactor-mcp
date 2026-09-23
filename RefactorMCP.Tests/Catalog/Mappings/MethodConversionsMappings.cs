@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using static RefactorMCP.Tests.Catalog.CatalogMapping;
 
 namespace RefactorMCP.Tests.Catalog.Mappings;
@@ -70,6 +72,18 @@ internal sealed class MethodConversionsMappings : ICatalogMappings
                 ["overloaded-method"] = "also uses another overload",
                 ["unsupported-method"] = "is an extension, extern or partial method",
             }),
+        new CatalogMapping(
+            "convert-local-function-to-method",
+            "convert-local-function-to-method",
+            LocalFunctionArguments,
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["not-a-local-function"] = "There is no local function",
+                ["name-conflict"] = "already has a member named",
+                ["used-as-delegate"] = "is used as a delegate and captures variables",
+                ["calls-local-function"] = "which a method could not reach",
+                ["ref-in-async"] = "which it would need to take by ref",
+            }),
     };
 
     private static async Task<Dictionary<string, JsonElement>> MethodArguments(StepContext context)
@@ -82,6 +96,48 @@ internal sealed class MethodConversionsMappings : ICatalogMappings
             ["methodName"] = Json(location.Symbol.Name),
             ["line"] = Json(location.Line),
         };
+    }
+
+    /// <summary>
+    /// A local function has no symbol id of its own. A caret marks it, on its name or a
+    /// call; in a later step of a composite, the containing member's symbol with
+    /// <c>arguments.function</c> naming it.
+    /// </summary>
+    private static async Task<Dictionary<string, JsonElement>> LocalFunctionArguments(StepContext context)
+    {
+        var (filePath, line, column) = context.Step.Target?.Caret is not null
+            ? (context.TargetFilePath(), context.Caret().Line, context.Caret().Column)
+            : await LocalFunctionPosition(context);
+        var arguments = new Dictionary<string, JsonElement>
+        {
+            ["solutionPath"] = Json(context.SolutionPath),
+            ["filePath"] = Json(filePath),
+            ["line"] = Json(line),
+            ["column"] = Json(column),
+        };
+        if (context.HasArgument("name"))
+            arguments["name"] = context.RequiredArgument("name");
+        return arguments;
+    }
+
+    private static async Task<(string FilePath, int Line, int Column)> LocalFunctionPosition(StepContext context)
+    {
+        var member = await context.SymbolAsync();
+        var name = context.RequiredString("function");
+        foreach (var reference in member.DeclaringSyntaxReferences)
+        {
+            var function = (await reference.GetSyntaxAsync())
+                .DescendantNodes()
+                .OfType<LocalFunctionStatementSyntax>()
+                .FirstOrDefault(f => f.Identifier.ValueText == name);
+            if (function is null)
+                continue;
+
+            var start = function.Identifier.GetLocation().GetLineSpan().StartLinePosition;
+            return (function.SyntaxTree.FilePath, start.Line + 1, start.Character + 1);
+        }
+
+        throw new InvalidOperationException($"'{member.Name}' declares no local function named '{name}'");
     }
 
     /// <summary>

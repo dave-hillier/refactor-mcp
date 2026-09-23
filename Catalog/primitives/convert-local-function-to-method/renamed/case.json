@@ -1,0 +1,6 @@
+{
+  "refactoring": "convert-local-function-to-method",
+  "description": "The method takes the name given, and every call uses it",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "arguments": { "name": "ApplyTax" }
+}

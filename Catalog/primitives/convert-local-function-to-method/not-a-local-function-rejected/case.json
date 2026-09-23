@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-local-function-to-method",
+  "description": "Refuses a caret on something other than a local function",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "not-a-local-function"
+}

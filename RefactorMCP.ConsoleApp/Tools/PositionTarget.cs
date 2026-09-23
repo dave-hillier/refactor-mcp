@@ -89,6 +89,6 @@ internal sealed class PositionTarget
     {
         var text = trivia.SyntaxTree!.GetText();
         var line = text.Lines.GetLineFromPosition(trivia.SpanStart);
-        return line.Start == trivia.SpanStart && trivia.SpanStart > 0;
+        return line.Start == trivia.SpanStart;
     }
 }

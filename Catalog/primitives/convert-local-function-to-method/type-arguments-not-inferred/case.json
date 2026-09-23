@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-local-function-to-method",
+  "description": "A type parameter the calls cannot infer is passed explicitly",
+  "target": { "file": "Sample.cs", "caret": "marker" }
+}

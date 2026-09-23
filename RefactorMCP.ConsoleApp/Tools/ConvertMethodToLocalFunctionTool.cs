@@ -217,12 +217,28 @@ public static class ConvertMethodToLocalFunctionTool
     private static LocalFunctionStatementSyntax LocalFunction(MethodDeclarationSyntax method, int indentation)
     {
         var shifted = PositionTarget.Reindent(method, indentation - PositionTarget.IndentationOf(method));
-        var modifiers = shifted.Modifiers.Where(m => !SyntaxFacts.IsAccessibilityModifier(m.Kind()));
+
+        // A dropped accessibility modifier leaves its leading trivia to the token after it.
+        var modifiers = new List<SyntaxToken>();
+        var carried = SyntaxFactory.TriviaList();
+        foreach (var modifier in shifted.Modifiers)
+        {
+            if (SyntaxFacts.IsAccessibilityModifier(modifier.Kind()))
+            {
+                carried = carried.AddRange(modifier.LeadingTrivia);
+                continue;
+            }
+
+            modifiers.Add(modifier.WithLeadingTrivia(carried.AddRange(modifier.LeadingTrivia)));
+            carried = SyntaxFactory.TriviaList();
+        }
+
+        var returnType = shifted.ReturnType.WithLeadingTrivia(carried.AddRange(shifted.ReturnType.GetLeadingTrivia()));
 
         var function = SyntaxFactory.LocalFunctionStatement(
                 shifted.AttributeLists,
                 SyntaxFactory.TokenList(modifiers),
-                shifted.ReturnType,
+                returnType,
                 shifted.Identifier,
                 shifted.TypeParameterList,
                 shifted.ParameterList,
