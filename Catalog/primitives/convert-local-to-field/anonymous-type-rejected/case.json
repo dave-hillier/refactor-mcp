@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-local-to-field",
+  "description": "Refuses a local of anonymous type, which a field cannot be declared with",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "arguments": { "name": "_point" },
+  "expect": "error",
+  "errorCode": "anonymous-type"
+}

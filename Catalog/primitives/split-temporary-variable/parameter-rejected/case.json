@@ -1,0 +1,8 @@
+{
+  "refactoring": "split-temporary-variable",
+  "description": "Refuses a parameter, which is not a local",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "arguments": { "name": "other" },
+  "expect": "error",
+  "errorCode": "not-a-local"
+}

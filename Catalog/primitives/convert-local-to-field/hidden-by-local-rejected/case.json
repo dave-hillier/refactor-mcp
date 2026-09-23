@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-local-to-field",
+  "description": "Refuses a field name that a parameter of the method already has, which would hide the field",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "arguments": { "name": "count" },
+  "expect": "error",
+  "errorCode": "hidden-by-local"
+}

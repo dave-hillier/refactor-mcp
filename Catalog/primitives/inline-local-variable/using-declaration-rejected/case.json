@@ -1,0 +1,7 @@
+{
+  "refactoring": "inline-local-variable",
+  "description": "Refuses a using declaration, which would no longer be disposed",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "using-declaration"
+}
