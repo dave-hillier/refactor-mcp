@@ -2090,6 +2090,42 @@ dotnet run --project RefactorMCP.ConsoleApp -- --json use-pattern-matching '{"so
 
 <!-- Generators: examples for this group's tools go below this line. -->
 
+Generators add structure or change behaviour, so each pins one design; the
+catalog README for each refactoring under `Catalog/generators/` describes it.
+
+`add-null-checks` guards a method's or constructor's reference-type
+parameters with `ArgumentNullException.ThrowIfNull`, skipping those already
+guarded, annotated nullable or defaulting to null. A constructor is named by
+its type; `line` picks an overload.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json add-null-checks '{"solutionPath":"./Shop.sln","filePath":"./Shop/Printer.cs","methodName":"Print"}'
+```
+
+`convert-to-nullable-aware` adds `#nullable enable` to one file and annotates
+the declarations its nullable warnings point to, refusing when a warning such
+as a possible null dereference remains.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json convert-to-nullable-aware '{"solutionPath":"./Shop.sln","filePath":"./Shop/Directory.cs"}'
+```
+
+`add-observer` declares `public event Action<...> <eventName>` before a void
+method and raises it with the method's parameters at the end and before each
+return.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json add-observer '{"solutionPath":"./Shop.sln","filePath":"./Shop/Counter.cs","className":"Counter","methodName":"Update","eventName":"Updated"}'
+```
+
+`feature-flag-refactor` moves the branches of the one `if (x.IsEnabled("Flag"))`
+in a file into `FlagStrategy` and `NoFlagStrategy` classes, selected by a
+private `Flag` property that checks the flag on each call.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json feature-flag-refactor '{"solutionPath":"./Shop.sln","filePath":"./Shop/Checkout.cs","flagName":"NewCheckout"}'
+```
+
 <!-- End of Generators. -->
 
 ## Metrics Resource
