@@ -2077,6 +2077,15 @@ check, with a declaration pattern. `name` optionally names the variable.
 dotnet run --project RefactorMCP.ConsoleApp -- --json use-pattern-matching '{"solutionPath":"./RefactorMCP.sln","filePath":"./Shop/Shapes.cs","line":14,"column":13,"name":"circle"}'
 ```
 
+#### Consolidate Duplicate Conditional Fragments
+
+Moves statements every branch ends with after the conditional, and statements
+every branch starts with before it.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json consolidate-duplicate-conditional-fragments '{"solutionPath":"./RefactorMCP.sln","filePath":"./Shop/Deal.cs","line":9,"column":13}'
+```
+
 <!-- End of Conditionals. -->
 
 ### Loops and expressions
@@ -2314,15 +2323,6 @@ method.
 
 ```bash
 dotnet run --project RefactorMCP.ConsoleApp -- --json consolidate-conditional-expression '{"solutionPath":"./RefactorMCP.sln","filePath":"./Staff/Disability.cs","line":12,"column":13,"methodName":"IsNotEligible"}'
-```
-
-##### Consolidate Duplicate Conditional Fragments
-
-Moves statements every branch ends with after the conditional, and statements
-every branch starts with before it.
-
-```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --json consolidate-duplicate-conditional-fragments '{"solutionPath":"./RefactorMCP.sln","filePath":"./Shop/Deal.cs","line":9,"column":13}'
 ```
 
 ##### Remove Middle Man

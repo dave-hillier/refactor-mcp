@@ -38,6 +38,17 @@ internal sealed class ConditionalsMappings : ICatalogMappings
                 ("not-splittable", "is not joined by && or ||"),
                 ("and-with-else", "splits on && and has an else"))),
         new CatalogMapping(
+            "consolidate-duplicate-conditional-fragments",
+            "consolidate-duplicate-conditional-fragments",
+            CaretArguments,
+            Codes(
+                ("not-an-if", "is not on an if statement"),
+                ("not-in-block", "is not in a block"),
+                ("no-final-else", "has no final else"),
+                ("no-common-fragments", "no common fragments to move"),
+                ("uses-branch-local", "its branch declares"),
+                ("condition-depends-on-fragment", "The conditions depend on"))),
+        new CatalogMapping(
             "invert-boolean",
             "invert-boolean",
             InvertBooleanArguments,
