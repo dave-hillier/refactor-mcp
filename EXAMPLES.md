@@ -2080,6 +2080,66 @@ dotnet run --project RefactorMCP.ConsoleApp -- --json use-pattern-matching '{"so
 
 <!-- Composites: examples for this group's tools go below this line. -->
 
+Composite refactorings run a sequence of primitive refactorings as one call.
+Those built from primitives name the step that refused in their error, and put
+every file back as it was.
+
+`extract-class` creates a class, gives the class a field holding an instance
+of it, and moves the named fields, properties and methods through that field.
+`extract-superclass` creates a base class between a class and its old base
+class and pulls the named fields and methods up into it.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json extract-class '{"solutionPath":"./Shop.sln","filePath":"./Shop/Customer.cs","className":"Customer","newClassName":"Address","memberNames":["_street","_town","FormatAddress"],"fieldName":"_address"}'
+dotnet run --project RefactorMCP.ConsoleApp -- --json extract-superclass '{"solutionPath":"./Staff.sln","filePath":"./Staff/Manager.cs","className":"Manager","superclassName":"Employee","memberNames":["_name","Badge"]}'
+```
+
+`introduce-interface-for-dependency` extracts an interface from the class a
+field, property or parameter holds and declares the dependency as the
+interface; for a field, the constructor parameters stored in it change too.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json introduce-interface-for-dependency '{"solutionPath":"./Shop.sln","filePath":"./Shop/Report.cs","name":"_writer","interfaceName":"IWriter","memberNames":["Write"]}'
+dotnet run --project RefactorMCP.ConsoleApp -- --json introduce-interface-for-dependency '{"solutionPath":"./Shop.sln","filePath":"./Shop/Report.cs","name":"Print","parameterName":"writer","interfaceName":"IWriter"}'
+```
+
+`make-static-then-move` makes an instance method static, taking the instance
+as a parameter, and moves it to another class; `move-multiple-methods` moves
+several methods, callees first, through a field (`via`) or to a type
+(`targetType`). Both keep delegating stubs unless told not to.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json make-static-then-move '{"solutionPath":"./Shop.sln","filePath":"./Shop/Order.cs","methodName":"Describe","targetClass":"Receipts","keepStub":false}'
+dotnet run --project RefactorMCP.ConsoleApp -- --json move-multiple-methods '{"solutionPath":"./Shop.sln","filePath":"./Shop/Customer.cs","className":"Customer","methodNames":["Label","Street"],"via":"_address"}'
+```
+
+`replace-method-with-method-object` moves a method's body into a new class
+whose fields hold the instance, the parameters and the locals; the method
+creates one for each call and runs it.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json replace-method-with-method-object '{"solutionPath":"./Shop.sln","filePath":"./Shop/Order.cs","methodName":"Price","className":"PriceCalculation"}'
+```
+
+`hide-delegate` gives a class a member forwarding to a member of an object it
+holds, and repoints clients: `person.Department.Manager` becomes
+`person.Manager`.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json hide-delegate '{"solutionPath":"./Staff.sln","filePath":"./Staff/Person.cs","delegateName":"Department","memberName":"Manager"}'
+```
+
+`replace-inheritance-with-delegation` turns a base class into a field,
+forwarding the inherited members other code uses;
+`replace-delegation-with-inheritance` goes the other way, deriving from the
+class of a field the class created and removing the members that only
+forwarded to it.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json replace-inheritance-with-delegation '{"solutionPath":"./Shop.sln","filePath":"./Shop/Stack.cs","className":"Stack"}'
+dotnet run --project RefactorMCP.ConsoleApp -- --json replace-delegation-with-inheritance '{"solutionPath":"./Staff.sln","filePath":"./Staff/Employee.cs","className":"Employee","fieldName":"_person"}'
+```
+
 <!-- End of Composites. -->
 
 ### Generators
