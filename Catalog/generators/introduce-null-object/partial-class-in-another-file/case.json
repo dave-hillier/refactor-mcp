@@ -1,0 +1,5 @@
+{
+  "refactoring": "introduce-null-object",
+  "description": "Removes checks in another part of a partial class, declared in another file",
+  "target": { "symbol": "F:Shop.Order._logger" }
+}

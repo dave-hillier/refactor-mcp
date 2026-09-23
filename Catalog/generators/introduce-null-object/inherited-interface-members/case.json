@@ -1,0 +1,5 @@
+{
+  "refactoring": "introduce-null-object",
+  "description": "Implements every member of the interface and the interfaces it extends: events, settable properties, out parameters and generic methods",
+  "target": { "symbol": "F:Shop.Order._notifier" }
+}

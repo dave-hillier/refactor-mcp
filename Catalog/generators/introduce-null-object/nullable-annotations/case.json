@@ -1,0 +1,6 @@
+{
+  "refactoring": "introduce-null-object",
+  "description": "Makes the nullable field non-nullable and keeps the interface's annotations on the null object's members",
+  "project": { "nullable": "enable" },
+  "target": { "symbol": "F:Shop.Order._logger" }
+}
