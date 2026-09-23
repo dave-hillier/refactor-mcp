@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-method-to-local-function",
+  "description": "Refuses a caller with an expression body, which has no block to hold a local function",
+  "target": { "symbol": "M:Sample.WithTax(System.Int32)" },
+  "expect": "error",
+  "errorCode": "caller-expression-bodied"
+}

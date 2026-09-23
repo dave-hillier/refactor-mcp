@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-to-expression-body",
+  "description": "Refuses a body with more than one statement",
+  "target": { "symbol": "M:Sample.Total" },
+  "expect": "error",
+  "errorCode": "not-single-statement"
+}

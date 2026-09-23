@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-method-group-to-lambda",
+  "description": "A parameter name already used where the lambda goes gets a number",
+  "target": { "file": "Sample.cs", "caret": "marker" }
+}

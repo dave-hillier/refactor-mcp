@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-method-to-local-function",
+  "description": "A private instance method using a field becomes a local function that is not static",
+  "target": { "symbol": "M:Sample.WithTax(System.Int32)" }
+}

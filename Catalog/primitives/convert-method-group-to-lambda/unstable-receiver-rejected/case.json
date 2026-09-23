@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-method-group-to-lambda",
+  "description": "Refuses a receiver with side effects, which the method group evaluates once and a lambda would evaluate on every call",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "unstable-receiver"
+}

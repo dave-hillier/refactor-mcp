@@ -1,0 +1,6 @@
+{
+  "refactoring": "convert-method-to-local-function",
+  "description": "A method with nullable annotations keeps them as a local function",
+  "project": { "nullable": "enable" },
+  "target": { "symbol": "M:Sample.Clean(System.String)" }
+}

@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-to-block-body",
+  "description": "Refuses an auto-property, whose accessors have no bodies to expand",
+  "target": { "symbol": "P:Sample.Name" },
+  "expect": "error",
+  "errorCode": "no-body"
+}

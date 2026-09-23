@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-to-expression-body",
+  "description": "Comments inside the block move above the member, and a comment after the statement stays at the end of the line",
+  "target": { "symbol": "M:Sample.Total" }
+}

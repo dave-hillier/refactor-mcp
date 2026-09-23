@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-local-function-to-method",
+  "description": "Refuses a function that calls another local function, which the method could not reach",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "calls-local-function"
+}

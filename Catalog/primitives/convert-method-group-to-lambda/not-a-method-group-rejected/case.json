@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-method-group-to-lambda",
+  "description": "Refuses a method that is called rather than used as a delegate",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "not-a-method-group"
+}

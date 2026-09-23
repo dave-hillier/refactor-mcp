@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-to-expression-body",
+  "description": "A generic method keeps its constraint clause before the expression body",
+  "target": { "symbol": "M:Sample.Larger``1(``0,``0)" }
+}

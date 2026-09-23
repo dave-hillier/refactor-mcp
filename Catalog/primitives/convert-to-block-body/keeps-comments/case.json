@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-to-block-body",
+  "description": "The comment above the member stays there and a comment after it stays with the statement",
+  "target": { "symbol": "M:Sample.Total" }
+}

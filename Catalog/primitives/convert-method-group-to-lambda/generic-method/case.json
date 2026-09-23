@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-method-group-to-lambda",
+  "description": "A group of a generic method keeps its type arguments in the call",
+  "target": { "file": "Sample.cs", "caret": "marker" }
+}

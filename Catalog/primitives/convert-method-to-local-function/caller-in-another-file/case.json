@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-method-to-local-function",
+  "description": "A method of a partial class called from a member in another file moves into that member",
+  "target": { "symbol": "M:Shop.Order.Discount(System.Decimal)" }
+}

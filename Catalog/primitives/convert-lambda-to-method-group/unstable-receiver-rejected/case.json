@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-lambda-to-method-group",
+  "description": "Refuses a receiver the lambda evaluates on every call, which a method group would evaluate once",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "unstable-receiver"
+}

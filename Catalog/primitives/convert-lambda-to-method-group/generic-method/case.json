@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-lambda-to-method-group",
+  "description": "A lambda calling a generic method becomes the method group, whose type argument is inferred the same way",
+  "target": { "file": "Sample.cs", "caret": "marker" }
+}

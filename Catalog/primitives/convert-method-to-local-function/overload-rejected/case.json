@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-method-to-local-function",
+  "description": "Refuses when the caller also calls another overload, which the local function would hide",
+  "target": { "symbol": "M:Sample.Format(System.Int32)" },
+  "expect": "error",
+  "errorCode": "overloaded-method"
+}

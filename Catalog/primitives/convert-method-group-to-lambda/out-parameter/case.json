@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-method-group-to-lambda",
+  "description": "A delegate with an out parameter gets an explicitly typed lambda passing it by out",
+  "target": { "file": "Sample.cs", "caret": "marker" }
+}

@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-lambda-to-method-group",
+  "description": "Refuses a lambda whose argument is converted to the method's parameter type, which a method group cannot do",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "resolution-changes"
+}

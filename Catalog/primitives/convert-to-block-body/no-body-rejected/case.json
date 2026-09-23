@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-to-block-body",
+  "description": "Refuses an abstract method, which has no body",
+  "target": { "symbol": "M:Shape.Area" },
+  "expect": "error",
+  "errorCode": "no-body"
+}

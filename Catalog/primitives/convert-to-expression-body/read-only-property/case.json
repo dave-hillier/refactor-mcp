@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-to-expression-body",
+  "description": "A property with only a get accessor becomes an expression-bodied property",
+  "target": { "symbol": "P:Sample.Name" }
+}

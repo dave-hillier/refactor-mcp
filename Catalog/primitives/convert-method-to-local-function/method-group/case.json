@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-method-to-local-function",
+  "description": "A method used as a method group in its one caller becomes a local function used the same way",
+  "target": { "symbol": "M:Sample.Format(System.Int32)" }
+}

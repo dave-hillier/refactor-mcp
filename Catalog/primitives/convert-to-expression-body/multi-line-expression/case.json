@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-to-expression-body",
+  "description": "An expression spanning several lines keeps its line breaks, indented under the member",
+  "target": { "symbol": "M:Sample.Total(System.Collections.Generic.List{System.Int32})" }
+}

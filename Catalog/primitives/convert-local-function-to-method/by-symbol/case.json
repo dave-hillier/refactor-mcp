@@ -1,0 +1,6 @@
+{
+  "refactoring": "convert-local-function-to-method",
+  "description": "In a later step of a composite, the containing member's symbol and the function's name pick the local function",
+  "target": { "symbol": "M:Sample.Total(System.Int32[])" },
+  "arguments": { "function": "WithTax" }
+}

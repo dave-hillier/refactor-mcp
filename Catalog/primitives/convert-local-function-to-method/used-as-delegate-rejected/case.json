@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-local-function-to-method",
+  "description": "Refuses a function that captures a variable and is used as a delegate, which the method could not be passed as",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "used-as-delegate"
+}

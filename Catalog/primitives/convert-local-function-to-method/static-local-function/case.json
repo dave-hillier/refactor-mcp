@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-local-function-to-method",
+  "description": "A static local function in a static method becomes a private static method",
+  "target": { "file": "Sample.cs", "caret": "marker" }
+}

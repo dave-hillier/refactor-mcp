@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-to-expression-body",
+  "description": "Only the targeted overload is converted",
+  "target": { "symbol": "M:Sample.Format(System.Int32)" }
+}

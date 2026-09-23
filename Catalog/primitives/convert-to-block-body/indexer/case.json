@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-to-block-body",
+  "description": "An expression-bodied indexer becomes an indexer with a get accessor",
+  "target": { "symbol": "P:Sample.Item(System.Int32)" }
+}

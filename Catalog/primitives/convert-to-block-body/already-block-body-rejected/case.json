@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-to-block-body",
+  "description": "Refuses a member that already has a block body",
+  "target": { "symbol": "M:Sample.Total" },
+  "expect": "error",
+  "errorCode": "already-block-body"
+}

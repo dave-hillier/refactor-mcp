@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-local-function-to-method",
+  "description": "A recursive call inside the function passes the captured variables on too",
+  "target": { "file": "Sample.cs", "caret": "marker" }
+}

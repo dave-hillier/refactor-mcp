@@ -1,0 +1,6 @@
+{
+  "refactoring": "convert-lambda-to-method-group",
+  "description": "A lambda over nullable references becomes the method group without new warnings",
+  "project": { "nullable": "enable" },
+  "target": { "file": "Sample.cs", "caret": "marker" }
+}

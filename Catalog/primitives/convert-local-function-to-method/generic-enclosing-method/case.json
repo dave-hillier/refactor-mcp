@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-local-function-to-method",
+  "description": "A type parameter of the enclosing method that the function uses becomes a type parameter of the method, with its constraint",
+  "target": { "file": "Sample.cs", "caret": "marker" }
+}

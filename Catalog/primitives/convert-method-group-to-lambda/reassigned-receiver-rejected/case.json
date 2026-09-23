@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-method-group-to-lambda",
+  "description": "Refuses a local receiver that is assigned again, which a lambda would read when it runs",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "unstable-receiver"
+}

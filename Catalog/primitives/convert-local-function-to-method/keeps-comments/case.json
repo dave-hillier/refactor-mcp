@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-local-function-to-method",
+  "description": "Comments above and inside the local function move with it",
+  "target": { "file": "Sample.cs", "caret": "marker" }
+}

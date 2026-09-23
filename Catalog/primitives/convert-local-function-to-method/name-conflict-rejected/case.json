@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-local-function-to-method",
+  "description": "Refuses when the type already has a member with the method's name",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "name-conflict"
+}

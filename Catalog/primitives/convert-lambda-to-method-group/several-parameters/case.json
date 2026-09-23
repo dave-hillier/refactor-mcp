@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-lambda-to-method-group",
+  "description": "A lambda passing several parameters in order becomes the method group",
+  "target": { "file": "Sample.cs", "caret": "marker" }
+}

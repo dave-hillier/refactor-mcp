@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-lambda-to-method-group",
+  "description": "Refuses a lambda that passes something other than its parameters",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "not-a-forwarding-call"
+}

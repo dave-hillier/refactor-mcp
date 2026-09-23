@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-method-group-to-lambda",
+  "description": "A method group for a delegate with several parameters becomes a lambda with a parenthesised parameter list",
+  "target": { "file": "Sample.cs", "caret": "marker" }
+}

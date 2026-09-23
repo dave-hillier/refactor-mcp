@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-to-expression-body",
+  "description": "One accessor of a property with a getter and a setter becomes expression-bodied",
+  "target": { "symbol": "M:Sample.set_Name(System.String)" }
+}
