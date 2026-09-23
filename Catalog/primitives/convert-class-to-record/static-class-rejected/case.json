@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-class-to-record",
+  "description": "Refuses a static class, which has no instances to compare",
+  "target": { "symbol": "T:Shop.Pricing" },
+  "expect": "error",
+  "errorCode": "unsupported-type"
+}

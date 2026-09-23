@@ -41,6 +41,20 @@ internal sealed class TypeConversionsMappings : ICatalogMappings
                 ["with-expression"] = "is copied with a with expression",
                 ["partial-type"] = "merge them first",
             }),
+        new CatalogMapping(
+            "convert-class-to-record",
+            "convert-class-to-record",
+            context => DeclarationArguments(context, "typeName"),
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["unsupported-type"] = "only a class with instances can become a record",
+                ["language-version"] = "raise the language version first",
+                ["class-hierarchy"] = "is part of a class hierarchy",
+                ["mutable-state"] = "has mutable state",
+                ["declares-equality"] = "overrides Equals(object)",
+                ["equality-observed"] = "value equality would change behaviour",
+                ["to-string-observed"] = "ToString would change behaviour",
+            }),
     };
 
     /// <summary>

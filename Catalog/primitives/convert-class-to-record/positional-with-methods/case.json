@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-class-to-record",
+  "description": "Turns a class whose constructor only sets get-only properties into a positional record, keeping its other members and comments",
+  "target": { "symbol": "T:Shop.Point" }
+}
