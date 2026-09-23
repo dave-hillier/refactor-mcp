@@ -100,6 +100,39 @@ internal sealed class StructuralCompositesMappings : ICatalogMappings
                 ("type-already-exists", "already exists"),
                 ("incompatible-use", "breaks code that uses it"),
                 ("changes-overload", "would change which member"))),
+
+        new CatalogMapping(
+            "make-static-then-move",
+            "make-static-then-move",
+            async context =>
+            {
+                var location = await context.SymbolLocationAsync();
+                var arguments = new Dictionary<string, JsonElement>
+                {
+                    ["solutionPath"] = Json(context.SolutionPath),
+                    ["filePath"] = Json(location.FilePath),
+                    ["methodName"] = Json(location.Symbol.Name),
+                    ["line"] = Json(location.Line),
+                    ["targetClass"] = context.RequiredArgument("to"),
+                };
+                CopyOptional(context, arguments, "name", "instanceParameterName");
+                CopyOptional(context, arguments, "stub", "keepStub");
+                if (context.HasArgument("file"))
+                    arguments["targetFilePath"] = Json(context.WorkspacePath(context.RequiredString("file")));
+                return arguments;
+            },
+            Codes(
+                ("already-static", "is already static"),
+                ("polymorphic-method", "callers rely on dispatch through the instance"),
+                ("not-a-class", "is not a class"),
+                ("uses-base", "calls through base"),
+                ("method-group", "is used as a method group"),
+                ("conditional-access", "null-conditional access"),
+                ("name-conflict", "already has a parameter or local named"),
+                ("same-type", "is already"),
+                ("member-exists", "already has a"),
+                ("target-not-class", "cannot move into it"),
+                ("uses-protected-member", "uses the protected member"))),
     };
 
     private static void CopyOptional(

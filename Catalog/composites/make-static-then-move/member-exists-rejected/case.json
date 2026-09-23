@@ -1,0 +1,9 @@
+{
+  "refactoring": "make-static-then-move",
+  "description": "The target already has a method with the static method's parameters, so the move refuses after the method was made static, and every file is put back",
+  "target": { "symbol": "M:Shop.Order.Describe(System.String)" },
+  "arguments": { "to": "Receipts" },
+  "expect": "error",
+  "errorCode": "member-exists",
+  "errorContains": "step 2 (move-static-method)"
+}
