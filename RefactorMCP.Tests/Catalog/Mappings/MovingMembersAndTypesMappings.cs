@@ -38,6 +38,41 @@ internal sealed class MovingMembersAndTypesMappings : ICatalogMappings
                 ("only-type-in-file", "is the only type in"),
                 ("file-exists", "already exists"),
                 ("nested-type", "is nested in another type"))),
+
+        new CatalogMapping(
+            "move-type-to-namespace",
+            "move-type-to-namespace",
+            async context => new Dictionary<string, JsonElement>
+            {
+                ["solutionPath"] = Json(context.SolutionPath),
+                ["filePath"] = Json(await context.SymbolFilePathAsync()),
+                ["typeName"] = Json((await context.SymbolAsync()).Name),
+                ["targetNamespace"] = context.RequiredArgument("namespace"),
+            },
+            Codes(
+                ("namespace-unchanged", "is already in namespace"),
+                ("type-exists", "already contains a type named"),
+                ("nested-type", "its namespace is its container's"),
+                ("invalid-namespace", "is not a valid namespace name"),
+                ("partial-type", "is a partial type declared in several places"),
+                ("nested-namespace-block", "is declared in a nested namespace block"),
+                ("shares-file-scoped-namespace", "shares a file-scoped namespace"))),
+
+        new CatalogMapping(
+            "sync-namespace-with-folder",
+            "sync-namespace-with-folder",
+            context => new Dictionary<string, JsonElement>
+            {
+                ["solutionPath"] = Json(context.SolutionPath),
+                ["filePath"] = Json(context.TargetFilePath()),
+            },
+            Codes(
+                ("namespace-matches-folder", "already matches its folder"),
+                ("multiple-namespaces", "declares more than one namespace"),
+                ("no-namespace", "declares no namespace"),
+                ("type-exists", "already contains a type named"),
+                ("partial-type", "is a partial type declared in several places"),
+                ("invalid-namespace", "is not a valid namespace name"))),
     };
 
     private static IReadOnlyDictionary<string, string> Codes(params (string Code, string Fragment)[] codes)

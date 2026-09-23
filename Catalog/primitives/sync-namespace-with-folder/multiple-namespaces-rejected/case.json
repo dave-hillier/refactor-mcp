@@ -1,0 +1,7 @@
+{
+  "refactoring": "sync-namespace-with-folder",
+  "description": "Refuses a file declaring more than one namespace, since only one can match the folder",
+  "target": { "file": "Billing/Model.cs" },
+  "expect": "error",
+  "errorCode": "multiple-namespaces"
+}

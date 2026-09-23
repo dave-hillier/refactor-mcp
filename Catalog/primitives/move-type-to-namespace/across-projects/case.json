@@ -1,0 +1,10 @@
+{
+  "refactoring": "move-type-to-namespace",
+  "description": "References in a project that depends on the type's project are updated too",
+  "target": { "symbol": "T:Core.Money" },
+  "arguments": { "namespace": "Core.Values" },
+  "projects": [
+    { "name": "Core" },
+    { "name": "App", "references": ["Core"] }
+  ]
+}

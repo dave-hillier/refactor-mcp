@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -115,9 +116,7 @@ internal static class MovingSupport
             var document = updated.GetDocument(id)!;
             var path = document.FilePath!;
             var text = await document.GetTextAsync(cancellationToken);
-            var encoding = File.Exists(path)
-                ? await RefactoringHelpers.GetFileEncodingAsync(path, cancellationToken)
-                : text.Encoding ?? new System.Text.UTF8Encoding(false);
+            var encoding = await EncodingOfAsync(path, cancellationToken);
             Directory.CreateDirectory(Path.GetDirectoryName(path)!);
             await File.WriteAllTextAsync(path, text.ToString(), encoding, cancellationToken);
             RefactoringHelpers.EvictFileCaches(path);
@@ -125,6 +124,24 @@ internal static class MovingSupport
 
         if (!string.IsNullOrEmpty(updated.FilePath))
             SessionRegistry.GetOrCreate(updated.FilePath).Replace(updated);
+    }
+
+    /// <summary>
+    /// The encoding a file already uses, so a rewrite neither adds nor drops a
+    /// byte order mark. New files are UTF-8 without one.
+    /// </summary>
+    private static async Task<Encoding> EncodingOfAsync(string path, CancellationToken cancellationToken)
+    {
+        if (!File.Exists(path))
+            return new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+
+        var encoding = await RefactoringHelpers.GetFileEncodingAsync(path, cancellationToken);
+        if (encoding is not UTF8Encoding)
+            return encoding;
+
+        var bytes = await File.ReadAllBytesAsync(path, cancellationToken);
+        var hasBom = bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF;
+        return new UTF8Encoding(encoderShouldEmitUTF8Identifier: hasBom);
     }
 
     private static IEnumerable<DocumentId> ChangedOrAddedDocuments(Solution original, Solution updated)

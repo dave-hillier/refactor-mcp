@@ -1,0 +1,8 @@
+{
+  "refactoring": "move-type-to-namespace",
+  "description": "Refuses a namespace that is not a valid dotted name",
+  "target": { "symbol": "T:Shop.Invoice" },
+  "arguments": { "namespace": "Shop.2024" },
+  "expect": "error",
+  "errorCode": "invalid-namespace"
+}

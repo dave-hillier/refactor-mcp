@@ -1,0 +1,6 @@
+{
+  "refactoring": "move-type-to-namespace",
+  "description": "Changes a file-scoped namespace, and a file with no usings gains one",
+  "target": { "symbol": "T:Shop.Invoice" },
+  "arguments": { "namespace": "Shop.Billing" }
+}

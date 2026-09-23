@@ -1,0 +1,6 @@
+{
+  "refactoring": "move-type-to-namespace",
+  "description": "Renames the namespace block of a file holding one type, and imports the new namespace where the type is used",
+  "target": { "symbol": "T:Shop.Invoice" },
+  "arguments": { "namespace": "Shop.Billing" }
+}
