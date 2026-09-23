@@ -1,0 +1,10 @@
+{
+  "refactoring": "replace-delegation-with-inheritance",
+  "description": "The recipe: derive from Person, inline each forwarding member, inline the field. Inline Method would put the private field into Payroll's calls, and no primitive turns the field into the instance itself, so the recipe cannot finish",
+  "status": "unimplemented",
+  "steps": [
+    { "refactoring": "change-base-type", "target": { "symbol": "T:Staff.Employee" }, "arguments": { "to": "Person" } },
+    { "refactoring": "inline-method", "target": { "symbol": "M:Staff.Employee.LastName" } },
+    { "refactoring": "inline-field", "target": { "symbol": "F:Staff.Employee._person" } }
+  ]
+}

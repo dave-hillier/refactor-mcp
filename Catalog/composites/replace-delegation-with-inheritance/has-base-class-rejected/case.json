@@ -1,0 +1,8 @@
+{
+  "refactoring": "replace-delegation-with-inheritance",
+  "description": "Employee already derives from Worker, and cannot derive from Person as well",
+  "target": { "symbol": "T:Staff.Employee" },
+  "arguments": { "field": "_person" },
+  "expect": "error",
+  "errorCode": "has-base-class"
+}

@@ -1,0 +1,8 @@
+{
+  "refactoring": "replace-delegation-with-inheritance",
+  "description": "The field is public, so code outside the class may reach the person through it",
+  "target": { "symbol": "T:Staff.Employee" },
+  "arguments": { "field": "Person" },
+  "expect": "error",
+  "errorCode": "field-not-private"
+}
