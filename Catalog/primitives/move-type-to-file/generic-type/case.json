@@ -1,0 +1,5 @@
+{
+  "refactoring": "move-type-to-file",
+  "description": "A generic type moves to a file named without its type parameters",
+  "target": { "symbol": "T:Shop.Result`1" }
+}
