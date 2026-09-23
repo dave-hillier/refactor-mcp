@@ -1,0 +1,8 @@
+{
+  "refactoring": "pull-up-field",
+  "description": "Refuses when another subclass declares a different member of that name, which would hide the moved field",
+  "target": { "symbol": "F:Shop.Manager.Rank" },
+  "expect": "error",
+  "errorCode": "conflicts-with-sibling",
+  "errorContains": "Engineer"
+}

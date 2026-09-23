@@ -1,0 +1,6 @@
+{
+  "refactoring": "pull-up-method",
+  "description": "Moves the documentation comment and body comments with the method, keeping nullable annotations",
+  "project": { "nullable": "enable" },
+  "target": { "symbol": "M:Shop.Manager.FindNickname(System.String)" }
+}

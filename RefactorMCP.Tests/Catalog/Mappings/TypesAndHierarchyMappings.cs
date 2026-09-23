@@ -57,7 +57,61 @@ internal sealed class TypesAndHierarchyMappings : ICatalogMappings
                 ("circular-base", "already derives from"),
                 ("base-members-in-use", "relies on members of"),
                 ("base-conversion-in-use", "converting to"))),
+
+        new CatalogMapping(
+            "pull-up-field",
+            "pull-up-field",
+            async context => await MemberArguments(context, "fieldName"),
+            Codes(
+                ("no-base-class", "has no base class"),
+                ("base-not-in-source", "is not declared in the solution"),
+                ("member-exists-in-base", "already has a member named"),
+                ("conflicts-with-sibling", "which would hide the pulled-up"),
+                ("uses-subclass-members", "which only"),
+                ("breaks-compilation", "would break the build"))),
+
+        new CatalogMapping(
+            "pull-up-method",
+            "pull-up-method",
+            async context =>
+            {
+                var arguments = await MemberArguments(context, "methodName", withLine: true);
+                if (context.HasArgument("abstract"))
+                    arguments["makeAbstract"] = context.RequiredArgument("abstract");
+                return arguments;
+            },
+            Codes(
+                ("no-base-class", "has no base class"),
+                ("base-not-in-source", "is not declared in the solution"),
+                ("member-exists-in-base", "already has a member named"),
+                ("conflicts-with-sibling", "which would hide the pulled-up"),
+                ("uses-subclass-members", "which only"),
+                ("base-not-abstract", "is not abstract"),
+                ("sibling-lacks-implementation", "does not implement"),
+                ("breaks-compilation", "would break the build"))),
     };
+
+    /// <summary>
+    /// Arguments for a tool that finds a member by its class and name, and by
+    /// the line of its declaration when overloads share the name.
+    /// </summary>
+    private static async Task<Dictionary<string, JsonElement>> MemberArguments(
+        StepContext context,
+        string memberParameter,
+        bool withLine = false)
+    {
+        var location = await context.SymbolLocationAsync();
+        var arguments = new Dictionary<string, JsonElement>
+        {
+            ["solutionPath"] = Json(context.SolutionPath),
+            ["filePath"] = Json(location.FilePath),
+            ["className"] = Json(location.Symbol.ContainingType.Name),
+            [memberParameter] = Json(location.Symbol.Name),
+        };
+        if (withLine)
+            arguments["line"] = Json(location.Line);
+        return arguments;
+    }
 
     private static void CopyOptional(
         StepContext context,

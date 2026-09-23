@@ -1,0 +1,5 @@
+{
+  "refactoring": "pull-up-method",
+  "description": "Moves one overload and leaves the other in the subclass",
+  "target": { "symbol": "M:Shop.Manager.Pay(System.Decimal)" }
+}

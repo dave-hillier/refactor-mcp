@@ -1,0 +1,9 @@
+{
+  "refactoring": "pull-up-method",
+  "description": "Refuses to declare an abstract method another subclass does not implement",
+  "target": { "symbol": "M:Shop.Manager.Bonus" },
+  "arguments": { "abstract": true },
+  "expect": "error",
+  "errorCode": "sibling-lacks-implementation",
+  "errorContains": "Engineer"
+}

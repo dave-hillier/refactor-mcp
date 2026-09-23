@@ -177,7 +177,7 @@ internal static class TypeRefactoringHelpers
     internal static IReadOnlyList<string> NamespacesUsedBy(SyntaxNode node, SemanticModel model)
     {
         var namespaces = new HashSet<string>(StringComparer.Ordinal);
-        foreach (var name in node.DescendantNodesAndSelf().OfType<SimpleNameSyntax>())
+        foreach (var name in node.DescendantNodesAndSelf().OfType<SimpleNameSyntax>().Where(n => !n.IsVar))
         {
             var symbol = model.GetSymbolInfo(name).Symbol;
             var owner = symbol switch

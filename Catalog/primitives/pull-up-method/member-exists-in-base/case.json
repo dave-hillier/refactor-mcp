@@ -1,0 +1,8 @@
+{
+  "refactoring": "pull-up-method",
+  "description": "Refuses when the base class already declares the method",
+  "target": { "symbol": "M:Shop.Manager.Describe" },
+  "expect": "error",
+  "errorCode": "member-exists-in-base",
+  "errorContains": "Describe"
+}

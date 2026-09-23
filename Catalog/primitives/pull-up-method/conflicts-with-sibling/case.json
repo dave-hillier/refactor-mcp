@@ -1,0 +1,8 @@
+{
+  "refactoring": "pull-up-method",
+  "description": "Refuses when another subclass has the same method with a different body, which would hide the moved one",
+  "target": { "symbol": "M:Shop.Manager.Title" },
+  "expect": "error",
+  "errorCode": "conflicts-with-sibling",
+  "errorContains": "Engineer"
+}
