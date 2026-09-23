@@ -1,0 +1,6 @@
+{
+  "refactoring": "change-type",
+  "description": "Widens a parameter to an interface, leaving callers in another file that pass the class",
+  "target": { "symbol": "M:Shop.Report.Print(Shop.FileWriter)" },
+  "arguments": { "parameter": "writer", "to": "IWriter" }
+}

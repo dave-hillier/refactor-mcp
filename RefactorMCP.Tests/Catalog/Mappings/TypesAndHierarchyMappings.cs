@@ -145,6 +145,42 @@ internal sealed class TypesAndHierarchyMappings : ICatalogMappings
                 ("breaks-compilation", "would break the build"))),
 
         new CatalogMapping(
+            "change-type",
+            "change-type",
+            async context =>
+            {
+                var arguments = new Dictionary<string, JsonElement>
+                {
+                    ["solutionPath"] = Json(context.SolutionPath),
+                    ["newType"] = context.RequiredArgument("to"),
+                };
+                if (context.Step.Target?.Caret is not null)
+                {
+                    var (line, column) = context.Caret();
+                    arguments["filePath"] = Json(context.TargetFilePath());
+                    arguments["name"] = Json(context.TokenAtCaret());
+                    arguments["line"] = Json(line);
+                    arguments["column"] = Json(column);
+                }
+                else
+                {
+                    var location = await context.SymbolLocationAsync();
+                    arguments["filePath"] = Json(location.FilePath);
+                    arguments["name"] = Json(location.Symbol.Name);
+                    arguments["line"] = Json(location.Line);
+                    arguments["column"] = Json(location.Column);
+                }
+
+                CopyOptional(context, arguments, "parameter", "parameterName");
+                return arguments;
+            },
+            Codes(
+                ("type-not-found", "No type named"),
+                ("parameter-not-found", "has no parameter named"),
+                ("incompatible-use", "breaks code that uses it"),
+                ("changes-overload", "would change which member"))),
+
+        new CatalogMapping(
             "push-down-field",
             "push-down-field",
             async context => await MemberArguments(context, "fieldName"),

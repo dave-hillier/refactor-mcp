@@ -1,0 +1,6 @@
+{
+  "refactoring": "change-type",
+  "description": "Replaces var with the interface for a local picked by the caret",
+  "target": { "file": "Report.cs", "caret": "marker" },
+  "arguments": { "to": "IWriter" }
+}

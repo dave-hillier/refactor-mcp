@@ -1,0 +1,7 @@
+{
+  "refactoring": "change-type",
+  "description": "Keeps a property nullable when changing its type",
+  "project": { "nullable": "enable" },
+  "target": { "symbol": "P:Shop.Report.Writer" },
+  "arguments": { "to": "IWriter" }
+}

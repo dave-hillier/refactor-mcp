@@ -1,0 +1,6 @@
+{
+  "refactoring": "change-type",
+  "description": "Returns a more general type when every caller only enumerates the result",
+  "target": { "symbol": "M:Shop.Store.Pending" },
+  "arguments": { "to": "IEnumerable<Order>" }
+}

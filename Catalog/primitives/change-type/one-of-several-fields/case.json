@@ -1,0 +1,6 @@
+{
+  "refactoring": "change-type",
+  "description": "Splits a declaration of several fields and changes only the target",
+  "target": { "symbol": "F:Shop.Report._backup" },
+  "arguments": { "to": "IWriter" }
+}

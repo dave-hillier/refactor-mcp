@@ -1,0 +1,6 @@
+{
+  "refactoring": "change-type",
+  "description": "Declares a field as the interface its uses need rather than the concrete class",
+  "target": { "symbol": "F:Shop.Report._writer" },
+  "arguments": { "to": "IWriter" }
+}

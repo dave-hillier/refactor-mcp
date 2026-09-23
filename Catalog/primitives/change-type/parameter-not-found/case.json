@@ -1,0 +1,9 @@
+{
+  "refactoring": "change-type",
+  "description": "Refuses a parameter name the method does not have",
+  "target": { "symbol": "M:Shop.Report.Print(Shop.FileWriter)" },
+  "arguments": { "parameter": "output", "to": "IWriter" },
+  "expect": "error",
+  "errorCode": "parameter-not-found",
+  "errorContains": "output"
+}
