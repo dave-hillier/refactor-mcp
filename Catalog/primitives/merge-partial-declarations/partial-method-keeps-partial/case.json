@@ -1,0 +1,5 @@
+{
+  "refactoring": "merge-partial-declarations",
+  "description": "Keeps the type partial when it declares a partial method, whose two halves end up together",
+  "target": { "symbol": "T:Shop.Customer", "file": "Customer.cs" }
+}

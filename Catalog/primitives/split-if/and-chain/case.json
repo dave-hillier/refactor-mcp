@@ -1,0 +1,5 @@
+{
+  "refactoring": "split-if",
+  "description": "A chain of && splits at its first operator, keeping the rest together",
+  "target": { "file": "Order.cs", "caret": "marker" }
+}

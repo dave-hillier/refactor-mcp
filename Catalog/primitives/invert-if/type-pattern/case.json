@@ -1,0 +1,5 @@
+{
+  "refactoring": "invert-if",
+  "description": "A type test becomes a negated pattern, keeping its designation",
+  "target": { "file": "Shapes.cs", "caret": "marker" }
+}

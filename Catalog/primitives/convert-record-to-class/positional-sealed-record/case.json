@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-record-to-class",
+  "description": "Turns a positional sealed record into a class with a constructor, init-only properties, Deconstruct and the equality, ToString and operator members the record provided",
+  "target": { "symbol": "T:Shop.Point" }
+}

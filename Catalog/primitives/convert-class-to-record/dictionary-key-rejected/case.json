@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-class-to-record",
+  "description": "Refuses when the class is used as a dictionary key, whose lookups would start matching equal instances",
+  "target": { "symbol": "T:Shop.Sku" },
+  "expect": "error",
+  "errorCode": "equality-observed",
+  "errorContains": "dictionary key or set element"
+}

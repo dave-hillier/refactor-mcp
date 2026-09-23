@@ -1,0 +1,9 @@
+{
+  "refactoring": "convert-anonymous-type-to-class",
+  "description": "Refuses an anonymous type whose property type is a method's type parameter",
+  "target": { "file": "Pairs.cs", "caret": "marker" },
+  "arguments": { "name": "Pair" },
+  "expect": "error",
+  "errorCode": "unnamable-property-type",
+  "errorContains": "First"
+}

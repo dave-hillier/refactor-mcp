@@ -1,0 +1,7 @@
+{
+  "refactoring": "merge-nested-if",
+  "description": "Refuses an if whose body holds no if to merge",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "no-inner-if"
+}

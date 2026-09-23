@@ -1,0 +1,6 @@
+{
+  "refactoring": "convert-tuple-to-named-type",
+  "description": "Declares a sealed record class instead of a record struct when kind is class, keeping element names that are already Pascal case",
+  "target": { "symbol": "M:Shop.Menu.Cheapest" },
+  "arguments": { "name": "Offer", "kind": "class" }
+}

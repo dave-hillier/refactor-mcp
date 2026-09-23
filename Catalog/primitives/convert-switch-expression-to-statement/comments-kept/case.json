@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-switch-expression-to-statement",
+  "description": "Comments above an arm move above its section, and comments before the statement stay before the switch",
+  "target": { "file": "Parser.cs", "caret": "marker" }
+}

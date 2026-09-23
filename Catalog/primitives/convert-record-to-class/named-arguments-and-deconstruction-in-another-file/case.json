@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-record-to-class",
+  "description": "Renames named arguments to the camel-case constructor parameters; deconstruction and equality in another file keep working",
+  "target": { "symbol": "T:Shop.Size" }
+}

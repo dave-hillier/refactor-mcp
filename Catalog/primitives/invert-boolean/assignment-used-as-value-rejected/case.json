@@ -1,0 +1,8 @@
+{
+  "refactoring": "invert-boolean",
+  "description": "Refuses an assignment whose value is used, which would see the inverted value",
+  "target": { "symbol": "F:Shop.Sample._ready" },
+  "arguments": { "name": "_waiting" },
+  "expect": "error",
+  "errorCode": "assignment-used-as-value"
+}

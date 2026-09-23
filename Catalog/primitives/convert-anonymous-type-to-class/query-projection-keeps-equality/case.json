@@ -1,0 +1,6 @@
+{
+  "refactoring": "convert-anonymous-type-to-class",
+  "description": "Replaces every creation of the same anonymous type in the method, including projection initializers, so Distinct and Equals still compare values",
+  "target": { "file": "Reports.cs", "caret": "marker" },
+  "arguments": { "name": "Row" }
+}

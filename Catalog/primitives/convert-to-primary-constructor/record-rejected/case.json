@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-to-primary-constructor",
+  "description": "Refuses a record, whose parameter list would declare properties rather than plain parameters",
+  "target": { "symbol": "T:Shop.Point" },
+  "expect": "error",
+  "errorCode": "unsupported-type"
+}

@@ -1,0 +1,6 @@
+{
+  "refactoring": "invert-boolean",
+  "description": "A field that defaulted to false is initialised to true, and compound assignments swap & and |",
+  "target": { "symbol": "F:Shop.Document._dirty" },
+  "arguments": { "name": "_saved" }
+}

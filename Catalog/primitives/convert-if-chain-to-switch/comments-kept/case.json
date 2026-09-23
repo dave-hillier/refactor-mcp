@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-if-chain-to-switch",
+  "description": "Comments inside each branch stay with its statements",
+  "target": { "file": "Stock.cs", "caret": "marker" }
+}

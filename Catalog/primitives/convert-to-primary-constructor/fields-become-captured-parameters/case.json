@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-to-primary-constructor",
+  "description": "Replaces a constructor that only assigns private readonly fields with a primary constructor whose parameters the members use directly",
+  "target": { "symbol": "T:Shop.OrderService" }
+}

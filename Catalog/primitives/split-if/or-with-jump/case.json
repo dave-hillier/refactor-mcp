@@ -1,0 +1,5 @@
+{
+  "refactoring": "split-if",
+  "description": "An if on a || b whose body always jumps away becomes two ifs with the same body, the comment staying on the first",
+  "target": { "file": "Validator.cs", "caret": "marker" }
+}
