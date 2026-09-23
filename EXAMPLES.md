@@ -1804,6 +1804,62 @@ dotnet run --project RefactorMCP.ConsoleApp -- --json introduce-generic-type-par
 
 <!-- Loops and expressions: examples for this group's tools go below this line. -->
 
+These tools act on the loop, statement or expression under a caret: any line
+and column inside it.
+
+**Convert For to Foreach**: `for (int i = 0; i < orders.Count; i++)` that only
+reads `orders[i]` becomes `foreach (Order order in orders)`. The optional
+`name` names the element.
+
+```bash
+refactor --json convert-for-to-foreach \
+    '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Foo.cs","line":12,"column":9}'
+```
+
+**Convert Foreach to For**: `foreach (var order in orders)` becomes an index
+loop over `orders.Count` that starts with `var order = orders[i];`. The
+optional `name` names the index.
+
+```bash
+refactor --json convert-foreach-to-for \
+    '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Foo.cs","line":12,"column":9,"name":"index"}'
+```
+
+**Convert Foreach to LINQ**: a loop that adds the matching elements to a new
+list, sums, counts or looks for a match becomes `Where`, `Select` and `ToList`,
+`Sum`, `Count` or `Any`.
+
+```bash
+refactor --json convert-foreach-to-linq \
+    '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Foo.cs","line":13,"column":9}'
+```
+
+**Convert LINQ to Foreach**: `var names = users.Where(...).Select(...).ToList();`
+becomes a list filled by a `foreach`. The optional `name` names the local that
+holds a returned query's result.
+
+```bash
+refactor --json convert-linq-to-foreach \
+    '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Foo.cs","line":12,"column":21}'
+```
+
+**Convert String Concatenation to Interpolation**: `"Total: " + count + " items"`
+becomes `$"Total: {count} items"`.
+
+```bash
+refactor --json convert-concatenation-to-interpolation \
+    '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Foo.cs","line":12,"column":20}'
+```
+
+**Introduce Using Declaration**: `using (var reader = ...) { ... }` at the end
+of its block becomes `using var reader = ...;` followed by the block's
+statements.
+
+```bash
+refactor --json introduce-using-declaration \
+    '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Foo.cs","line":12,"column":9}'
+```
+
 <!-- End of Loops and expressions. -->
 
 ### Naming and housekeeping

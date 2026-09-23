@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-linq-to-foreach",
+  "description": "A returned ToList fills a local named result, which is then returned",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  }
+}

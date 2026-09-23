@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-linq-to-foreach",
+  "description": "Comments above and after the statement stay with the code that replaces it",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "refactoring": "convert-linq-to-foreach",
+  "description": "Refuses an operator the loop form does not cover",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  },
+  "errorContains": "OrderBy",
+  "expect": "error",
+  "errorCode": "unsupported-query"
+}

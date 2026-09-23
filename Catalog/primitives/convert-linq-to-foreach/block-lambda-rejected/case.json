@@ -1,0 +1,10 @@
+{
+  "refactoring": "convert-linq-to-foreach",
+  "description": "Refuses a lambda with a block body",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  },
+  "expect": "error",
+  "errorCode": "unsupported-query"
+}

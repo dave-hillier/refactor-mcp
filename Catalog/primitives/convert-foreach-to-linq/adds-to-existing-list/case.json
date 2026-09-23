@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-foreach-to-linq",
+  "description": "Adding to a list that already exists becomes AddRange",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  }
+}

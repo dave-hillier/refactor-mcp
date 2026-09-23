@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-linq-to-foreach",
+  "description": "Where and Sum become a total starting at zero, written with the sum's type, and later lambdas use the loop variable",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  }
+}

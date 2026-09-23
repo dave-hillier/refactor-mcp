@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-linq-to-foreach",
+  "description": "An explicitly typed local keeps its type, and a Where alone adds the element itself",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-foreach-to-linq",
+  "description": "A loop that adds a projection of the matching elements to a new list becomes Where, Select and ToList",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "refactoring": "convert-foreach-to-linq",
+  "description": "Refuses a loop that stops early other than to find a match",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  },
+  "expect": "error",
+  "errorCode": "early-exit"
+}

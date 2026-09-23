@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-foreach-to-linq",
+  "description": "A loop that adds a value of the matching elements to a total starting at zero becomes Where and Sum",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  }
+}
