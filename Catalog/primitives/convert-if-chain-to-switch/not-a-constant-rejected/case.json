@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-if-chain-to-switch",
+  "description": "Refuses a comparison with a value that is not constant",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "unsupported-condition"
+}

@@ -1984,6 +1984,84 @@ var order = Order.Create("tea", 2);
 
 <!-- Conditionals: examples for this group's tools go below this line. -->
 
+The tools that act on a statement take the line and column of its keyword:
+`if` or `switch`, or anywhere on a switch expression before its opening
+brace.
+
+#### Invert If
+
+Negates the condition and swaps the branches. Without an `else`, an `if` that
+ends a method or loop body becomes an early `return` or `continue`, and an
+early return becomes an `if` around the code after it.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json invert-if '{"solutionPath":"./RefactorMCP.sln","filePath":"./Shop/Shipping.cs","line":10,"column":13}'
+```
+
+#### Merge Nested If
+
+Joins an `if` whose only statement is another `if` into one `if` on both
+conditions.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json merge-nested-if '{"solutionPath":"./RefactorMCP.sln","filePath":"./Shop/Shipping.cs","line":9,"column":13}'
+```
+
+#### Split If
+
+Splits an `if` on its first `&&` into nested ifs, or on its first `||` into
+two ifs with the same body.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json split-if '{"solutionPath":"./RefactorMCP.sln","filePath":"./Shop/Validator.cs","line":8,"column":13}'
+```
+
+#### Invert Boolean
+
+Renames a `bool` field, property, method or local and negates every value it
+is given and every use, so `IsEnabled` can become `IsDisabled`. The position
+is the symbol's declaration or a use of it.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json invert-boolean '{"solutionPath":"./RefactorMCP.sln","filePath":"./Shop/Feature.cs","line":7,"column":21,"newName":"IsDisabled"}'
+```
+
+#### Convert If Chain to Switch
+
+Turns an `if` / `else if` chain comparing one value with constants or patterns
+into a switch statement.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json convert-if-chain-to-switch '{"solutionPath":"./RefactorMCP.sln","filePath":"./Shop/Shipping.cs","line":9,"column":13}'
+```
+
+#### Convert Switch Statement to Expression
+
+Turns a switch statement whose sections all return, or all assign one
+variable, into a switch expression.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json convert-switch-statement-to-expression '{"solutionPath":"./RefactorMCP.sln","filePath":"./Shop/Shipping.cs","line":7,"column":13}'
+```
+
+#### Convert Switch Expression to Statement
+
+Turns a switch expression that is returned, assigned or initialises a local
+into a switch statement.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json convert-switch-expression-to-statement '{"solutionPath":"./RefactorMCP.sln","filePath":"./Shop/Shipping.cs","line":7,"column":25}'
+```
+
+#### Use Pattern Matching
+
+Replaces `x is T` followed by casts `(T)x`, or `x as T` followed by a null
+check, with a declaration pattern. `name` optionally names the variable.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json use-pattern-matching '{"solutionPath":"./RefactorMCP.sln","filePath":"./Shop/Shapes.cs","line":14,"column":13,"name":"circle"}'
+```
+
 <!-- End of Conditionals. -->
 
 ### Loops and expressions

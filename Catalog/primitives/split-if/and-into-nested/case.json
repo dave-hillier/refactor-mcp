@@ -1,0 +1,5 @@
+{
+  "refactoring": "split-if",
+  "description": "An if on a && b becomes an if on a holding an if on b",
+  "target": { "file": "Shipping.cs", "caret": "marker" }
+}

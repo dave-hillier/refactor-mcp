@@ -1,0 +1,5 @@
+{
+  "refactoring": "invert-if",
+  "description": "Negating && and || follows De Morgan's laws, parenthesising where precedence needs it",
+  "target": { "file": "Discount.cs", "caret": "marker" }
+}

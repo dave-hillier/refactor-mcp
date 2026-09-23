@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-switch-statement-to-expression",
+  "description": "A switch whose every section assigns one variable and breaks becomes an assignment of a switch expression",
+  "target": { "file": "Pricing.cs", "caret": "marker" }
+}

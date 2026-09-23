@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-switch-statement-to-expression",
+  "description": "Refuses sections that do more than return or assign one value",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "unsupported-section"
+}

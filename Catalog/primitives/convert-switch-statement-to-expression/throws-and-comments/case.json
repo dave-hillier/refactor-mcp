@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-switch-statement-to-expression",
+  "description": "A section that throws becomes a throw expression, and comments on sections stay with their arms",
+  "target": { "file": "Parser.cs", "caret": "marker" }
+}

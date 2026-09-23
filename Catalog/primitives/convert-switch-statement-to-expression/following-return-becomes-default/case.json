@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-switch-statement-to-expression",
+  "description": "Without a default, the return after the switch becomes the discard arm",
+  "target": { "file": "Shapes.cs", "caret": "marker" }
+}

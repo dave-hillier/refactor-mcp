@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-switch-expression-to-statement",
+  "description": "Refuses a switch expression that is part of a larger expression",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "unsupported-context"
+}

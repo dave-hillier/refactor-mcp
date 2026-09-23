@@ -1,0 +1,6 @@
+{
+  "refactoring": "invert-boolean",
+  "description": "Inverts one overload of a method, negating each return and every call in another file, leaving the other overload alone",
+  "target": { "symbol": "M:Shop.Validator.IsValid(System.Int32)" },
+  "arguments": { "name": "IsInvalid" }
+}
