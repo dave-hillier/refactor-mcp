@@ -1,0 +1,6 @@
+{
+  "refactoring": "encapsulate-field",
+  "description": "A protected field used by a subclass gets a protected property with the given name, and the subclass uses the property",
+  "target": { "symbol": "F:Shop.Product._title" },
+  "arguments": { "name": "DisplayTitle" }
+}

@@ -1,0 +1,8 @@
+{
+  "refactoring": "introduce-field",
+  "description": "Refuses an expression whose type uses a type parameter of the method, which a field cannot name",
+  "target": { "file": "Sample.cs", "selection": "marker" },
+  "arguments": { "name": "_items" },
+  "expect": "error",
+  "errorCode": "method-type-parameter"
+}

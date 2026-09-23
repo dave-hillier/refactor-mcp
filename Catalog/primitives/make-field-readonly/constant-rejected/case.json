@@ -1,0 +1,7 @@
+{
+  "refactoring": "make-field-readonly",
+  "description": "Refuses a constant",
+  "target": { "symbol": "F:Shop.Sample.Limit" },
+  "expect": "error",
+  "errorCode": "constant-field"
+}

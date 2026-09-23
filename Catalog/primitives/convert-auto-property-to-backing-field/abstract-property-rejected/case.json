@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-auto-property-to-backing-field",
+  "description": "Refuses an abstract property, which looks like an auto-property but has no storage",
+  "target": { "symbol": "P:Shop.Shape.Sides" },
+  "expect": "error",
+  "errorCode": "not-auto-property"
+}

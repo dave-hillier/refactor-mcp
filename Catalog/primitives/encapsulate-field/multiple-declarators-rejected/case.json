@@ -1,0 +1,7 @@
+{
+  "refactoring": "encapsulate-field",
+  "description": "Refuses a field declared alongside others",
+  "target": { "symbol": "F:Shop.Point.X" },
+  "expect": "error",
+  "errorCode": "multiple-declarators"
+}

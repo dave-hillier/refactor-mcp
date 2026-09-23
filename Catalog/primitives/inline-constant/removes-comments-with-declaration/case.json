@@ -1,0 +1,5 @@
+{
+  "refactoring": "inline-constant",
+  "description": "The constant's own comments go with it, the blank line after it does not linger, and comments at the uses stay",
+  "target": { "symbol": "F:Shop.Greeter.Greeting" }
+}

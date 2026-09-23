@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-to-auto-property",
+  "description": "Refuses when the backing field is visible outside the type, where removing it would break its users",
+  "target": { "symbol": "P:Shop.Product.Price" },
+  "expect": "error",
+  "errorCode": "backing-field-not-private"
+}

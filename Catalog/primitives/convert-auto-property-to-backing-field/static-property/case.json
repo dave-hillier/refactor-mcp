@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-auto-property-to-backing-field",
+  "description": "A static auto-property gets a static field",
+  "target": { "symbol": "P:Shop.Registry.Instances" }
+}

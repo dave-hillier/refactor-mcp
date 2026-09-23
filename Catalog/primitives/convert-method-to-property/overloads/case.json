@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-method-to-property",
+  "description": "Only the parameterless overload becomes a property; calls to the other overload are left alone",
+  "target": { "symbol": "M:Shop.Item.GetPrice" }
+}

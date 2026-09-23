@@ -1,0 +1,6 @@
+{
+  "refactoring": "convert-method-to-property",
+  "description": "A nullable return type becomes the property's type",
+  "target": { "symbol": "M:Shop.Profile.GetNickname" },
+  "project": { "nullable": "enable" }
+}

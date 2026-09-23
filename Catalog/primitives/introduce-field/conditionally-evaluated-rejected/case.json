@@ -1,0 +1,8 @@
+{
+  "refactoring": "introduce-field",
+  "description": "Refuses an expression its statement may not evaluate, since assigning it first would evaluate it always",
+  "target": { "file": "Sample.cs", "selection": "marker" },
+  "arguments": { "name": "_large" },
+  "expect": "error",
+  "errorCode": "conditionally-evaluated"
+}

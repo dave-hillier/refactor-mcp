@@ -1,0 +1,5 @@
+{
+  "refactoring": "encapsulate-field",
+  "description": "A public field becomes a private field behind a public property of the same name; code in other types uses the property and the type itself keeps using the field",
+  "target": { "symbol": "F:Shop.Order.Quantity" }
+}

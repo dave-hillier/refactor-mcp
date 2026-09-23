@@ -1,0 +1,7 @@
+{
+  "refactoring": "make-field-readonly",
+  "description": "Refuses a field assigned by a lambda written in the constructor, which may run after construction",
+  "target": { "symbol": "F:Shop.Button._clicks" },
+  "expect": "error",
+  "errorCode": "assigned-outside-constructor"
+}

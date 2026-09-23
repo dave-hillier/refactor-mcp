@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-auto-property-to-backing-field",
+  "description": "Refuses a field name another member already has",
+  "target": { "symbol": "P:Shop.Sample.Count" },
+  "expect": "error",
+  "errorCode": "name-conflict",
+  "errorContains": "'_count'"
+}

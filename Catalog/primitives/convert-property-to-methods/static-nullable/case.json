@@ -1,0 +1,6 @@
+{
+  "refactoring": "convert-property-to-methods",
+  "description": "A static nullable property gives static methods with the same nullable type",
+  "target": { "symbol": "P:Shop.Registry.Last" },
+  "project": { "nullable": "enable" }
+}

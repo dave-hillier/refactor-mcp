@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-to-auto-property",
+  "description": "An expression-bodied property over a readonly field becomes a get-only auto-property, assigned by the constructor",
+  "target": { "symbol": "P:Shop.Product.Code" }
+}

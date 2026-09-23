@@ -1,0 +1,7 @@
+{
+  "refactoring": "make-field-readonly",
+  "description": "Refuses a field that a method assigns",
+  "target": { "symbol": "F:Shop.Counter._count" },
+  "expect": "error",
+  "errorCode": "assigned-outside-constructor"
+}

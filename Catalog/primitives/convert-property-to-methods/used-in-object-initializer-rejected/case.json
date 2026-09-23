@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-property-to-methods",
+  "description": "Refuses a property set in an object initialiser, which cannot call a method",
+  "target": { "symbol": "P:Shop.Order.Quantity" },
+  "expect": "error",
+  "errorCode": "used-in-object-initializer"
+}

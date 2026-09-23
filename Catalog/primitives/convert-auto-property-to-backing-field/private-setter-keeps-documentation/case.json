@@ -1,0 +1,6 @@
+{
+  "refactoring": "convert-auto-property-to-backing-field",
+  "description": "Accessor modifiers carry over to the new accessors, and the property keeps its documentation and attributes",
+  "target": { "symbol": "P:Shop.Counter.Value" },
+  "arguments": { "name": "_current" }
+}

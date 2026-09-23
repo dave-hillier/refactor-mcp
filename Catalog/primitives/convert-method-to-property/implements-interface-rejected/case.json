@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-method-to-property",
+  "description": "Refuses a method that implements an interface member, which would no longer be implemented",
+  "target": { "symbol": "M:Shop.Book.GetTitle" },
+  "expect": "error",
+  "errorCode": "implements-interface"
+}

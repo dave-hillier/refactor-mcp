@@ -1,0 +1,6 @@
+{
+  "refactoring": "convert-setter-to-init",
+  "description": "A nullable property keeps its annotation",
+  "target": { "symbol": "P:Shop.Profile.Nickname" },
+  "project": { "nullable": "enable" }
+}

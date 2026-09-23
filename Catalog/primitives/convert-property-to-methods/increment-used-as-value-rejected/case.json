@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-property-to-methods",
+  "description": "Refuses an increment whose value is used, which a pair of calls cannot express as one expression",
+  "target": { "symbol": "P:Shop.Counter.Value" },
+  "expect": "error",
+  "errorCode": "increment-used-as-value"
+}

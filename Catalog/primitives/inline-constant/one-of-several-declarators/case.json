@@ -1,0 +1,5 @@
+{
+  "refactoring": "inline-constant",
+  "description": "A constant declared alongside others is removed from the declaration, which keeps the rest",
+  "target": { "symbol": "F:Shop.Sizes.Medium" }
+}

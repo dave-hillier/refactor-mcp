@@ -1,0 +1,6 @@
+{
+  "refactoring": "make-field-readonly",
+  "description": "A nullable field assigned by an init accessor becomes readonly, which init accessors may assign",
+  "target": { "symbol": "F:Shop.Profile._nickname" },
+  "project": { "nullable": "enable" }
+}

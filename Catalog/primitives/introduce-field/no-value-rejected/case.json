@@ -1,0 +1,8 @@
+{
+  "refactoring": "introduce-field",
+  "description": "Refuses an expression that produces no value",
+  "target": { "file": "Sample.cs", "selection": "marker" },
+  "arguments": { "name": "_written" },
+  "expect": "error",
+  "errorCode": "no-value"
+}

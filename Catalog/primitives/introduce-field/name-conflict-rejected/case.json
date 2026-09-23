@@ -1,0 +1,9 @@
+{
+  "refactoring": "introduce-field",
+  "description": "Refuses a name another member of the type already has",
+  "target": { "file": "Sample.cs", "selection": "marker" },
+  "arguments": { "name": "_total" },
+  "expect": "error",
+  "errorCode": "name-conflict",
+  "errorContains": "'_total'"
+}

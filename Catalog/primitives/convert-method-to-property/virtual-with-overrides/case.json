@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-method-to-property",
+  "description": "A virtual method becomes a virtual property, and every override becomes an overriding property",
+  "target": { "symbol": "M:Shop.Product.GetLabel" }
+}

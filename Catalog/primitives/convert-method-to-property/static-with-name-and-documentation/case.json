@@ -1,0 +1,6 @@
+{
+  "refactoring": "convert-method-to-property",
+  "description": "A static method becomes a static property with the given name, keeping its documentation",
+  "target": { "symbol": "M:Shop.Settings.CreateDefault" },
+  "arguments": { "name": "Default" }
+}

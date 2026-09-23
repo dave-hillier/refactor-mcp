@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-to-auto-property",
+  "description": "Uses of the field in another part of a partial type read the property, and the property's documentation and accessor modifiers are kept",
+  "target": { "symbol": "P:Shop.Order.Total" }
+}

@@ -1,0 +1,7 @@
+{
+  "refactoring": "inline-field",
+  "description": "Refuses a field that is assigned somewhere other than its initialiser",
+  "target": { "symbol": "F:Shop.Counter._step" },
+  "expect": "error",
+  "errorCode": "written-after-initialization"
+}

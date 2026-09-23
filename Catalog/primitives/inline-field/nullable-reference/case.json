@@ -1,0 +1,6 @@
+{
+  "refactoring": "inline-field",
+  "description": "A field declared nullable is replaced by its value, and the code keeps its nullable annotations",
+  "target": { "symbol": "F:Shop.Profile._fallback" },
+  "project": { "nullable": "enable" }
+}

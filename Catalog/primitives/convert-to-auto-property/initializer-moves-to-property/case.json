@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-to-auto-property",
+  "description": "The field's initialiser becomes the property's, and expression-bodied accessors are recognised",
+  "target": { "symbol": "P:Shop.Customer.Name" }
+}

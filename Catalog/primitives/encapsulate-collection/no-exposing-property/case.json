@@ -1,0 +1,5 @@
+{
+  "refactoring": "encapsulate-collection",
+  "description": "A list no property exposes gets a read-only property after the fields, then Add and Remove methods; singular names drop -ies to -y",
+  "target": { "symbol": "F:Shop.Journal._entries" }
+}

@@ -1,0 +1,6 @@
+{
+  "refactoring": "convert-auto-property-to-backing-field",
+  "description": "An init accessor gets a readonly field, which init may assign, and the nullable annotation carries over",
+  "target": { "symbol": "P:Shop.Profile.Nickname" },
+  "project": { "nullable": "enable" }
+}

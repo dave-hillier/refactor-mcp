@@ -1,0 +1,6 @@
+{
+  "refactoring": "introduce-field",
+  "description": "Comments above the statement stay above it, now above the assignment that opens it, and a trailing comment stays on its line",
+  "target": { "file": "Converter.cs", "selection": "marker" },
+  "arguments": { "name": "_converted" }
+}

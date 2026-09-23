@@ -1,0 +1,7 @@
+{
+  "refactoring": "inline-field",
+  "description": "Refuses a field that has no initialiser to inline",
+  "target": { "symbol": "F:Shop.Counter._step" },
+  "expect": "error",
+  "errorCode": "no-initializer"
+}

@@ -1,0 +1,5 @@
+{
+  "refactoring": "inline-field",
+  "description": "The value is parenthesised where the use binds more tightly than the initialiser",
+  "target": { "symbol": "F:Shop.Pricing._markup" }
+}

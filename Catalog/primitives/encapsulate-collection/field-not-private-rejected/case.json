@@ -1,0 +1,7 @@
+{
+  "refactoring": "encapsulate-collection",
+  "description": "Refuses a list field that is visible outside the type; encapsulate the field first",
+  "target": { "symbol": "F:Shop.Order.Tags" },
+  "expect": "error",
+  "errorCode": "field-not-private"
+}

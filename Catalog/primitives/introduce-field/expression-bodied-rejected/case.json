@@ -1,0 +1,8 @@
+{
+  "refactoring": "introduce-field",
+  "description": "Refuses a non-constant expression in an expression-bodied member, which has no statement to assign the field before",
+  "target": { "file": "Sample.cs", "selection": "marker" },
+  "arguments": { "name": "_doubled" },
+  "expect": "error",
+  "errorCode": "expression-bodied-member"
+}

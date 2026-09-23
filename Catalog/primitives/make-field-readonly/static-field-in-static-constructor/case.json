@@ -1,0 +1,5 @@
+{
+  "refactoring": "make-field-readonly",
+  "description": "A static field assigned only by the static constructor becomes static readonly",
+  "target": { "symbol": "F:Shop.Registry._started" }
+}

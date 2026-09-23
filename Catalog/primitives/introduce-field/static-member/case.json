@@ -1,0 +1,6 @@
+{
+  "refactoring": "introduce-field",
+  "description": "An expression in a static method becomes a static field",
+  "target": { "file": "Labels.cs", "selection": "marker" },
+  "arguments": { "name": "_upperName" }
+}

@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-setter-to-init",
+  "description": "A setter only used by object initialisers, here in another file, becomes init",
+  "target": { "symbol": "P:Shop.Customer.Name" }
+}

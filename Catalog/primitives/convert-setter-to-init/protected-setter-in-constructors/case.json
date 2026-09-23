@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-setter-to-init",
+  "description": "A protected setter assigned by constructors, including a derived type's, becomes a protected init accessor, keeping its documentation",
+  "target": { "symbol": "P:Shop.Product.Code" }
+}

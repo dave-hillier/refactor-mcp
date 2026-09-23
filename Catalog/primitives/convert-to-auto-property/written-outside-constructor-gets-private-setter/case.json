@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-to-auto-property",
+  "description": "A get-only property whose field the type writes after construction gets a private setter",
+  "target": { "symbol": "P:Shop.Counter.Value" }
+}

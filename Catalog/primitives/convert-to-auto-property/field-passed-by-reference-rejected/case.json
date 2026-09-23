@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-to-auto-property",
+  "description": "Refuses when the backing field is passed by reference, which a property cannot be",
+  "target": { "symbol": "P:Shop.Counter.Hits" },
+  "expect": "error",
+  "errorCode": "field-passed-by-reference"
+}

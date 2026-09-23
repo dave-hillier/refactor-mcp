@@ -1,0 +1,5 @@
+{
+  "refactoring": "make-field-readonly",
+  "description": "A field that is already readonly is left as it is",
+  "target": { "symbol": "F:Shop.Sample._limit" }
+}

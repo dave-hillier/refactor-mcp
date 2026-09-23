@@ -1,0 +1,7 @@
+{
+  "refactoring": "introduce-field",
+  "description": "With nullable reference types enabled, a reference-type field assigned in a member is declared nullable, since no constructor assigns it",
+  "target": { "file": "Greeter.cs", "selection": "marker" },
+  "arguments": { "name": "_trimmed" },
+  "project": { "nullable": "enable" }
+}

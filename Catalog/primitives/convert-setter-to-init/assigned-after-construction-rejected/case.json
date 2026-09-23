@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-setter-to-init",
+  "description": "Refuses a property that code assigns after the object is constructed",
+  "target": { "symbol": "P:Shop.Customer.Name" },
+  "expect": "error",
+  "errorCode": "assigned-after-construction"
+}

@@ -1,0 +1,5 @@
+{
+  "refactoring": "inline-constant",
+  "description": "Replaces every use of a private constant with its value and removes the declaration",
+  "target": { "symbol": "F:Shop.Session.SecondsPerMinute" }
+}

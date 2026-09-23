@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-setter-to-init",
+  "description": "Refuses a property with no setter",
+  "target": { "symbol": "P:Shop.Sample.Name" },
+  "expect": "error",
+  "errorCode": "no-setter"
+}

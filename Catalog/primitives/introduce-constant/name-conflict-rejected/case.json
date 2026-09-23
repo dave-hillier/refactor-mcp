@@ -1,0 +1,9 @@
+{
+  "refactoring": "introduce-constant",
+  "description": "Refuses a name another member of the type already has",
+  "target": { "file": "Sample.cs", "selection": "marker" },
+  "arguments": { "name": "Limit" },
+  "expect": "error",
+  "errorCode": "name-conflict",
+  "errorContains": "'Limit'"
+}

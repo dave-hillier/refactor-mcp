@@ -1,0 +1,6 @@
+{
+  "refactoring": "introduce-field",
+  "description": "Given a type and no selection, adds a readonly field of that type holding a new instance, after the existing fields",
+  "target": { "symbol": "T:Shop.Customer" },
+  "arguments": { "type": "Address", "name": "_address" }
+}

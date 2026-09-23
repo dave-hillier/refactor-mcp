@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-property-to-methods",
+  "description": "An expression-bodied property becomes a Get method that keeps the property's documentation",
+  "target": { "symbol": "P:Shop.Basket.Total" }
+}

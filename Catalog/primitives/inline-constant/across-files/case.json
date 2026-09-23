@@ -1,0 +1,5 @@
+{
+  "refactoring": "inline-constant",
+  "description": "Uses in other files are replaced too; names in the value are qualified where the use needs it, and the value is parenthesised where precedence requires",
+  "target": { "symbol": "F:Shop.Limits.MaxItems" }
+}

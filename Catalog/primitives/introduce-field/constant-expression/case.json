@@ -1,0 +1,6 @@
+{
+  "refactoring": "introduce-field",
+  "description": "A constant expression becomes a readonly field initialised where it is declared",
+  "target": { "file": "Session.cs", "selection": "marker" },
+  "arguments": { "name": "_secondsPerMinute" }
+}

@@ -1,0 +1,6 @@
+{
+  "refactoring": "introduce-constant",
+  "description": "A selected literal becomes a private constant of the containing type",
+  "target": { "file": "Session.cs", "selection": "marker" },
+  "arguments": { "name": "SecondsPerMinute" }
+}
