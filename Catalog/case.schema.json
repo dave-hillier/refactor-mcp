@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Refactoring catalog case",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["refactoring"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "refactoring": {
+      "description": "The catalog name of the refactoring, matching its directory, e.g. extract-method.",
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "description": { "type": "string" },
+    "target": { "$ref": "#/$defs/target" },
+    "arguments": { "$ref": "#/$defs/arguments" },
+    "steps": {
+      "description": "For a composite run as its recipe: the primitive operations in order. Each step carries its own target.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["refactoring"],
+        "properties": {
+          "refactoring": { "type": "string" },
+          "target": { "$ref": "#/$defs/target" },
+          "arguments": { "$ref": "#/$defs/arguments" }
+        }
+      }
+    },
+    "expect": { "enum": ["success", "error"], "default": "success" },
+    "errorCode": {
+      "description": "A stable, kebab-case code for the refusal. The runner's adapter maps it to the implementation's message.",
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "errorContains": {
+      "description": "A fragment the error message must contain, for detail a code does not capture.",
+      "type": "string"
+    },
+    "status": {
+      "description": "Set while the implementation does not support the case. The case is skipped while it fails and fails once it passes.",
+      "enum": ["unimplemented"]
+    },
+    "project": { "$ref": "#/$defs/projectSettings" },
+    "projects": {
+      "description": "Several projects. Each project's files live in before/<name>/ and after/<name>/.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string" },
+          "references": { "type": "array", "items": { "type": "string" } },
+          "settings": { "$ref": "#/$defs/projectSettings" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "file": { "description": "Path relative to before/.", "type": "string" },
+        "symbol": {
+          "description": "A documentation comment id, e.g. M:Shop.Order.Total(System.Int32).",
+          "type": "string"
+        },
+        "selection": {
+          "description": "marker: the /*[*/ ... /*]*/ markers in file.",
+          "enum": ["marker"]
+        },
+        "caret": {
+          "description": "marker: the /*^*/ marker in file.",
+          "enum": ["marker"]
+        },
+        "range": {
+          "description": "startLine:startColumn-endLine:endColumn, 1-based, end exclusive. A fallback for when markers do not fit.",
+          "type": "string",
+          "pattern": "^[0-9]+:[0-9]+-[0-9]+:[0-9]+$"
+        }
+      }
+    },
+    "arguments": {
+      "description": "Arguments named in catalog terms, not tool parameter names.",
+      "type": "object"
+    },
+    "projectSettings": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "langVersion": { "type": "string" },
+        "nullable": { "enum": ["enable", "disable", "warnings", "annotations"] }
+      }
+    }
+  }
+}

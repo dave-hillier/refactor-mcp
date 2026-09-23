@@ -1,0 +1,6 @@
+{
+  "refactoring": "rename",
+  "description": "Renames one overload of a method and its calls in another file, leaving the other overload alone",
+  "target": { "symbol": "M:Shop.Order.Total(System.Int32)" },
+  "arguments": { "name": "TotalWithDiscount" }
+}

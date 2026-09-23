@@ -1,0 +1,6 @@
+{
+  "refactoring": "invert-if",
+  "description": "Negates the condition of an if with an else and swaps the branches",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "status": "unimplemented"
+}

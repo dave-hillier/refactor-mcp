@@ -1,0 +1,6 @@
+{
+  "refactoring": "extract-method",
+  "description": "Statements that await produce an async method returning Task, and the call is awaited",
+  "target": { "file": "Sample.cs", "selection": "marker" },
+  "arguments": { "name": "Pause" }
+}

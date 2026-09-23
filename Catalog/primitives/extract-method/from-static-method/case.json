@@ -1,0 +1,7 @@
+{
+  "refactoring": "extract-method",
+  "description": "Extracting from a static method creates a static method, callable without an instance",
+  "target": { "file": "Sample.cs", "selection": "marker" },
+  "arguments": { "name": "Report" },
+  "status": "unimplemented"
+}

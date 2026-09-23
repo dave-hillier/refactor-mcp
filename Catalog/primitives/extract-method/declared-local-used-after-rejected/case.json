@@ -1,0 +1,9 @@
+{
+  "refactoring": "extract-method",
+  "description": "Refuses when the block declares a local the rest of the method still reads",
+  "target": { "file": "Sample.cs", "selection": "marker" },
+  "arguments": { "name": "WriteAdjusted" },
+  "expect": "error",
+  "errorCode": "declared-local-used-after",
+  "errorContains": "'adjusted'"
+}

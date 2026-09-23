@@ -1,0 +1,6 @@
+{
+  "refactoring": "rename",
+  "description": "Renames a local variable chosen by caret, and every use of it",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "arguments": { "name": "total" }
+}

@@ -1,0 +1,6 @@
+{
+  "refactoring": "extract-method",
+  "description": "Extracts a guard statement into a private method taking the parameters it reads",
+  "target": { "file": "Sample.cs", "selection": "marker" },
+  "arguments": { "name": "ValidateInputs" }
+}

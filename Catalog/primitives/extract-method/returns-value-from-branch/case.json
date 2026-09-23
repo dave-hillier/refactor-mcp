@@ -1,0 +1,6 @@
+{
+  "refactoring": "extract-method",
+  "description": "Extracts a block that returns on one branch; the caller returns only when the extracted method produced a value",
+  "target": { "file": "Sample.cs", "selection": "marker" },
+  "arguments": { "name": "ExplainPositive" }
+}

@@ -1,0 +1,8 @@
+{
+  "refactoring": "extract-method",
+  "description": "Refuses to extract from an expression-bodied method, which has no statements to move",
+  "target": { "file": "Sample.cs", "selection": "marker" },
+  "arguments": { "name": "Extracted" },
+  "expect": "error",
+  "errorCode": "expression-bodied-member"
+}
