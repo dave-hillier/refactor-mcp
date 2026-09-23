@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-record-to-class",
+  "description": "Converts a generic positional record, comparing its members with the default comparer for the type parameter",
+  "target": { "symbol": "T:Shop.Pair`1" }
+}

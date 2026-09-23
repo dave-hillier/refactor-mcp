@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-switch-expression-to-statement",
+  "description": "Refuses a local of anonymous type, which cannot be declared before the switch",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "anonymous-type"
+}

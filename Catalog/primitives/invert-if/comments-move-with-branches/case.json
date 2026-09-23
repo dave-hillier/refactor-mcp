@@ -1,0 +1,5 @@
+{
+  "refactoring": "invert-if",
+  "description": "Comments inside each branch move with it, and a negated call gains !",
+  "target": { "file": "Stock.cs", "caret": "marker" }
+}

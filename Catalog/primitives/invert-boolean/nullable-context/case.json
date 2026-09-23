@@ -1,0 +1,7 @@
+{
+  "refactoring": "invert-boolean",
+  "description": "Inverts a property in a nullable context, where its reads sit beside nullable references",
+  "project": { "nullable": "enable" },
+  "target": { "symbol": "P:Shop.Account.IsActive" },
+  "arguments": { "name": "IsSuspended" }
+}

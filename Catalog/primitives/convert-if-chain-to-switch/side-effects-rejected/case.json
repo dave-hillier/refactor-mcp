@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-if-chain-to-switch",
+  "description": "Refuses a compared value with side effects, which the chain evaluates once per comparison",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "side-effects"
+}

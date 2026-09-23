@@ -1,0 +1,6 @@
+{
+  "refactoring": "invert-boolean",
+  "description": "Inverts a local chosen by a caret on its declaration",
+  "target": { "file": "Search.cs", "caret": "marker" },
+  "arguments": { "name": "missing" }
+}

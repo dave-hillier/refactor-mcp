@@ -1,0 +1,5 @@
+{
+  "refactoring": "split-if",
+  "description": "An if on a || b whose body can finish becomes an else if with the same body, keeping the else",
+  "target": { "file": "Counter.cs", "caret": "marker" }
+}

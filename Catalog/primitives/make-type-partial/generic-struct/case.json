@@ -1,0 +1,5 @@
+{
+  "refactoring": "make-type-partial",
+  "description": "Adds partial to a generic readonly struct with a constraint",
+  "target": { "symbol": "T:Shop.Range`1" }
+}

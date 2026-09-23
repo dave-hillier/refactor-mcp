@@ -1,0 +1,5 @@
+{
+  "refactoring": "replace-constructor-with-factory-method",
+  "description": "Adds a static Create method after the constructor, makes the constructor private and calls Create wherever the constructor was called",
+  "target": { "symbol": "M:Shop.Order.#ctor(System.String,System.Int32)" }
+}

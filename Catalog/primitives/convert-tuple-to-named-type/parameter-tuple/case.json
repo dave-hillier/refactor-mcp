@@ -1,0 +1,6 @@
+{
+  "refactoring": "convert-tuple-to-named-type",
+  "description": "Replaces a tuple parameter, constructing the type from tuple literals at call sites and renaming element accesses in the body",
+  "target": { "symbol": "M:Shop.Printer.Print(System.ValueTuple{System.String,System.Int32})" },
+  "arguments": { "name": "OrderLine", "parameter": "line" }
+}

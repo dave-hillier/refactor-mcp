@@ -1,0 +1,5 @@
+{
+  "refactoring": "invert-if",
+  "description": "Branches without braces are swapped as they are, and a double negation is removed",
+  "target": { "file": "Sign.cs", "caret": "marker" }
+}

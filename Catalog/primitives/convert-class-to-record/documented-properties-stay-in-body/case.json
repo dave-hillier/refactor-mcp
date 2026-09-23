@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-class-to-record",
+  "description": "Keeps the constructor and properties in the body when the properties carry documentation a positional parameter would lose",
+  "target": { "symbol": "T:Shop.Customer" }
+}

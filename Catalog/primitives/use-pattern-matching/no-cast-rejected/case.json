@@ -1,0 +1,7 @@
+{
+  "refactoring": "use-pattern-matching",
+  "description": "Refuses a type test with no cast of the value to replace",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "no-cast"
+}
