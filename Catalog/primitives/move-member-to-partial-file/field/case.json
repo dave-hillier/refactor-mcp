@@ -1,0 +1,6 @@
+{
+  "refactoring": "move-member-to-partial-file",
+  "description": "A field declared alongside another is split out of its declaration and moved on its own",
+  "target": { "symbol": "F:Shop.Order._discount" },
+  "arguments": { "file": "Order.Pricing.cs" }
+}

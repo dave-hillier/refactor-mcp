@@ -1,0 +1,6 @@
+{
+  "refactoring": "move-member-to-partial-file",
+  "description": "The target part's file gains the usings the member needs, and the source file drops those only the member needed",
+  "target": { "symbol": "M:Shop.Order.Skus" },
+  "arguments": { "file": "Order.Queries.cs" }
+}

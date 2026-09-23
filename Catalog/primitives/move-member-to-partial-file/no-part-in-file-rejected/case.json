@@ -1,0 +1,8 @@
+{
+  "refactoring": "move-member-to-partial-file",
+  "description": "Refuses an existing file that declares no part of the class",
+  "target": { "symbol": "M:Shop.Order.Total" },
+  "arguments": { "file": "Customer.cs" },
+  "expect": "error",
+  "errorCode": "no-part-in-file"
+}

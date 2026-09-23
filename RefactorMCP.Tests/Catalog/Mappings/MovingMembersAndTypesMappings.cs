@@ -73,7 +73,35 @@ internal sealed class MovingMembersAndTypesMappings : ICatalogMappings
                 ("type-exists", "already contains a type named"),
                 ("partial-type", "is a partial type declared in several places"),
                 ("invalid-namespace", "is not a valid namespace name"))),
+
+        new CatalogMapping(
+            "move-member-to-partial-file",
+            "move-member-to-partial-file",
+            async context =>
+            {
+                var arguments = await MemberArguments(context);
+                arguments["targetFilePath"] = Json(context.WorkspacePath(context.RequiredString("file")));
+                return arguments;
+            },
+            Codes(
+                ("type-not-partial", "is not partial"),
+                ("same-file", "is already in"),
+                ("no-part-in-file", "declares no part of"),
+                ("nested-type", "is nested; add a part of it"))),
     };
+
+    /// <summary>The file, name and line of <c>target.symbol</c>, as the member tools take them.</summary>
+    private static async Task<Dictionary<string, JsonElement>> MemberArguments(StepContext context)
+    {
+        var location = await context.SymbolLocationAsync();
+        return new Dictionary<string, JsonElement>
+        {
+            ["solutionPath"] = Json(context.SolutionPath),
+            ["filePath"] = Json(location.FilePath),
+            ["memberName"] = Json(location.Symbol.Name),
+            ["line"] = Json(location.Line),
+        };
+    }
 
     private static IReadOnlyDictionary<string, string> Codes(params (string Code, string Fragment)[] codes)
     {
