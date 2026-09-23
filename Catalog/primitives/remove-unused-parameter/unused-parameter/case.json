@@ -1,0 +1,6 @@
+{
+  "refactoring": "remove-unused-parameter",
+  "description": "Removes a parameter the body never reads and the argument each call passes for it",
+  "target": { "symbol": "M:Shop.Report.Title(System.String,System.Int32)" },
+  "arguments": { "parameter": "width" }
+}

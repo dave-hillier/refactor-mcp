@@ -1,0 +1,11 @@
+{
+  "refactoring": "change-signature",
+  "description": "Adds a parameter to a constructor, updating object creation, target-typed new, this() and base() calls",
+  "target": { "symbol": "M:Shop.Account.#ctor(System.String)" },
+  "arguments": {
+    "parameters": [
+      { "name": "owner" },
+      { "name": "limit", "type": "decimal", "value": "0m" }
+    ]
+  }
+}

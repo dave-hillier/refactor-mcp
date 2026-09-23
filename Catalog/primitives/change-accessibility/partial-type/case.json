@@ -1,0 +1,6 @@
+{
+  "refactoring": "change-accessibility",
+  "description": "Changes a partial class on the part that states its accessibility, leaving the part that states none",
+  "target": { "symbol": "T:Shop.Basket" },
+  "arguments": { "accessibility": "internal" }
+}

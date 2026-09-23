@@ -1,0 +1,9 @@
+{
+  "refactoring": "change-return-type",
+  "description": "Refuses when a caller would still compile but call a different overload with the result",
+  "target": { "symbol": "M:Shop.Counter.Count(System.Int32[])" },
+  "arguments": { "type": "long" },
+  "expect": "error",
+  "errorCode": "changes-overload-resolution",
+  "errorContains": "Print"
+}

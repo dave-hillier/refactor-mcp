@@ -1,0 +1,7 @@
+{
+  "refactoring": "inline-parameter",
+  "description": "Inlines a string into a nullable parameter's uses in a nullable context",
+  "target": { "symbol": "M:Shop.Formatter.Money(System.Decimal,System.String)" },
+  "project": { "nullable": "enable" },
+  "arguments": { "parameter": "culture" }
+}

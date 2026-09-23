@@ -1,0 +1,6 @@
+{
+  "refactoring": "inline-parameter",
+  "description": "Every call passes the same literal, so the body uses the literal and the parameter goes",
+  "target": { "symbol": "M:Shop.Greeting.Greet(System.String,System.String)" },
+  "arguments": { "parameter": "punctuation" }
+}

@@ -1,0 +1,14 @@
+{
+  "refactoring": "change-signature",
+  "description": "Reorders and adds an optional parameter; named arguments keep their names and an argument after an omitted one becomes named",
+  "target": { "symbol": "M:Shop.Mailer.Compose(System.String,System.String,System.Boolean,System.String)" },
+  "arguments": {
+    "parameters": [
+      { "name": "subject" },
+      { "name": "to" },
+      { "name": "priority", "type": "int", "default": "0" },
+      { "name": "urgent" },
+      { "name": "footer" }
+    ]
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "refactoring": "inline-parameter",
+  "description": "Refuses when a call passes something other than a constant, even if every call passes the same expression",
+  "target": { "symbol": "M:Shop.Greeting.Greet(System.String,System.String)" },
+  "arguments": { "parameter": "punctuation" },
+  "expect": "error",
+  "errorCode": "not-constant"
+}

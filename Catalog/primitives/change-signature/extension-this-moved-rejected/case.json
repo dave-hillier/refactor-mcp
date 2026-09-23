@@ -1,0 +1,8 @@
+{
+  "refactoring": "change-signature",
+  "description": "Refuses to move the this parameter of an extension method away from the front",
+  "target": { "symbol": "M:Shop.TextExtensions.Truncate(System.String,System.Int32)" },
+  "arguments": { "parameters": [ { "name": "length" }, { "name": "text" } ] },
+  "expect": "error",
+  "errorCode": "extension-this-moved"
+}

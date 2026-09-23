@@ -1,0 +1,6 @@
+{
+  "refactoring": "add-parameter-default-value",
+  "description": "A comment after the parameter's name stays after the default",
+  "target": { "symbol": "M:Shop.Grid.Rows(System.Int32,System.Int32)" },
+  "arguments": { "parameter": "height", "value": "10" }
+}

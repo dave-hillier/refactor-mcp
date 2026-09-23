@@ -1,0 +1,6 @@
+{
+  "refactoring": "change-accessibility",
+  "description": "Makes a generic class public, with its constructed uses in another file unchanged",
+  "target": { "symbol": "T:Shop.Box`1" },
+  "arguments": { "accessibility": "public" }
+}

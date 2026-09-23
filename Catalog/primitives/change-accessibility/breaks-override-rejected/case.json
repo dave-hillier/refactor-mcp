@@ -1,0 +1,8 @@
+{
+  "refactoring": "change-accessibility",
+  "description": "Refuses to change a virtual method whose override must keep the same accessibility",
+  "target": { "symbol": "M:Shop.Notifier.Format(System.String)" },
+  "arguments": { "accessibility": "public" },
+  "expect": "error",
+  "errorCode": "breaks-override"
+}

@@ -1,0 +1,8 @@
+{
+  "refactoring": "change-accessibility",
+  "description": "Refuses a field declared together with another, which would need splitting first",
+  "target": { "symbol": "F:Shop.Point.X" },
+  "arguments": { "accessibility": "private" },
+  "expect": "error",
+  "errorCode": "shared-declaration"
+}

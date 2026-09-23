@@ -1,0 +1,6 @@
+{
+  "refactoring": "change-accessibility",
+  "description": "Adds an accessibility to a member that had none, after its attribute and documentation comment",
+  "target": { "symbol": "M:Shop.Counter.Reset" },
+  "arguments": { "accessibility": "internal" }
+}

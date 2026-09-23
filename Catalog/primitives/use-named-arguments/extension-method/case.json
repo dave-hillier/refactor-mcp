@@ -1,0 +1,5 @@
+{
+  "refactoring": "use-named-arguments",
+  "description": "Names the arguments of an extension method called in reduced form, skipping the receiver",
+  "target": { "file": "TextExtensions.cs", "caret": "marker" }
+}

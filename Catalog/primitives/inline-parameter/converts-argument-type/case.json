@@ -1,0 +1,6 @@
+{
+  "refactoring": "inline-parameter",
+  "description": "An argument converted to the parameter's type is inlined with a cast, so integer division does not creep in",
+  "target": { "symbol": "M:Shop.Measure.Half(System.Double,System.Double)" },
+  "arguments": { "parameter": "divisor" }
+}

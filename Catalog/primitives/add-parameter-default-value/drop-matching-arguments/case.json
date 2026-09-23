@@ -1,0 +1,6 @@
+{
+  "refactoring": "add-parameter-default-value",
+  "description": "Gives a parameter a default and drops the arguments that pass the same value, in another file and by name",
+  "target": { "symbol": "M:Shop.Catalogue.Page(System.Int32,System.Int32)" },
+  "arguments": { "parameter": "size", "value": "20", "removeFromCallSites": true }
+}

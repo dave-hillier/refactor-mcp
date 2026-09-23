@@ -1,0 +1,8 @@
+{
+  "refactoring": "add-parameter-default-value",
+  "description": "Refuses a default that is not a compile-time constant",
+  "target": { "symbol": "M:Shop.Money.Format(System.Decimal,System.String)" },
+  "arguments": { "parameter": "currency", "value": "System.Environment.MachineName" },
+  "expect": "error",
+  "errorCode": "not-constant"
+}

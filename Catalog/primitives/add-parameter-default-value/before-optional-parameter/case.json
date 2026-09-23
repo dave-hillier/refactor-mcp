@@ -1,0 +1,6 @@
+{
+  "refactoring": "add-parameter-default-value",
+  "description": "Gives a default to a parameter followed by an optional one; a call that drops the argument names the one after it",
+  "target": { "symbol": "M:Shop.Printer.Print(System.String,System.Int32,System.Boolean)" },
+  "arguments": { "parameter": "copies", "value": "1", "removeFromCallSites": true }
+}

@@ -1,0 +1,7 @@
+{
+  "refactoring": "introduce-parameter",
+  "description": "Introduces a parameter from a null-coalescing expression in a nullable context, with the non-nullable type of the expression",
+  "target": { "file": "Profile.cs", "selection": "marker" },
+  "project": { "nullable": "enable" },
+  "arguments": { "name": "label" }
+}

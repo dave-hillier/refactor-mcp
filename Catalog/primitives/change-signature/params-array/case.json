@@ -1,0 +1,12 @@
+{
+  "refactoring": "change-signature",
+  "description": "Adds a parameter before a params array; expanded arguments stay together at the end",
+  "target": { "symbol": "M:Shop.Logger.Log(System.String,System.Object[])" },
+  "arguments": {
+    "parameters": [
+      { "name": "level", "type": "int", "value": "0" },
+      { "name": "format" },
+      { "name": "values" }
+    ]
+  }
+}

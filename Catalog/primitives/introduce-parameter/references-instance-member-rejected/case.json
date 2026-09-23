@@ -1,0 +1,9 @@
+{
+  "refactoring": "introduce-parameter",
+  "description": "Refuses an expression that reads an instance field through this",
+  "target": { "file": "Tax.cs", "selection": "marker" },
+  "arguments": { "name": "rate" },
+  "expect": "error",
+  "errorCode": "references-instance-member",
+  "errorContains": "_rate"
+}

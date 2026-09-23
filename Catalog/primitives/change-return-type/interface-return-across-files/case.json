@@ -1,0 +1,6 @@
+{
+  "refactoring": "change-return-type",
+  "description": "Returns an interface instead of a concrete list where callers in another file only enumerate the result",
+  "target": { "symbol": "M:Shop.Catalogue.Names" },
+  "arguments": { "type": "IEnumerable<string>" }
+}

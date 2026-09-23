@@ -1,0 +1,12 @@
+{
+  "refactoring": "change-signature",
+  "description": "Adds a nullable reference parameter in a nullable context, passing null",
+  "target": { "symbol": "M:Shop.Greeter.Greet(System.String)" },
+  "project": { "nullable": "enable" },
+  "arguments": {
+    "parameters": [
+      { "name": "name" },
+      { "name": "title", "type": "string?", "value": "null" }
+    ]
+  }
+}

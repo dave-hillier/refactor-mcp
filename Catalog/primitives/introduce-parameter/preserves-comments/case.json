@@ -1,0 +1,6 @@
+{
+  "refactoring": "introduce-parameter",
+  "description": "Comments beside the expression and above the call stay where they are",
+  "target": { "file": "Shipping.cs", "selection": "marker" },
+  "arguments": { "name": "baseFee" }
+}

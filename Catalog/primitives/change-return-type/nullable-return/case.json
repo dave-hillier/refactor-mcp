@@ -1,0 +1,7 @@
+{
+  "refactoring": "change-return-type",
+  "description": "Makes a reference return type nullable where the caller already handles null",
+  "target": { "symbol": "M:Shop.Directory.Find(System.String)" },
+  "project": { "nullable": "enable" },
+  "arguments": { "type": "string?" }
+}

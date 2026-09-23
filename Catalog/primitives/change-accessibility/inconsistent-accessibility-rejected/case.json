@@ -1,0 +1,8 @@
+{
+  "refactoring": "change-accessibility",
+  "description": "Refuses to make a type internal while a public method returns it",
+  "target": { "symbol": "T:Shop.Money" },
+  "arguments": { "accessibility": "internal" },
+  "expect": "error",
+  "errorCode": "inconsistent-accessibility"
+}

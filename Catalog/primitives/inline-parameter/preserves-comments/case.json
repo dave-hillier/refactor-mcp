@@ -1,0 +1,6 @@
+{
+  "refactoring": "inline-parameter",
+  "description": "Comments in the body and at the calls stay where they are",
+  "target": { "symbol": "M:Shop.Labels.Label(System.String,System.Boolean)" },
+  "arguments": { "parameter": "upper" }
+}

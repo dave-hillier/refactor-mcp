@@ -1,0 +1,7 @@
+{
+  "refactoring": "use-named-arguments",
+  "description": "Refuses a call whose arguments are all named already",
+  "target": { "file": "Shipping.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "already-named"
+}

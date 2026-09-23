@@ -1,0 +1,6 @@
+{
+  "refactoring": "introduce-parameter",
+  "description": "Turns a literal into a parameter and passes the literal at the call",
+  "target": { "file": "Tax.cs", "selection": "marker" },
+  "arguments": { "name": "rate" }
+}

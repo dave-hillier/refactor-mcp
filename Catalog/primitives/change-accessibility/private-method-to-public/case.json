@@ -1,0 +1,6 @@
+{
+  "refactoring": "change-accessibility",
+  "description": "Makes a private method public",
+  "target": { "symbol": "M:Shop.Order.Tax" },
+  "arguments": { "accessibility": "public" }
+}

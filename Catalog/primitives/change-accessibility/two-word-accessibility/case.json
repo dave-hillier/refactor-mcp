@@ -1,0 +1,6 @@
+{
+  "refactoring": "change-accessibility",
+  "description": "Writes a two-word accessibility in place of a one-word one",
+  "target": { "symbol": "M:Shop.Report.Header" },
+  "arguments": { "accessibility": "protected internal" }
+}

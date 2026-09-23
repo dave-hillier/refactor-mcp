@@ -1,0 +1,9 @@
+{
+  "refactoring": "introduce-parameter",
+  "description": "Refuses a name that is already a parameter of the method",
+  "target": { "file": "Tax.cs", "selection": "marker" },
+  "arguments": { "name": "price" },
+  "expect": "error",
+  "errorCode": "name-conflict",
+  "errorContains": "price"
+}

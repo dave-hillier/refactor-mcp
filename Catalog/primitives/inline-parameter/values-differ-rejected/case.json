@@ -1,0 +1,9 @@
+{
+  "refactoring": "inline-parameter",
+  "description": "Refuses when calls pass different values",
+  "target": { "symbol": "M:Shop.Greeting.Greet(System.String,System.String)" },
+  "arguments": { "parameter": "punctuation" },
+  "expect": "error",
+  "errorCode": "values-differ",
+  "errorContains": "punctuation"
+}

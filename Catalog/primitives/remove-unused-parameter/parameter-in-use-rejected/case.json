@@ -1,0 +1,8 @@
+{
+  "refactoring": "remove-unused-parameter",
+  "description": "Refuses to remove a parameter the body reads",
+  "target": { "symbol": "M:Shop.Report.Title(System.String,System.Int32)" },
+  "arguments": { "parameter": "name" },
+  "expect": "error",
+  "errorCode": "parameter-in-use"
+}

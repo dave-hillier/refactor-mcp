@@ -1,0 +1,9 @@
+{
+  "refactoring": "change-signature",
+  "description": "Refuses a parameter that neither exists nor has a type to add it with",
+  "target": { "symbol": "M:Shop.Pricing.Discount(System.Decimal,System.Int32)" },
+  "arguments": { "parameters": [ { "name": "price" }, { "name": "rate" } ] },
+  "expect": "error",
+  "errorCode": "unknown-parameter",
+  "errorContains": "rate"
+}

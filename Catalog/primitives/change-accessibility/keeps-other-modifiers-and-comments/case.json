@@ -1,0 +1,6 @@
+{
+  "refactoring": "change-accessibility",
+  "description": "Replaces only the accessibility of a field, keeping its other modifiers, its comment and its documentation",
+  "target": { "symbol": "F:Shop.Limits.Maximum" },
+  "arguments": { "accessibility": "private" }
+}

@@ -1,0 +1,6 @@
+{
+  "refactoring": "change-return-type",
+  "description": "Uses the method's type parameter in the new return type",
+  "target": { "symbol": "M:Shop.Boxes.Wrap``1(``0)" },
+  "arguments": { "type": "IReadOnlyList<T>" }
+}

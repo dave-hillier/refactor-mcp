@@ -1,0 +1,15 @@
+{
+  "refactoring": "change-signature",
+  "description": "Refuses to add a parameter with neither a value for existing calls nor a default",
+  "target": { "symbol": "M:Shop.Pricing.Discount(System.Decimal,System.Int32)" },
+  "arguments": {
+    "parameters": [
+      { "name": "price" },
+      { "name": "percent" },
+      { "name": "rounding", "type": "int" }
+    ]
+  },
+  "expect": "error",
+  "errorCode": "missing-value",
+  "errorContains": "rounding"
+}

@@ -1,0 +1,6 @@
+{
+  "refactoring": "remove-unused-parameter",
+  "description": "Removes the first parameter, updating positional and named calls in another file",
+  "target": { "symbol": "M:Shop.Invoice.Line(System.Int32,System.String,System.Decimal)" },
+  "arguments": { "parameter": "index" }
+}

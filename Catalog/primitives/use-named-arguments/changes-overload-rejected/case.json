@@ -1,0 +1,7 @@
+{
+  "refactoring": "use-named-arguments",
+  "description": "Refuses when naming the arguments would make another overload a candidate, so the call would no longer bind to the same method",
+  "target": { "file": "Geometry.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "changes-overload"
+}

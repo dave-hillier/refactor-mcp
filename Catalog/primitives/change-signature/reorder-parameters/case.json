@@ -1,0 +1,6 @@
+{
+  "refactoring": "change-signature",
+  "description": "Swaps two parameters and the arguments of a call in the same class",
+  "target": { "symbol": "M:Shop.Pricing.Discount(System.Decimal,System.Int32)" },
+  "arguments": { "parameters": [ { "name": "percent" }, { "name": "price" } ] }
+}

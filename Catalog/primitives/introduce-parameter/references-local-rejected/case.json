@@ -1,0 +1,9 @@
+{
+  "refactoring": "introduce-parameter",
+  "description": "Refuses an expression that reads a local, which callers cannot see",
+  "target": { "file": "Shipping.cs", "selection": "marker" },
+  "arguments": { "name": "total" },
+  "expect": "error",
+  "errorCode": "references-local",
+  "errorContains": "fee"
+}

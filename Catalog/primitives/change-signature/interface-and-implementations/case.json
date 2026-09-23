@@ -1,0 +1,6 @@
+{
+  "refactoring": "change-signature",
+  "description": "Reorders an interface method's parameters in every implementation, explicit ones included, and at calls through the interface and through a class",
+  "target": { "symbol": "M:Shop.IShipping.Cost(System.Decimal,System.String)" },
+  "arguments": { "parameters": [ { "name": "region" }, { "name": "weight" } ] }
+}

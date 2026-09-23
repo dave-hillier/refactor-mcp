@@ -1,0 +1,8 @@
+{
+  "refactoring": "change-return-type",
+  "description": "Refuses when the method's own return statements do not fit the new type",
+  "target": { "symbol": "M:Shop.Counter.Count(System.Int32[])" },
+  "arguments": { "type": "string" },
+  "expect": "error",
+  "errorCode": "return-value-incompatible"
+}

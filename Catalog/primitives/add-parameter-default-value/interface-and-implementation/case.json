@@ -1,0 +1,6 @@
+{
+  "refactoring": "add-parameter-default-value",
+  "description": "Gives the parameter the same default on the interface and its implementation, so calls through either may leave it out",
+  "target": { "symbol": "M:Shop.IClock.Stamp(System.Int32,System.String)" },
+  "arguments": { "parameter": "pattern", "value": "\"t\"", "removeFromCallSites": true }
+}

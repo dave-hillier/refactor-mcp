@@ -1,0 +1,11 @@
+{
+  "refactoring": "change-signature",
+  "description": "Adds a parameter and passes the given value at calls in another file",
+  "target": { "symbol": "M:Shop.Order.Total(System.Decimal)" },
+  "arguments": {
+    "parameters": [
+      { "name": "subtotal" },
+      { "name": "shipping", "type": "decimal", "value": "0m" }
+    ]
+  }
+}
