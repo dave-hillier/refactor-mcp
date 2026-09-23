@@ -1,0 +1,6 @@
+{
+  "refactoring": "move-instance-method",
+  "description": "Moves a method onto the type of one of its parameters, which it no longer takes; it uses nothing else of its class, so no instance is passed",
+  "target": { "symbol": "M:Shop.Warehouse.Track(Shop.Parcel,System.String)" },
+  "arguments": { "via": "parcel" }
+}

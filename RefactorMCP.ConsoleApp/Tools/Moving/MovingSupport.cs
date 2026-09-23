@@ -180,8 +180,11 @@ internal static class MovingSupport
 
     /// <summary>A type name as a fully qualified expression the simplifier reduces and imports.</summary>
     public static TypeSyntax QualifiedType(ITypeSymbol type) =>
-        ((TypeSyntax)SyntaxGenerator.GetGenerator(new AdhocWorkspace(), LanguageNames.CSharp).TypeExpression(type, addImport: true))
-            .WithAdditionalAnnotations(Simplifier.Annotation);
+        SyntaxFactory.ParseTypeName(type.ToDisplayString(QualifiedFormat))
+            .WithAdditionalAnnotations(Simplifier.Annotation, Simplifier.AddImportsAnnotation);
+
+    private static readonly SymbolDisplayFormat QualifiedFormat = SymbolDisplayFormat.FullyQualifiedFormat
+        .AddMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier);
 
     /// <summary>
     /// Raises a private member to internal, so code that moved out of its type
@@ -214,5 +217,49 @@ internal static class MovingSupport
             return "value";
         var camel = char.ToLowerInvariant(name[0]) + name[1..];
         return SyntaxFacts.GetKeywordKind(camel) != SyntaxKind.None ? "@" + camel : camel;
+    }
+
+    /// <summary>Adds using directives the file lacks, after its existing ones.</summary>
+    public static CompilationUnitSyntax AddUsings(CompilationUnitSyntax root, IEnumerable<string> namespaces)
+    {
+        foreach (var ns in namespaces)
+        {
+            if (root.Usings.Any(u => u.Alias is null && u.StaticKeyword.IsKind(SyntaxKind.None) && u.Name?.ToString() == ns))
+                continue;
+
+            root = root.AddUsings(SyntaxFactory.UsingDirective(SyntaxFactory.ParseName(ns))
+                .WithAdditionalAnnotations(Microsoft.CodeAnalysis.Formatting.Formatter.Annotation));
+        }
+
+        return root;
+    }
+
+    /// <summary>
+    /// Removes, from every document the two solutions share and that changed,
+    /// the usings the edit made unnecessary. Usings that were unnecessary
+    /// before are the author's business and stay.
+    /// </summary>
+    public static async Task<Solution> RemoveNewlyUnnecessaryUsingsAsync(Solution original, Solution updated, CancellationToken cancellationToken)
+    {
+        foreach (var project in updated.GetChanges(original).GetProjectChanges())
+        {
+            foreach (var id in project.GetChangedDocuments(onlyGetDocumentsWithTextChanges: true))
+            {
+                var before = (await MemberLayout.UnnecessaryUsingsAsync(original.GetDocument(id)!, cancellationToken))
+                    .Select(u => u.WithoutTrivia().ToString())
+                    .ToHashSet(StringComparer.Ordinal);
+                var document = updated.GetDocument(id)!;
+                var newlyUnnecessary = (await MemberLayout.UnnecessaryUsingsAsync(document, cancellationToken))
+                    .Where(u => !before.Contains(u.WithoutTrivia().ToString()))
+                    .ToList();
+                if (newlyUnnecessary.Count == 0)
+                    continue;
+
+                var root = (CompilationUnitSyntax)(await document.GetSyntaxRootAsync(cancellationToken))!;
+                updated = updated.WithDocumentSyntaxRoot(id, MemberLayout.RemoveUsings(root, newlyUnnecessary));
+            }
+        }
+
+        return updated;
     }
 }

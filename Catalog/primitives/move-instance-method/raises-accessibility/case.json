@@ -1,0 +1,6 @@
+{
+  "refactoring": "move-instance-method",
+  "description": "Private members the moved method still uses through the instance become internal, and a private method moves as internal",
+  "target": { "symbol": "M:Shop.Customer.Discounted(System.Decimal)" },
+  "arguments": { "via": "_account" }
+}

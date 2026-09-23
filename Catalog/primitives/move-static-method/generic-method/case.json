@@ -1,0 +1,6 @@
+{
+  "refactoring": "move-static-method",
+  "description": "A generic method moves with its constraints; calls keep their type arguments",
+  "target": { "symbol": "M:Shop.Order.Larger``1(``0,``0)" },
+  "arguments": { "to": "Compare", "stub": false }
+}

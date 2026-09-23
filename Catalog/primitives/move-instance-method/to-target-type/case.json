@@ -1,0 +1,6 @@
+{
+  "refactoring": "move-instance-method",
+  "description": "Naming the target type finds the one field of that type to move through",
+  "target": { "symbol": "M:Shop.Customer.Where" },
+  "arguments": { "to": "Address" }
+}

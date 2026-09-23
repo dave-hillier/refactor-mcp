@@ -1,0 +1,8 @@
+{
+  "refactoring": "move-field",
+  "description": "Refuses to move a static field through an instance member; name the target type instead",
+  "target": { "symbol": "F:Shop.Customer.Count" },
+  "arguments": { "via": "Address" },
+  "expect": "error",
+  "errorCode": "static-member-via"
+}

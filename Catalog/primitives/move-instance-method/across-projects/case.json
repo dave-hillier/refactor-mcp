@@ -1,0 +1,10 @@
+{
+  "refactoring": "move-instance-method",
+  "description": "A method that needs nothing of its class moves into a type in a project its own project references",
+  "target": { "symbol": "M:App.Customer.Town" },
+  "arguments": { "via": "_address" },
+  "projects": [
+    { "name": "Core" },
+    { "name": "App", "references": ["Core"] }
+  ]
+}

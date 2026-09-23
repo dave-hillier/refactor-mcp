@@ -1,0 +1,8 @@
+{
+  "refactoring": "move-property",
+  "description": "Refuses a property whose accessors use other members of its class, since a property cannot take the instance as a parameter",
+  "target": { "symbol": "P:Shop.Customer.Label" },
+  "arguments": { "via": "_address" },
+  "expect": "error",
+  "errorCode": "uses-source-members"
+}

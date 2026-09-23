@@ -135,4 +135,19 @@ internal static class MemberReferences
         && assignment.Left == name
         && assignment.Parent is InitializerExpressionSyntax initializer
         && initializer.IsKind(SyntaxKind.ObjectInitializerExpression);
+
+    /// <summary>
+    /// <c>x.X</c> can become a bare <c>X</c> inside <paramref name="type"/> when X
+    /// is an instance member of the type, or of a base, and no local, parameter
+    /// or range variable named X hides it there.
+    /// </summary>
+    public static bool CanDropQualifier(MemberAccessExpressionSyntax access, SemanticModel model, INamedTypeSymbol type)
+    {
+        var member = model.GetSymbolInfo(access).Symbol;
+        if (member is null || member.IsStatic || member.ContainingType is null || !InheritsFrom(type, member.ContainingType))
+            return false;
+
+        var visible = model.LookupSymbols(access.SpanStart, name: access.Name.Identifier.ValueText);
+        return visible.All(s => s is not (ILocalSymbol or IParameterSymbol or IRangeVariableSymbol));
+    }
 }

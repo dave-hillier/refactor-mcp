@@ -1,0 +1,6 @@
+{
+  "refactoring": "move-instance-method",
+  "description": "Without a stub, the method is removed and every call goes through the property, passing the instance it was called on",
+  "target": { "symbol": "M:Shop.Customer.Label" },
+  "arguments": { "via": "Address", "stub": false }
+}

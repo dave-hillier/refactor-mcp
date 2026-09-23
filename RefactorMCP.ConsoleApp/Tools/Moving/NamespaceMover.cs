@@ -75,7 +75,7 @@ internal static class NamespaceMover
             if (id == declaringDocument.Id)
             {
                 root = restructure(root);
-                root = AddUsings(root, importedNamespaces);
+                root = MovingSupport.AddUsings(root, importedNamespaces);
             }
 
             updated = updated.WithDocumentSyntaxRoot(id, root);
@@ -276,20 +276,5 @@ internal static class NamespaceMover
         return qualified
             .WithTriviaFrom(name)
             .WithAdditionalAnnotations(Simplifier.Annotation, Simplifier.AddImportsAnnotation);
-    }
-
-    /// <summary>Adds using directives the file lacks, after its existing ones.</summary>
-    private static CompilationUnitSyntax AddUsings(CompilationUnitSyntax root, IEnumerable<string> namespaces)
-    {
-        foreach (var ns in namespaces)
-        {
-            if (root.Usings.Any(u => u.Alias is null && u.StaticKeyword.IsKind(SyntaxKind.None) && u.Name?.ToString() == ns))
-                continue;
-
-            root = root.AddUsings(SyntaxFactory.UsingDirective(SyntaxFactory.ParseName(ns))
-                .WithAdditionalAnnotations(Microsoft.CodeAnalysis.Formatting.Formatter.Annotation));
-        }
-
-        return root;
     }
 }

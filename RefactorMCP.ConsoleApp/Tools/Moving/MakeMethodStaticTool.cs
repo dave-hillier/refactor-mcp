@@ -77,7 +77,7 @@ internal static class StaticConversion
             ? RewriteMembersAsParameters(body, model, type, method, document.Id, edits)
             : RewriteThroughInstance(body, model, type, method, document.Id, edits, InstanceName(parameterName, type, declaration));
 
-        var newParameters = used.Select(u => SyntaxFactory.Parameter(SyntaxFactory.Identifier(u.Name)).WithType(u.Type)).ToList();
+        var newParameters = used.Select(u => SyntaxFactory.Parameter(SyntaxFactory.Identifier(u.Name)).WithType(u.Type.WithTrailingTrivia(SyntaxFactory.Space))).ToList();
         edits.Replace(document.Id, declaration, rewritten =>
         {
             var updated = WithStatic((MethodDeclarationSyntax)rewritten);

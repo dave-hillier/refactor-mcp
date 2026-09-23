@@ -1,0 +1,6 @@
+{
+  "refactoring": "move-field",
+  "description": "A field declared alongside another is split out, and the other stays",
+  "target": { "symbol": "F:Shop.Customer._town" },
+  "arguments": { "via": "_address" }
+}

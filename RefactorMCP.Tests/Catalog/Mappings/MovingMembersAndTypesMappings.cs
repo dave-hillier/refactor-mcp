@@ -11,6 +11,11 @@ internal sealed class MovingMembersAndTypesMappings : ICatalogMappings
 {
     public IEnumerable<CatalogMapping> Mappings => new[]
     {
+        MoveMapping("move-instance-method", "instance-method"),
+        MoveMapping("move-static-method", "static-method"),
+        MoveMapping("move-field", "field"),
+        MoveMapping("move-property", "property"),
+
         new CatalogMapping(
             "rename-file-to-match-type",
             "rename-file-to-match-type",
@@ -158,6 +163,58 @@ internal sealed class MovingMembersAndTypesMappings : ICatalogMappings
                 ("null-argument", "passes null for"),
                 ("method-group", "is used as a method group"))),
     };
+
+    /// <summary>
+    /// The four moves share one tool: <c>via</c> names the field, property or
+    /// parameter to move through, <c>to</c> the target type, <c>stub</c> whether
+    /// a moved method leaves a delegating stub (default true), and <c>file</c> the
+    /// file for a target type that has to be created.
+    /// </summary>
+    private static CatalogMapping MoveMapping(string refactoring, string kind) => new(
+        refactoring,
+        "move-member",
+        async context =>
+        {
+            var arguments = await MemberArguments(context);
+            arguments["kind"] = Json(kind);
+            if (context.HasArgument("via"))
+                arguments["via"] = context.RequiredArgument("via");
+            if (context.HasArgument("to"))
+                arguments["targetType"] = context.RequiredArgument("to");
+            if (context.HasArgument("stub"))
+                arguments["keepStub"] = context.RequiredArgument("stub");
+            if (context.HasArgument("file"))
+                arguments["targetFilePath"] = Json(context.WorkspacePath(context.RequiredString("file")));
+            return arguments;
+        },
+        MoveErrorCodes);
+
+    private static readonly IReadOnlyDictionary<string, string> MoveErrorCodes = Codes(
+        ("via-not-found", "to move through"),
+        ("no-reference-to-target", "has no field, property or parameter of type"),
+        ("ambiguous-target", "is reachable through several members"),
+        ("target-not-in-source", "the solution does not declare"),
+        ("target-not-class", "cannot move into it"),
+        ("generic-target", "constructed generic type"),
+        ("same-type", "is already"),
+        ("member-exists", "already has a"),
+        ("method-is-static", "is static; move it as a static method"),
+        ("static-member-via", "is static; name the target type"),
+        ("method-not-static", "is an instance method; move it through"),
+        ("polymorphic-method", "callers rely on dispatch through the instance"),
+        ("uses-base", "calls through base"),
+        ("recursive-method", "calls itself"),
+        ("uses-protected-member", "uses the protected member"),
+        ("uses-source-members", "cannot be given as a parameter"),
+        ("via-assigned", "the member it would move through"),
+        ("via-not-accessible", "is not accessible where"),
+        ("object-initializer", "An object initializer sets"),
+        ("conditional-access", "null-conditional access"),
+        ("method-group", "is used as a method group"),
+        ("complex-receiver", "store it in a local first"),
+        ("null-argument", "passes null for"),
+        ("name-conflict", "already has a parameter or local named"),
+        ("target-cannot-see-source", "which cannot see"));
 
     /// <summary><see cref="MemberArguments"/> for tools that call the member a method.</summary>
     private static async Task<Dictionary<string, JsonElement>> MethodArguments(StepContext context)

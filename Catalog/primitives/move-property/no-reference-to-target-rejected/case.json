@@ -1,0 +1,8 @@
+{
+  "refactoring": "move-property",
+  "description": "Refuses an instance property when no field or property of the target type leads to it",
+  "target": { "symbol": "P:Shop.Customer.Street" },
+  "arguments": { "to": "Address" },
+  "expect": "error",
+  "errorCode": "no-reference-to-target"
+}

@@ -61,7 +61,7 @@ public static class MakeMethodInstanceTool
             if (MemberReferences.IsWrittenTo(use))
                 throw new McpException($"Error: {method.Name} assigns {parameter.Name}, and this cannot be reassigned");
 
-            if (use.Parent is MemberAccessExpressionSyntax access && access.Expression == use && CanDropThis(access, model, type))
+            if (use.Parent is MemberAccessExpressionSyntax access && access.Expression == use && MemberReferences.CanDropQualifier(access, model, type))
                 edits.Replace(document.Id, access, rewritten => ((MemberAccessExpressionSyntax)rewritten).Name.WithTriviaFrom(rewritten));
             else
                 edits.Replace(document.Id, use, rewritten => SyntaxFactory.ThisExpression().WithTriviaFrom(rewritten));
@@ -111,19 +111,5 @@ public static class MakeMethodInstanceTool
         }
 
         return await edits.ApplyAsync(solution, cancellationToken);
-    }
-
-    /// <summary>
-    /// <c>p.X</c> can become <c>X</c> when X is an instance member of the type
-    /// and no local or parameter named X hides it at that point.
-    /// </summary>
-    private static bool CanDropThis(MemberAccessExpressionSyntax access, SemanticModel model, INamedTypeSymbol type)
-    {
-        var member = model.GetSymbolInfo(access).Symbol;
-        if (member is null || member.IsStatic || member.ContainingType is null || !MemberReferences.InheritsFrom(type, member.ContainingType))
-            return false;
-
-        var visible = model.LookupSymbols(access.SpanStart, name: access.Name.Identifier.ValueText);
-        return visible.All(s => s is not (ILocalSymbol or IParameterSymbol or IRangeVariableSymbol));
     }
 }
