@@ -1,0 +1,9 @@
+{
+  "refactoring": "replace-type-code-with-enum",
+  "description": "Refuses a constant that is neither an int nor a string",
+  "target": { "symbol": "T:Staff.Employee" },
+  "arguments": { "name": "EmployeeType", "constants": ["Rate"] },
+  "expect": "error",
+  "errorCode": "not-a-type-code",
+  "errorContains": "Rate"
+}

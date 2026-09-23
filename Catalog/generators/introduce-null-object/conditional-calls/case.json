@@ -1,0 +1,5 @@
+{
+  "refactoring": "introduce-null-object",
+  "description": "Generates NullLogger, defaults the constructor's assignment to it and removes the if and ?. checks",
+  "target": { "symbol": "F:Shop.Order._logger" }
+}

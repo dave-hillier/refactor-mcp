@@ -1,0 +1,7 @@
+{
+  "refactoring": "create-adapter",
+  "description": "Keeps the interface's nullable annotations in the adapter's signatures",
+  "project": { "nullable": "enable" },
+  "target": { "symbol": "T:Shop.LegacyCache" },
+  "arguments": { "interface": "ICache", "name": "CacheAdapter", "map": { "Get": "Lookup", "Put": "Remember" } }
+}

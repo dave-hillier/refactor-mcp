@@ -1,0 +1,5 @@
+{
+  "refactoring": "add-null-checks",
+  "description": "A void method's expression body becomes a statement after the guard",
+  "target": { "symbol": "M:Shop.Text.Log(System.String)" }
+}

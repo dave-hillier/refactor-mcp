@@ -1,0 +1,5 @@
+{
+  "refactoring": "replace-type-code-with-subclasses",
+  "description": "Constructs the subclass where a caller passes a known code, and calls the factory where it passes a variable",
+  "target": { "symbol": "F:Staff.Employee._type" }
+}

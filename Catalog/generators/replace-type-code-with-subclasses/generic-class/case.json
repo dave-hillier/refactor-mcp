@@ -1,0 +1,5 @@
+{
+  "refactoring": "replace-type-code-with-subclasses",
+  "description": "Gives each subclass the generic class's type parameters and constraints, in a block namespace",
+  "target": { "symbol": "F:Storage.Store`1._kind" }
+}

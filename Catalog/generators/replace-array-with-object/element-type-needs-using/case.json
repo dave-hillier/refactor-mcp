@@ -1,0 +1,6 @@
+{
+  "refactoring": "replace-array-with-object",
+  "description": "Imports the element type's namespace into the new class's file",
+  "target": { "symbol": "F:Shop.Booking._stay" },
+  "arguments": { "name": "Stay", "members": ["Arrival", "Departure"] }
+}

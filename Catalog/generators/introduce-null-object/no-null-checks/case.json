@@ -1,0 +1,7 @@
+{
+  "refactoring": "introduce-null-object",
+  "description": "Refuses a field that is never checked for null, since there is nothing for a null object to replace",
+  "target": { "symbol": "F:Shop.Order._logger" },
+  "expect": "error",
+  "errorCode": "no-null-checks"
+}

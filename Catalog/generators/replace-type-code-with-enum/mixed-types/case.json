@@ -1,0 +1,8 @@
+{
+  "refactoring": "replace-type-code-with-enum",
+  "description": "Refuses int and string constants together, which cannot be one type code",
+  "target": { "symbol": "T:Staff.Employee" },
+  "arguments": { "name": "EmployeeType", "constants": ["Engineer", "Title"] },
+  "expect": "error",
+  "errorCode": "mixed-types"
+}

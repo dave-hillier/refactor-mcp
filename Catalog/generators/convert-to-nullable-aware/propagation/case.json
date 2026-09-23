@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-to-nullable-aware",
+  "description": "Follows a null through a return, an explicitly typed local and an argument, annotating each declaration in turn",
+  "target": { "file": "Labels.cs" }
+}

@@ -1,0 +1,5 @@
+{
+  "refactoring": "replace-conditional-with-polymorphism",
+  "description": "Moves the cases of a switch on a parameter's type into an abstract method of the parameter's class, and delegates to it",
+  "target": { "symbol": "M:Shapes.Geometry.Area(Shapes.Shape)" }
+}

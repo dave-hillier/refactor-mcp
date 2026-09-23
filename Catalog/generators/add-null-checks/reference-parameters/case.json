@@ -1,0 +1,5 @@
+{
+  "refactoring": "add-null-checks",
+  "description": "Guards each reference-type parameter, skipping value types and parameters that default to null, and imports System",
+  "target": { "symbol": "M:Shop.Printer.Print(Shop.Customer,System.Int32,System.String,System.String)" }
+}

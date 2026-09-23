@@ -1,0 +1,7 @@
+{
+  "refactoring": "add-observer",
+  "description": "In a nullable context the event is declared nullable, and a type parameter of the class is passed through",
+  "project": { "nullable": "enable" },
+  "target": { "symbol": "M:Shop.Store`1.Save(`0,System.String)" },
+  "arguments": { "event": "Saved" }
+}

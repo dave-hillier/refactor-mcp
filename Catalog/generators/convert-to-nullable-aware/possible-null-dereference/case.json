@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-to-nullable-aware",
+  "description": "Refuses when a value that may be null is dereferenced, which no annotation can fix",
+  "target": { "file": "Directory.cs" },
+  "expect": "error",
+  "errorCode": "unresolved-warning",
+  "errorContains": "CS8602"
+}

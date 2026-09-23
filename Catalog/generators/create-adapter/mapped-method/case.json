@@ -1,0 +1,6 @@
+{
+  "refactoring": "create-adapter",
+  "description": "Implements an interface over an existing class, delegating a method to the differently named one it maps to",
+  "target": { "symbol": "T:Shop.LegacyLogger" },
+  "arguments": { "interface": "ILogger", "name": "LegacyLoggerAdapter", "map": { "Log": "Write" } }
+}

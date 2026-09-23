@@ -1,0 +1,5 @@
+{
+  "refactoring": "add-null-checks",
+  "description": "Guards a type parameter constrained to a class but not an unconstrained one, and only in the chosen overload",
+  "target": { "symbol": "M:Shop.Cache.Put``2(System.String,``0,``1)" }
+}

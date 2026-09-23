@@ -1,0 +1,9 @@
+{
+  "refactoring": "create-adapter",
+  "description": "Refuses an interface name that names no type",
+  "target": { "symbol": "T:Shop.LegacyLogger" },
+  "arguments": { "interface": "IAuditLog", "name": "LegacyLoggerAdapter" },
+  "expect": "error",
+  "errorCode": "interface-not-found",
+  "errorContains": "IAuditLog"
+}

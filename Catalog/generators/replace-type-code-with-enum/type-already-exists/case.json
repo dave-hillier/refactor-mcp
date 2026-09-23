@@ -1,0 +1,8 @@
+{
+  "refactoring": "replace-type-code-with-enum",
+  "description": "Refuses an enum name the namespace already uses",
+  "target": { "symbol": "T:Staff.Employee" },
+  "arguments": { "name": "EmployeeType", "constants": ["Engineer", "Salesman"] },
+  "expect": "error",
+  "errorCode": "type-already-exists"
+}

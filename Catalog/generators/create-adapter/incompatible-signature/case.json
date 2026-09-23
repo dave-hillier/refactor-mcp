@@ -1,0 +1,9 @@
+{
+  "refactoring": "create-adapter",
+  "description": "Refuses a mapping to a member whose parameters cannot take the interface's arguments",
+  "target": { "symbol": "T:Shop.LegacyLogger" },
+  "arguments": { "interface": "ILogger", "name": "LegacyLoggerAdapter", "map": { "Log": "Write" } },
+  "expect": "error",
+  "errorCode": "incompatible-signature",
+  "errorContains": "Write"
+}

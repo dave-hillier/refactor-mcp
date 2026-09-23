@@ -1,0 +1,8 @@
+{
+  "refactoring": "add-observer",
+  "description": "Refuses a method that returns a value",
+  "target": { "symbol": "M:Shop.Counter.Next" },
+  "arguments": { "event": "Advanced" },
+  "expect": "error",
+  "errorCode": "not-void"
+}

@@ -1,0 +1,6 @@
+{
+  "refactoring": "extract-decorator",
+  "description": "Keeps nullable annotations in the delegated signatures",
+  "project": { "nullable": "enable" },
+  "target": { "symbol": "T:Shop.IDirectory" }
+}

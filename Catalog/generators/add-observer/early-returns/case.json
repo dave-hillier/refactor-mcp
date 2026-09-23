@@ -1,0 +1,6 @@
+{
+  "refactoring": "add-observer",
+  "description": "Raises the event before every return that leaves the method, wrapping an embedded return in a block, but not inside a lambda",
+  "target": { "symbol": "M:Shop.Basket.Clear" },
+  "arguments": { "event": "Cleared" }
+}

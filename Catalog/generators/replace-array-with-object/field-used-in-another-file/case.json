@@ -1,0 +1,6 @@
+{
+  "refactoring": "replace-array-with-object",
+  "description": "Replaces a public array field, its initialiser and its uses in another namespace, including an assigned implicitly typed array",
+  "target": { "symbol": "F:Shop.Result.Score" },
+  "arguments": { "name": "FinalScore", "members": ["Home", "Away"] }
+}

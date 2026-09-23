@@ -1,0 +1,8 @@
+{
+  "refactoring": "introduce-null-object",
+  "description": "Refuses when two checks fall back to different values for the same member, so no single null object can return both",
+  "target": { "symbol": "F:Shop.Order._policy" },
+  "expect": "error",
+  "errorCode": "inconsistent-fallbacks",
+  "errorContains": "Priority"
+}

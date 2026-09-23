@@ -1,0 +1,9 @@
+{
+  "refactoring": "feature-flag-wrapping",
+  "description": "Refuses a branch that uses members of the class, which a strategy class cannot reach",
+  "target": { "file": "Checkout.cs" },
+  "arguments": { "flag": "NewCheckout" },
+  "expect": "error",
+  "errorCode": "branch-uses-members",
+  "errorContains": "_payments"
+}

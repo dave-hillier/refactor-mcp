@@ -1,0 +1,6 @@
+{
+  "refactoring": "create-adapter",
+  "description": "Adapts to a constructed generic interface declared in another file and namespace, importing it into the adapter",
+  "target": { "symbol": "T:Shop.LegacyOrderStore" },
+  "arguments": { "interface": "IRepository<Order>", "name": "OrderRepository", "map": { "Find": "Load", "Save": "Store" } }
+}

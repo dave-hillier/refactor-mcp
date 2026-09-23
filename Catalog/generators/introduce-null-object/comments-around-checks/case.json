@@ -1,0 +1,5 @@
+{
+  "refactoring": "introduce-null-object",
+  "description": "Keeps the comments on and inside a removed if, and unwraps an if without braces",
+  "target": { "symbol": "F:Shop.Order._logger" }
+}

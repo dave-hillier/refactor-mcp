@@ -1,0 +1,9 @@
+{
+  "refactoring": "create-adapter",
+  "description": "Refuses when the adaptee's namespace already has a type with the adapter's name",
+  "target": { "symbol": "T:Shop.LegacyLogger" },
+  "arguments": { "interface": "ILogger", "name": "LoggerAdapter", "map": { "Log": "Write" } },
+  "expect": "error",
+  "errorCode": "type-already-exists",
+  "errorContains": "LoggerAdapter"
+}

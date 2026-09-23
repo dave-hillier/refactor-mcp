@@ -1,0 +1,8 @@
+{
+  "refactoring": "introduce-null-object",
+  "description": "Refuses a field whose type is a class; Extract Interface comes first",
+  "target": { "symbol": "F:Shop.Order._logger" },
+  "expect": "error",
+  "errorCode": "not-an-interface",
+  "errorContains": "Logger"
+}

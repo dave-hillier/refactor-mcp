@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-to-nullable-aware",
+  "description": "Annotates a field and an event the constructor leaves unset, and leaves the fields it sets",
+  "target": { "file": "Basket.cs" }
+}

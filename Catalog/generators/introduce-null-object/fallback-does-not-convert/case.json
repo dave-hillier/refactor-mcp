@@ -1,0 +1,8 @@
+{
+  "refactoring": "introduce-null-object",
+  "description": "Refuses when the result would not compile, here because a fallback is wider than the member's return type",
+  "target": { "symbol": "F:Shop.Basket._counter" },
+  "expect": "error",
+  "errorCode": "breaks-compilation",
+  "errorContains": "NullCounter.cs"
+}

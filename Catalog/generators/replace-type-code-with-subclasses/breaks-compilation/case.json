@@ -1,0 +1,7 @@
+{
+  "refactoring": "replace-type-code-with-subclasses",
+  "description": "Refuses when the property named after the field would clash with an existing member",
+  "target": { "symbol": "F:Staff.Employee._type" },
+  "expect": "error",
+  "errorCode": "breaks-compilation"
+}

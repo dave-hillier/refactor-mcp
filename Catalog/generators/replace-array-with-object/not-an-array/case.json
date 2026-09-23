@@ -1,0 +1,9 @@
+{
+  "refactoring": "replace-array-with-object",
+  "description": "Refuses a field that is not a single-dimensional array",
+  "target": { "symbol": "F:Shop.Grid._cells" },
+  "arguments": { "name": "Cells", "members": ["First", "Second"] },
+  "expect": "error",
+  "errorCode": "not-an-array",
+  "errorContains": "_cells"
+}

@@ -1,0 +1,5 @@
+{
+  "refactoring": "extract-decorator",
+  "description": "Decorates the interface a class implements, declared in another file and namespace, placing the decorator beside the class",
+  "target": { "symbol": "T:Shop.Greeter" }
+}

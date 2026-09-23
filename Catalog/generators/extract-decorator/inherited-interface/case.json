@@ -1,0 +1,5 @@
+{
+  "refactoring": "extract-decorator",
+  "description": "Delegates inherited interface members and overloads, implementing a member the derived interface hides explicitly",
+  "target": { "symbol": "T:Shop.IStream" }
+}
