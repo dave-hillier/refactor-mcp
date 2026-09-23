@@ -1359,6 +1359,83 @@ Inherited members are automatically qualified when moved:
 ### Automatic Static Conversion
 When a moved instance method has no dependencies on instance members, it is made static automatically.
 
+## Catalog Refactorings
+
+Tools added for the refactoring catalog in `Catalog/`, grouped as the catalog
+groups them. Each tool's fixtures are the fuller specification.
+
+### Methods and locals
+
+<!-- Methods and locals: examples for this group's tools go below this line. -->
+
+<!-- End of Methods and locals. -->
+
+### Method conversions
+
+<!-- Method conversions: examples for this group's tools go below this line. -->
+
+<!-- End of Method conversions. -->
+
+### Signatures
+
+<!-- Signatures: examples for this group's tools go below this line. -->
+
+<!-- End of Signatures. -->
+
+### Fields, properties and constants
+
+<!-- Fields, properties and constants: examples for this group's tools go below this line. -->
+
+<!-- End of Fields, properties and constants. -->
+
+### Moving members and types
+
+<!-- Moving members and types: examples for this group's tools go below this line. -->
+
+<!-- End of Moving members and types. -->
+
+### Types and hierarchy
+
+<!-- Types and hierarchy: examples for this group's tools go below this line. -->
+
+<!-- End of Types and hierarchy. -->
+
+### Type conversions
+
+<!-- Type conversions: examples for this group's tools go below this line. -->
+
+<!-- End of Type conversions. -->
+
+### Conditionals
+
+<!-- Conditionals: examples for this group's tools go below this line. -->
+
+<!-- End of Conditionals. -->
+
+### Loops and expressions
+
+<!-- Loops and expressions: examples for this group's tools go below this line. -->
+
+<!-- End of Loops and expressions. -->
+
+### Naming and housekeeping
+
+<!-- Naming and housekeeping: examples for this group's tools go below this line. -->
+
+<!-- End of Naming and housekeeping. -->
+
+### Composites
+
+<!-- Composites: examples for this group's tools go below this line. -->
+
+<!-- End of Composites. -->
+
+### Generators
+
+<!-- Generators: examples for this group's tools go below this line. -->
+
+<!-- End of Generators. -->
+
 ## Metrics Resource
 
 Metrics can be queried using the resource scheme:
