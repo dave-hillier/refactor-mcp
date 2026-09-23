@@ -1,0 +1,8 @@
+{
+  "refactoring": "add-delegating-member",
+  "description": "Refuses when the forwarding member would not compile: a public method of a public class cannot return an internal type",
+  "target": { "symbol": "T:Shop.Car" },
+  "arguments": { "member": "Spare", "via": "_engine" },
+  "expect": "error",
+  "errorCode": "breaks-compilation"
+}

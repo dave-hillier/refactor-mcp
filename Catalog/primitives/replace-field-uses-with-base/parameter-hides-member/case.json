@@ -1,0 +1,6 @@
+{
+  "refactoring": "replace-field-uses-with-base",
+  "description": "Where a parameter shares the member's name, the use says this",
+  "target": { "symbol": "T:Staff.Employee" },
+  "arguments": { "field": "_person" }
+}

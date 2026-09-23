@@ -1,0 +1,7 @@
+{
+  "refactoring": "remove-delegating-member",
+  "description": "Refuses a member whose parameters differ from the inherited member's, here in a default value callers rely on",
+  "target": { "symbol": "M:Staff.Employee.Greeting(System.String)" },
+  "expect": "error",
+  "errorCode": "signature-differs"
+}

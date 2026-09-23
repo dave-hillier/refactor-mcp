@@ -9,17 +9,23 @@ the field goes.
 
 1. `change-base-type` the class to the field's class:
    `"target": { "symbol": "T:Staff.Employee" }, "arguments": { "to": "Person" }`.
-2. `inline-method` each forwarding method: `"target": { "symbol": "M:Staff.Employee.LastName" }`.
-3. `inline-field` the field: `"target": { "symbol": "F:Staff.Employee._person" }`.
+2. `replace-field-uses-with-base`, so uses of the field's members reach the
+   inherited members and the field goes:
+   `"target": { "symbol": "T:Staff.Employee" }, "arguments": { "field": "_person" }`.
+   A forwarding member now reads `get => base.Name;` or
+   `return base.LastName();`.
+3. `remove-delegating-member` for each member that now only forwards to the
+   inherited one: `"target": { "symbol": "P:Staff.Employee.Name" }`, then
+   `"target": { "symbol": "M:Staff.Employee.LastName" }`. Uses written with
+   `base` only because the removed member hid the inherited one become plain
+   uses.
 
-This recipe cannot finish. Inline Method puts the forwarding method's body,
-`_person.LastName()`, into its callers, and refuses when a caller outside the
-class cannot reach the private field. Inline Field refuses a field whose
-initialiser creates an object. Neither is what the refactoring needs: a
-forwarding member should be removed so callers reach the inherited member,
-and the field should become the instance itself, which no primitive does. The
-recipe case is kept, marked unimplemented, with the dedicated implementation's
-result as its `after/`, until primitives for those steps exist.
+The plan's recipe, Change Base Type, Inline Method for each delegating
+member, Inline Field, cannot preserve behaviour: Inline Method would put the
+private field into callers outside the class, and a field holding an object
+is not inlined. Turning the field into the instance itself first, then
+removing the members that forward to the inherited ones, does the same job
+one safe step at a time.
 
 ## Arguments
 

@@ -1,0 +1,7 @@
+{
+  "refactoring": "remove-delegating-member",
+  "description": "Refuses when the inherited member is less accessible than the one forwarding to it",
+  "target": { "symbol": "M:Staff.Employee.Code" },
+  "expect": "error",
+  "errorCode": "inherited-less-accessible"
+}

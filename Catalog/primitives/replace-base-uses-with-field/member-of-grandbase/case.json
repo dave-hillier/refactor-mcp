@@ -1,0 +1,6 @@
+{
+  "refactoring": "replace-base-uses-with-field",
+  "description": "Members the base class itself inherits are reached through the field too",
+  "target": { "symbol": "T:Staff.Manager" },
+  "arguments": { "field": "_employee" }
+}

@@ -1,0 +1,6 @@
+{
+  "refactoring": "replace-field-uses-with-base",
+  "description": "Uses of the field's members become uses of the members the class inherits, and the field goes with its comment",
+  "target": { "symbol": "T:Staff.Employee" },
+  "arguments": { "field": "_person" }
+}

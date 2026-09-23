@@ -1,0 +1,6 @@
+{
+  "refactoring": "replace-field-uses-with-base",
+  "description": "With a constructed generic base, member and element accesses through the field become accesses on the instance",
+  "target": { "symbol": "T:Shop.Inventory" },
+  "arguments": { "field": "_items" }
+}

@@ -1,0 +1,9 @@
+{
+  "refactoring": "add-delegating-member",
+  "description": "Refuses when the new member would hide an inherited member other code uses, which would then reach the field instead",
+  "target": { "symbol": "T:Shop.Order" },
+  "arguments": { "member": "Name", "via": "_customer" },
+  "expect": "error",
+  "errorCode": "changes-meaning",
+  "errorContains": "Order.cs(17,"
+}

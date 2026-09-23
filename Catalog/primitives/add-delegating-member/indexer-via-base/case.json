@@ -1,0 +1,6 @@
+{
+  "refactoring": "add-delegating-member",
+  "description": "An indexer is named this; the forwarding indexer keeps its setter, and the class's own element accesses use base",
+  "target": { "symbol": "T:Shop.Stack" },
+  "arguments": { "member": "this", "via": "base" }
+}

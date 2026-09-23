@@ -1,0 +1,7 @@
+{
+  "refactoring": "remove-delegating-member",
+  "description": "Refuses a member that forwards to an inherited member of another name, which callers would not reach once it is gone",
+  "target": { "symbol": "M:Staff.Employee.Surname" },
+  "expect": "error",
+  "errorCode": "not-delegating"
+}

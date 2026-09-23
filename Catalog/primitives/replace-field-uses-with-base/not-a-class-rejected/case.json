@@ -1,0 +1,8 @@
+{
+  "refactoring": "replace-field-uses-with-base",
+  "description": "Refuses a struct, which has no base class",
+  "target": { "symbol": "T:Staff.Badge" },
+  "arguments": { "field": "_number" },
+  "expect": "error",
+  "errorCode": "not-a-class"
+}

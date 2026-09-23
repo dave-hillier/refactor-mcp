@@ -9,18 +9,24 @@ uses, and stops deriving from the old base class.
 
 1. `introduce-field` of the base type on the class:
    `"target": { "symbol": "T:Shop.Stack" }, "arguments": { "type": "List<int>", "name": "_list" }`.
-2. Delegate each inherited member the class or its users rely on: inside the
-   class, `Add(value)` becomes `_list.Add(value)`; for other code, the class
-   gains `public int Count => _list.Count;`.
-3. `change-base-type` removing the base class:
+2. `add-delegating-member` forwarding to the base class, for each inherited
+   member other code uses through the class:
+   `"target": { "symbol": "T:Shop.Stack" }, "arguments": { "member": "Count", "via": "base" }`,
+   then `"member": "this"` for the indexer. Each is declared `new`, and the
+   class's own uses of the inherited member are written with `base`.
+3. `replace-base-uses-with-field`, so the class's uses of its inherited
+   members, those in the new forwarding members included, go through the
+   field: `"target": { "symbol": "T:Shop.Stack" }, "arguments": { "field": "_list" }`.
+4. `change-base-type` removing the base class, which also drops the `new`
+   modifiers that no longer hide anything:
    `"target": { "symbol": "T:Shop.Stack" }`.
 
-Step 2 has no primitive: nothing in the catalog rewrites a use of an inherited
-member to go through a field, or adds a member that forwards to one. Without
-it, Change Base Type refuses because the class still relies on the base
-class's members. The recipe case is kept, marked unimplemented, with the
-dedicated implementation's result as its `after/`, until such a primitive
-exists.
+The plan's recipe, Introduce Field, delegate each used inherited member,
+Change Base Type, has no single primitive for its middle step. It is split
+here into forwarding members added while the base class is still there,
+which changes nothing for their callers, and one step that moves every use
+of the base class part onto the field at once, which is what keeps each step
+behaviour-preserving.
 
 ## Arguments
 

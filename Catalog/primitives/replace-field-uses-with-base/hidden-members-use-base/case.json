@@ -1,0 +1,6 @@
+{
+  "refactoring": "replace-field-uses-with-base",
+  "description": "Where a member of the class hides the inherited one, including inside that member, the use says base; callers elsewhere are untouched",
+  "target": { "symbol": "T:Staff.Employee" },
+  "arguments": { "field": "_person" }
+}

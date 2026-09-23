@@ -1,0 +1,6 @@
+{
+  "refactoring": "replace-field-uses-with-base",
+  "description": "A region around the field stays, and the field's own comment goes with it",
+  "target": { "symbol": "T:Staff.Employee" },
+  "arguments": { "field": "_person" }
+}

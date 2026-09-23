@@ -1,0 +1,5 @@
+{
+  "refactoring": "change-base-type",
+  "description": "Removing the base class drops the new modifier from members that hid its members and now hide nothing",
+  "target": { "symbol": "T:Shop.Stack" }
+}

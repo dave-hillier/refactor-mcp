@@ -53,6 +53,7 @@ public static class ChangeBaseTypeTool
                 description = $"changed the base class of {className} to {newBaseType}";
             }
 
+            changed = await WithoutNeedlessNewModifiersAsync(changed, className, cancellationToken);
             await TypeRefactoringHelpers.ApplyIfCompilesAsync(
                 solution,
                 changed.Project.Solution,
@@ -112,6 +113,38 @@ public static class ChangeBaseTypeTool
             throw new McpException($"Error: {resolved.ToDisplayString()} already derives from {type.Name}, so it cannot be its base class");
 
         return changed;
+    }
+
+    /// <summary>
+    /// Drops the <c>new</c> modifier from members of the class that the
+    /// compiler reports no longer hide anything under the changed base class.
+    /// </summary>
+    private static async Task<Document> WithoutNeedlessNewModifiersAsync(Document document, string className, CancellationToken cancellationToken)
+    {
+        var root = (await document.GetSyntaxRootAsync(cancellationToken))!;
+        var model = (await document.GetSemanticModelAsync(cancellationToken))!;
+        var members = model.GetDiagnostics(cancellationToken: cancellationToken)
+            .Where(d => d.Id == "CS0109")
+            .Select(d => root.FindNode(d.Location.SourceSpan).AncestorsAndSelf().OfType<MemberDeclarationSyntax>().FirstOrDefault())
+            .OfType<MemberDeclarationSyntax>()
+            .Where(m => m.Parent is TypeDeclarationSyntax type && type.Identifier.ValueText == className)
+            .Distinct()
+            .ToList();
+        if (members.Count == 0)
+            return document;
+
+        return document.WithSyntaxRoot(root.ReplaceNodes(members, (_, member) =>
+        {
+            var index = member.Modifiers.IndexOf(SyntaxKind.NewKeyword);
+            if (index < 0)
+                return member;
+
+            // The token after new takes over what came before it, such as indentation.
+            var removed = member.Modifiers[index];
+            var next = removed.GetNextToken();
+            member = member.ReplaceToken(next, next.WithLeadingTrivia(removed.LeadingTrivia.AddRange(next.LeadingTrivia)));
+            return member.WithModifiers(member.Modifiers.RemoveAt(index));
+        }));
     }
 
     internal static TypeDeclarationSyntax WithoutBase(TypeDeclarationSyntax declaration, BaseTypeSyntax current)

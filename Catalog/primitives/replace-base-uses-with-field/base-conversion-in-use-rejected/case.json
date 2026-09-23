@@ -1,0 +1,9 @@
+{
+  "refactoring": "replace-base-uses-with-field",
+  "description": "Refuses when code converts the class to its base class or one of its interfaces, which reaches the base class part",
+  "target": { "symbol": "T:Shop.Stack" },
+  "arguments": { "field": "_list" },
+  "expect": "error",
+  "errorCode": "base-conversion-in-use",
+  "errorContains": "Client.cs(11,"
+}

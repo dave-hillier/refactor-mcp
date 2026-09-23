@@ -1,0 +1,5 @@
+{
+  "refactoring": "remove-delegating-member",
+  "description": "Removes an indexer that only reaches the inherited indexer; element accesses written with base become accesses on this",
+  "target": { "symbol": "P:Shop.Stack.Item(System.Int32)" }
+}

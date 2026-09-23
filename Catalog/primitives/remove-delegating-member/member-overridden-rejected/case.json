@@ -1,0 +1,8 @@
+{
+  "refactoring": "remove-delegating-member",
+  "description": "Refuses a virtual member a subclass overrides, which would be left overriding something else",
+  "target": { "symbol": "M:Staff.Employee.LastName" },
+  "expect": "error",
+  "errorCode": "member-overridden",
+  "errorContains": "Manager"
+}

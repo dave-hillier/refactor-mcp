@@ -1,0 +1,6 @@
+{
+  "refactoring": "add-delegating-member",
+  "description": "A property with a setter the class can reach is forwarded with both accessors",
+  "target": { "symbol": "T:Shop.Order" },
+  "arguments": { "member": "Name", "via": "_customer" }
+}

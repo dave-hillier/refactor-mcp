@@ -1,0 +1,6 @@
+{
+  "refactoring": "replace-base-uses-with-field",
+  "description": "The class's uses of the members it inherits go through the field instead",
+  "target": { "symbol": "T:Shop.Stack" },
+  "arguments": { "field": "_list" }
+}

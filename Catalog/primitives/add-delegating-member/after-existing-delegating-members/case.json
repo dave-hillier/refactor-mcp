@@ -1,0 +1,6 @@
+{
+  "refactoring": "add-delegating-member",
+  "description": "The new member goes after the members that already forward to the same field, and comments on the neighbouring members stay with them",
+  "target": { "symbol": "T:Shop.Order" },
+  "arguments": { "member": "Greeting", "via": "_customer" }
+}

@@ -1,0 +1,9 @@
+{
+  "refactoring": "replace-base-uses-with-field",
+  "description": "Refuses when the class has no field of that name",
+  "target": { "symbol": "T:Shop.Stack" },
+  "arguments": { "field": "_items" },
+  "expect": "error",
+  "errorCode": "field-not-found",
+  "errorContains": "_items"
+}

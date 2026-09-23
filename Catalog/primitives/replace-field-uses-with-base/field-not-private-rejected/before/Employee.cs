@@ -1,0 +1,12 @@
+namespace Staff
+{
+    public class Employee : Person
+    {
+        // The person this employee is.
+        internal readonly Person _person = new Person();
+
+        public decimal Salary { get; set; }
+
+        public string Badge() => _person.Greeting("Employee") + " (" + _person.Name + ")";
+    }
+}

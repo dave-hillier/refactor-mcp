@@ -1,0 +1,6 @@
+{
+  "refactoring": "add-delegating-member",
+  "description": "Nullable annotations on the forwarded member's type and parameters are kept",
+  "target": { "symbol": "T:Shop.Order" },
+  "arguments": { "member": "Find", "via": "_book" }
+}

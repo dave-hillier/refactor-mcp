@@ -1,0 +1,8 @@
+{
+  "refactoring": "replace-base-uses-with-field",
+  "description": "Refuses a field other code could reach, which may hold something else by the time the class uses it",
+  "target": { "symbol": "T:Shop.Stack" },
+  "arguments": { "field": "_list" },
+  "expect": "error",
+  "errorCode": "field-not-private"
+}

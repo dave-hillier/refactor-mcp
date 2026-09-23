@@ -1,0 +1,6 @@
+{
+  "refactoring": "add-delegating-member",
+  "description": "A member forwarding to the base class hides the inherited one; the class's own uses of the inherited member say base so they keep reaching it, and callers elsewhere reach the new member",
+  "target": { "symbol": "T:Shop.Stack" },
+  "arguments": { "member": "Count", "via": "base" }
+}

@@ -1,0 +1,6 @@
+{
+  "refactoring": "replace-base-uses-with-field",
+  "description": "A generic class deriving from a constructed generic base uses a field of the same constructed type",
+  "target": { "symbol": "T:Shop.Registry`1" },
+  "arguments": { "field": "_items" }
+}

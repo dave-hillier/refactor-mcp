@@ -1,0 +1,5 @@
+{
+  "refactoring": "remove-delegating-member",
+  "description": "Removes a method that only calls the method it hides through base; callers now reach the inherited method",
+  "target": { "symbol": "M:Staff.Employee.LastName" }
+}

@@ -1,0 +1,6 @@
+{
+  "refactoring": "add-delegating-member",
+  "description": "A readonly field of the delegate is forwarded by a get-only property",
+  "target": { "symbol": "T:Shop.OrderLine" },
+  "arguments": { "member": "Sku", "via": "_product" }
+}

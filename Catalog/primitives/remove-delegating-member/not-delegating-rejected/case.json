@@ -1,0 +1,7 @@
+{
+  "refactoring": "remove-delegating-member",
+  "description": "Refuses a member that does more than reach the inherited member",
+  "target": { "symbol": "M:Staff.Employee.LastName" },
+  "expect": "error",
+  "errorCode": "not-delegating"
+}

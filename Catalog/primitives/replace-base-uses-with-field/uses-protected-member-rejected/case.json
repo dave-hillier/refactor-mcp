@@ -1,0 +1,9 @@
+{
+  "refactoring": "replace-base-uses-with-field",
+  "description": "Refuses a class that uses a protected member of the base class, which the field cannot reach",
+  "target": { "symbol": "T:Shop.Report" },
+  "arguments": { "field": "_document" },
+  "expect": "error",
+  "errorCode": "uses-protected-member",
+  "errorContains": "Stamp"
+}

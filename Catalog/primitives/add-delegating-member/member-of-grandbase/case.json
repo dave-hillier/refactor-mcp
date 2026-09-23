@@ -1,0 +1,6 @@
+{
+  "refactoring": "add-delegating-member",
+  "description": "Forwarding to the base reaches a member the base class inherited itself",
+  "target": { "symbol": "T:Staff.Manager" },
+  "arguments": { "member": "Name", "via": "base" }
+}

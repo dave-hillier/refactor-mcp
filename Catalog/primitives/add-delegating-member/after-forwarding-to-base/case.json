@@ -1,0 +1,6 @@
+{
+  "refactoring": "add-delegating-member",
+  "description": "A second member forwarding to the base class goes after the first, and callers elsewhere that used the inherited indexer reach the new one",
+  "target": { "symbol": "T:Shop.Stack" },
+  "arguments": { "member": "this", "via": "base" }
+}

@@ -1,0 +1,9 @@
+{
+  "refactoring": "add-delegating-member",
+  "description": "Refuses when the class already declares a member of that name",
+  "target": { "symbol": "T:Shop.Order" },
+  "arguments": { "member": "Greeting", "via": "_customer" },
+  "expect": "error",
+  "errorCode": "name-conflict",
+  "errorContains": "Greeting"
+}
