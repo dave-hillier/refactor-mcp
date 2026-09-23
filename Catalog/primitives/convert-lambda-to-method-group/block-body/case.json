@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-lambda-to-method-group",
+  "description": "A lambda whose block holds the single call becomes the method group, choosing the same overload",
+  "target": { "file": "Sample.cs", "caret": "marker" }
+}

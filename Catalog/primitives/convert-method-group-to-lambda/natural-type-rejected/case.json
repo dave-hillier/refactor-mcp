@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-method-group-to-lambda",
+  "description": "Refuses a method group whose delegate type comes from the group itself, which a lambda without parameter types cannot provide",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "resolution-changes"
+}

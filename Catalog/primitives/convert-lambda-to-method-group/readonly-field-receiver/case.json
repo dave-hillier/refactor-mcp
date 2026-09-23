@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-lambda-to-method-group",
+  "description": "A lambda calling a method on a readonly field becomes that field's method group",
+  "target": { "file": "Sample.cs", "caret": "marker" }
+}

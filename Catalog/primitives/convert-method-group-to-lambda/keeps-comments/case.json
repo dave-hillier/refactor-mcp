@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-method-group-to-lambda",
+  "description": "Comments around the method group stay around the lambda",
+  "target": { "file": "Sample.cs", "caret": "marker" }
+}

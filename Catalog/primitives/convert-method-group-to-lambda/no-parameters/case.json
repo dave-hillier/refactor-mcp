@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-method-group-to-lambda",
+  "description": "A method group for a delegate without parameters becomes a lambda with an empty parameter list",
+  "target": { "file": "Sample.cs", "caret": "marker" }
+}

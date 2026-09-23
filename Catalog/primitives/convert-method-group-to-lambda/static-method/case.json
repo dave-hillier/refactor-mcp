@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-method-group-to-lambda",
+  "description": "A method group becomes a lambda calling the method, with its parameter's name",
+  "target": { "file": "Sample.cs", "caret": "marker" }
+}

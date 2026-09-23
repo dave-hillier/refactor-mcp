@@ -34,6 +34,27 @@ internal sealed class MethodConversionsMappings : ICatalogMappings
                 ["no-body"] = "has no body",
                 ["not-a-member-with-body"] = "There is no method, property, accessor, constructor, operator or local function",
             }),
+        new CatalogMapping(
+            "convert-lambda-to-method-group",
+            "convert-lambda-to-method-group",
+            PositionArguments,
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["not-a-lambda"] = "There is no lambda",
+                ["not-a-forwarding-call"] = "is not a single call of a method passing the lambda's parameters",
+                ["unstable-receiver"] = "where a method group would evaluate it once",
+                ["resolution-changes"] = "would change which method, delegate type or overload is chosen",
+            }),
+        new CatalogMapping(
+            "convert-method-group-to-lambda",
+            "convert-method-group-to-lambda",
+            PositionArguments,
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["not-a-method-group"] = "is not a method group",
+                ["unstable-receiver"] = "where a lambda would evaluate it each time it runs",
+                ["resolution-changes"] = "would change which method, delegate type or overload is chosen",
+            }),
     };
 
     /// <summary>

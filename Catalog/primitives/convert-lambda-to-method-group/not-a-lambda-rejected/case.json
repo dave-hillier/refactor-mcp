@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-lambda-to-method-group",
+  "description": "Refuses a caret that is not inside a lambda",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "not-a-lambda"
+}

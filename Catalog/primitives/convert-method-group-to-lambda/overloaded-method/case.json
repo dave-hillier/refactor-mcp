@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-method-group-to-lambda",
+  "description": "A group of an overloaded method becomes a lambda calling the overload the delegate chose",
+  "target": { "file": "Sample.cs", "caret": "marker" }
+}
