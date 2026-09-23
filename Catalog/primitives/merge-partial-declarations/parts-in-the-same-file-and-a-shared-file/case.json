@@ -1,0 +1,5 @@
+{
+  "refactoring": "merge-partial-declarations",
+  "description": "Merges a second part in the same file and one in a file that keeps another type, which is not deleted",
+  "target": { "symbol": "T:Shop.Order", "file": "Order.cs" }
+}

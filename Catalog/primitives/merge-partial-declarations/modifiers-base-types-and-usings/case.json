@@ -1,0 +1,5 @@
+{
+  "refactoring": "merge-partial-declarations",
+  "description": "Combines the modifiers and base types of every part and brings the using directives the moved members need",
+  "target": { "symbol": "T:Shop.Order", "file": "Order.cs" }
+}
