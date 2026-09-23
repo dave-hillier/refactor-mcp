@@ -1,0 +1,5 @@
+{
+  "refactoring": "remove-delegating-member",
+  "description": "A forwarding member of a generic class, in terms of its type parameter, is removed",
+  "target": { "symbol": "M:Shop.Registry`1.Add(`0)" }
+}

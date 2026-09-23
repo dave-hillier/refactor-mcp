@@ -1,0 +1,8 @@
+{
+  "refactoring": "add-delegating-member",
+  "description": "Refuses to forward to the base class of a class that derives only from object",
+  "target": { "symbol": "T:Shop.Order" },
+  "arguments": { "member": "Name", "via": "base" },
+  "expect": "error",
+  "errorCode": "no-base-class"
+}

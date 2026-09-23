@@ -1,0 +1,5 @@
+{
+  "refactoring": "remove-delegating-member",
+  "description": "Removes the one overload the id names",
+  "target": { "symbol": "M:Shop.Report.Print(System.String)" }
+}

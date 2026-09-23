@@ -1,0 +1,8 @@
+{
+  "refactoring": "replace-base-uses-with-field",
+  "description": "Refuses when a constructor passes arguments to the base class, so the field would not start the same",
+  "target": { "symbol": "T:Shop.Stack" },
+  "arguments": { "field": "_list" },
+  "expect": "error",
+  "errorCode": "base-constructed-with-arguments"
+}

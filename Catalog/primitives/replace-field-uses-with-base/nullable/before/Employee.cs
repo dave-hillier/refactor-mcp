@@ -1,0 +1,11 @@
+#nullable enable
+
+namespace Staff
+{
+    public class Employee : Person
+    {
+        private readonly Person _person = new Person();
+
+        public string Display() => _person.Nickname ?? "anonymous";
+    }
+}

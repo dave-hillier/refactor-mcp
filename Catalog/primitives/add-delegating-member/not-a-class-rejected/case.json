@@ -1,0 +1,8 @@
+{
+  "refactoring": "add-delegating-member",
+  "description": "Refuses an interface, which cannot hold a field or forward to a base class",
+  "target": { "symbol": "T:Shop.IOrder" },
+  "arguments": { "member": "Name", "via": "base" },
+  "expect": "error",
+  "errorCode": "not-a-class"
+}

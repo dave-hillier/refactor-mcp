@@ -1,0 +1,8 @@
+{
+  "refactoring": "add-delegating-member",
+  "description": "Refuses an event, which a forwarding member cannot reproduce",
+  "target": { "symbol": "T:Shop.Order" },
+  "arguments": { "member": "Changed", "via": "_customer" },
+  "expect": "error",
+  "errorCode": "unsupported-member"
+}

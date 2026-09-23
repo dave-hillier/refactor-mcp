@@ -1,0 +1,8 @@
+{
+  "refactoring": "replace-base-uses-with-field",
+  "description": "Refuses a field the class already uses, whose contents may differ from the base class part",
+  "target": { "symbol": "T:Shop.Stack" },
+  "arguments": { "field": "_list" },
+  "expect": "error",
+  "errorCode": "field-in-use"
+}

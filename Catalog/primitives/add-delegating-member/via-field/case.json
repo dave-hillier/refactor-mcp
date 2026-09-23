@@ -1,0 +1,6 @@
+{
+  "refactoring": "add-delegating-member",
+  "description": "Adds a method that forwards to the same method of a field, after the fields",
+  "target": { "symbol": "T:Shop.Order" },
+  "arguments": { "member": "Greeting", "via": "_customer" }
+}

@@ -1,0 +1,8 @@
+{
+  "refactoring": "replace-base-uses-with-field",
+  "description": "Refuses a class that derives only from object",
+  "target": { "symbol": "T:Shop.Stack" },
+  "arguments": { "field": "_list" },
+  "expect": "error",
+  "errorCode": "no-base-class"
+}

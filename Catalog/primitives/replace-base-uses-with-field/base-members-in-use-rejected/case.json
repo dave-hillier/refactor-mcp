@@ -1,0 +1,9 @@
+{
+  "refactoring": "replace-base-uses-with-field",
+  "description": "Refuses when code elsewhere uses a member the class inherits, which would no longer see what the class adds",
+  "target": { "symbol": "T:Shop.Stack" },
+  "arguments": { "field": "_list" },
+  "expect": "error",
+  "errorCode": "base-members-in-use",
+  "errorContains": "Client.cs(9,"
+}

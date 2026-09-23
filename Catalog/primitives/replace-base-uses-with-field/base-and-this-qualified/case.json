@@ -1,0 +1,6 @@
+{
+  "refactoring": "replace-base-uses-with-field",
+  "description": "Uses written with base or this go through the field, including those in members that forward to the base class, while code elsewhere keeps using the class's own members; comments stay",
+  "target": { "symbol": "T:Shop.Stack" },
+  "arguments": { "field": "_list" }
+}

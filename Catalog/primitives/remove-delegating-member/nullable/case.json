@@ -1,0 +1,5 @@
+{
+  "refactoring": "remove-delegating-member",
+  "description": "A forwarding member with nullable types is removed like any other",
+  "target": { "symbol": "P:Staff.Employee.Nickname" }
+}

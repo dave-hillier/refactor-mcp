@@ -1,0 +1,9 @@
+{
+  "refactoring": "replace-field-uses-with-base",
+  "description": "Refuses when the class has no field of that name",
+  "target": { "symbol": "T:Staff.Employee" },
+  "arguments": { "field": "_self" },
+  "expect": "error",
+  "errorCode": "field-not-found",
+  "errorContains": "_self"
+}

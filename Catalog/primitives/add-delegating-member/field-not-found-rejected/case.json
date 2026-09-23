@@ -1,0 +1,9 @@
+{
+  "refactoring": "add-delegating-member",
+  "description": "Refuses when the class has no field of the given name",
+  "target": { "symbol": "T:Shop.Order" },
+  "arguments": { "member": "Name", "via": "_buyer" },
+  "expect": "error",
+  "errorCode": "field-not-found",
+  "errorContains": "_buyer"
+}

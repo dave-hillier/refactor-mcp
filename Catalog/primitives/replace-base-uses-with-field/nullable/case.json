@@ -1,0 +1,6 @@
+{
+  "refactoring": "replace-base-uses-with-field",
+  "description": "Nullable annotations are untouched when the uses move to the field",
+  "target": { "symbol": "T:Shop.Cache" },
+  "arguments": { "field": "_entries" }
+}

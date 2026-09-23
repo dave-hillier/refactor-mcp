@@ -1,0 +1,8 @@
+{
+  "refactoring": "replace-base-uses-with-field",
+  "description": "Refuses a struct, which has no base class to stop using",
+  "target": { "symbol": "T:Shop.Point" },
+  "arguments": { "field": "_x" },
+  "expect": "error",
+  "errorCode": "not-a-class"
+}

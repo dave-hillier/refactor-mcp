@@ -1,0 +1,9 @@
+{
+  "refactoring": "replace-field-uses-with-base",
+  "description": "Refuses when code converts the class to its base class, which would then see what the field held",
+  "target": { "symbol": "T:Staff.Employee" },
+  "arguments": { "field": "_person" },
+  "expect": "error",
+  "errorCode": "base-conversion-in-use",
+  "errorContains": "Payroll.cs(5,"
+}

@@ -1,0 +1,8 @@
+{
+  "refactoring": "replace-field-uses-with-base",
+  "description": "Refuses a class that overrides a member of the base class, which the base class would then call",
+  "target": { "symbol": "T:Shop.Report" },
+  "arguments": { "field": "_document" },
+  "expect": "error",
+  "errorCode": "overrides-base-member"
+}

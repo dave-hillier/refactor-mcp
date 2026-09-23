@@ -1,0 +1,8 @@
+{
+  "refactoring": "add-delegating-member",
+  "description": "Refuses a name several overloads share; the member must be named by its id",
+  "target": { "symbol": "T:Shop.Report" },
+  "arguments": { "member": "Print", "via": "_printer" },
+  "expect": "error",
+  "errorCode": "ambiguous-member"
+}

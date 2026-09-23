@@ -1,0 +1,9 @@
+{
+  "refactoring": "add-delegating-member",
+  "description": "Refuses a member the field's type does not have",
+  "target": { "symbol": "T:Shop.Order" },
+  "arguments": { "member": "Surname", "via": "_customer" },
+  "expect": "error",
+  "errorCode": "member-not-found",
+  "errorContains": "Surname"
+}

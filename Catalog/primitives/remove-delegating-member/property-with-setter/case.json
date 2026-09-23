@@ -1,0 +1,5 @@
+{
+  "refactoring": "remove-delegating-member",
+  "description": "Removes a property whose getter and setter only reach the inherited property through base",
+  "target": { "symbol": "P:Staff.Employee.Name" }
+}

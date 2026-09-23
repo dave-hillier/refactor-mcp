@@ -1,0 +1,8 @@
+{
+  "refactoring": "replace-field-uses-with-base",
+  "description": "Refuses a field whose type is not the base class",
+  "target": { "symbol": "T:Staff.Employee" },
+  "arguments": { "field": "_person" },
+  "expect": "error",
+  "errorCode": "field-type-not-base"
+}

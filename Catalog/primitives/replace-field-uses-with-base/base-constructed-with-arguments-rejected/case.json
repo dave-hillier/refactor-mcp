@@ -1,0 +1,8 @@
+{
+  "refactoring": "replace-field-uses-with-base",
+  "description": "Refuses when a constructor passes arguments to the base class, so the instance would not start like the field's object",
+  "target": { "symbol": "T:Staff.Employee" },
+  "arguments": { "field": "_person" },
+  "expect": "error",
+  "errorCode": "base-constructed-with-arguments"
+}

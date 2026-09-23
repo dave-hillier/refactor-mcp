@@ -1,0 +1,6 @@
+{
+  "refactoring": "add-delegating-member",
+  "description": "Forwarding to a field of a constructed generic type writes the member with the type arguments substituted",
+  "target": { "symbol": "T:Shop.Tally" },
+  "arguments": { "member": "ContainsKey", "via": "_counts" }
+}

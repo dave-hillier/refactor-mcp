@@ -1,0 +1,9 @@
+{
+  "refactoring": "replace-field-uses-with-base",
+  "description": "Refuses a field used as an object in its own right, which the instance could not stand in for",
+  "target": { "symbol": "T:Staff.Employee" },
+  "arguments": { "field": "_person" },
+  "expect": "error",
+  "errorCode": "field-escapes",
+  "errorContains": "Employee.cs(9,"
+}

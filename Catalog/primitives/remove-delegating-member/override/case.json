@@ -1,0 +1,5 @@
+{
+  "refactoring": "remove-delegating-member",
+  "description": "Removes an override that only calls the member it overrides",
+  "target": { "symbol": "M:Shop.Report.Title" }
+}

@@ -1,0 +1,5 @@
+{
+  "refactoring": "remove-delegating-member",
+  "description": "A use written with base stays when a subclass overrides the member, since without base it would reach the override",
+  "target": { "symbol": "M:Shop.Report.Title" }
+}

@@ -1,0 +1,8 @@
+{
+  "refactoring": "replace-field-uses-with-base",
+  "description": "Refuses a class that derives only from object",
+  "target": { "symbol": "T:Staff.Employee" },
+  "arguments": { "field": "_person" },
+  "expect": "error",
+  "errorCode": "no-base-class"
+}

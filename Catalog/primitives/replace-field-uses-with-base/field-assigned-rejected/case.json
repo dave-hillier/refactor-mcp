@@ -1,0 +1,9 @@
+{
+  "refactoring": "replace-field-uses-with-base",
+  "description": "Refuses a field assigned after its initialiser, which may then hold another object",
+  "target": { "symbol": "T:Staff.Employee" },
+  "arguments": { "field": "_person" },
+  "expect": "error",
+  "errorCode": "field-assigned",
+  "errorContains": "Employee.cs(11,"
+}

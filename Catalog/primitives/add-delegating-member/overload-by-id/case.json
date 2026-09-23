@@ -1,0 +1,6 @@
+{
+  "refactoring": "add-delegating-member",
+  "description": "An overloaded member is named by its documentation comment id, and only that overload is forwarded",
+  "target": { "symbol": "T:Shop.Report" },
+  "arguments": { "member": "M:Shop.Printer.Print(System.String)", "via": "_printer" }
+}

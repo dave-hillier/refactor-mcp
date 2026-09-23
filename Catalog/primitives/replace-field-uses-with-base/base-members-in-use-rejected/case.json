@@ -1,0 +1,9 @@
+{
+  "refactoring": "replace-field-uses-with-base",
+  "description": "Refuses when code already uses an inherited member, which would then see what the field held",
+  "target": { "symbol": "T:Staff.Employee" },
+  "arguments": { "field": "_person" },
+  "expect": "error",
+  "errorCode": "base-members-in-use",
+  "errorContains": "Payroll.cs(5,"
+}
