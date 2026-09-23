@@ -1,0 +1,5 @@
+{
+  "refactoring": "add-null-checks",
+  "description": "Leaves a parameter the method already guards, and keeps the comment above the first statement with that statement",
+  "target": { "symbol": "M:Shop.Mailer.Send(System.String,System.String,System.String)" }
+}
