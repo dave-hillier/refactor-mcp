@@ -120,6 +120,26 @@ internal sealed class TypeConversionsMappings : ICatalogMappings
                 ["unnamable-property-type"] = "has a type the class cannot name",
                 ["name-conflict"] = "is already visible where the class would be declared",
             }),
+        new CatalogMapping(
+            "convert-tuple-to-named-type",
+            "convert-tuple-to-named-type",
+            async context =>
+            {
+                var arguments = With(await DeclarationArguments(context, "methodName"), ("typeName", context.RequiredArgument("name")));
+                if (context.HasArgument("parameter"))
+                    arguments["parameterName"] = context.RequiredArgument("parameter");
+                if (context.HasArgument("kind"))
+                    arguments["kind"] = context.RequiredArgument("kind");
+                return arguments;
+            },
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["not-a-tuple"] = "is not a tuple",
+                ["unnamed-elements"] = "has no name to give the property",
+                ["name-conflict"] = "is already visible where the type would be declared",
+                ["language-version"] = "raise the language version first",
+                ["used-as-tuple"] = "A use of the tuple would not compile",
+            }),
     };
 
     /// <summary>

@@ -1,0 +1,9 @@
+{
+  "refactoring": "convert-tuple-to-named-type",
+  "description": "Refuses when a caller stores the result in a variable declared with the tuple type",
+  "target": { "symbol": "M:Shop.Stats.Range(System.Int32[])" },
+  "arguments": { "name": "MinMax" },
+  "expect": "error",
+  "errorCode": "used-as-tuple",
+  "errorContains": "Report.cs"
+}
