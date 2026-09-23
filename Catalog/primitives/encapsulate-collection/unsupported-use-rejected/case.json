@@ -1,0 +1,8 @@
+{
+  "refactoring": "encapsulate-collection",
+  "description": "Refuses when a caller uses the list in a way a read-only view does not allow, and changes nothing",
+  "target": { "symbol": "F:Shop.Order._tags" },
+  "expect": "error",
+  "errorCode": "unsupported-use",
+  "errorContains": "Clear"
+}

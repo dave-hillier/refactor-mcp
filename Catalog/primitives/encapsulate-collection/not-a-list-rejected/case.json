@@ -1,0 +1,7 @@
+{
+  "refactoring": "encapsulate-collection",
+  "description": "Refuses a collection that is not a List<T>",
+  "target": { "symbol": "F:Shop.Order._codes" },
+  "expect": "error",
+  "errorCode": "unsupported-collection-type"
+}

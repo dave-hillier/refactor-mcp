@@ -1,0 +1,5 @@
+{
+  "refactoring": "make-field-readonly",
+  "description": "A field only assigned by the constructor becomes readonly",
+  "target": { "symbol": "F:Shop.Customer._name" }
+}

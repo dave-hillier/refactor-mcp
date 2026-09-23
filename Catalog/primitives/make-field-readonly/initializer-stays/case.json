@@ -1,0 +1,5 @@
+{
+  "refactoring": "make-field-readonly",
+  "description": "An initialiser stays where it is, even when the type has a constructor, and comments on the field are kept",
+  "target": { "symbol": "F:Shop.Config._timeout" }
+}

@@ -1,0 +1,7 @@
+{
+  "refactoring": "encapsulate-collection",
+  "description": "Refuses when the exposing property can also replace the list",
+  "target": { "symbol": "F:Shop.Order._tags" },
+  "expect": "error",
+  "errorCode": "property-has-setter"
+}

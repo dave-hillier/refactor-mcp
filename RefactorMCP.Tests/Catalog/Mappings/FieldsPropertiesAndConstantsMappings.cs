@@ -112,6 +112,34 @@ internal sealed class FieldsPropertiesAndConstantsMappings : ICatalogMappings
                 ("increment-used-as-value", "The value of an increment"),
                 ("unsupported-assignment", "cannot be written as a call"),
                 ("receiver-evaluated-twice", "twice"))),
+        new CatalogMapping(
+            "make-field-readonly",
+            "make-field-readonly",
+            context => MemberArguments(context, "fieldName"),
+            Codes(
+                ("constant-field", "is a constant"),
+                ("volatile-field", "is volatile"),
+                ("mutable-struct", "holds the mutable struct"),
+                ("multiple-declarators", "is declared alongside other fields"),
+                ("assigned-outside-constructor", "is assigned outside a constructor"))),
+        new CatalogMapping(
+            "convert-setter-to-init",
+            "transform-setter-to-init",
+            context => MemberArguments(context, "propertyName"),
+            Codes(
+                ("no-setter", "has no setter"),
+                ("in-hierarchy", "so its hierarchy would have to change too"),
+                ("assigned-after-construction", "is assigned after construction"))),
+        new CatalogMapping(
+            "encapsulate-collection",
+            "encapsulate-collection",
+            context => MemberArguments(context, "fieldName", ("name", "elementName")),
+            Codes(
+                ("field-not-private", "is not private"),
+                ("unsupported-collection-type", "only List<T> fields are supported"),
+                ("property-has-setter", "can replace the list"),
+                ("name-conflict", "already has a member named"),
+                ("unsupported-use", "in a way a read-only list does not allow"))),
     };
 
     /// <summary>

@@ -1,0 +1,6 @@
+{
+  "refactoring": "encapsulate-collection",
+  "description": "Nullable element types carry over to the view and the methods",
+  "target": { "symbol": "F:Shop.Survey._answers" },
+  "project": { "nullable": "enable" }
+}

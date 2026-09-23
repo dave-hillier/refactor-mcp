@@ -1,0 +1,5 @@
+{
+  "refactoring": "encapsulate-collection",
+  "description": "The property exposing a list returns a read-only view, Add and Remove methods are added, and callers in other files that added and removed through the property call them",
+  "target": { "symbol": "F:Shop.Order._tags" }
+}

@@ -1,0 +1,7 @@
+{
+  "refactoring": "make-field-readonly",
+  "description": "Refuses a field holding a mutable struct, whose methods would then change a copy",
+  "target": { "symbol": "F:Shop.Meter._tally" },
+  "expect": "error",
+  "errorCode": "mutable-struct"
+}

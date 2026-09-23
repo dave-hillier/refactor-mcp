@@ -1,0 +1,5 @@
+{
+  "refactoring": "make-field-readonly",
+  "description": "A constructor in another part of a partial type may assign the field",
+  "target": { "symbol": "F:Shop.Order._id" }
+}

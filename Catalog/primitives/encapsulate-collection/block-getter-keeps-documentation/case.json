@@ -1,0 +1,6 @@
+{
+  "refactoring": "encapsulate-collection",
+  "description": "A block-bodied getter is rewritten in place and keeps the property's documentation; the element name comes from the name argument",
+  "target": { "symbol": "F:Shop.Team._people" },
+  "arguments": { "name": "Member" }
+}

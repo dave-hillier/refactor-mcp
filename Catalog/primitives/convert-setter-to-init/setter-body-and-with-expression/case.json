@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-setter-to-init",
+  "description": "A setter with a body keeps it as an init accessor, and a with expression on a record may still set it",
+  "target": { "symbol": "P:Shop.Point.X" }
+}

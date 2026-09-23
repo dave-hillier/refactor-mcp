@@ -18,12 +18,11 @@ public class FieldAndUsingsInSourceTests
 }";
         var expected = @"class CurrencyFormatter
 {
-    private readonly string formatPattern;
+    private readonly string formatPattern = ""Currency"";
 
     public CurrencyFormatter()
     {
         Console.WriteLine(formatPattern);
-        formatPattern = ""Currency"";
     }
 }";
         var output = MakeFieldReadonlyTool.MakeFieldReadonlyInSource(input, "formatPattern");

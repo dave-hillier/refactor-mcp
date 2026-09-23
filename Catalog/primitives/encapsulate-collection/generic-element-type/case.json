@@ -1,0 +1,5 @@
+{
+  "refactoring": "encapsulate-collection",
+  "description": "A list of a type parameter gives methods taking that type parameter",
+  "target": { "symbol": "F:Shop.Basket`1._items" }
+}

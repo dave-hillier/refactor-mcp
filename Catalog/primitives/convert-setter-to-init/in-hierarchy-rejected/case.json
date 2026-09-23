@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-setter-to-init",
+  "description": "Refuses a virtual property, whose overrides would have to change too",
+  "target": { "symbol": "P:Shop.Product.Name" },
+  "expect": "error",
+  "errorCode": "in-hierarchy"
+}

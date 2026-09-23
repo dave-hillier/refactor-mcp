@@ -4,6 +4,8 @@ using System.ComponentModel;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Editing;
+using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Formatting;
 
 [McpServerToolType]
@@ -13,7 +15,7 @@ public static class TransformSetterToInitTool
     public static async Task<string> TransformSetterToInit(
         [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
-        [Description("Name of the property to transform")] string propertyName)
+        [Description("Name of the property to transform, optionally qualified by its type as Type.Property")] string propertyName)
     {
         try
         {
@@ -29,30 +31,58 @@ public static class TransformSetterToInitTool
         }
     }
 
+    /// <summary>
+    /// Turns the setter into an init accessor when nothing sets the property
+    /// after construction: every assignment is in an object initialiser, a
+    /// <c>with</c> expression, or a constructor or init accessor of the type
+    /// or a type derived from it.
+    /// </summary>
     private static async Task<string> TransformSetterToInitWithSolution(Document document, string propertyName)
     {
-        var syntaxRoot = await document.GetSyntaxRootAsync();
-
-        var property = syntaxRoot!.DescendantNodes()
-            .OfType<PropertyDeclarationSyntax>()
-            .FirstOrDefault(p => p.Identifier.ValueText == propertyName);
-        if (property == null)
-            throw new McpException($"Error: No property named '{propertyName}' found");
-
-        var setter = property.AccessorList?.Accessors.FirstOrDefault(a => a.IsKind(SyntaxKind.SetAccessorDeclaration));
-        if (setter == null)
+        var property = await FieldPropertyRefactoring.FindPropertyAsync(document, propertyName);
+        propertyName = property.Name;
+        var declaration = await FieldPropertyRefactoring.DeclarationAsync<PropertyDeclarationSyntax>(property);
+        if (declaration.AccessorList?.Accessors.Any(a => a.IsKind(SyntaxKind.SetAccessorDeclaration)) != true)
             throw new McpException($"Error: Property '{propertyName}' has no setter");
+        if (property.IsVirtual || property.IsAbstract || property.IsOverride)
+            throw new McpException($"Error: Property '{propertyName}' is virtual, abstract or an override, so its hierarchy would have to change too");
 
-        var rewriter = new SetterToInitRewriter(propertyName);
-        var newRoot = rewriter.Visit(syntaxRoot);
-        var formatted = Formatter.Format(newRoot!, document.Project.Solution.Workspace);
-        var newDocument = document.WithSyntaxRoot(formatted);
-        var newText = await newDocument.GetTextAsync();
-        var encoding = await RefactoringHelpers.GetFileEncodingAsync(document.FilePath!);
-        await File.WriteAllTextAsync(document.FilePath!, newText.ToString(), encoding);
-        RefactoringHelpers.UpdateSolutionCache(newDocument);
+        var solution = document.Project.Solution;
+        foreach (var location in (await SymbolFinder.FindReferencesAsync(property, solution)).SelectMany(r => r.Locations))
+        {
+            var root = (await location.Document.GetSyntaxRootAsync())!;
+            var name = (ExpressionSyntax)root.FindNode(location.Location.SourceSpan, getInnermostNodeForTie: true);
+            if (FieldPropertyRefactoring.IsWrite(name) && !MayUseInit(name, property, (await location.Document.GetSemanticModelAsync())!))
+                throw new McpException($"Error: '{propertyName}' is assigned after construction at {location.Location.GetLineSpan()}, which an init accessor does not allow");
+        }
 
-        return $"Successfully converted setter to init for '{propertyName}' in {document.FilePath} (solution mode)";
+        var declaringDocument = solution.GetDocument(declaration.SyntaxTree)!;
+        var editor = await DocumentEditor.CreateAsync(declaringDocument);
+        editor.ReplaceNode(declaration, new SetterToInitRewriter(propertyName).Visit(declaration)!);
+
+        await FieldPropertyRefactoring.WriteChangesAsync(solution, editor.GetChangedDocument().Project.Solution);
+        return $"Successfully converted setter to init for '{propertyName}' in {declaringDocument.FilePath} (solution mode)";
+    }
+
+    private static bool MayUseInit(ExpressionSyntax name, IPropertySymbol property, SemanticModel model)
+    {
+        var reference = FieldPropertyRefactoring.ReferenceExpression(name);
+        if (reference.Parent is AssignmentExpressionSyntax { Parent: InitializerExpressionSyntax initializer } assignment
+            && assignment.Left == reference
+            && (initializer.IsKind(SyntaxKind.ObjectInitializerExpression) || initializer.IsKind(SyntaxKind.WithInitializerExpression)))
+            return true;
+
+        if (FieldPropertyRefactoring.ConstructingMember(name, property.IsStatic)?.Parent is not TypeDeclarationSyntax type)
+            return false;
+
+        var receiverIsThis = reference is not MemberAccessExpressionSyntax access
+            || access.Expression is ThisExpressionSyntax or BaseExpressionSyntax;
+        for (var candidate = model.GetDeclaredSymbol(type); candidate is not null; candidate = candidate.BaseType)
+        {
+            if (SymbolEqualityComparer.Default.Equals(candidate, property.ContainingType))
+                return receiverIsThis;
+        }
+        return false;
     }
 
     private static Task<string> TransformSetterToInitSingleFile(string filePath, string propertyName)

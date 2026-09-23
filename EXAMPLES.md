@@ -1386,6 +1386,104 @@ groups them. Each tool's fixtures are the fuller specification.
 
 <!-- Fields, properties and constants: examples for this group's tools go below this line. -->
 
+Tools that take a member name also accept it qualified by its type, such as
+`Order.Quantity`, to choose between types declared in the same file.
+
+#### Introduce Field of a Type
+
+`introduce-field` with `fieldType` adds a field of that type to the type
+containing the selection, instead of introducing one from an expression. A
+class with an accessible parameterless constructor gets a readonly field
+holding a new instance.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json introduce-field '{"solutionPath":"./RefactorMCP.sln","filePath":"./Shop/Customer.cs","selectionRange":"3:18-3:26","fieldName":"_address","fieldType":"Address"}'
+```
+
+#### Introduce Constant
+
+Replaces a selected literal or constant expression with a private constant;
+`replaceAll` also replaces every other occurrence of the same value in the
+type.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json introduce-constant '{"solutionPath":"./RefactorMCP.sln","filePath":"./Shop/Session.cs","selectionRange":"7:30-7:32","constantName":"SecondsPerMinute","replaceAll":true}'
+```
+
+#### Inline Constant
+
+Replaces every use of a constant with its value, qualified and parenthesised
+as each use needs, and removes the constant.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json inline-constant '{"solutionPath":"./RefactorMCP.sln","filePath":"./Shop/Limits.cs","constantName":"MaxItems"}'
+```
+
+#### Inline Field
+
+Replaces every read of a field assigned only by a side-effect-free
+initialiser with that initialiser, and removes the field.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json inline-field '{"solutionPath":"./RefactorMCP.sln","filePath":"./Shop/Greeter.cs","fieldName":"_greeting"}'
+```
+
+#### Encapsulate Field
+
+Makes a field private behind a property; code outside the type uses the
+property. `propertyName` is optional.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json encapsulate-field '{"solutionPath":"./RefactorMCP.sln","filePath":"./Shop/Order.cs","fieldName":"Quantity"}'
+```
+
+#### Convert to Auto-Property
+
+Replaces a property that only reads and writes a private field with an
+auto-property, and removes the field.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json convert-to-auto-property '{"solutionPath":"./RefactorMCP.sln","filePath":"./Shop/Basket.cs","propertyName":"Count"}'
+```
+
+#### Convert Auto-Property to Backing Field
+
+Gives an auto-property a private backing field and accessors that read and
+write it. `fieldName` is optional.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json convert-auto-property-to-backing-field '{"solutionPath":"./RefactorMCP.sln","filePath":"./Shop/Customer.cs","propertyName":"Name","fieldName":"_name"}'
+```
+
+#### Convert Method to Property
+
+Turns a parameterless method that returns a value into a get-only property,
+with its overrides, and each call into a read. `GetTotal` becomes `Total`
+unless `propertyName` is given.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json convert-method-to-property '{"solutionPath":"./RefactorMCP.sln","filePath":"./Shop/Order.cs","methodName":"GetTotal"}'
+```
+
+#### Convert Property to Methods
+
+Replaces a property with `Get` and `Set` methods and turns every read and
+write into a call.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json convert-property-to-methods '{"solutionPath":"./RefactorMCP.sln","filePath":"./Shop/Order.cs","propertyName":"Quantity"}'
+```
+
+#### Encapsulate Collection
+
+Exposes a private `List<T>` field as a read-only list, adds `Add` and
+`Remove` methods, and redirects callers that added or removed through the
+property. `elementName` is optional.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json encapsulate-collection '{"solutionPath":"./RefactorMCP.sln","filePath":"./Shop/Order.cs","fieldName":"_tags","elementName":"Tag"}'
+```
+
 <!-- End of Fields, properties and constants. -->
 
 ### Moving members and types

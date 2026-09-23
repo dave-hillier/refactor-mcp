@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-setter-to-init",
+  "description": "Refuses a property its own type increments after construction",
+  "target": { "symbol": "P:Shop.Counter.Count" },
+  "expect": "error",
+  "errorCode": "assigned-after-construction"
+}

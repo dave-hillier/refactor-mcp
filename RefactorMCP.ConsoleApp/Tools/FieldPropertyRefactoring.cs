@@ -126,6 +126,50 @@ internal static class FieldPropertyRefactoring
         };
     }
 
+    /// <summary>
+    /// The constructor or init accessor a node runs in while an object is
+    /// being constructed, or null. Only a static constructor counts for static
+    /// members and only instance constructors and init accessors for instance
+    /// members; code in a lambda or local function may run later, so it does
+    /// not count.
+    /// </summary>
+    internal static MemberDeclarationSyntax? ConstructingMember(SyntaxNode node, bool isStatic)
+    {
+        foreach (var ancestor in node.Ancestors())
+        {
+            switch (ancestor)
+            {
+                case AnonymousFunctionExpressionSyntax or LocalFunctionStatementSyntax:
+                    return null;
+                case ConstructorDeclarationSyntax constructor:
+                    return constructor.Modifiers.Any(SyntaxKind.StaticKeyword) == isStatic ? constructor : null;
+                case AccessorDeclarationSyntax accessor when accessor.IsKind(SyntaxKind.InitAccessorDeclaration):
+                    return isStatic ? null : ancestor.Parent!.Parent as MemberDeclarationSyntax;
+                case MemberDeclarationSyntax:
+                    return null;
+            }
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// The expression a property's getter returns when that is all it does:
+    /// its expression body, the get accessor's expression body, or the value
+    /// of a get accessor block holding a single return.
+    /// </summary>
+    internal static ExpressionSyntax? GetterExpression(PropertyDeclarationSyntax property)
+    {
+        if (property.ExpressionBody is { } arrow)
+            return arrow.Expression;
+
+        return property.AccessorList?.Accessors.FirstOrDefault(a => a.IsKind(SyntaxKind.GetAccessorDeclaration)) switch
+        {
+            { ExpressionBody: { } body } => body.Expression,
+            { Body.Statements: [ReturnStatementSyntax { Expression: { } returned }] } => returned,
+            _ => null,
+        };
+    }
+
     /// <summary>True when the reference is passed as a <c>ref</c>, <c>out</c> or <c>in</c> argument.</summary>
     internal static bool IsPassedByReference(ExpressionSyntax reference) =>
         ReferenceExpression(reference).Parent is ArgumentSyntax argument && !argument.RefKindKeyword.IsKind(SyntaxKind.None);

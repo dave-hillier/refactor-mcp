@@ -43,7 +43,9 @@ public static class ConvertToAutoPropertyTool
                 var name = (ExpressionSyntax)root.FindNode(location.Location.SourceSpan, getInnermostNodeForTie: true);
                 if (FieldPropertyRefactoring.IsPassedByReference(name))
                     throw new McpException($"Error: The backing field '{field.Name}' is passed by reference at {location.Location.GetLineSpan()}, which a property cannot be");
-                if (FieldPropertyRefactoring.IsWrite(name) && !IsInConstructor(name, field.IsStatic))
+
+                // Constructors may assign a get-only auto-property; anything else needs a setter.
+                if (FieldPropertyRefactoring.IsWrite(name) && FieldPropertyRefactoring.ConstructingMember(name, field.IsStatic) is not ConstructorDeclarationSyntax)
                     writtenAfterConstruction = true;
             }
 
@@ -85,9 +87,7 @@ public static class ConvertToAutoPropertyTool
             throw new McpException($"Error: Property '{property.Name}' has no backing field; it is already an auto-property");
 
         var notTrivial = new McpException($"Error: Property '{property.Name}' does more than read and write a single field");
-        var getter = declaration.ExpressionBody?.Expression
-            ?? Returned(accessors.FirstOrDefault(a => a.IsKind(SyntaxKind.GetAccessorDeclaration)))
-            ?? throw notTrivial;
+        var getter = FieldPropertyRefactoring.GetterExpression(declaration) ?? throw notTrivial;
         var field = model.GetSymbolInfo(getter).Symbol as IFieldSymbol ?? throw notTrivial;
         if (getter is not (IdentifierNameSyntax or MemberAccessExpressionSyntax { Expression: ThisExpressionSyntax }))
             throw notTrivial;
@@ -109,34 +109,12 @@ public static class ConvertToAutoPropertyTool
         return field;
     }
 
-    private static ExpressionSyntax? Returned(AccessorDeclarationSyntax? getter) => getter switch
-    {
-        { ExpressionBody: { } body } => body.Expression,
-        { Body.Statements: [ReturnStatementSyntax { Expression: { } returned }] } => returned,
-        _ => null,
-    };
-
     private static AssignmentExpressionSyntax? Assigned(AccessorDeclarationSyntax setter) => setter switch
     {
         { ExpressionBody.Expression: AssignmentExpressionSyntax assignment } => assignment,
         { Body.Statements: [ExpressionStatementSyntax { Expression: AssignmentExpressionSyntax assignment }] } => assignment,
         _ => null,
     } is { } found && found.IsKind(SyntaxKind.SimpleAssignmentExpression) ? found : null;
-
-    /// <summary>Constructors may assign a get-only auto-property; anything else needs a setter.</summary>
-    private static bool IsInConstructor(SyntaxNode node, bool isStatic)
-    {
-        foreach (var ancestor in node.Ancestors())
-        {
-            if (ancestor is AnonymousFunctionExpressionSyntax or LocalFunctionStatementSyntax)
-                return false;
-            if (ancestor is ConstructorDeclarationSyntax constructor)
-                return constructor.Modifiers.Any(SyntaxKind.StaticKeyword) == isStatic;
-            if (ancestor is MemberDeclarationSyntax)
-                return false;
-        }
-        return false;
-    }
 
     /// <summary>
     /// The property with accessors that have no bodies, on one line. The
