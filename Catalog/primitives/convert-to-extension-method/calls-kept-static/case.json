@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-to-extension-method",
+  "description": "Calls whose first argument would not bind as a receiver, or whose file cannot see the extension, keep the static form",
+  "target": { "symbol": "M:Shop.Numbers.Twice(System.Int64)" }
+}

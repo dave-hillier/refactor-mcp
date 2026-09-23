@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-to-extension-method",
+  "description": "A static method of a static class becomes an extension method on its first parameter, and calls in other files take the extension form",
+  "target": { "symbol": "M:Shop.Text.Shout(System.String)" }
+}

@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-extension-method-to-static",
+  "description": "Calls from a namespace that imports the extension's namespace name the class simply; chained calls keep their order",
+  "target": { "symbol": "M:Shop.Text.Formatting.Trimmed(System.String)" }
+}

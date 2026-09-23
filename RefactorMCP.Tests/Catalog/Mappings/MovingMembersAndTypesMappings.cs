@@ -88,6 +88,40 @@ internal sealed class MovingMembersAndTypesMappings : ICatalogMappings
                 ("same-file", "is already in"),
                 ("no-part-in-file", "declares no part of"),
                 ("nested-type", "is nested; add a part of it"))),
+
+        new CatalogMapping(
+            "convert-to-extension-method",
+            "convert-to-extension-method",
+            async context =>
+            {
+                var arguments = await MemberArguments(context);
+                arguments["methodName"] = arguments["memberName"];
+                arguments.Remove("memberName");
+                if (context.HasArgument("to"))
+                    arguments["extensionClass"] = context.RequiredArgument("to");
+                return arguments;
+            },
+            Codes(
+                ("already-extension", "is already an extension method"),
+                ("not-static-class", "is not a static class"),
+                ("nested-or-generic-class", "is nested or generic"),
+                ("no-parameters", "has no parameters"),
+                ("invalid-first-parameter", "cannot become the extended value"))),
+
+        new CatalogMapping(
+            "convert-extension-method-to-static",
+            "convert-extension-method-to-static",
+            async context =>
+            {
+                var arguments = await MemberArguments(context);
+                arguments["methodName"] = arguments["memberName"];
+                arguments.Remove("memberName");
+                return arguments;
+            },
+            Codes(
+                ("not-extension", "is not an extension method"),
+                ("conditional-access", "null-conditional access"),
+                ("method-group", "is used as a method group"))),
     };
 
     /// <summary>The file, name and line of <c>target.symbol</c>, as the member tools take them.</summary>

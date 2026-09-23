@@ -1,0 +1,13 @@
+namespace Shop
+{
+    public class Ledger
+    {
+        public long Balance { get; set; }
+
+        public long Doubled() => Numbers.Twice(Balance);
+
+        public long FromInt(int small) => Numbers.Twice(small);
+
+        public long Literal() => Numbers.Twice(21);
+    }
+}

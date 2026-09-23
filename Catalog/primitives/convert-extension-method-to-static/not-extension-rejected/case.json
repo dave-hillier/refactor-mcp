@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-extension-method-to-static",
+  "description": "Refuses a method that is not an extension method",
+  "target": { "symbol": "M:Shop.Text.Shout(System.String)" },
+  "expect": "error",
+  "errorCode": "not-extension"
+}

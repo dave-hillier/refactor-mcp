@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-to-extension-method",
+  "description": "A generic method becomes a generic extension method, and inferred calls stay inferred",
+  "target": { "symbol": "M:Shop.Sequences.FirstOr``1(System.Collections.Generic.IEnumerable{``0},``0)" }
+}
