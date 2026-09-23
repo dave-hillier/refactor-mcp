@@ -69,6 +69,16 @@ internal sealed class TypeConversionsMappings : ICatalogMappings
                 ["constructor-has-logic"] = "does more than assign its parameters",
                 ["parameter-shadowed"] = "would not read the primary constructor's parameter",
             }),
+        new CatalogMapping(
+            "convert-primary-constructor-to-constructor",
+            "convert-primary-constructor-to-constructor",
+            context => DeclarationArguments(context, "typeName"),
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["unsupported-type"] = "is not a class or struct with a single declaration",
+                ["no-primary-constructor"] = "has no primary constructor",
+                ["name-conflict"] = "already has a member of that name",
+            }),
     };
 
     /// <summary>

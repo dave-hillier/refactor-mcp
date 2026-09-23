@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-primary-constructor-to-constructor",
+  "description": "Refuses a class with no primary constructor",
+  "target": { "symbol": "T:Shop.Greeter" },
+  "expect": "error",
+  "errorCode": "no-primary-constructor"
+}

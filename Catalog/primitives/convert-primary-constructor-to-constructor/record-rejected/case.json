@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-primary-constructor-to-constructor",
+  "description": "Refuses a positional record, whose parameters declare properties",
+  "target": { "symbol": "T:Shop.Point" },
+  "expect": "error",
+  "errorCode": "unsupported-type"
+}
