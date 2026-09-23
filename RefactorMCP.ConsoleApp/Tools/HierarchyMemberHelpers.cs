@@ -268,7 +268,7 @@ internal static class HierarchyMemberHelpers
     }
 
     /// <summary>Removes one field from its type, or one variable from a declaration of several.</summary>
-    internal static void RemoveField(SolutionEdits edits, Document document, TypeDeclarationSyntax type, FieldDeclarationSyntax field, VariableDeclaratorSyntax variable)
+    internal static void RemoveField(HierarchyEdits edits, Document document, TypeDeclarationSyntax type, FieldDeclarationSyntax field, VariableDeclaratorSyntax variable)
     {
         if (field.Declaration.Variables.Count == 1)
         {
@@ -357,14 +357,14 @@ internal static class HierarchyMemberHelpers
 /// in the original trees and tracked through earlier edits, so edits to a type
 /// and to members inside it can be combined.
 /// </summary>
-internal sealed class SolutionEdits
+internal sealed class HierarchyEdits
 {
     private readonly Solution _solution;
     private readonly Dictionary<DocumentId, List<SyntaxNode>> _tracked = new();
     private readonly Dictionary<DocumentId, List<Func<SyntaxNode, SyntaxNode>>> _edits = new();
     private readonly Dictionary<DocumentId, HashSet<string>> _imports = new();
 
-    public SolutionEdits(Solution solution) => _solution = solution;
+    public HierarchyEdits(Solution solution) => _solution = solution;
 
     /// <summary>Replaces a node with what <paramref name="edit"/> makes of its current version.</summary>
     public void Replace<T>(Document document, T node, Func<T, SyntaxNode> edit)
