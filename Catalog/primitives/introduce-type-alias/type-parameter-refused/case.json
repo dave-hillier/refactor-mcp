@@ -1,0 +1,8 @@
+{
+  "refactoring": "introduce-type-alias",
+  "description": "Refuses a type built from a type parameter, which an alias cannot name",
+  "target": { "file": "Pager.cs", "caret": "marker" },
+  "arguments": { "name": "Page" },
+  "expect": "error",
+  "errorCode": "uses-type-parameter"
+}

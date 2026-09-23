@@ -1,0 +1,6 @@
+{
+  "refactoring": "rename",
+  "description": "Renames a class declared in a file named after something else, leaving the file name alone",
+  "target": { "symbol": "T:Shop.Address" },
+  "arguments": { "name": "Location" }
+}

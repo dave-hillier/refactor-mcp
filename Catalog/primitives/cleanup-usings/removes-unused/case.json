@@ -1,0 +1,5 @@
+{
+  "refactoring": "cleanup-usings",
+  "description": "Removes the using directives nothing in the file needs, keeping the one an extension method call needs and leaving the rest of the file as written",
+  "target": { "file": "Sample.cs" }
+}

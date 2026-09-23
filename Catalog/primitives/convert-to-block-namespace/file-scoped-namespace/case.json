@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-to-block-namespace",
+  "description": "Wraps everything after a file-scoped namespace declaration in a namespace block, indenting it a level",
+  "target": { "file": "Order.cs" }
+}

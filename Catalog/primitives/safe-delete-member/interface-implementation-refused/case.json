@@ -1,0 +1,8 @@
+{
+  "refactoring": "safe-delete-member",
+  "description": "Refuses to delete a method that implements an interface member",
+  "target": { "symbol": "M:Shop.EmailNotifier.Send(System.String)" },
+  "arguments": {},
+  "expect": "error",
+  "errorCode": "implements-interface"
+}

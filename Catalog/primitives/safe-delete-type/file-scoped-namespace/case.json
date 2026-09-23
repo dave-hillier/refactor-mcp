@@ -1,0 +1,6 @@
+{
+  "refactoring": "safe-delete-type",
+  "description": "Deletes an unused interface and its file when the file uses a file-scoped namespace",
+  "target": { "symbol": "T:Shop.IAuditor" },
+  "arguments": {}
+}

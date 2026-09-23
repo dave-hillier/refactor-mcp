@@ -1,0 +1,8 @@
+{
+  "refactoring": "safe-delete-member",
+  "description": "Refuses a type, which safe-delete-type deletes",
+  "target": { "symbol": "T:Shop.Order" },
+  "arguments": {},
+  "expect": "error",
+  "errorCode": "not-a-member"
+}

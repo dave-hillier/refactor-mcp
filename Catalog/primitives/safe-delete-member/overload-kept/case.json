@@ -1,0 +1,6 @@
+{
+  "refactoring": "safe-delete-member",
+  "description": "Deletes an unused generic overload, leaving the overload that is called",
+  "target": { "symbol": "M:Shop.Formatter.Format``1(``0)" },
+  "arguments": {}
+}

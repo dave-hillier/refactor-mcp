@@ -1,0 +1,6 @@
+{
+  "refactoring": "safe-delete-type",
+  "description": "Deletes an unused class and the namespace block it leaves empty, keeping the other namespace in the file",
+  "target": { "symbol": "T:Shop.Legacy.OldCart" },
+  "arguments": {}
+}

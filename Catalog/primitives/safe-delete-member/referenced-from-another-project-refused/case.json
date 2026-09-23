@@ -1,0 +1,12 @@
+{
+  "refactoring": "safe-delete-member",
+  "description": "Refuses to delete a property read by a project that references the declaring one",
+  "projects": [
+    { "name": "Core" },
+    { "name": "App", "references": ["Core"] }
+  ],
+  "target": { "symbol": "P:Core.Product.Sku" },
+  "arguments": {},
+  "expect": "error",
+  "errorCode": "member-referenced"
+}

@@ -1,0 +1,6 @@
+{
+  "refactoring": "safe-delete-type",
+  "description": "Deletes an unused nested class",
+  "target": { "symbol": "T:Shop.Order.Draft" },
+  "arguments": {}
+}

@@ -1,0 +1,7 @@
+{
+  "refactoring": "rename",
+  "description": "Renames a nullable property, including its use in an object initializer and a null-conditional access in another file",
+  "project": { "nullable": "enable" },
+  "target": { "symbol": "P:Shop.Customer.Nickname" },
+  "arguments": { "name": "DisplayName" }
+}

@@ -1,0 +1,6 @@
+{
+  "refactoring": "rename",
+  "description": "Renames a virtual method together with its override, the base call and the calls through either type",
+  "target": { "symbol": "M:Shop.Shape.Area" },
+  "arguments": { "name": "Surface" }
+}

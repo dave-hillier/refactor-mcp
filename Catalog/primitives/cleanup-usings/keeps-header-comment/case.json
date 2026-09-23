@@ -1,0 +1,5 @@
+{
+  "refactoring": "cleanup-usings",
+  "description": "Keeps the file's header comment when the first using directive is removed",
+  "target": { "file": "Sample.cs" }
+}

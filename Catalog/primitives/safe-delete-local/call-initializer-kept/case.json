@@ -1,0 +1,6 @@
+{
+  "refactoring": "safe-delete-local",
+  "description": "Keeps a call that initialised the deleted local as a statement, with the comment above it",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "arguments": {}
+}

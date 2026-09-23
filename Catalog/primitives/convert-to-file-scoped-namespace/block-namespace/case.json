@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-to-file-scoped-namespace",
+  "description": "Turns the file's namespace block into a file-scoped declaration and takes a level of indentation off its contents",
+  "target": { "file": "Order.cs" }
+}

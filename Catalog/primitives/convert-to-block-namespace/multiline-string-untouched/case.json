@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-to-block-namespace",
+  "description": "Leaves the lines inside a raw string literal as they were, since they are part of its value",
+  "target": { "file": "Template.cs" }
+}

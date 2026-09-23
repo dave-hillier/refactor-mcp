@@ -1,0 +1,8 @@
+{
+  "refactoring": "safe-delete-local",
+  "description": "Refuses to delete a local that is read",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "arguments": {},
+  "expect": "error",
+  "errorCode": "local-referenced"
+}

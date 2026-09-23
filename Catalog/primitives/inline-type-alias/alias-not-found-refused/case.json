@@ -1,0 +1,8 @@
+{
+  "refactoring": "inline-type-alias",
+  "description": "Refuses when the file declares no alias with the name",
+  "target": { "file": "Order.cs" },
+  "arguments": { "alias": "Money" },
+  "expect": "error",
+  "errorCode": "alias-not-found"
+}

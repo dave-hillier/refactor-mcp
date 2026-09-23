@@ -1810,6 +1810,76 @@ dotnet run --project RefactorMCP.ConsoleApp -- --json introduce-generic-type-par
 
 <!-- Naming and housekeeping: examples for this group's tools go below this line. -->
 
+#### Rename
+
+Renames any symbol and every reference to it, including overrides, interface
+implementations, named arguments and documentation comments. A top-level type
+whose file is named after it has its file renamed too. `line` and `column`
+pick the symbol when the name is ambiguous; a rename that would clash with
+existing code is refused.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json rename-symbol \
+  '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Customer.cs","oldName":"Customer","newName":"Client","line":3,"column":18}'
+```
+
+#### Introduce Type Alias and Inline Type Alias
+
+`introduce-type-alias` declares a `using` alias for the type named at a line
+and column and uses it wherever the file names that type.
+`inline-type-alias` writes the type back in place of every use of an alias,
+in every file for a global alias, and removes the directive.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json introduce-type-alias \
+  '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Inventory.cs","line":7,"column":26,"aliasName":"StockIndex"}'
+
+dotnet run --project RefactorMCP.ConsoleApp -- --json inline-type-alias \
+  '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Inventory.cs","aliasName":"StockIndex"}'
+```
+
+#### Safe Delete Member, Type and Local
+
+Each deletes a declaration only when nothing depends on it.
+`safe-delete-member` takes a method, property, field or event, with `line` to
+pick an overload, and refuses overrides and interface implementations.
+`safe-delete-type` also deletes a file the type was alone in.
+`safe-delete-local` keeps an initializer with side effects as a statement.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json safe-delete-member \
+  '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Order.cs","memberName":"Legacy","line":12}'
+
+dotnet run --project RefactorMCP.ConsoleApp -- --json safe-delete-type \
+  '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/LegacyPricing.cs","typeName":"LegacyPricing"}'
+
+dotnet run --project RefactorMCP.ConsoleApp -- --json safe-delete-local \
+  '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Sample.cs","line":8,"column":13}'
+```
+
+#### Cleanup Usings
+
+Removes the using directives nothing in the file needs, leaving the rest of the
+file as written.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json cleanup-usings \
+  '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Sample.cs"}'
+```
+
+#### Convert to File-Scoped Namespace and Convert to Block Namespace
+
+Switches a file between `namespace Shop { ... }` and `namespace Shop;`,
+shifting the code inside by one level of indentation.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json convert-to-file-scoped-namespace \
+  '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Order.cs"}'
+
+dotnet run --project RefactorMCP.ConsoleApp -- --json convert-to-block-namespace \
+  '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Order.cs"}'
+```
+
 <!-- End of Naming and housekeeping. -->
 
 ### Composites

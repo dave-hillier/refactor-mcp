@@ -1,0 +1,6 @@
+{
+  "refactoring": "rename",
+  "description": "Renames the last part of a namespace in its declaration, using directives and qualified names",
+  "target": { "symbol": "N:Shop.Billing" },
+  "arguments": { "name": "Payments" }
+}

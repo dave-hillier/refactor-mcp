@@ -1,0 +1,8 @@
+{
+  "refactoring": "safe-delete-local",
+  "description": "Refuses when the caret is on a parameter rather than a local",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "arguments": {},
+  "expect": "error",
+  "errorCode": "not-a-local"
+}

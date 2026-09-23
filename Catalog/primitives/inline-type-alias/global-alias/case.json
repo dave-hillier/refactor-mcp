@@ -1,0 +1,6 @@
+{
+  "refactoring": "inline-type-alias",
+  "description": "Inlines a global alias in every file of the project and deletes the file its directive leaves empty",
+  "target": { "file": "Usings.cs" },
+  "arguments": { "alias": "Money" }
+}

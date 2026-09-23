@@ -1,0 +1,12 @@
+{
+  "refactoring": "safe-delete-type",
+  "description": "Refuses to delete a class a referencing project uses",
+  "projects": [
+    { "name": "Core" },
+    { "name": "App", "references": ["Core"] }
+  ],
+  "target": { "symbol": "T:Core.Product" },
+  "arguments": {},
+  "expect": "error",
+  "errorCode": "type-referenced"
+}

@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-to-file-scoped-namespace",
+  "description": "Leaves the lines inside a verbatim string as they were, since they are part of its value",
+  "target": { "file": "Template.cs" }
+}

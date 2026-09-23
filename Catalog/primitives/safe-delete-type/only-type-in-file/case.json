@@ -1,0 +1,6 @@
+{
+  "refactoring": "safe-delete-type",
+  "description": "Deletes an unused class and the file that held only it",
+  "target": { "symbol": "T:Shop.LegacyPricing" },
+  "arguments": {}
+}

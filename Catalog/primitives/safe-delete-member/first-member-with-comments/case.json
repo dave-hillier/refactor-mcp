@@ -1,0 +1,6 @@
+{
+  "refactoring": "safe-delete-member",
+  "description": "Deletes the first member of a class with its documentation comment, keeping the region around it",
+  "target": { "symbol": "P:Shop.Customer.Nickname" },
+  "arguments": {}
+}

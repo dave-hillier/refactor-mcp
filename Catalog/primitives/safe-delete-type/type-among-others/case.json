@@ -1,0 +1,6 @@
+{
+  "refactoring": "safe-delete-type",
+  "description": "Deletes an unused class with its documentation comment from a file that declares other types",
+  "target": { "symbol": "T:Shop.Coupon" },
+  "arguments": {}
+}

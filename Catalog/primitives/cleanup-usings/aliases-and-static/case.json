@@ -1,0 +1,5 @@
+{
+  "refactoring": "cleanup-usings",
+  "description": "Treats alias and static directives like the others: kept when used, removed when not",
+  "target": { "file": "Sample.cs" }
+}

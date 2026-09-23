@@ -1,0 +1,8 @@
+{
+  "refactoring": "safe-delete-local",
+  "description": "Refuses to delete a using declaration, whose disposal is behaviour",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "arguments": {},
+  "expect": "error",
+  "errorCode": "using-declaration"
+}

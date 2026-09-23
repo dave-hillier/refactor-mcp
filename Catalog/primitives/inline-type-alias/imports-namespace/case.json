@@ -1,0 +1,6 @@
+{
+  "refactoring": "inline-type-alias",
+  "description": "Imports the namespace of the aliased type when the file did not, keeping the alias's neighbours and comments",
+  "target": { "file": "Clock.cs" },
+  "arguments": { "alias": "Stamp" }
+}

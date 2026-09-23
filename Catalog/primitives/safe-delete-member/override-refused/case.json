@@ -1,0 +1,8 @@
+{
+  "refactoring": "safe-delete-member",
+  "description": "Refuses to delete an override, which would change what calls through the base class run",
+  "target": { "symbol": "M:Shop.Square.Area" },
+  "arguments": {},
+  "expect": "error",
+  "errorCode": "overrides-member"
+}

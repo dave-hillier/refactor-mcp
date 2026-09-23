@@ -1,0 +1,6 @@
+{
+  "refactoring": "rename",
+  "description": "Renames an interface method with its implicit and explicit implementations and the calls through each",
+  "target": { "symbol": "M:Shop.INotifier.Send(System.String)" },
+  "arguments": { "name": "Notify" }
+}

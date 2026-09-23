@@ -1,0 +1,6 @@
+{
+  "refactoring": "safe-delete-member",
+  "description": "Deletes a method nothing calls, with the blank line that separated it",
+  "target": { "symbol": "M:Shop.Order.Legacy" },
+  "arguments": {}
+}
