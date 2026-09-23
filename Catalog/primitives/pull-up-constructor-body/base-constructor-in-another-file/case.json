@@ -1,0 +1,5 @@
+{
+  "refactoring": "pull-up-constructor-body",
+  "description": "Moves the statements that only set the base class's fields into a new base constructor, and chains to it",
+  "target": { "symbol": "M:Shop.Manager.#ctor(System.String,System.String,System.Int32)" }
+}

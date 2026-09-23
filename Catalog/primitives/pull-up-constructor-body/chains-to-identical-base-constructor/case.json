@@ -1,0 +1,5 @@
+{
+  "refactoring": "pull-up-constructor-body",
+  "description": "Chains to a base constructor that already does exactly what the statements do",
+  "target": { "symbol": "M:Shop.Engineer.#ctor(System.String,System.Int32)" }
+}

@@ -1,0 +1,7 @@
+{
+  "refactoring": "pull-up-constructor-body",
+  "description": "Refuses when the class has no base class",
+  "target": { "symbol": "M:Shop.Manager.#ctor(System.String)" },
+  "expect": "error",
+  "errorCode": "no-base-class"
+}

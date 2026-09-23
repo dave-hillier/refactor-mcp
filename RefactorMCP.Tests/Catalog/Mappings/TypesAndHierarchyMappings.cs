@@ -91,6 +91,28 @@ internal sealed class TypesAndHierarchyMappings : ICatalogMappings
                 ("breaks-compilation", "would break the build"))),
 
         new CatalogMapping(
+            "pull-up-constructor-body",
+            "pull-up-constructor-body",
+            async context =>
+            {
+                var location = await context.SymbolLocationAsync();
+                return new Dictionary<string, JsonElement>
+                {
+                    ["solutionPath"] = Json(context.SolutionPath),
+                    ["filePath"] = Json(location.FilePath),
+                    ["className"] = Json(location.Symbol.ContainingType.Name),
+                    ["line"] = Json(location.Line),
+                };
+            },
+            Codes(
+                ("no-base-class", "has no base class"),
+                ("base-not-in-source", "is not declared in the solution"),
+                ("already-chains", "already calls"),
+                ("nothing-to-pull-up", "nothing can move"),
+                ("base-constructor-exists", "already has a constructor taking these parameters"),
+                ("breaks-compilation", "would break the build"))),
+
+        new CatalogMapping(
             "push-down-field",
             "push-down-field",
             async context => await MemberArguments(context, "fieldName"),

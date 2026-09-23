@@ -1,0 +1,7 @@
+{
+  "refactoring": "pull-up-constructor-body",
+  "description": "Refuses when the base class is not declared in the solution",
+  "target": { "symbol": "M:Shop.OrderException.#ctor(System.Int32)" },
+  "expect": "error",
+  "errorCode": "base-not-in-source"
+}

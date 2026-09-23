@@ -1,0 +1,6 @@
+{
+  "refactoring": "pull-up-constructor-body",
+  "description": "Initialises the base class's non-nullable field in its own constructor",
+  "project": { "nullable": "enable" },
+  "target": { "symbol": "M:Shop.Manager.#ctor(System.String,System.String)" }
+}

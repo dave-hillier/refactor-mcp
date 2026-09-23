@@ -302,16 +302,20 @@ internal static class HierarchyMemberHelpers
     }
 
     /// <summary>
-    /// Adds a member to a type: a field after the last field, anything else at
-    /// the end. Fields sit together; other members are set apart by a blank line.
+    /// Adds a member to a type: a field after the last field, a constructor
+    /// after the fields and constructors, anything else at the end. Fields sit
+    /// together; other members are set apart by a blank line.
     /// </summary>
     internal static TypeDeclarationSyntax InsertMember(TypeDeclarationSyntax type, MemberDeclarationSyntax member, SyntaxTrivia endOfLine)
     {
         var isField = member is FieldDeclarationSyntax;
-        var lastField = type.Members.LastOrDefault(m => m is FieldDeclarationSyntax);
-        var index = isField
-            ? (lastField is null ? 0 : type.Members.IndexOf(lastField) + 1)
-            : type.Members.Count;
+        var after = member switch
+        {
+            FieldDeclarationSyntax => type.Members.LastOrDefault(m => m is FieldDeclarationSyntax),
+            ConstructorDeclarationSyntax => type.Members.LastOrDefault(m => m is FieldDeclarationSyntax or ConstructorDeclarationSyntax),
+            _ => type.Members.LastOrDefault(),
+        };
+        var index = after is null ? 0 : type.Members.IndexOf(after) + 1;
 
         var previous = index > 0 ? type.Members[index - 1] : null;
         var leading = WithoutLeadingBlankLines(member.GetLeadingTrivia());

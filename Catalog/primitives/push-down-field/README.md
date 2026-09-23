@@ -40,10 +40,8 @@ None. The target is the field, by symbol:
 
 ## Limitations
 
-- Each receiving subclass gets its own field, so code that relied on
-  instances of different subclasses sharing one declaration now sees
-  separate ones. Behaviour is unaffected because each object only ever had
-  its own value.
+- The field only moves one level: a field that a class further down uses
+  goes to the direct subclass above that class, not to the class itself.
 - Usings the class's file no longer needs are left in place.
 
 ## Error codes

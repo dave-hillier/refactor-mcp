@@ -1,0 +1,7 @@
+{
+  "refactoring": "pull-up-constructor-body",
+  "description": "Refuses a constructor that already passes arguments to a base constructor",
+  "target": { "symbol": "M:Shop.Manager.#ctor(System.String,System.Int32)" },
+  "expect": "error",
+  "errorCode": "already-chains"
+}
