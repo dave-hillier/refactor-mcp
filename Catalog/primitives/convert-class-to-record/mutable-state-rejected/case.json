@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-class-to-record",
+  "description": "Refuses a class with a settable property, whose state is not fixed at construction",
+  "target": { "symbol": "T:Shop.Basket" },
+  "expect": "error",
+  "errorCode": "mutable-state",
+  "errorContains": "Count"
+}

@@ -1,0 +1,8 @@
+{
+  "refactoring": "replace-constructor-with-factory-method",
+  "description": "Refuses to make the constructor private while a derived class calls it",
+  "target": { "symbol": "M:Shop.Notice.#ctor(System.String)" },
+  "expect": "error",
+  "errorCode": "constructor-still-needed",
+  "errorContains": "Alert.cs"
+}

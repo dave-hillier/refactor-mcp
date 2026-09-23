@@ -1,0 +1,6 @@
+{
+  "refactoring": "convert-to-primary-constructor",
+  "description": "Initializes a get-only property from its parameter and captures the parameter behind a private field, on C# 12",
+  "target": { "symbol": "T:Shop.Customer" },
+  "project": { "langVersion": "12" }
+}

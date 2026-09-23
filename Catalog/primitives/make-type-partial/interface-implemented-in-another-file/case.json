@@ -1,0 +1,5 @@
+{
+  "refactoring": "make-type-partial",
+  "description": "Adds partial to an interface, leaving the class that implements it in another file unchanged",
+  "target": { "symbol": "T:Shop.IPricing" }
+}

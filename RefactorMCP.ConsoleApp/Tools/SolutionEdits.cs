@@ -178,7 +178,10 @@ internal static class SolutionEdits
         return $"{Path.GetFileName(position.Path)}({position.StartLinePosition.Line + 1},{position.StartLinePosition.Character + 1})";
     }
 
-    /// <summary>Writes every changed document to disk and makes the changed solution current.</summary>
+    /// <summary>
+    /// Writes every changed document to disk, deletes the files of removed
+    /// documents, and makes the changed solution current.
+    /// </summary>
     public static async Task WriteAsync(Solution original, Solution changed, CancellationToken cancellationToken = default)
     {
         foreach (var projectChange in changed.GetChanges(original).GetProjectChanges())
@@ -190,6 +193,15 @@ internal static class SolutionEdits
                 var encoding = await RefactoringHelpers.GetFileEncodingAsync(document.FilePath!, cancellationToken);
                 await File.WriteAllTextAsync(document.FilePath!, text.ToString(), encoding, cancellationToken);
                 RefactoringHelpers.UpdateSolutionCache(document);
+            }
+
+            foreach (var documentId in projectChange.GetRemovedDocuments())
+            {
+                var path = original.GetDocument(documentId)!.FilePath!;
+                File.Delete(path);
+                RefactoringHelpers.EvictFileCaches(path);
+                if (changed.FilePath is not null)
+                    SessionRegistry.GetOrCreate(changed.FilePath).Replace(changed);
             }
         }
     }

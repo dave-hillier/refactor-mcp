@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-class-to-record",
+  "description": "Refuses a class that overrides Equals(object), which a record generates itself",
+  "target": { "symbol": "T:Shop.Sku" },
+  "expect": "error",
+  "errorCode": "declares-equality"
+}

@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-class-to-record",
+  "description": "Refuses when instances are compared with ==, which would switch from reference to value equality",
+  "target": { "symbol": "T:Shop.Point" },
+  "expect": "error",
+  "errorCode": "equality-observed",
+  "errorContains": "Route.cs"
+}

@@ -1,0 +1,5 @@
+{
+  "refactoring": "replace-constructor-with-factory-method",
+  "description": "Calls the factory on the constructed type, whether its type argument is concrete or a type parameter",
+  "target": { "symbol": "M:Shop.Box`1.#ctor(`0)" }
+}

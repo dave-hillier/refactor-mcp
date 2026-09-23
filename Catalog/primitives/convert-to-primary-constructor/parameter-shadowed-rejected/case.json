@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-to-primary-constructor",
+  "description": "Refuses when a method parameter has the name the captured parameter would take, so the field's uses would bind to it",
+  "target": { "symbol": "T:Shop.Greeter" },
+  "expect": "error",
+  "errorCode": "parameter-shadowed",
+  "errorContains": "greeting"
+}

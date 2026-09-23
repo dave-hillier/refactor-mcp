@@ -1,0 +1,6 @@
+{
+  "refactoring": "replace-constructor-with-factory-method",
+  "description": "Replaces target-typed new expressions, naming the type they create",
+  "target": { "symbol": "M:Shop.Sku.#ctor(System.String)" },
+  "arguments": { "name": "Parse" }
+}

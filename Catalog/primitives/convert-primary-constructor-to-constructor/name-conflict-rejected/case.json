@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-primary-constructor-to-constructor",
+  "description": "Refuses when the field a captured parameter needs is already a member name",
+  "target": { "symbol": "T:Shop.Greeter" },
+  "expect": "error",
+  "errorCode": "name-conflict",
+  "errorContains": "_greeting"
+}
