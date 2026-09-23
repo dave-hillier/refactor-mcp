@@ -55,7 +55,34 @@ internal sealed class MethodConversionsMappings : ICatalogMappings
                 ["unstable-receiver"] = "where a lambda would evaluate it each time it runs",
                 ["resolution-changes"] = "would change which method, delegate type or overload is chosen",
             }),
+        new CatalogMapping(
+            "convert-method-to-local-function",
+            "convert-method-to-local-function",
+            MethodArguments,
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["not-private"] = "is not private",
+                ["never-called"] = "is never called",
+                ["called-from-several-members"] = "a local function can only belong to one",
+                ["caller-expression-bodied"] = "outside a block body",
+                ["called-on-another-instance"] = "on another instance",
+                ["name-conflict"] = "is already declared in the caller",
+                ["overloaded-method"] = "also uses another overload",
+                ["unsupported-method"] = "is an extension, extern or partial method",
+            }),
     };
+
+    private static async Task<Dictionary<string, JsonElement>> MethodArguments(StepContext context)
+    {
+        var location = await context.SymbolLocationAsync();
+        return new Dictionary<string, JsonElement>
+        {
+            ["solutionPath"] = Json(context.SolutionPath),
+            ["filePath"] = Json(location.FilePath),
+            ["methodName"] = Json(location.Symbol.Name),
+            ["line"] = Json(location.Line),
+        };
+    }
 
     /// <summary>
     /// Refactorings of a declaration or an expression take a position: the caret, or

@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-method-to-local-function",
+  "description": "Every call in the one member, including one qualified with this and one inside a lambda, calls the local function",
+  "target": { "symbol": "M:Sample.Describe(System.Int32)" }
+}

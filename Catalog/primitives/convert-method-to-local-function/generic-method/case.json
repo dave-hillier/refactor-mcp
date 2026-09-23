@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-method-to-local-function",
+  "description": "A generic method keeps its type parameters and constraint as a local function",
+  "target": { "symbol": "M:Sample.Larger``1(``0,``0)" }
+}

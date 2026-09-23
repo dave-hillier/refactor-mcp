@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-method-to-local-function",
+  "description": "A private static method called from one method becomes a static local function at the end of it",
+  "target": { "symbol": "M:Sample.WithTax(System.Int32)" }
+}

@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-method-to-local-function",
+  "description": "Refuses a call on another instance, which a local function could not be called on",
+  "target": { "symbol": "M:Shop.Order.Amount" },
+  "expect": "error",
+  "errorCode": "called-on-another-instance"
+}
