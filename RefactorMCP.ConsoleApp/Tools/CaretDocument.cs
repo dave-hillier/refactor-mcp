@@ -76,8 +76,9 @@ internal sealed class CaretDocument
             .FirstOrDefault(node => header(node).Contains(Position) || header(node).End == Position);
 
     /// <summary>
-    /// Adds the imports, simplifies and formats what the edit annotated, refuses the change if it
-    /// adds compile errors, then writes the document and makes it current.
+    /// Adds imports, simplifies and formats what the edit annotated, refuses
+    /// the change if it adds compile errors, then writes the document and
+    /// makes it current.
     /// </summary>
     public async Task ApplyAsync(SyntaxNode newRoot, CancellationToken cancellationToken)
     {

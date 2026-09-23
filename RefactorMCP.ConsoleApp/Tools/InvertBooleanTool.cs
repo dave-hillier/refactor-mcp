@@ -8,6 +8,7 @@ using Microsoft.CodeAnalysis.Editing;
 using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Rename;
+using Microsoft.CodeAnalysis.Text;
 using System.Threading;
 
 [McpServerToolType]
@@ -145,7 +146,7 @@ public static class InvertBooleanTool
         return edits;
     }
 
-    private readonly record struct TextSpanKey(Microsoft.CodeAnalysis.Text.TextSpan Span, int Kind);
+    private readonly record struct TextSpanKey(TextSpan Span, int Kind);
 
     /// <summary>Whether a reference only names the symbol, in <c>nameof</c>, where its value is not used.</summary>
     private static bool IsNameOnly(SimpleNameSyntax name) =>
