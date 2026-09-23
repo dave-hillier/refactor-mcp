@@ -27,7 +27,7 @@ public static class PushDownTool
             EnsureNoPrivateUse(model, target.Symbol, target.ContainingType, target.Field.Declaration.Type, target.Variable);
             var receivers = await ReceiversAsync(solution, target.Symbol, target.ContainingType, target.Field, cancellationToken);
 
-            var edits = new HierarchyEdits(solution);
+            var edits = new SolutionEdits(solution);
             RemoveField(edits, document, target.Type, target.Field, target.Variable);
             foreach (var subclass in receivers)
             {
@@ -83,7 +83,7 @@ public static class PushDownTool
             EnsureNoPrivateUse(model, symbol, target.ContainingType, target.Method);
             var receivers = await ReceiversAsync(solution, symbol, target.ContainingType, target.Method, cancellationToken);
 
-            var edits = new HierarchyEdits(solution);
+            var edits = new SolutionEdits(solution);
             edits.RemoveMember(document, target.Type, target.Method);
 
             if (symbol.IsAbstract)
