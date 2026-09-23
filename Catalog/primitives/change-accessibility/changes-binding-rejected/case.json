@@ -1,0 +1,8 @@
+{
+  "refactoring": "change-accessibility",
+  "description": "Refuses when a caller would still compile but call another overload",
+  "target": { "symbol": "M:Shop.Printer.Print(System.String)" },
+  "arguments": { "accessibility": "private" },
+  "expect": "error",
+  "errorCode": "changes-binding"
+}

@@ -1,0 +1,8 @@
+{
+  "refactoring": "change-accessibility",
+  "description": "Refuses to narrow a method that implicitly implements an interface member",
+  "target": { "symbol": "M:Shop.Courier.Cost(System.Decimal)" },
+  "arguments": { "accessibility": "internal" },
+  "expect": "error",
+  "errorCode": "breaks-interface-implementation"
+}

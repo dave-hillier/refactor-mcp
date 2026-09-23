@@ -128,6 +128,20 @@ internal sealed class SignaturesMappings : ICatalogMappings
                 ["introduces-nullable-warnings"] = "would give callers nullable warnings",
                 ["external-member"] = "which is declared outside the solution",
             }),
+        new CatalogMapping(
+            "change-accessibility",
+            "change-accessibility",
+            async context => With(await MemberArguments(context, "memberName"), ("accessibility", context.RequiredArgument("accessibility"))),
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["invalid-accessibility"] = "is not an accessibility",
+                ["breaks-references"] = "it would be inaccessible where it is used",
+                ["breaks-override"] = "an override must keep the accessibility of the member it overrides",
+                ["breaks-interface-implementation"] = "implementing an interface member implicitly must be public",
+                ["inconsistent-accessibility"] = "inconsistent accessibility",
+                ["changes-binding"] = "so some calls would bind to a different member",
+                ["shared-declaration"] = "split the declaration first",
+            }),
     };
 
     /// <summary>

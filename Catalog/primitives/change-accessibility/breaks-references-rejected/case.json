@@ -1,0 +1,9 @@
+{
+  "refactoring": "change-accessibility",
+  "description": "Refuses to make a method private while another class calls it",
+  "target": { "symbol": "M:Shop.Order.Tax" },
+  "arguments": { "accessibility": "private" },
+  "expect": "error",
+  "errorCode": "breaks-references",
+  "errorContains": "Invoice.cs"
+}

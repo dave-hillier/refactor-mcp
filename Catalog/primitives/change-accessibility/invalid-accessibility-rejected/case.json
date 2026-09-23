@@ -1,0 +1,8 @@
+{
+  "refactoring": "change-accessibility",
+  "description": "Refuses a word that is not a C# accessibility",
+  "target": { "symbol": "M:Shop.Order.Tax" },
+  "arguments": { "accessibility": "friend" },
+  "expect": "error",
+  "errorCode": "invalid-accessibility"
+}

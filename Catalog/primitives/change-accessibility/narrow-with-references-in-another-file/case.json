@@ -1,0 +1,6 @@
+{
+  "refactoring": "change-accessibility",
+  "description": "Narrows a public method to internal when its only callers are in the same assembly",
+  "target": { "symbol": "M:Shop.Order.Tax" },
+  "arguments": { "accessibility": "internal" }
+}
