@@ -169,6 +169,25 @@ internal sealed class StepContext
                 return symbol;
         }
 
+        // Roslyn cannot resolve some ids it produces, such as a property whose
+        // type is a type parameter, so fall back to comparing declared symbols.
+        foreach (var project in solution.Projects)
+        {
+            foreach (var document in project.Documents)
+            {
+                var model = await document.GetSemanticModelAsync();
+                var root = await document.GetSyntaxRootAsync();
+                if (model is null || root is null)
+                    continue;
+
+                var declared = root.DescendantNodes()
+                    .Select(node => model.GetDeclaredSymbol(node))
+                    .FirstOrDefault(s => s?.GetDocumentationCommentId() == id);
+                if (declared is not null)
+                    return declared;
+            }
+        }
+
         throw new InvalidOperationException($"No symbol in the solution has the id '{id}'");
     }
 
