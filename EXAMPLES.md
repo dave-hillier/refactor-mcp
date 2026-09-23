@@ -1368,6 +1368,57 @@ groups them. Each tool's fixtures are the fuller specification.
 
 <!-- Methods and locals: examples for this group's tools go below this line. -->
 
+The tools that act on one local take the line and column of its name, on its
+declaration or on any use of it.
+
+**Inline Local Variable**: replace every use of `total` with its initializer
+and remove the declaration.
+
+```bash
+refactor --json inline-local-variable \
+    '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Foo.cs","line":12,"column":13}'
+```
+
+**Split Temporary Variable**: the local reassigned on line 15 gets a new
+local, `area`, from that assignment on. The position is the assigned name.
+
+```bash
+refactor --json split-temporary-variable \
+    '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Foo.cs","line":15,"column":9,"name":"area"}'
+```
+
+**Split Declaration and Assignment**: `var total = a + b;` becomes
+`int total;` followed by `total = a + b;`.
+
+```bash
+refactor --json split-declaration-and-assignment \
+    '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Foo.cs","line":12,"column":13}'
+```
+
+**Join Declaration and Assignment**: `int total;` moves down to its first
+assignment and becomes `int total = a + b;`.
+
+```bash
+refactor --json join-declaration-and-assignment \
+    '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Foo.cs","line":12,"column":13}'
+```
+
+**Convert Local to Field**: promote `total` to a private field `_total`. The
+name is optional and defaults to the local's.
+
+```bash
+refactor --json convert-local-to-field \
+    '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Foo.cs","line":12,"column":13,"name":"_total"}'
+```
+
+**Inline Method** takes an optional `line`, the line of the method's
+declaration, to choose between overloads:
+
+```bash
+refactor --json inline-method \
+    '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Foo.cs","methodName":"Format","line":20}'
+```
+
 <!-- End of Methods and locals. -->
 
 ### Method conversions
