@@ -1,0 +1,6 @@
+{
+  "refactoring": "extract-local-variable",
+  "description": "An expression in a statement without a block gets a block to hold the declaration",
+  "target": { "file": "Sample.cs", "selection": "marker" },
+  "arguments": { "name": "tax" }
+}

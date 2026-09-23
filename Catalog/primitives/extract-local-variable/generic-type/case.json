@@ -1,0 +1,6 @@
+{
+  "refactoring": "extract-local-variable",
+  "description": "The local's type is written with the method's type parameters",
+  "target": { "file": "Sample.cs", "selection": "marker" },
+  "arguments": { "name": "items" }
+}

@@ -1,0 +1,8 @@
+{
+  "refactoring": "extract-local-variable",
+  "description": "Refuses an expression with no value",
+  "target": { "file": "Sample.cs", "selection": "marker" },
+  "arguments": { "name": "extracted" },
+  "expect": "error",
+  "errorCode": "void-expression"
+}

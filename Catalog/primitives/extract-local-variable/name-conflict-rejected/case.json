@@ -1,0 +1,8 @@
+{
+  "refactoring": "extract-local-variable",
+  "description": "Refuses a name already used by a parameter in scope",
+  "target": { "file": "Sample.cs", "selection": "marker" },
+  "arguments": { "name": "a" },
+  "expect": "error",
+  "errorCode": "name-conflict"
+}

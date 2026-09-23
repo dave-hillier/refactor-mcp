@@ -1,0 +1,8 @@
+{
+  "refactoring": "extract-local-variable",
+  "description": "Refuses a selection that is not an expression, such as a method's name",
+  "target": { "file": "Sample.cs", "selection": "marker" },
+  "arguments": { "name": "extracted" },
+  "expect": "error",
+  "errorCode": "not-an-expression"
+}

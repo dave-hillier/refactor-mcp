@@ -1,0 +1,6 @@
+{
+  "refactoring": "extract-local-variable",
+  "description": "An expression with side effects replaces only the selected occurrence, so it still runs as often as before",
+  "target": { "file": "Sample.cs", "selection": "marker" },
+  "arguments": { "name": "first" }
+}

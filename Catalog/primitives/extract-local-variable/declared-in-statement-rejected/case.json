@@ -1,0 +1,8 @@
+{
+  "refactoring": "extract-local-variable",
+  "description": "Refuses an expression that reads a lambda parameter, which does not exist before the statement",
+  "target": { "file": "Sample.cs", "selection": "marker" },
+  "arguments": { "name": "extracted" },
+  "expect": "error",
+  "errorCode": "declared-in-statement"
+}

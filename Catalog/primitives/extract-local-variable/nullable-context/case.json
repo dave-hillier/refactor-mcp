@@ -1,0 +1,7 @@
+{
+  "refactoring": "extract-local-variable",
+  "description": "The local's type carries the expression's nullable annotation",
+  "project": { "nullable": "enable" },
+  "target": { "file": "Sample.cs", "selection": "marker" },
+  "arguments": { "name": "trimmed" }
+}

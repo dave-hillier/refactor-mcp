@@ -1,0 +1,8 @@
+{
+  "refactoring": "extract-local-variable",
+  "description": "Refuses an expression evaluated only on some paths, which would then run on every path",
+  "target": { "file": "Sample.cs", "selection": "marker" },
+  "arguments": { "name": "extracted" },
+  "expect": "error",
+  "errorCode": "conditionally-evaluated"
+}

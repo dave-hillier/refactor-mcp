@@ -1,0 +1,6 @@
+{
+  "refactoring": "extract-local-variable",
+  "description": "A comment above the statement stays above the new declaration, and a trailing comment stays on the statement",
+  "target": { "file": "Sample.cs", "selection": "marker" },
+  "arguments": { "name": "discount" }
+}

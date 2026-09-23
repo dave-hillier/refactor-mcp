@@ -1,0 +1,6 @@
+{
+  "refactoring": "extract-local-variable",
+  "description": "Declares a local of the expression's type just before the statement and uses it in place of the expression",
+  "target": { "file": "Sample.cs", "selection": "marker" },
+  "arguments": { "name": "factor" }
+}

@@ -1,0 +1,6 @@
+{
+  "refactoring": "extract-local-variable",
+  "description": "Identical side-effect free expressions in the same statement use the local too; other members are untouched",
+  "target": { "file": "Sample.cs", "selection": "marker" },
+  "arguments": { "name": "sum" }
+}

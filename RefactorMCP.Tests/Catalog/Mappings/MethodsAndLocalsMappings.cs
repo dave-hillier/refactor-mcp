@@ -33,6 +33,27 @@ internal sealed class MethodsAndLocalsMappings : ICatalogMappings
                 ["no-statements-selected"] = "does not contain extractable statements",
             }),
         new CatalogMapping(
+            "extract-local-variable",
+            "introduce-variable",
+            context => new Dictionary<string, JsonElement>
+            {
+                ["solutionPath"] = Json(context.SolutionPath),
+                ["filePath"] = Json(context.TargetFilePath()),
+                ["selectionRange"] = Json(context.SelectionRange()),
+                ["variableName"] = context.RequiredArgument("name"),
+            },
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["expression-bodied-member"] = "in an expression-bodied member is not supported",
+                ["not-in-statement"] = "is not inside a statement",
+                ["in-loop-condition"] = "is part of a loop condition",
+                ["conditionally-evaluated"] = "is only evaluated on some paths",
+                ["declared-in-statement"] = "which is declared inside the statement",
+                ["name-conflict"] = "is already declared or used",
+                ["void-expression"] = "has no value",
+                ["not-an-expression"] = "is not a valid expression",
+            }),
+        new CatalogMapping(
             "split-declaration-and-assignment",
             "split-declaration-and-assignment",
             LocalArguments,

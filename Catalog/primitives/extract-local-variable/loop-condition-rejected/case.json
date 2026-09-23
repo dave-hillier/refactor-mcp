@@ -1,0 +1,8 @@
+{
+  "refactoring": "extract-local-variable",
+  "description": "Refuses an expression in a loop condition, which is evaluated again on every iteration",
+  "target": { "file": "Sample.cs", "selection": "marker" },
+  "arguments": { "name": "extracted" },
+  "expect": "error",
+  "errorCode": "in-loop-condition"
+}
