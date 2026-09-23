@@ -2,6 +2,7 @@ using ModelContextProtocol;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.FindSymbols;
 
 /// <summary>
 /// Finding the type a type conversion acts on and the facts about its
@@ -40,6 +41,49 @@ internal static class TypeDeclarations
         CancellationToken cancellationToken = default) =>
         (await DeclarationsAsync(type, cancellationToken))[0];
 
+    /// <summary>
+    /// The names of named arguments, in every call of a constructor in the
+    /// solution, that must change because its parameters are renamed.
+    /// </summary>
+    public static async Task<ILookup<DocumentId, (IdentifierNameSyntax Name, string NewName)>> NamedArgumentRenamesAsync(
+        Solution solution,
+        IMethodSymbol? constructor,
+        IReadOnlyDictionary<string, string> renames,
+        CancellationToken cancellationToken = default)
+    {
+        var found = new List<(DocumentId Document, IdentifierNameSyntax Name, string NewName)>();
+        if (constructor is null || renames.All(r => r.Key == r.Value))
+            return found.ToLookup(f => f.Document, f => (f.Name, f.NewName));
+
+        var references = await SymbolFinder.FindReferencesAsync(constructor, solution, cancellationToken);
+        foreach (var location in references.SelectMany(r => r.Locations))
+        {
+            var root = await location.Document.GetSyntaxRootAsync(cancellationToken);
+            var arguments = root!.FindNode(location.Location.SourceSpan, getInnermostNodeForTie: true)
+                .AncestorsAndSelf()
+                .Select(n => n switch
+                {
+                    BaseObjectCreationExpressionSyntax creation => creation.ArgumentList,
+                    ConstructorInitializerSyntax initializer => initializer.ArgumentList,
+                    PrimaryConstructorBaseTypeSyntax primary => primary.ArgumentList,
+                    _ => null,
+                })
+                .FirstOrDefault(a => a is not null);
+
+            foreach (var argument in arguments?.Arguments ?? default)
+            {
+                if (argument.NameColon?.Name is { } name
+                    && renames.TryGetValue(name.Identifier.ValueText, out var newName)
+                    && newName != name.Identifier.ValueText)
+                {
+                    found.Add((location.Document.Id, name, newName));
+                }
+            }
+        }
+
+        return found.ToLookup(f => f.Document, f => (f.Name, f.NewName));
+    }
+
     /// <summary>Refuses when the file's language version is older than a feature needs.</summary>
     public static void EnsureLanguageVersion(SyntaxTree tree, LanguageVersion required, string feature)
     {
@@ -52,6 +96,18 @@ internal static class TypeDeclarations
     /// <summary>Whether nullable annotations are enabled at a position.</summary>
     public static bool AnnotationsEnabled(SemanticModel model, int position) =>
         model.GetNullableContext(position).AnnotationsEnabled();
+
+    /// <summary>
+    /// The namespaces of the named types that do not resolve at a position,
+    /// so a file that already imports them, globally or not, gets no
+    /// duplicate directive.
+    /// </summary>
+    public static IEnumerable<string> MissingImports(SemanticModel model, int position, params (string Namespace, string Type)[] needed) =>
+        needed
+            .Where(n => !model.LookupNamespacesAndTypes(position, name: n.Type)
+                .Any(s => s.ContainingNamespace?.ToDisplayString() == n.Namespace))
+            .Select(n => n.Namespace)
+            .Distinct(StringComparer.Ordinal);
 
     /// <summary>
     /// Adds <c>using</c> directives for namespaces the file does not import yet.

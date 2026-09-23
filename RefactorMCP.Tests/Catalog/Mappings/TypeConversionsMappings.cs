@@ -30,6 +30,17 @@ internal sealed class TypeConversionsMappings : ICatalogMappings
                 ["single-declaration"] = "has only one declaration",
                 ["conflicting-imports"] = "import conflicting names",
             }),
+        new CatalogMapping(
+            "convert-record-to-class",
+            "convert-record-to-class",
+            context => DeclarationArguments(context, "typeName"),
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["record-struct"] = "is a record struct",
+                ["record-hierarchy"] = "is part of a record hierarchy",
+                ["with-expression"] = "is copied with a with expression",
+                ["partial-type"] = "merge them first",
+            }),
     };
 
     /// <summary>
