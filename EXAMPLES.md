@@ -2451,6 +2451,36 @@ dotnet run --project RefactorMCP.ConsoleApp -- --json create-adapter '{"solution
 
 <!-- End of Generators. -->
 
+### Recipe gaps
+
+<!-- Recipe gaps: examples for this group's tools go below this line. -->
+
+Primitives that give composite recipes a step of their own. Like the other
+tools that act on a statement, they take the line and column of the `if`
+keyword.
+
+#### Remove Redundant Else
+
+Removes the `else` of an `if` whose branch always returns, throws, breaks or
+continues, so the `else`'s statements follow the `if`; an `else if` becomes an
+`if` of its own.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json remove-redundant-else '{"solutionPath":"./RefactorMCP.sln","filePath":"./Staff/Payroll.cs","line":11,"column":13}'
+```
+
+#### Merge Sibling Ifs
+
+Joins an `if` with the `else if` or `if` statement after it when both have the
+same body, into one `if` on both conditions joined by `||`. A following `if`
+statement must share a body that always jumps away.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json merge-sibling-ifs '{"solutionPath":"./RefactorMCP.sln","filePath":"./Staff/Disability.cs","line":12,"column":13}'
+```
+
+<!-- End of Recipe gaps. -->
+
 ## Metrics Resource
 
 Metrics can be queried using the resource scheme:
