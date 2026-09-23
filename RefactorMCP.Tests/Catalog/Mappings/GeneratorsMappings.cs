@@ -35,6 +35,25 @@ internal sealed class GeneratorsMappings : ICatalogMappings
                 ("not-void", "returns a value"),
                 ("ref-parameter", "has a ref, out or in parameter"),
                 ("member-exists", "already has a member named"))),
+
+        new CatalogMapping(
+            "feature-flag-wrapping",
+            "feature-flag-refactor",
+            context => new Dictionary<string, JsonElement>
+            {
+                ["solutionPath"] = Json(context.SolutionPath),
+                ["filePath"] = Json(context.TargetFilePath()),
+                ["flagName"] = context.RequiredArgument("flag"),
+            },
+            Codes(
+                ("flag-not-found", "not found in"),
+                ("ambiguous-flag-check", "is checked more than once"),
+                ("flag-source-not-member", "which is not a field, property or type the class can read"),
+                ("branch-leaves-early", "leaves the method early"),
+                ("branch-uses-members", "that a strategy class cannot reach"),
+                ("branch-assigns-outer-variable", "declared outside it"),
+                ("type-already-exists", "already exists"),
+                ("member-exists", "already has a member named"))),
     };
 
     /// <summary>

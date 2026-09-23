@@ -1,0 +1,9 @@
+{
+  "refactoring": "feature-flag-wrapping",
+  "description": "Refuses a branch that assigns a local declared outside it, which Apply would change only in its own copy",
+  "target": { "file": "Checkout.cs" },
+  "arguments": { "flag": "Discounts" },
+  "expect": "error",
+  "errorCode": "branch-assigns-outer-variable",
+  "errorContains": "total"
+}

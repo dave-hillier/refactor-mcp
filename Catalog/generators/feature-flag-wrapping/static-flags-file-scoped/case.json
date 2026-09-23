@@ -1,0 +1,6 @@
+{
+  "refactoring": "feature-flag-wrapping",
+  "description": "A check in a static method on a static flag source gives a static property, in a file-scoped namespace",
+  "target": { "file": "Banner.cs" },
+  "arguments": { "flag": "Sale" }
+}

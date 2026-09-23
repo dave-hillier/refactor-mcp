@@ -996,7 +996,7 @@ return values.Sum() / (double)values.Count;
 
 ## 17. Feature Flag Refactor
 
-**Purpose**: Replace `features.IsEnabled(flag)` checks with strategy classes.
+**Purpose**: Replace a `features.IsEnabled(flag)` check with strategy classes chosen by a property that checks the flag.
 
 ### Example
 **Before**:
@@ -1026,9 +1026,13 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli feature-flag-refactor \
 ```csharp
 public void DoWork()
 {
-    _coolFeatureStrategy.Apply();
+    CoolFeature.Apply();
 }
+
+private ICoolFeatureStrategy CoolFeature => featureFlags.IsEnabled("CoolFeature") ? new CoolFeatureStrategy() : new NoCoolFeatureStrategy();
 ```
+
+`CoolFeatureStrategy` and `NoCoolFeatureStrategy` implement `ICoolFeatureStrategy`, and their `Apply` methods hold the two branches.
 ## 18. Extract Decorator
 
 **Purpose**: Generate a decorator class that delegates to an existing method.
