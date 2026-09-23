@@ -1425,6 +1425,56 @@ refactor --json inline-method \
 
 <!-- Method conversions: examples for this group's tools go below this line. -->
 
+**Convert Method to Local Function**: move the private method `WithTax`, used
+only by one member, into that member. `line` chooses between overloads.
+
+```bash
+refactor --json convert-method-to-local-function \
+    '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Foo.cs","methodName":"WithTax","line":20}'
+```
+
+**Convert Local Function to Method**: the local function named, or called, at
+line 18, column 13 becomes a private method; the variables it captures become
+parameters. The name is optional and defaults to the local function's.
+
+```bash
+refactor --json convert-local-function-to-method \
+    '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Foo.cs","line":18,"column":13,"name":"ApplyTax"}'
+```
+
+The body conversions take the position of the member's name, or of the `get`
+or `set` keyword for one accessor.
+
+**Convert to Expression Body**: `{ return _a + _b; }` becomes `=> _a + _b;`.
+
+```bash
+refactor --json convert-to-expression-body \
+    '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Foo.cs","line":12,"column":16}'
+```
+
+**Convert to Block Body**: `=> _a + _b;` becomes `{ return _a + _b; }`.
+
+```bash
+refactor --json convert-to-block-body \
+    '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Foo.cs","line":12,"column":16}'
+```
+
+**Convert Lambda to Method Group**: `numbers.Select(n => Format(n))` becomes
+`numbers.Select(Format)`. The position is anywhere inside the lambda.
+
+```bash
+refactor --json convert-lambda-to-method-group \
+    '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Foo.cs","line":14,"column":31}'
+```
+
+**Convert Method Group to Lambda**: `numbers.Select(Format)` becomes
+`numbers.Select(number => Format(number))`. The position is the method's name.
+
+```bash
+refactor --json convert-method-group-to-lambda \
+    '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Foo.cs","line":14,"column":31}'
+```
+
 <!-- End of Method conversions. -->
 
 ### Signatures

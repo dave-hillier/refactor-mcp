@@ -271,7 +271,10 @@ public static class ConvertLocalFunctionToMethodTool
             var memberIndentation = PositionTarget.IndentationOf(Member);
             var shifted = ReindentDetached(rewritten, memberIndentation - PositionTarget.IndentationOf(_function));
 
-            var modifiers = new List<SyntaxToken> { Keyword(SyntaxKind.PrivateKeyword) };
+            // After attributes, the modifiers start the line the function's first modifier
+            // or return type did; otherwise the method's leading trivia replaces this.
+            var firstLeading = shifted.Modifiers.Count > 0 ? shifted.Modifiers[0].LeadingTrivia : shifted.ReturnType.GetLeadingTrivia();
+            var modifiers = new List<SyntaxToken> { Keyword(SyntaxKind.PrivateKeyword).WithLeadingTrivia(firstLeading) };
             if (IsStatic)
                 modifiers.Add(Keyword(SyntaxKind.StaticKeyword));
             modifiers.AddRange(shifted.Modifiers

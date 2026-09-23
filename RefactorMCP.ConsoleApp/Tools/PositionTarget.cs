@@ -50,8 +50,12 @@ internal sealed class PositionTarget
     public T? Enclosing<T>() where T : SyntaxNode =>
         Token.Parent?.AncestorsAndSelf().OfType<T>().FirstOrDefault();
 
-    public string Describe() =>
-        $"{Token.GetLocation().GetLineSpan().StartLinePosition.Line + 1}:{Token.GetLocation().GetLineSpan().StartLinePosition.Character + 1}";
+    /// <summary>The token's 1-based line and column, for messages.</summary>
+    public string Describe()
+    {
+        var start = Token.GetLocation().GetLineSpan().StartLinePosition;
+        return $"{start.Line + 1}:{start.Character + 1}";
+    }
 
     /// <summary>Writes the new root, updating the session's solution.</summary>
     public Task WriteAsync(SyntaxNode newRoot) => RefactoringHelpers.WriteAndUpdateCachesAsync(Document, newRoot);
