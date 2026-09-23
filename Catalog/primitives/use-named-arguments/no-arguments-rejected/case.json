@@ -1,0 +1,7 @@
+{
+  "refactoring": "use-named-arguments",
+  "description": "Refuses a call with no arguments to name",
+  "target": { "file": "Clock.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "no-arguments"
+}

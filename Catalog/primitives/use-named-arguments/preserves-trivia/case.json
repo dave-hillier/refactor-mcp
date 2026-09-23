@@ -1,0 +1,5 @@
+{
+  "refactoring": "use-named-arguments",
+  "description": "Names arguments laid out one per line, keeping indentation and comments",
+  "target": { "file": "Shipping.cs", "caret": "marker" }
+}

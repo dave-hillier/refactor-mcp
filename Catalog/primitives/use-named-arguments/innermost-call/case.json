@@ -1,0 +1,5 @@
+{
+  "refactoring": "use-named-arguments",
+  "description": "With the caret inside a nested call, names the arguments of that call only",
+  "target": { "file": "Shipping.cs", "caret": "marker" }
+}

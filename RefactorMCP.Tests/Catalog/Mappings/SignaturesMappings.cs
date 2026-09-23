@@ -94,6 +94,27 @@ internal sealed class SignaturesMappings : ICatalogMappings
                 ["not-constant"] = "is not a compile-time constant",
                 ["incompatible-value"] = "cannot be converted to the type of",
             }),
+        new CatalogMapping(
+            "use-named-arguments",
+            "use-named-arguments",
+            context =>
+            {
+                var (line, column) = context.Caret();
+                return new Dictionary<string, JsonElement>
+                {
+                    ["solutionPath"] = Json(context.SolutionPath),
+                    ["filePath"] = Json(context.TargetFilePath()),
+                    ["line"] = Json(line),
+                    ["column"] = Json(column),
+                };
+            },
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["no-call-at-caret"] = "There is no call at",
+                ["no-arguments"] = "has no arguments to name",
+                ["already-named"] = "that can be named already is",
+                ["changes-overload"] = "would no longer bind to",
+            }),
     };
 
     /// <summary>

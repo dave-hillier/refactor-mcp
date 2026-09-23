@@ -1,0 +1,5 @@
+{
+  "refactoring": "use-named-arguments",
+  "description": "Names the positional arguments and leaves named ones, in their written order",
+  "target": { "file": "Shipping.cs", "caret": "marker" }
+}

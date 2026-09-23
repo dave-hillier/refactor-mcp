@@ -391,7 +391,8 @@ internal static class SignatureChange
         return method.Parameters[ordinal].Name;
     }
 
-    private static ArgumentSyntax Named(ArgumentSyntax argument, string name)
+    /// <summary>The argument with <c>name:</c> in front, after any comment that led it.</summary>
+    public static ArgumentSyntax Named(ArgumentSyntax argument, string name)
     {
         var leading = argument.GetLeadingTrivia();
         var nameColon = SyntaxFactory.NameColon(

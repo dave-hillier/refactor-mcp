@@ -1,0 +1,5 @@
+{
+  "refactoring": "use-named-arguments",
+  "description": "Names the arguments of an object creation, using the constructor declared in another file",
+  "target": { "file": "Packing.cs", "caret": "marker" }
+}

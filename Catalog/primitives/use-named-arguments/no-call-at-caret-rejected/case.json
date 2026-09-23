@@ -1,0 +1,7 @@
+{
+  "refactoring": "use-named-arguments",
+  "description": "Refuses when the caret is not in a call",
+  "target": { "file": "Shipping.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "no-call-at-caret"
+}

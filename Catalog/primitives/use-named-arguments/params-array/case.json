@@ -1,0 +1,5 @@
+{
+  "refactoring": "use-named-arguments",
+  "description": "Arguments passed to a params array in expanded form stay positional",
+  "target": { "file": "Logger.cs", "caret": "marker" }
+}
