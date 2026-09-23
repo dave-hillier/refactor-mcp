@@ -24,6 +24,15 @@ internal sealed class RecipeGapsMappings : ICatalogMappings
                 ("not-in-block", "is not in a block"),
                 ("branch-falls-through", "can run on past its end"),
                 ("name-conflict", "which is also declared elsewhere"))),
+        new CatalogMapping(
+            "merge-sibling-ifs",
+            "merge-sibling-ifs",
+            CaretArguments,
+            Codes(
+                ("not-an-if", "is not on an if statement"),
+                ("no-sibling-if", "is not followed by an else if or an if statement with the same body"),
+                ("body-falls-through", "share a body that can fall through"),
+                ("declares-variable", "A condition declares a variable"))),
     };
 
     /// <summary>The file and the 1-based position of the caret, for tools that act on the statement under it.</summary>

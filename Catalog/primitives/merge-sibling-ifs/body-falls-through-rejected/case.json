@@ -1,0 +1,7 @@
+{
+  "refactoring": "merge-sibling-ifs",
+  "description": "Refuses consecutive ifs whose shared body can fall through, since it runs twice when both conditions hold",
+  "target": { "file": "Alerts.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "body-falls-through"
+}

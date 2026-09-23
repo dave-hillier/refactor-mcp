@@ -1,0 +1,5 @@
+{
+  "refactoring": "merge-sibling-ifs",
+  "description": "A condition that binds more loosely than || is parenthesised, and one joined by && is not",
+  "target": { "file": "Access.cs", "caret": "marker" }
+}

@@ -1,0 +1,5 @@
+{
+  "refactoring": "merge-sibling-ifs",
+  "description": "The if after it may have an else, which the merged if keeps: it only ran when neither condition held",
+  "target": { "file": "Batch.cs", "caret": "marker" }
+}

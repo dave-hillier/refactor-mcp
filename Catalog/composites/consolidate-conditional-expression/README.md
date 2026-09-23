@@ -5,22 +5,20 @@ and optionally gives it a name by extracting it into a method.
 
 ## Recipe
 
-1. Merge the conditions that share a body into one `if`.
-2. Extract Method on the combined condition.
-
-Only nested conditions have a primitive that merges them: Merge Nested If
-joins `if (a) { if (b) { S } }` into `if (a && b) { S }`, and is repeated on
-the same `if`, which stays where it was, for deeper nesting:
-
-1. `{ "refactoring": "merge-nested-if", "target": { "file": "Shipping.cs", "caret": "marker" } }`
-2. `{ "refactoring": "merge-nested-if", "target": { "file": "Shipping.cs", "range": "18:13-18:13" } }`
+1. Merge the conditions that share a body into one `if`, one condition per
+   step, on the same `if`, which stays where it was:
+   - Merge Sibling Ifs for `if` statements or `else if` branches that follow
+     it, joining with `||`:
+     `{ "refactoring": "merge-sibling-ifs", "target": { "file": "Disability.cs", "caret": "marker" } }`
+   - Merge Nested If for an `if` nested in it, joining with `&&`:
+     `{ "refactoring": "merge-nested-if", "target": { "file": "Shipping.cs", "caret": "marker" } }`
+2. With `name`, Extract Method on the combined condition, selected exactly,
+   which extracts it into a method returning its value:
+   `{ "refactoring": "extract-method", "target": { "file": "Disability.cs", "range": "12:17-12:70" }, "arguments": { "name": "IsNotEligible" } }`
 
 A later step cannot use a marker, so it gives the caret as a `range` whose
-start is the caret.
-
-No primitive joins consecutive `if` statements or `else if` branches with `||`,
-and Extract Method extracts statements, not an expression. So the recipe case
-is limited to nested conditions; the dedicated implementation does the rest.
+start is the caret, such as `"range": "12:13-12:13"`, and the condition as
+the range it covers once the conditions are merged.
 
 ## Target and arguments
 

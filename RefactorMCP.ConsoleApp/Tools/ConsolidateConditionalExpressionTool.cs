@@ -27,10 +27,10 @@ public static class ConsolidateConditionalExpressionTool
                 ?? throw new McpException(
                     "Error: The if statement has nothing to consolidate: no nested if, no else if and no following if with the same body");
 
-            if (merge.Operator == SyntaxKind.LogicalOrExpression && merge.Conditions.Any(DeclaresVariable))
+            if (merge.Operator == SyntaxKind.LogicalOrExpression && merge.Conditions.Any(MergeSiblingIfsTool.DeclaresVariable))
                 throw new McpException("Error: A condition declares a variable, which joining the conditions with || would leave unassigned");
 
-            var condition = Combine(merge.Conditions, merge.Operator);
+            var condition = MergeSiblingIfsTool.Combine(merge.Conditions, merge.Operator);
             MethodDeclarationSyntax? extracted = null;
             if (methodName is not null)
                 (condition, extracted) = Extract(condition, merge.Conditions, methodName, statement, caret);
@@ -120,57 +120,7 @@ public static class ConsolidateConditionalExpressionTool
         }
 
         var conditions = following.Select(f => f.Condition).Prepend(statement.Condition).ToList();
-        return new Merge(conditions, SyntaxKind.LogicalOrExpression, statement.WithLeadingTrivia(LeadingComments(statement, following)), following);
-    }
-
-    /// <summary>
-    /// The first if's leading trivia followed by the comments above the ifs
-    /// it absorbs, so that they stay above the combined if.
-    /// </summary>
-    private static SyntaxTriviaList LeadingComments(IfStatementSyntax statement, IEnumerable<IfStatementSyntax> absorbed)
-    {
-        var leading = statement.GetLeadingTrivia();
-        var commented = absorbed.Where(HasComments).ToList();
-        if (commented.Count == 0)
-            return leading;
-
-        // The if's own indentation ends its trivia; it goes after the comments.
-        var indentation = leading.LastOrDefault();
-        if (indentation.IsKind(SyntaxKind.WhitespaceTrivia))
-            leading = leading.RemoveAt(leading.Count - 1);
-        foreach (var next in commented)
-        {
-            leading = leading.AddRange(HierarchyMemberHelpers.WithoutLeadingBlankLines(next.GetLeadingTrivia()));
-            if (leading.LastOrDefault().IsKind(SyntaxKind.WhitespaceTrivia))
-                leading = leading.RemoveAt(leading.Count - 1);
-        }
-
-        return indentation.IsKind(SyntaxKind.WhitespaceTrivia) ? leading.Add(indentation) : leading;
-    }
-
-    private static bool HasComments(SyntaxNode node) =>
-        node.GetLeadingTrivia().Any(t => t.IsKind(SyntaxKind.SingleLineCommentTrivia) || t.IsKind(SyntaxKind.MultiLineCommentTrivia));
-
-    private static bool DeclaresVariable(ExpressionSyntax condition) =>
-        condition.DescendantNodes().Any(n => n is SingleVariableDesignationSyntax or DeclarationExpressionSyntax);
-
-    /// <summary>The conditions joined in order, parenthesised only where precedence needs it.</summary>
-    private static ExpressionSyntax Combine(IReadOnlyList<ExpressionSyntax> conditions, SyntaxKind kind)
-    {
-        var token = SyntaxFactory.Token(kind == SyntaxKind.LogicalAndExpression ? SyntaxKind.AmpersandAmpersandToken : SyntaxKind.BarBarToken)
-            .WithLeadingTrivia(SyntaxFactory.Space)
-            .WithTrailingTrivia(SyntaxFactory.Space);
-
-        var combined = conditions[0].WithoutTrivia();
-        foreach (var next in conditions.Skip(1))
-        {
-            var binary = SyntaxFactory.BinaryExpression(kind, combined, token, next.WithoutTrivia());
-            combined = binary.ReplaceNodes(
-                new[] { binary.Left, binary.Right },
-                (original, _) => ExpressionPlacement.Fit(original, original));
-        }
-
-        return combined;
+        return new Merge(conditions, SyntaxKind.LogicalOrExpression, statement.WithLeadingTrivia(MergeSiblingIfsTool.LeadingComments(statement, following)), following);
     }
 
     /// <summary>
@@ -198,7 +148,7 @@ public static class ConsolidateConditionalExpressionTool
         foreach (var original in conditions)
         {
             var flow = caret.Model.AnalyzeDataFlow(original);
-            if (DeclaresVariable(original) || flow is { Succeeded: true, WrittenInside.IsEmpty: false })
+            if (MergeSiblingIfsTool.DeclaresVariable(original) || flow is { Succeeded: true, WrittenInside.IsEmpty: false })
                 throw new McpException("Error: A condition declares or assigns a variable, which a method extracted from it could not share with the if");
         }
 

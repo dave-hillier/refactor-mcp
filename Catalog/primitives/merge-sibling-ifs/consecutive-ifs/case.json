@@ -1,0 +1,5 @@
+{
+  "refactoring": "merge-sibling-ifs",
+  "description": "An if followed by an if with the same body, which always returns, becomes one if on both conditions joined by ||",
+  "target": { "file": "Disability.cs", "caret": "marker" }
+}
