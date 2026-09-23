@@ -1,0 +1,25 @@
+{
+  "refactoring": "parameterise-method",
+  "description": "Runs the recipe: Introduce Parameter on the first method's literal, Rename it, Extract Method onto it from the similar method, then Inline Method on the similar method",
+  "steps": [
+    {
+      "refactoring": "introduce-parameter",
+      "target": { "file": "Employee.cs", "selection": "marker" },
+      "arguments": { "name": "factor" }
+    },
+    {
+      "refactoring": "rename",
+      "target": { "symbol": "M:Payroll.Employee.TenPercentRaise(System.Decimal)" },
+      "arguments": { "name": "Raise" }
+    },
+    {
+      "refactoring": "extract-method",
+      "target": { "file": "Employee.cs", "range": "19:13-19:30" },
+      "arguments": { "name": "Raise" }
+    },
+    {
+      "refactoring": "inline-method",
+      "target": { "symbol": "M:Payroll.Employee.FivePercentRaise" }
+    }
+  ]
+}

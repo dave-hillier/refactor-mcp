@@ -73,15 +73,20 @@ public static class ExtractMethodTool
 
         var containingClass = containingMethod.Ancestors().OfType<ClassDeclarationSyntax>().FirstOrDefault();
         var semanticModel = (await document.GetSemanticModelAsync())!;
-        EnsureNameIsFree(containingMethod, methodName, semanticModel);
 
-        ExtractMethodRewriter rewriter;
+        // A name the class already uses can only be that of a method whose body is the
+        // selected code, which the selection then calls instead of a new method.
+        var nameTaken = semanticModel.GetDeclaredSymbol(containingMethod)?.ContainingType.GetMembers(methodName).Any() == true;
+
+        SyntaxNode newRoot;
         var expression = FieldPropertyRefactoring.SelectedExpression(syntaxRoot, sourceText, span);
         if (expression != null && expression.Parent is not ExpressionStatementSyntax && containingMethod.Body.Span.Contains(expression.Span))
         {
             EnsureExtractableExpression(expression, semanticModel);
             EnsureAssignedLocalsStayInside(containingMethod, expression.Span, semanticModel.AnalyzeDataFlow(expression), semanticModel);
-            rewriter = new ExtractMethodRewriter(containingMethod, containingClass, expression, methodName, semanticModel);
+            newRoot = nameTaken
+                ? await ExistingMethodCall.ReplaceAsync(document, semanticModel, containingMethod, new[] { expression }, methodName)
+                : new ExtractMethodRewriter(containingMethod, containingClass, expression, methodName, semanticModel).Visit(syntaxRoot)!;
         }
         else
         {
@@ -96,11 +101,12 @@ public static class ExtractMethodTool
                 semanticModel.AnalyzeDataFlow(statementsToExtract.First(), statementsToExtract.Last()),
                 semanticModel);
             EnsureNoEarlyReturn(containingMethod, statementsToExtract, semanticModel);
-            rewriter = new ExtractMethodRewriter(containingMethod, containingClass, statementsToExtract, methodName, semanticModel, span);
+            newRoot = nameTaken
+                ? await ExistingMethodCall.ReplaceAsync(document, semanticModel, containingMethod, statementsToExtract, methodName)
+                : new ExtractMethodRewriter(containingMethod, containingClass, statementsToExtract, methodName, semanticModel, span).Visit(syntaxRoot)!;
         }
 
-        var newRoot = rewriter.Visit(syntaxRoot);
-        return Formatter.Format(newRoot!, document.Project.Solution.Workspace);
+        return Formatter.Format(newRoot, document.Project.Solution.Workspace);
     }
 
     /// <summary>
@@ -145,14 +151,6 @@ public static class ExtractMethodTool
         while (end > start && char.IsWhiteSpace(text[end - 1]))
             end--;
         return TextSpan.FromBounds(start, end);
-    }
-
-    /// <summary>The new method would clash with a member of the type that has the name.</summary>
-    private static void EnsureNameIsFree(MethodDeclarationSyntax containingMethod, string methodName, SemanticModel semanticModel)
-    {
-        var type = semanticModel.GetDeclaredSymbol(containingMethod)?.ContainingType;
-        if (type != null && type.GetMembers(methodName).Any())
-            throw new McpException($"Error: '{type.Name}' already has a member named '{methodName}'");
     }
 
     /// <summary>

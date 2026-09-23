@@ -1,0 +1,6 @@
+{
+  "refactoring": "parameterise-method",
+  "description": "Replaces two methods differing in one literal with one taking it as a parameter, as the recipe does; a caller in another file passes each method's literal",
+  "target": { "file": "Employee.cs" },
+  "arguments": { "methods": ["TenPercentRaise", "FivePercentRaise"], "name": "Raise", "parameterNames": ["factor"] }
+}

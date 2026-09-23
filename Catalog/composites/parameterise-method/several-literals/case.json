@@ -1,0 +1,6 @@
+{
+  "refactoring": "parameterise-method",
+  "description": "Methods that return a value and take a parameter differ in two literals, which become parameters after the existing one, in the order they appear",
+  "target": { "file": "Tariff.cs" },
+  "arguments": { "methods": ["MiddleBand", "TopBand"], "name": "WithinBand", "parameterNames": ["top", "bottom"] }
+}

@@ -1,0 +1,8 @@
+{
+  "refactoring": "parameterise-method",
+  "description": "Refuses methods that differ in more than literal values",
+  "target": { "file": "Employee.cs" },
+  "arguments": { "methods": ["Raise", "Cut"], "name": "Adjust", "parameterNames": ["factor"] },
+  "expect": "error",
+  "errorCode": "bodies-differ"
+}

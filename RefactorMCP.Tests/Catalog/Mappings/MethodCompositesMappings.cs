@@ -144,6 +144,29 @@ internal sealed class MethodCompositesMappings : ICatalogMappings
                 ["method-group-reference"] = "is used as a method group",
                 ["name-conflict"] = "already has a member named",
             }),
+        new CatalogMapping(
+            "parameterise-method",
+            "parameterise-method",
+            context => new Dictionary<string, JsonElement>
+            {
+                ["solutionPath"] = Json(context.SolutionPath),
+                ["filePath"] = Json(context.TargetFilePath()),
+                ["methods"] = context.RequiredArgument("methods"),
+                ["name"] = context.RequiredArgument("name"),
+                ["parameterNames"] = context.RequiredArgument("parameterNames"),
+            },
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["too-few-methods"] = "needs at least two similar methods",
+                ["signatures-differ"] = "differ in their class, return type, parameters or static modifier",
+                ["bodies-differ"] = "in more than literals of the same type",
+                ["same-body"] = "have the same body, so there is no value to make a parameter",
+                ["parameter-count"] = "parameter name(s) were given",
+                ["no-block-body"] = "has no block body to compare",
+                ["name-conflict"] = "is already in use in",
+                ["polymorphic-method"] = "is virtual, an override or an interface implementation",
+                ["method-group-reference"] = "is used without being called",
+            }),
     };
 
     /// <summary>

@@ -16,7 +16,8 @@ a new private method, and replaces them with a call to it.
   before it in an enclosing loop. The assignment would change a copy in the
   new method and be lost.
 - In a `void` method, the statements return only at their end.
-- The class has no member with the name.
+- The class has no member with the name, or has a method of that name whose
+  body is the selected code (see below).
 
 ## Transformation
 
@@ -29,6 +30,13 @@ a new private method, and replaces them with a call to it.
 - An expression becomes a method returning it, with the expression's type,
   and the call takes its place.
 - A `return;` ending the selection stays at the call site, after the call.
+- When the name is that of a method the class already has, whose body is the
+  selected code with each of its parameters standing for an expression in
+  it, no method is created: the selection becomes a call of that method,
+  passing those expressions. The method is not generic, takes its parameters
+  by value, returns the selected expression's type or, for statements,
+  nothing, and is static when the containing method is. The expressions have
+  no side effects, and every other name means the same in both.
 - Parameters and locals the statements read are passed as parameters, in the
   order they are first used. A parameter keeps its nullable annotation; a
   `var` local that flow analysis knows is not null is passed as non-nullable.
@@ -72,6 +80,6 @@ a new private method, and replaces them with a call to it.
 | `not-in-method` | the selection is not inside a method |
 | `no-statements-selected` | the selection covers no whole statement |
 | `returns-early` | the statements of a `void` method return before their end |
-| `name-conflict` | the class already has a member with the name |
+| `name-conflict` | the class already has a member with the name, and no method of that name has the selected code as its body |
 | `no-value` | the selected expression has no value a method could return |
 | `assigned-expression` | the selected expression is assigned to |

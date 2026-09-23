@@ -1,0 +1,9 @@
+{
+  "refactoring": "parameterise-method",
+  "description": "Refuses when the number of parameter names does not match the number of literals that differ",
+  "target": { "file": "Tariff.cs" },
+  "arguments": { "methods": ["MiddleBand", "TopBand"], "name": "WithinBand", "parameterNames": ["top"] },
+  "expect": "error",
+  "errorCode": "parameter-count",
+  "errorContains": "2 literal(s) differ"
+}
