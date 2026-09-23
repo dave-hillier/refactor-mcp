@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-foreach-to-for",
+  "description": "A foreach over a string's characters counts up to its Length",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  }
+}

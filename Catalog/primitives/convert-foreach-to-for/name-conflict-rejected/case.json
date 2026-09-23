@@ -1,0 +1,13 @@
+{
+  "refactoring": "convert-foreach-to-for",
+  "description": "Refuses an index name already declared in the loop's scope",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  },
+  "arguments": {
+    "name": "total"
+  },
+  "expect": "error",
+  "errorCode": "name-conflict"
+}

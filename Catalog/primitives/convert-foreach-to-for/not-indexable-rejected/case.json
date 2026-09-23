@@ -1,0 +1,10 @@
+{
+  "refactoring": "convert-foreach-to-for",
+  "description": "Refuses a sequence that cannot be indexed",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  },
+  "expect": "error",
+  "errorCode": "not-indexable"
+}

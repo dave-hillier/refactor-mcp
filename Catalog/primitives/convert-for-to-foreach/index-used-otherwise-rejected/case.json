@@ -1,0 +1,10 @@
+{
+  "refactoring": "convert-for-to-foreach",
+  "description": "Refuses when the index is used for something other than reading the element",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  },
+  "expect": "error",
+  "errorCode": "index-used-otherwise"
+}

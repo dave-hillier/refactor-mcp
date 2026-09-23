@@ -1,0 +1,8 @@
+{
+  "refactoring": "introduce-using-declaration",
+  "description": "Comments above the using and inside its block stay with the code",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  }
+}

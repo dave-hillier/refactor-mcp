@@ -1,0 +1,8 @@
+{
+  "refactoring": "introduce-using-declaration",
+  "description": "A using that declares several resources declares them all",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  }
+}

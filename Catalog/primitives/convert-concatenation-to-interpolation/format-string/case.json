@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-concatenation-to-interpolation",
+  "description": "A value formatted with ToString and a format string becomes a format specifier",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  }
+}

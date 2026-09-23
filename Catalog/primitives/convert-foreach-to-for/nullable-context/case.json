@@ -1,0 +1,11 @@
+{
+  "refactoring": "convert-foreach-to-for",
+  "description": "In a nullable context the element keeps its nullable annotation",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  },
+  "project": {
+    "nullable": "enable"
+  }
+}

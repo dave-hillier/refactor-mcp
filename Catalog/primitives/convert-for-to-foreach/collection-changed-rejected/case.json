@@ -1,0 +1,10 @@
+{
+  "refactoring": "convert-for-to-foreach",
+  "description": "Refuses when the loop adds to the collection it walks",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  },
+  "expect": "error",
+  "errorCode": "collection-modified"
+}

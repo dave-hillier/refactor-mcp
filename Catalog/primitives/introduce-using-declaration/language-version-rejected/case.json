@@ -1,0 +1,13 @@
+{
+  "refactoring": "introduce-using-declaration",
+  "description": "Refuses a project on a language version before using declarations",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  },
+  "project": {
+    "langVersion": "7.3"
+  },
+  "expect": "error",
+  "errorCode": "language-version"
+}

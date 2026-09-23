@@ -1,0 +1,11 @@
+{
+  "refactoring": "introduce-using-declaration",
+  "description": "In a nullable context a resource that may be null is declared as it was",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  },
+  "project": {
+    "nullable": "enable"
+  }
+}

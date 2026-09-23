@@ -1,0 +1,10 @@
+{
+  "refactoring": "introduce-using-declaration",
+  "description": "Refuses a using of an expression, which declares no variable",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  },
+  "expect": "error",
+  "errorCode": "no-variable"
+}

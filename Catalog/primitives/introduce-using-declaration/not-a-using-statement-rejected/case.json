@@ -1,0 +1,10 @@
+{
+  "refactoring": "introduce-using-declaration",
+  "description": "Refuses a caret that is not on a using statement",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  },
+  "expect": "error",
+  "errorCode": "not-a-using-statement"
+}

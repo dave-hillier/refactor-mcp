@@ -1,0 +1,8 @@
+{
+  "refactoring": "introduce-using-declaration",
+  "description": "An await using keeps await",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  }
+}

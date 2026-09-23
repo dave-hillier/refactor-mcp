@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-foreach-to-for",
+  "description": "A loop variable whose type needs an explicit conversion from the element gets a cast, as foreach converted it",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  }
+}
