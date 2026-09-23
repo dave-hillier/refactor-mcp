@@ -1,0 +1,8 @@
+{
+  "refactoring": "invert-boolean",
+  "description": "Refuses a new name the type already uses",
+  "target": { "symbol": "P:Shop.Sample.IsOpen" },
+  "arguments": { "name": "IsClosed" },
+  "expect": "error",
+  "errorCode": "name-conflict"
+}

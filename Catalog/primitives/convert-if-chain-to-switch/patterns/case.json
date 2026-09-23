@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-if-chain-to-switch",
+  "description": "Type patterns and null checks become case labels, and && after a pattern becomes a when clause",
+  "target": { "file": "Shapes.cs", "caret": "marker" }
+}

@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-record-to-class",
+  "description": "Converts a record that is not sealed and declares its state in the body: equality covers the private field and checks the runtime type, ToString only public members",
+  "target": { "symbol": "T:Shop.Money" }
+}

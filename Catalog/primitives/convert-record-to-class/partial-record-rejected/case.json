@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-record-to-class",
+  "description": "Refuses a record declared in two parts; merge them first",
+  "target": { "symbol": "T:Shop.Tag" },
+  "expect": "error",
+  "errorCode": "partial-type"
+}

@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-to-primary-constructor",
+  "description": "Refuses a private constructor, since a primary constructor is public",
+  "target": { "symbol": "T:Shop.Token" },
+  "expect": "error",
+  "errorCode": "constructor-accessibility"
+}

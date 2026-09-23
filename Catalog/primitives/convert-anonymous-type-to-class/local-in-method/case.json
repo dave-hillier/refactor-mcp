@@ -1,0 +1,6 @@
+{
+  "refactoring": "convert-anonymous-type-to-class",
+  "description": "Declares a sealed class with the anonymous type's properties, value equality and ToString after the containing class, and constructs it instead",
+  "target": { "file": "Report.cs", "caret": "marker" },
+  "arguments": { "name": "Line" }
+}

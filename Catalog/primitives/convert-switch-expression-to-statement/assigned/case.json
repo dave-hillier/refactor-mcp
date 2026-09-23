@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-switch-expression-to-statement",
+  "description": "An assigned switch expression becomes sections that assign and break, and a throw arm becomes a throw statement",
+  "target": { "file": "Pricing.cs", "caret": "marker" }
+}

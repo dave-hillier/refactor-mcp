@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-primary-constructor-to-constructor",
+  "description": "Stores each captured parameter in a private readonly field assigned by an explicit constructor, and points the members at the fields",
+  "target": { "symbol": "T:Shop.OrderService" }
+}

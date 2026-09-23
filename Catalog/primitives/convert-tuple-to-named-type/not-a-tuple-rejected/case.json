@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-tuple-to-named-type",
+  "description": "Refuses a method whose return type is not a tuple",
+  "target": { "symbol": "M:Shop.Stats.Count(System.Int32[])" },
+  "arguments": { "name": "MinMax" },
+  "expect": "error",
+  "errorCode": "not-a-tuple"
+}

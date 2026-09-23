@@ -1,0 +1,6 @@
+{
+  "refactoring": "invert-boolean",
+  "description": "Inverts a field: its initialiser, assignments and reads are negated, and a double negation is removed",
+  "target": { "symbol": "F:Shop.Door._locked" },
+  "arguments": { "name": "_unlocked" }
+}

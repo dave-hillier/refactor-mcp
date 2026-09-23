@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-class-to-record",
+  "description": "Puts the positional parameters of a generic record after its type parameters and before its constraint",
+  "target": { "symbol": "T:Shop.Pair`1" }
+}

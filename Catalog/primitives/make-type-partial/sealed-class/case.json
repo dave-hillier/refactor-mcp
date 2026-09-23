@@ -1,0 +1,5 @@
+{
+  "refactoring": "make-type-partial",
+  "description": "Adds partial after the other modifiers of a sealed class",
+  "target": { "symbol": "T:Shop.Invoice" }
+}

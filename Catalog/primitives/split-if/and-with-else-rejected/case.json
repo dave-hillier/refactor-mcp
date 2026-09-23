@@ -1,0 +1,7 @@
+{
+  "refactoring": "split-if",
+  "description": "Refuses an if on a && b with an else, which both ifs would need",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "and-with-else"
+}

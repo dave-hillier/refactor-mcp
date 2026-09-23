@@ -1,0 +1,9 @@
+{
+  "refactoring": "convert-tuple-to-named-type",
+  "description": "Refuses a record struct when the project's language version predates them",
+  "target": { "symbol": "M:Shop.Stats.Range(System.Int32[])" },
+  "arguments": { "name": "MinMax" },
+  "project": { "langVersion": "9" },
+  "expect": "error",
+  "errorCode": "language-version"
+}

@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-class-to-record",
+  "description": "Keeps a constructor that validates its arguments, changing only class to record",
+  "target": { "symbol": "T:Shop.Money" }
+}

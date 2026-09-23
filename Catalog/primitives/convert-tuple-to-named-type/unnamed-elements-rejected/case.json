@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-tuple-to-named-type",
+  "description": "Refuses a tuple whose elements have no names to give the properties",
+  "target": { "symbol": "M:Shop.Stats.Range(System.Int32[])" },
+  "arguments": { "name": "MinMax" },
+  "expect": "error",
+  "errorCode": "unnamed-elements"
+}

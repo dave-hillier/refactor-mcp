@@ -1,0 +1,6 @@
+{
+  "refactoring": "convert-record-to-class",
+  "description": "Annotates the generated parameters that accept null when nullable annotations are enabled",
+  "target": { "symbol": "T:Shop.Contact" },
+  "project": { "nullable": "enable" }
+}
