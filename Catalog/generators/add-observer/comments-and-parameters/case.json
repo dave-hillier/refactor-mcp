@@ -1,0 +1,6 @@
+{
+  "refactoring": "add-observer",
+  "description": "Passes every parameter to the event, keeps the method's documentation comment with the method, and raises after a trailing comment",
+  "target": { "symbol": "M:Shop.Account.Transfer(Shop.Account,System.Decimal,System.String)" },
+  "arguments": { "event": "Transferred" }
+}

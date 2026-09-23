@@ -42,7 +42,7 @@ public static class AddNullChecksTool
 
         var original = solution;
         if (declaration.Body is null)
-            (document, declaration) = await WithBlockBodyAsync(document, declaration, method, cancellationToken);
+            (document, declaration) = await BlockBodies.ConvertAsync(document, declaration, method, cancellationToken);
 
         var root = (await document.GetSyntaxRootAsync(cancellationToken))!;
         var updated = root.ReplaceNode(declaration, WithGuards(declaration, parameters));
@@ -118,35 +118,6 @@ public static class AddNullChecksTool
             .Type is { TypeKind: not TypeKind.Error };
 
     /// <summary>
-    /// Gives an expression-bodied declaration a block body holding the
-    /// expression as a statement, returned unless the method returns nothing.
-    /// </summary>
-    private static async Task<(Document, BaseMethodDeclarationSyntax)> WithBlockBodyAsync(
-        Document document,
-        BaseMethodDeclarationSyntax declaration,
-        IMethodSymbol method,
-        CancellationToken cancellationToken)
-    {
-        var expression = declaration.ExpressionBody!.Expression.WithoutTrivia();
-        StatementSyntax statement = ReturnsNothing(method)
-            ? SyntaxFactory.ExpressionStatement(expression)
-            : SyntaxFactory.ReturnStatement(expression);
-        var mark = new SyntaxAnnotation();
-        var converted = declaration
-            .WithExpressionBody(null)
-            .WithSemicolonToken(default)
-            .WithParameterList(declaration.ParameterList.WithoutTrailingTrivia())
-            .WithBody(SyntaxFactory.Block(statement).WithTrailingTrivia(declaration.SemicolonToken.TrailingTrivia))
-            .WithAdditionalAnnotations(Formatter.Annotation, mark);
-
-        var root = (await document.GetSyntaxRootAsync(cancellationToken))!;
-        document = document.WithSyntaxRoot(root.ReplaceNode(declaration, converted));
-        document = await Formatter.FormatAsync(document, Formatter.Annotation, cancellationToken: cancellationToken);
-        root = (await document.GetSyntaxRootAsync(cancellationToken))!;
-        return (document, (BaseMethodDeclarationSyntax)root.GetAnnotatedNodes(mark).Single());
-    }
-
-    /// <summary>
     /// The declaration with a guard per parameter at the start of its body,
     /// then a blank line before what followed.
     /// </summary>
@@ -157,8 +128,8 @@ public static class AddNullChecksTool
         var eol = TypeRefactoringHelpers.EndOfLine(declaration.SyntaxTree.GetRoot());
         var body = declaration.Body!;
         var indentation = body.Statements.Count > 0
-            ? IndentationOf(body.Statements[0])
-            : IndentationOf(body.OpenBraceToken) + "    ";
+            ? BlockBodies.IndentationOf(body.Statements[0].GetFirstToken())
+            : BlockBodies.IndentationOf(body.OpenBraceToken) + "    ";
         var guards = parameters
             .Select(p => SyntaxFactory.ParseStatement($"ArgumentNullException.ThrowIfNull({Escape(p.Name)});")
                 .WithLeadingTrivia(SyntaxFactory.Whitespace(indentation))
@@ -170,19 +141,6 @@ public static class AddNullChecksTool
             statements = statements.Replace(statements[0], statements[0].WithLeadingTrivia(statements[0].GetLeadingTrivia().Insert(0, eol)));
 
         return declaration.WithBody(body.WithStatements(statements.InsertRange(0, guards)));
-    }
-
-    private static bool ReturnsNothing(IMethodSymbol method) =>
-        method.ReturnsVoid
-        || method.MethodKind == MethodKind.Constructor
-        || (method.IsAsync && method.ReturnType is INamedTypeSymbol { Arity: 0, Name: "Task" or "ValueTask" });
-
-    private static string IndentationOf(SyntaxNode node) => IndentationOf(node.GetFirstToken());
-
-    private static string IndentationOf(SyntaxToken token)
-    {
-        var line = token.SyntaxTree!.GetText().Lines.GetLineFromPosition(token.SpanStart).ToString();
-        return line[..(line.Length - line.TrimStart().Length)];
     }
 
     private static string Escape(string name) =>

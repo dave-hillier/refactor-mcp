@@ -19,6 +19,22 @@ internal sealed class GeneratorsMappings : ICatalogMappings
             Codes(
                 ("no-body", "has no body to guard"),
                 ("nothing-to-guard", "has no reference-type parameter left to guard"))),
+
+        new CatalogMapping(
+            "add-observer",
+            "add-observer",
+            async context =>
+            {
+                var arguments = await MethodArguments(context);
+                arguments["className"] = Json((await context.SymbolAsync()).ContainingType.Name);
+                arguments["eventName"] = context.RequiredArgument("event");
+                return arguments;
+            },
+            Codes(
+                ("no-body", "has no body to raise the event from"),
+                ("not-void", "returns a value"),
+                ("ref-parameter", "has a ref, out or in parameter"),
+                ("member-exists", "already has a member named"))),
     };
 
     /// <summary>

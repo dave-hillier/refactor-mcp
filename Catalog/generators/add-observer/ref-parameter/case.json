@@ -1,0 +1,8 @@
+{
+  "refactoring": "add-observer",
+  "description": "Refuses a method with a ref or out parameter, which an Action cannot take",
+  "target": { "symbol": "M:Shop.Counter.Swap(System.Int32@)" },
+  "arguments": { "event": "Swapped" },
+  "expect": "error",
+  "errorCode": "ref-parameter"
+}
