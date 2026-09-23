@@ -36,7 +36,7 @@ public static class PullUpTool
             var moved = SingleVariable(substituted, substituted.Declaration.Variables.First(v => v.Identifier.ValueText == fieldName));
             moved = WithModifiers(moved, WidenPrivate);
 
-            var edits = new HierarchyEdits(solution);
+            var edits = new SolutionEdits(solution);
             RemoveField(edits, document, target.Type, target.Field, target.Variable);
             edits.Replace(baseClass.Document, baseClass.Declaration, t => InsertMember(t, moved, TypeRefactoringHelpers.EndOfLine(t.SyntaxTree.GetRoot())));
             edits.Import(baseClass.Document, TypeRefactoringHelpers.NamespacesUsedBy(target.Field.Declaration.Type, model)
@@ -105,7 +105,7 @@ public static class PullUpTool
 
             EnsureBaseLacks(target.ContainingType, methodName, member => member is not IMethodSymbol method || SameParameters(method, target.Symbol));
 
-            var edits = new HierarchyEdits(solution);
+            var edits = new SolutionEdits(solution);
             var moved = Substitute(target.Method, model, map);
             var eol = TypeRefactoringHelpers.EndOfLine(target.Method.SyntaxTree.GetRoot());
             if (makeAbstract)
