@@ -1,0 +1,6 @@
+{
+  "refactoring": "use-pattern-matching",
+  "description": "The name argument names the new variable",
+  "target": { "file": "Shapes.cs", "caret": "marker" },
+  "arguments": { "name": "c" }
+}

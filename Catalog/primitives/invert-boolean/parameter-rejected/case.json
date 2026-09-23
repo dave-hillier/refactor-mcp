@@ -1,0 +1,8 @@
+{
+  "refactoring": "invert-boolean",
+  "description": "Refuses a parameter, whose callers would have to pass the negation",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "arguments": { "name": "quiet" },
+  "expect": "error",
+  "errorCode": "unsupported-symbol"
+}

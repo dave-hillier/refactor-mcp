@@ -1,0 +1,8 @@
+{
+  "refactoring": "invert-boolean",
+  "description": "Refuses a virtual method, whose overrides would have to be inverted too",
+  "target": { "symbol": "M:Shop.Sample.IsReady" },
+  "arguments": { "name": "IsBusy" },
+  "expect": "error",
+  "errorCode": "in-hierarchy"
+}

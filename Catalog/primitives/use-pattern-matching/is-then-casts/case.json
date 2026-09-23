@@ -1,0 +1,5 @@
+{
+  "refactoring": "use-pattern-matching",
+  "description": "Every cast of the tested value in the branch is replaced by the new variable, named after the type",
+  "target": { "file": "Basket.cs", "caret": "marker" }
+}

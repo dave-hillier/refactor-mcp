@@ -1,0 +1,5 @@
+{
+  "refactoring": "use-pattern-matching",
+  "description": "A type test followed by a local initialised with the cast becomes a declaration pattern with the local's name",
+  "target": { "file": "Shapes.cs", "caret": "marker" }
+}

@@ -1,0 +1,8 @@
+{
+  "refactoring": "invert-boolean",
+  "description": "Refuses a field passed by reference, whose writes through the reference cannot be negated",
+  "target": { "symbol": "F:Shop.Sample._done" },
+  "arguments": { "name": "_pending" },
+  "expect": "error",
+  "errorCode": "passed-by-reference"
+}

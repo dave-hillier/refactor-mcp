@@ -1,0 +1,6 @@
+{
+  "refactoring": "use-pattern-matching",
+  "description": "An as conversion followed by a null check that leaves becomes is not, keeping the variable for the code after it",
+  "project": { "nullable": "enable" },
+  "target": { "file": "Names.cs", "caret": "marker" }
+}
