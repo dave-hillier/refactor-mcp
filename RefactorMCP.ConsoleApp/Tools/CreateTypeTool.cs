@@ -171,23 +171,13 @@ public static class CreateTypeTool
     /// </summary>
     private static async Task<Document> ResolveBaseTypeAsync(Document document, string kind, string baseType, CancellationToken cancellationToken)
     {
-        var baseSyntax = await BaseTypeSyntaxAsync(document, cancellationToken);
-        var model = await document.GetSemanticModelAsync(cancellationToken);
-        var (imports, unresolved) = TypeRefactoringHelpers.ImportsForUnresolvedTypes(model!, baseSyntax);
-        if (unresolved.Count > 0)
-            throw new McpException($"Error: No type named '{string.Join("', '", unresolved)}' found for the base type {baseType}");
+        var root = await document.GetSyntaxRootAsync(cancellationToken);
+        var baseSyntax = root!.DescendantNodes().OfType<BaseTypeDeclarationSyntax>().Last().BaseList!.Types[0].Type;
+        var annotation = new SyntaxAnnotation();
+        document = document.WithSyntaxRoot(root.ReplaceNode(baseSyntax, baseSyntax.WithAdditionalAnnotations(annotation)));
 
-        if (imports.Count > 0)
-        {
-            var root = (CompilationUnitSyntax)(await document.GetSyntaxRootAsync(cancellationToken))!;
-            document = document.WithSyntaxRoot(TypeRefactoringHelpers.AddUsings(root, imports));
-            baseSyntax = await BaseTypeSyntaxAsync(document, cancellationToken);
-            model = await document.GetSemanticModelAsync(cancellationToken);
-        }
-
-        var symbol = model!.GetTypeInfo(baseSyntax, cancellationToken).Type as INamedTypeSymbol;
-        if (symbol is null || symbol.TypeKind == TypeKind.Error)
-            throw new McpException($"Error: No type named '{baseType}' found");
+        (document, var resolved) = await TypeRefactoringHelpers.ResolveTypeAsync(document, annotation, baseType, cancellationToken);
+        var symbol = (INamedTypeSymbol)resolved;
 
         var reason = (kind, symbol) switch
         {
@@ -205,11 +195,5 @@ public static class CreateTypeTool
         return reason is null
             ? document
             : throw new McpException($"Error: {symbol.ToDisplayString()} cannot be a base type of a {kind}: {reason}");
-    }
-
-    private static async Task<TypeSyntax> BaseTypeSyntaxAsync(Document document, CancellationToken cancellationToken)
-    {
-        var root = await document.GetSyntaxRootAsync(cancellationToken);
-        return root!.DescendantNodes().OfType<BaseTypeDeclarationSyntax>().Last().BaseList!.Types[0].Type;
     }
 }

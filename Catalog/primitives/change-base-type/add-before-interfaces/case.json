@@ -1,0 +1,6 @@
+{
+  "refactoring": "change-base-type",
+  "description": "Puts the new base class before the interfaces the class already implements",
+  "target": { "symbol": "T:Shop.Manager" },
+  "arguments": { "to": "Employee" }
+}

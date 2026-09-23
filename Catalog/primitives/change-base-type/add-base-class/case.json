@@ -1,0 +1,6 @@
+{
+  "refactoring": "change-base-type",
+  "description": "Gives a class with no base class one",
+  "target": { "symbol": "T:Shop.Manager" },
+  "arguments": { "to": "Shop.Employee" }
+}

@@ -1,0 +1,8 @@
+{
+  "refactoring": "change-base-type",
+  "description": "Refuses a base class that already derives from the class",
+  "target": { "symbol": "T:Shop.Employee" },
+  "arguments": { "to": "Manager" },
+  "expect": "error",
+  "errorCode": "circular-base"
+}

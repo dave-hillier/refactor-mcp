@@ -1,0 +1,9 @@
+{
+  "refactoring": "change-base-type",
+  "description": "Refuses when the class overrides a member only the old base class declares",
+  "target": { "symbol": "T:Shop.Manager" },
+  "arguments": { "to": "Vendor" },
+  "expect": "error",
+  "errorCode": "base-members-in-use",
+  "errorContains": "Describe"
+}

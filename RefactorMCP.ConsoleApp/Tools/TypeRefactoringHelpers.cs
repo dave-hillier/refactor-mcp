@@ -2,6 +2,7 @@ using ModelContextProtocol;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Simplification;
 using Microsoft.CodeAnalysis.Text;
 using System.Text;
 
@@ -111,6 +112,40 @@ internal static class TypeRefactoringHelpers
         }
 
         return (imports.Distinct().ToList(), unresolved);
+    }
+
+    /// <summary>
+    /// Binds the type syntax carrying <paramref name="annotation"/>, which holds
+    /// a name the caller typed, importing the namespaces it needs to bind.
+    /// </summary>
+    internal static async Task<(Document Document, ITypeSymbol Type)> ResolveTypeAsync(
+        Document document,
+        SyntaxAnnotation annotation,
+        string typeName,
+        CancellationToken cancellationToken)
+    {
+        var root = (CompilationUnitSyntax)(await document.GetSyntaxRootAsync(cancellationToken))!;
+        var model = await document.GetSemanticModelAsync(cancellationToken);
+        var (imports, unresolved) = ImportsForUnresolvedTypes(model!, root.GetAnnotatedNodes(annotation).Single());
+        if (unresolved.Count > 0)
+            throw new McpException($"Error: No type named '{string.Join("', '", unresolved)}' found for {typeName}");
+
+        if (imports.Count > 0)
+        {
+            document = document.WithSyntaxRoot(AddUsings(root, imports));
+            root = (CompilationUnitSyntax)(await document.GetSyntaxRootAsync(cancellationToken))!;
+            model = await document.GetSemanticModelAsync(cancellationToken);
+        }
+
+        var syntax = (TypeSyntax)root.GetAnnotatedNodes(annotation).Single();
+        var type = model!.GetTypeInfo(syntax, cancellationToken).Type;
+        if (type is null || type.TypeKind == TypeKind.Error)
+            throw new McpException($"Error: No type named '{typeName}' found");
+
+        // A qualified name the usings already cover is written the short way.
+        document = document.WithSyntaxRoot(root.ReplaceNode(syntax, syntax.WithAdditionalAnnotations(Simplifier.Annotation)));
+        document = await Simplifier.ReduceAsync(document, Simplifier.Annotation, cancellationToken: cancellationToken);
+        return (document, type);
     }
 
     private static List<INamedTypeSymbol> TypesNamed(Compilation compilation, string name, int arity)

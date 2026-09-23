@@ -1,0 +1,5 @@
+{
+  "refactoring": "change-base-type",
+  "description": "Removes the whole base list when the base class was all it held",
+  "target": { "symbol": "T:Shop.Manager" }
+}

@@ -1,0 +1,7 @@
+{
+  "refactoring": "change-base-type",
+  "description": "Refuses to remove a base class the class does not have",
+  "target": { "symbol": "T:Shop.Manager" },
+  "expect": "error",
+  "errorCode": "no-base-class"
+}

@@ -33,6 +33,30 @@ internal sealed class TypesAndHierarchyMappings : ICatalogMappings
                 ("invalid-kind", "Unknown kind"),
                 ("type-not-found", "No type named"),
                 ("invalid-base-type", "cannot be a base type"))),
+
+        new CatalogMapping(
+            "change-base-type",
+            "change-base-type",
+            async context =>
+            {
+                var location = await context.SymbolLocationAsync();
+                var arguments = new Dictionary<string, JsonElement>
+                {
+                    ["solutionPath"] = Json(context.SolutionPath),
+                    ["filePath"] = Json(location.FilePath),
+                    ["className"] = Json(location.Symbol.Name),
+                };
+                CopyOptional(context, arguments, "to", "newBaseType");
+                return arguments;
+            },
+            Codes(
+                ("not-a-class", "only a class has a base class"),
+                ("no-base-class", "has no base class to remove"),
+                ("type-not-found", "No type named"),
+                ("invalid-base-type", "cannot be the base class"),
+                ("circular-base", "already derives from"),
+                ("base-members-in-use", "relies on members of"),
+                ("base-conversion-in-use", "converting to"))),
     };
 
     private static void CopyOptional(

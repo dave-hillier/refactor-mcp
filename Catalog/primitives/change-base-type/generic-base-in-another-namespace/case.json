@@ -1,0 +1,6 @@
+{
+  "refactoring": "change-base-type",
+  "description": "Derives from a constructed generic class in another namespace and imports it",
+  "target": { "symbol": "T:Shop.OrderStore" },
+  "arguments": { "to": "Repository<Order>" }
+}

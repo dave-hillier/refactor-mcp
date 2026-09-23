@@ -1,0 +1,6 @@
+{
+  "refactoring": "change-base-type",
+  "description": "Replaces the base class with a subclass of it, keeping the interfaces and the comments around the declaration",
+  "target": { "symbol": "T:Shop.Manager" },
+  "arguments": { "to": "Employee" }
+}
