@@ -53,7 +53,7 @@ public static class PullUpConstructorBodyTool
             // The base constructor the subclass runs today must still run first.
             var runsBaseCode = await RunsCodeAsync(CurrentBaseConstructor(constructor, type, model), cancellationToken);
 
-            var edits = new MultiDocumentEdits(solution);
+            var edits = new SolutionEdits(solution);
             var eol = TypeRefactoringHelpers.EndOfLine(constructor.SyntaxTree.GetRoot());
             var existing = type.BaseType!.InstanceConstructors.FirstOrDefault(c => !c.IsImplicitlyDeclared
                 && c.Parameters.Length == parameters.Count
