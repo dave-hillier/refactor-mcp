@@ -1,0 +1,9 @@
+{
+  "refactoring": "replace-temp-with-query",
+  "description": "Refuses a temp that is assigned again, since a query cannot stand for more than one value",
+  "target": { "file": "Order.cs", "caret": "marker" },
+  "arguments": { "name": "Price" },
+  "expect": "error",
+  "errorCode": "assigned-after-declaration",
+  "errorContains": "'price'"
+}

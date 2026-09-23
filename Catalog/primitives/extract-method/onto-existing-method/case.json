@@ -1,0 +1,6 @@
+{
+  "refactoring": "extract-method",
+  "description": "Named after an existing method whose body is the selected code with a parameter standing for a literal, the selection becomes a call of that method",
+  "target": { "file": "Employee.cs", "selection": "marker" },
+  "arguments": { "name": "Raise" }
+}

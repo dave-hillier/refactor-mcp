@@ -1,0 +1,6 @@
+{
+  "refactoring": "separate-query-from-modifier",
+  "description": "Separates a method that changes state and then returns a value, as the recipe does; callers in another file call the modifier and then the query",
+  "target": { "symbol": "M:Bank.Account.Withdraw(System.Decimal)" },
+  "arguments": { "queryName": "Balance", "modifierName": "Debit" }
+}

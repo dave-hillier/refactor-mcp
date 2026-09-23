@@ -1,0 +1,6 @@
+{
+  "refactoring": "introduce-parameter-object",
+  "description": "Groups parameters in the middle of the list into a record class; each call builds it from its own arguments, named ones included",
+  "target": { "symbol": "M:Shop.Report.Print(System.String,System.Int32,System.Int32,System.Boolean)" },
+  "arguments": { "parameters": ["low", "high"], "typeName": "Band", "parameterName": "band", "kind": "class" }
+}

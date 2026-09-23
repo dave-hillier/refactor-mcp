@@ -1,0 +1,6 @@
+{
+  "refactoring": "introduce-parameter-object",
+  "description": "Groups two parameters into a record, as the recipe does, updating a caller in another file",
+  "target": { "symbol": "M:Bank.Account.TotalBetween(System.DateTime,System.DateTime)" },
+  "arguments": { "parameters": ["start", "end"], "typeName": "DateRange", "parameterName": "range" }
+}

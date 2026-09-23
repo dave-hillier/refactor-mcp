@@ -1,0 +1,6 @@
+{
+  "refactoring": "decompose-conditional",
+  "description": "A branch without braces is replaced by the call; with no else name the else branch stays as it is",
+  "target": { "file": "Ledger.cs", "caret": "marker" },
+  "arguments": { "conditionName": "OutOfRange", "thenName": "Reject" }
+}

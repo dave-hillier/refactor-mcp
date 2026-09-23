@@ -1,0 +1,6 @@
+{
+  "refactoring": "replace-temp-with-query",
+  "description": "A comment above the temp stays where it was, and a comment inside the initializer moves into the query",
+  "target": { "file": "Basket.cs", "caret": "marker" },
+  "arguments": { "name": "Subtotal" }
+}

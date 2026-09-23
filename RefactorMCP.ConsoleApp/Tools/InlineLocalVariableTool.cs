@@ -108,7 +108,7 @@ public static class InlineLocalVariableTool
     /// not contain the declaration is evaluated again on each iteration, so the whole
     /// loop counts as in between.
     /// </summary>
-    private static void EnsureInputsUnchanged(LocalVariableTarget target, ExpressionSyntax value, List<IdentifierNameSyntax> references)
+    internal static void EnsureInputsUnchanged(LocalVariableTarget target, ExpressionSyntax value, List<IdentifierNameSyntax> references)
     {
         var inputs = value.DescendantNodesAndSelf()
             .OfType<IdentifierNameSyntax>()

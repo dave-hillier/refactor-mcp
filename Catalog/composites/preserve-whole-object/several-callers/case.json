@@ -1,0 +1,6 @@
+{
+  "refactoring": "preserve-whole-object",
+  "description": "Each call passes its own object, and a parameter that is not replaced keeps its place",
+  "target": { "symbol": "M:Heating.HeatingPlan.Describe(System.String,System.Int32,System.Int32)" },
+  "arguments": { "parameters": ["low", "high"], "parameterName": "range" }
+}

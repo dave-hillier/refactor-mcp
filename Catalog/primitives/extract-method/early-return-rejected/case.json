@@ -1,0 +1,8 @@
+{
+  "refactoring": "extract-method",
+  "description": "Refuses statements of a void method that return before their end, which the new method would only return from itself",
+  "target": { "file": "Sample.cs", "selection": "marker" },
+  "arguments": { "name": "Check" },
+  "expect": "error",
+  "errorCode": "returns-early"
+}

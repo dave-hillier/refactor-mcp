@@ -20,6 +20,10 @@ are told apart by their signature. Or the property, such as
 - A method returning a value has a single expression: an expression body, or
   a block holding only `return expression;`. Its calls are expressions whose
   value is used.
+- A method returning a value from several statements returns only at its
+  end, and each call starts its statement: it is the whole statement, the
+  initializer of a local declaring nothing else, the value assigned to a
+  simple target, or the value returned.
 - A `void` method returns, if at all, only at its end. Each call is a
   statement of its own.
 - Every member and type the method names is accessible at each call.
@@ -50,6 +54,10 @@ For a property:
   where precedence requires. A `void` method's statements replace the call
   statement, in a new block when the call was the body of an `if` or loop
   without braces.
+- For a method returning a value from several statements, the statements
+  before its return go before the call's statement and the returned
+  expression replaces the call. A call whose value is discarded keeps the
+  expression only when evaluating it has side effects, as a discard.
 - Each parameter is replaced by its argument, or by the parameter's default
   when the call leaves it out. An argument with side effects that the method
   reads more than once or not at all, or that the method assigns, is first
@@ -80,8 +88,9 @@ For a property:
 
 ## Limitations
 
-- A value-returning method with more than one statement is refused rather
-  than turned into statements at a call that is itself a statement.
+- A value-returning method with more than one statement is refused where
+  its call sits inside a larger expression, rather than introducing a local
+  for the result.
 - Extension methods the method calls need their namespace imported at the
   call site; no `using` directive is added.
 - An argument without side effects is substituted even when it reads a field
@@ -100,7 +109,7 @@ For a property:
 | `unsupported-method` | the method is async or an iterator |
 | `method-group-reference` | the method is used without being called |
 | `inaccessible-member` | the method uses a member or type a call site cannot access |
-| `multiple-statements` | a value-returning method's body is more than a single return |
+| `multiple-statements` | a value-returning method's body is more than a single return, and a call does not start its statement |
 | `early-return` | a void method returns before its last statement |
 | `name-conflict` | a local the inlined code declares clashes with a name at the call site |
 | `unsupported-call` | a void method's call is not a statement of its own |

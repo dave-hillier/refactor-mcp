@@ -20,10 +20,18 @@ internal sealed class SignaturesMappings : ICatalogMappings
         new CatalogMapping(
             "change-signature",
             "change-signature",
-            async context => With(await MemberArguments(context, "methodName"), ("parameters", context.RequiredArgument("parameters"))),
+            async context =>
+            {
+                var arguments = With(await MemberArguments(context, "methodName"), ("parameters", context.RequiredArgument("parameters")));
+                if (context.HasArgument("replacements"))
+                    arguments["replacements"] = context.RequiredArgument("replacements");
+                return arguments;
+            },
             new Dictionary<string, string>(StringComparer.Ordinal)
             {
                 ["removed-parameter-in-use"] = "so it cannot be removed",
+                ["replaced-parameter-assigned"] = "so its uses cannot be replaced",
+                ["replaced-parameter-kept"] = "is kept, so its uses are not replaced",
                 ["unknown-parameter"] = "give a type to add it as a new parameter",
                 ["duplicate-parameter"] = "already has a parameter named",
                 ["missing-value"] = "needs a value for existing calls or a default",

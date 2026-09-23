@@ -34,6 +34,17 @@ old signature that is not listed is removed.
 | `value` | a C# expression each existing call passes for a new parameter |
 | `default` | a default value declared for a new parameter; with no `value`, existing calls leave it out |
 
+`replacements` is optional. For a removed parameter the body still uses, it
+gives the expression that takes the place of each use, usually one reading
+the parameter's value from a new parameter:
+
+```json
+"arguments": {
+  "parameters": [ { "name": "point", "type": "Point", "value": "new Point(3, 4)" } ],
+  "replacements": { "x": "point.X", "y": "point.Y" }
+}
+```
+
 The target is the method or constructor, by symbol. Targeting an override or
 an implementation changes the whole family.
 
@@ -42,7 +53,9 @@ an implementation changes the whole family.
 - Every listed name is either an existing parameter or comes with a type.
 - A new parameter has a value for existing calls, a default, or both.
 - No removed parameter is read or written in the body of any member of the
-  family.
+  family, unless `replacements` gives an expression for it. A replaced
+  parameter is only read, never assigned, and only removed parameters are
+  replaced.
 - A params array stays last, and no required parameter follows an optional
   one.
 - The `this` parameter of an extension method stays first.
@@ -56,6 +69,8 @@ an implementation changes the whole family.
 
 - Each declaration in the family gets the new parameter list. New parameters
   are declared with the given type and default.
+- Each use of a replaced parameter, in every body of the family, becomes its
+  expression, in parentheses unless it is a name or member access.
 - Each call's arguments are rearranged into the new order, with the given
   value for each new parameter and nothing for a removed one. This covers
   invocations, `base` calls, object creation, target-typed `new`, and `this()`
@@ -84,6 +99,8 @@ an implementation changes the whole family.
   order those side effects happen in.
 - A removed parameter's argument is dropped even if evaluating it had side
   effects. Remove Unused Parameter refuses in that case.
+- A replacement is taken on trust: behaviour is preserved only when, at every
+  call, the expression gives the value the call passed for the parameter.
 - `<param>` elements in documentation comments are not reordered, added or
   removed, and `cref` references with parameter lists are not updated.
 - Delegates, indexers, operators, attribute constructors and primary
@@ -96,6 +113,8 @@ an implementation changes the whole family.
 | Code | Meaning |
 |---|---|
 | `removed-parameter-in-use` | a parameter left out of the new list is used in a body |
+| `replaced-parameter-assigned` | a parameter given a replacement is assigned in a body |
+| `replaced-parameter-kept` | a parameter given a replacement is still in the new list |
 | `unknown-parameter` | a listed name is not a parameter and has no type to add it |
 | `duplicate-parameter` | a new parameter has the name of an existing one |
 | `missing-value` | a new parameter has neither a value for calls nor a default |

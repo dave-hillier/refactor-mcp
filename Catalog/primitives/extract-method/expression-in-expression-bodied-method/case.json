@@ -1,6 +1,0 @@
-{
-  "refactoring": "extract-method",
-  "description": "An expression can be extracted from an expression-bodied method, which keeps its expression body",
-  "target": { "file": "Sample.cs", "selection": "marker" },
-  "arguments": { "name": "Product" }
-}

@@ -1,8 +1,0 @@
-{
-  "refactoring": "extract-method",
-  "description": "Refuses an expression that awaits, which would need the extracted method to be async and its call awaited",
-  "target": { "file": "Loader.cs", "selection": "marker" },
-  "arguments": { "name": "Load" },
-  "expect": "error",
-  "errorCode": "expression-awaits"
-}

@@ -1,0 +1,11 @@
+{
+  "refactoring": "replace-parameter-with-explicit-methods",
+  "description": "Refuses a branch that carries on into statements after the dispatch, which its own method would not run",
+  "target": { "symbol": "M:Shapes.Box.SetValue(System.String,System.Int32)" },
+  "arguments": {
+    "parameter": "name",
+    "methods": [ { "value": "\"height\"", "name": "SetHeight" } ]
+  },
+  "expect": "error",
+  "errorCode": "falls-through"
+}

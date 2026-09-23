@@ -1,0 +1,18 @@
+{
+  "refactoring": "replace-temp-with-query",
+  "description": "The recipe stops at its first step when Extract Method refuses a temp in a property accessor, and nothing changes",
+  "steps": [
+    {
+      "refactoring": "extract-method",
+      "target": { "file": "Order.cs", "selection": "marker" },
+      "arguments": { "name": "BasePrice" }
+    },
+    {
+      "refactoring": "inline-local-variable",
+      "target": { "symbol": "P:Shop.Order.Price" },
+      "arguments": { "local": "basePrice" }
+    }
+  ],
+  "expect": "error",
+  "errorContains": "Selected code is not within a method"
+}

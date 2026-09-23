@@ -1,0 +1,8 @@
+{
+  "refactoring": "decompose-conditional",
+  "description": "Refuses a caret that is not on an if statement",
+  "target": { "file": "Ledger.cs", "caret": "marker" },
+  "arguments": { "conditionName": "HasMore", "thenName": "Step" },
+  "expect": "error",
+  "errorCode": "not-an-if"
+}

@@ -1,0 +1,12 @@
+{
+  "refactoring": "replace-parameter-with-explicit-methods",
+  "description": "Each branch of an if chain on a string parameter becomes a public method; calls passing a constant call it, and a call passing a variable keeps the original method",
+  "target": { "symbol": "M:Shapes.Box.SetValue(System.String,System.Int32)" },
+  "arguments": {
+    "parameter": "name",
+    "methods": [
+      { "value": "\"height\"", "name": "SetHeight" },
+      { "value": "\"width\"", "name": "SetWidth" }
+    ]
+  }
+}

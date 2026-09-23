@@ -1,0 +1,6 @@
+{
+  "refactoring": "replace-temp-with-query",
+  "description": "Replaces a temp used once with a private query method, as the recipe does",
+  "target": { "file": "Order.cs", "caret": "marker" },
+  "arguments": { "name": "BasePrice" }
+}

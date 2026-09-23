@@ -1,0 +1,9 @@
+{
+  "refactoring": "decompose-conditional",
+  "description": "Refuses when a branch assigns a local read after the if statement, which Extract Method cannot carry out of the new method",
+  "target": { "file": "Tariff.cs", "caret": "marker" },
+  "arguments": { "conditionName": "NotSummer", "thenName": "WinterCharge", "elseName": "SummerCharge" },
+  "expect": "error",
+  "errorCode": "assigned-local-used-after",
+  "errorContains": "'charge'"
+}

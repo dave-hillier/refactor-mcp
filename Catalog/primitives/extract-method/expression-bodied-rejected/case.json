@@ -1,6 +1,6 @@
 {
   "refactoring": "extract-method",
-  "description": "Refuses a selection in an expression-bodied method that is not a whole expression, since the method has no statements to move",
+  "description": "Refuses to extract from an expression-bodied method, which has no statements to move",
   "target": { "file": "Sample.cs", "selection": "marker" },
   "arguments": { "name": "Extracted" },
   "expect": "error",

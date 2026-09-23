@@ -1,0 +1,6 @@
+{
+  "refactoring": "constructor-injection",
+  "description": "A class without a constructor of its own gets one taking the dependency, and the given names are used for the parameter and the field",
+  "target": { "file": "Greeter.cs", "caret": "marker" },
+  "arguments": { "parameter": "time", "field": "_time" }
+}

@@ -1,8 +1,0 @@
-{
-  "refactoring": "extract-method",
-  "description": "Refuses an expression that has no value, such as a call returning void",
-  "target": { "file": "Logger.cs", "selection": "marker" },
-  "arguments": { "name": "Write" },
-  "expect": "error",
-  "errorCode": "not-a-value"
-}

@@ -1,0 +1,6 @@
+{
+  "refactoring": "separate-query-from-modifier",
+  "description": "A method that stores its value in a local before changing state becomes a query called before the modifier; a call whose value is discarded only calls the modifier",
+  "target": { "symbol": "M:Stacks.Pile.Pop" },
+  "arguments": { "queryName": "Peek", "modifierName": "RemoveTop" }
+}

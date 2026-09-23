@@ -1,0 +1,11 @@
+{
+  "refactoring": "replace-parameter-with-explicit-methods",
+  "description": "Refuses a value the method has no branch for",
+  "target": { "symbol": "M:Shapes.Box.SetValue(System.String,System.Int32)" },
+  "arguments": {
+    "parameter": "name",
+    "methods": [ { "value": "\"depth\"", "name": "SetDepth" } ]
+  },
+  "expect": "error",
+  "errorCode": "unknown-value"
+}

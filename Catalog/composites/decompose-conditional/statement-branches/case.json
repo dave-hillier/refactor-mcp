@@ -1,0 +1,6 @@
+{
+  "refactoring": "decompose-conditional",
+  "description": "Branches of several statements become void methods; a comment leading a branch stays above its call, and the locals the branches read are passed in",
+  "target": { "file": "Shipping.cs", "caret": "marker" },
+  "arguments": { "conditionName": "IsHeavy", "thenName": "ShipByFreight", "elseName": "ShipByPost" }
+}

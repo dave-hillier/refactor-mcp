@@ -1,0 +1,7 @@
+{
+  "refactoring": "constructor-injection",
+  "description": "Refuses a local that holds the result of a call rather than a newly constructed object",
+  "target": { "file": "OrderService.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "not-a-construction"
+}

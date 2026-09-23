@@ -24,7 +24,9 @@ internal sealed class MethodInliner
     private readonly SemanticModel _model;
 
     // A method that produces a value, or a getter, is inlined as its one expression; a
-    // void method as its statements.
+    // void method as its statements. A method that computes its value in several
+    // statements has both: the statements before its final return, and the expression
+    // it returns.
     private readonly ExpressionSyntax? _expression;
     private readonly IReadOnlyList<StatementSyntax> _statements;
 
@@ -156,8 +158,15 @@ internal sealed class MethodInliner
             if (body.Statements is [ReturnStatementSyntax { Expression: { } returned }])
                 return (returned, Array.Empty<StatementSyntax>());
 
-            throw new McpException(
-                $"Error: '{Name}' computes its result in several statements, so it cannot be inlined into an expression");
+            // Statements ending in the only return can be inlined where the call is a
+            // statement of its own; InlineCall refuses any other call.
+            if (body.Statements.LastOrDefault() is ReturnStatementSyntax { Expression: { } final } &&
+                ReturnsIn(body.Statements.Take(body.Statements.Count - 1)) == null)
+            {
+                return (final, body.Statements.Take(body.Statements.Count - 1).ToList());
+            }
+
+            throw MultipleStatements();
         }
 
         // A return at the very end only ends the method; one anywhere else would return
@@ -166,11 +175,7 @@ internal sealed class MethodInliner
         if (statements.LastOrDefault() is ReturnStatementSyntax)
             statements.RemoveAt(statements.Count - 1);
 
-        var earlyReturn = statements
-            .SelectMany(s => s.DescendantNodesAndSelf(n => n is not AnonymousFunctionExpressionSyntax and not LocalFunctionStatementSyntax))
-            .OfType<ReturnStatementSyntax>()
-            .FirstOrDefault();
-        if (earlyReturn != null)
+        if (ReturnsIn(statements) != null)
             throw new McpException($"Error: '{Name}' returns before its last statement, which would return from the caller once inlined");
 
         return (null, statements);
@@ -197,9 +202,17 @@ internal sealed class MethodInliner
         if (getter.Body.Statements is [ReturnStatementSyntax { Expression: { } returned }])
             return returned;
 
-        throw new McpException(
-            $"Error: '{Name}' computes its result in several statements, so it cannot be inlined into an expression");
+        throw MultipleStatements();
     }
+
+    private static ReturnStatementSyntax? ReturnsIn(IEnumerable<StatementSyntax> statements) =>
+        statements
+            .SelectMany(s => s.DescendantNodesAndSelf(n => n is not AnonymousFunctionExpressionSyntax and not LocalFunctionStatementSyntax))
+            .OfType<ReturnStatementSyntax>()
+            .FirstOrDefault();
+
+    private McpException MultipleStatements() =>
+        new($"Error: '{Name}' computes its result in several statements, so it cannot be inlined into an expression");
 
     private void EnsureInlinable()
     {
@@ -253,7 +266,8 @@ internal sealed class MethodInliner
                 (IEqualityComparer<ITypeParameterSymbol>)SymbolEqualityComparer.Default);
 
         var statementForm = _expression == null;
-        var arguments = Arguments(invocation, operation, statementForm);
+        var mixedForm = _expression != null && _statements.Count > 0;
+        var arguments = Arguments(invocation, operation, statementForm || mixedForm);
         var locals = arguments.Where(a => a.NeedsLocal).ToList();
 
         var callStatement = invocation.Parent as ExpressionStatementSyntax;
@@ -262,7 +276,7 @@ internal sealed class MethodInliner
 
         var containing = invocation.Ancestors().OfType<StatementSyntax>().FirstOrDefault();
         EnsureNamesAreFree(invocation, callModel, locals.Select(l => l.Parameter.Name)
-            .Concat(statementForm ? DeclaredNames(_statements) : Enumerable.Empty<string>()));
+            .Concat(statementForm || mixedForm ? DeclaredNames(_statements) : Enumerable.Empty<string>()));
 
         var declarations = locals.Select(l => (StatementSyntax)SyntaxFactory.LocalDeclarationStatement(
                 SyntaxFactory.VariableDeclaration(
@@ -280,6 +294,12 @@ internal sealed class MethodInliner
                 .Concat(_statements.Select(s => ((StatementSyntax)rewriter.Visit(s)!).WithAdditionalAnnotations(Formatter.Annotation)))
                 .ToList();
             ReplaceStatement(editor, callStatement!, inlined);
+            return;
+        }
+
+        if (mixedForm)
+        {
+            InlineStatementsAndResult(invocation, callModel, arguments, typeArguments, receiver, declarations, editor);
             return;
         }
 
@@ -314,6 +334,68 @@ internal sealed class MethodInliner
                 .WithAdditionalAnnotations(Simplifier.Annotation, Formatter.Annotation);
         });
     }
+
+    /// <summary>
+    /// Inlines a method that computes its value in several statements at a call that
+    /// starts its statement: the whole statement, a local's initializer, the value of
+    /// an assignment to a simple target, or a returned value. The statements go before
+    /// the call's statement and the returned expression takes the call's place, so
+    /// everything runs in the order it did. A discarded result is kept only when
+    /// evaluating it has side effects.
+    /// </summary>
+    private void InlineStatementsAndResult(
+        InvocationExpressionSyntax invocation,
+        SemanticModel callModel,
+        List<InlinedArgument> arguments,
+        Dictionary<ITypeParameterSymbol, TypeSyntax> typeArguments,
+        ExpressionSyntax? receiver,
+        List<StatementSyntax> declarations,
+        DocumentEditor editor)
+    {
+        var host = StatementStartingWith(invocation) ?? throw MultipleStatements();
+        var nested = invocation.ArgumentList.DescendantNodes().OfType<InvocationExpressionSyntax>()
+            .Any(i => SymbolEqualityComparer.Default.Equals(callModel.GetSymbolInfo(i).Symbol?.OriginalDefinition, _symbol));
+        if (nested)
+            throw new McpException($"Error: The call at {Where(invocation)} passes another call of '{Name}', so it cannot be inlined there");
+
+        var rewriter = new BodyRewriter(this, arguments, typeArguments, receiver);
+        var inlined = declarations
+            .Concat(_statements.Select(s => ((StatementSyntax)rewriter.Visit(s)!).WithAdditionalAnnotations(Formatter.Annotation)))
+            .ToList();
+
+        var result = (ExpressionSyntax)rewriter.Visit(_expression!)!;
+        if (host is ExpressionStatementSyntax { Expression: InvocationExpressionSyntax })
+        {
+            if (ExpressionFacts.HasSideEffects(result))
+            {
+                inlined.Add(SyntaxFactory.ExpressionStatement(SyntaxFactory.AssignmentExpression(
+                        SyntaxKind.SimpleAssignmentExpression,
+                        SyntaxFactory.IdentifierName("_"),
+                        result.WithoutTrivia()))
+                    .WithAdditionalAnnotations(Formatter.Annotation));
+            }
+        }
+        else
+        {
+            var value = SyntaxFactory.ParenthesizedExpression(result.WithoutTrivia())
+                .WithAdditionalAnnotations(Simplifier.Annotation);
+            inlined.Add(host.ReplaceNode(invocation, value.WithTriviaFrom(invocation)).WithoutLeadingTrivia()
+                .WithAdditionalAnnotations(Formatter.Annotation));
+        }
+
+        ReplaceStatement(editor, host, inlined);
+    }
+
+    /// <summary>The statement the call is evaluated first in, or null when anything else runs before it.</summary>
+    private static StatementSyntax? StatementStartingWith(InvocationExpressionSyntax invocation) => invocation.Parent switch
+    {
+        ExpressionStatementSyntax statement => statement,
+        EqualsValueClauseSyntax { Parent: VariableDeclaratorSyntax { Parent: VariableDeclarationSyntax { Variables.Count: 1, Parent: LocalDeclarationStatementSyntax declaration } } } => declaration,
+        AssignmentExpressionSyntax { RawKind: (int)SyntaxKind.SimpleAssignmentExpression, Parent: ExpressionStatementSyntax statement } assignment
+            when assignment.Right == invocation && ExpressionFacts.IsSimple(assignment.Left) => statement,
+        ReturnStatementSyntax statement => statement,
+        _ => null,
+    };
 
     /// <summary>
     /// The object the call is made on, when it is written and is not <c>this</c> or a
@@ -509,7 +591,7 @@ internal sealed class MethodInliner
     /// Puts the inlined statements where the call statement was. The comments above the
     /// call stay above them; a call that is the body of an if or loop gets a block.
     /// </summary>
-    private static void ReplaceStatement(SyntaxEditor editor, ExpressionStatementSyntax call, List<StatementSyntax> inlined)
+    private static void ReplaceStatement(SyntaxEditor editor, StatementSyntax call, List<StatementSyntax> inlined)
     {
         if (inlined.Count == 0)
         {

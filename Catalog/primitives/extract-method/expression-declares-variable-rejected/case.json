@@ -1,9 +1,0 @@
-{
-  "refactoring": "extract-method",
-  "description": "Refuses an expression declaring a pattern variable that is used after it",
-  "target": { "file": "Shapes.cs", "selection": "marker" },
-  "arguments": { "name": "IsCircle" },
-  "expect": "error",
-  "errorCode": "declared-local-used-after",
-  "errorContains": "circle"
-}

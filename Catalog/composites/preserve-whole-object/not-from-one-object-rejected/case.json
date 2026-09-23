@@ -1,0 +1,9 @@
+{
+  "refactoring": "preserve-whole-object",
+  "description": "Refuses when a call passes a value that is not read from a member of an object",
+  "target": { "symbol": "M:Heating.HeatingPlan.WithinRange(System.Int32,System.Int32)" },
+  "arguments": { "parameters": ["low", "high"], "parameterName": "range" },
+  "expect": "error",
+  "errorCode": "not-from-one-object",
+  "errorContains": "'high'"
+}

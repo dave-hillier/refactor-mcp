@@ -1,0 +1,11 @@
+{
+  "refactoring": "replace-parameter-with-explicit-methods",
+  "description": "Refuses a method that does other work before choosing what to do from the parameter",
+  "target": { "symbol": "M:Shapes.Box.SetValue(System.String,System.Int32)" },
+  "arguments": {
+    "parameter": "name",
+    "methods": [ { "value": "\"height\"", "name": "SetHeight" } ]
+  },
+  "expect": "error",
+  "errorCode": "not-a-dispatch"
+}
