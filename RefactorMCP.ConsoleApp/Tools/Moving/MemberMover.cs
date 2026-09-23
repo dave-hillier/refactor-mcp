@@ -83,7 +83,7 @@ internal sealed class MemberMover
         var model = (await document.GetSemanticModelAsync(cancellationToken))!;
 
         var moved = BuildMovedMember(declaration, model);
-        EnsureNoConflict(moved);
+        EnsureNoConflict();
 
         var targetDeclaration = (TypeDeclarationSyntax)await _target.DeclaringSyntaxReferences
             .OrderBy(r => r.SyntaxTree.FilePath.EndsWith(".g.cs", StringComparison.Ordinal))
@@ -455,18 +455,24 @@ internal sealed class MemberMover
             _raised.Add(symbol.OriginalDefinition);
     }
 
-    /// <summary>A moved member at least internal, so the code it left can still reach it.</summary>
+    /// <summary>
+    /// A moved member at least internal, so the code it left can still reach
+    /// it. Protected access means nothing outside its type, so it becomes
+    /// internal too.
+    /// </summary>
     private static SyntaxTokenList RaisedForTarget(SyntaxTokenList modifiers)
     {
-        if (modifiers.Any(SyntaxKind.ProtectedKeyword))
-        {
-            var index = modifiers.IndexOf(SyntaxKind.ProtectedKeyword);
-            var old = modifiers[index];
-            modifiers = modifiers.Replace(old, SyntaxFactory.Token(old.LeadingTrivia, SyntaxKind.InternalKeyword, old.TrailingTrivia));
-            return modifiers.Any(m => m.Kind() is SyntaxKind.InternalKeyword && m != modifiers[index]) ? modifiers.RemoveAt(index) : modifiers;
-        }
+        if (!modifiers.Any(SyntaxKind.ProtectedKeyword))
+            return MovingSupport.RaisePrivateToInternal(modifiers);
 
-        return MovingSupport.RaisePrivateToInternal(modifiers);
+        static bool IsAccessibility(SyntaxToken m) =>
+            m.Kind() is SyntaxKind.PublicKeyword or SyntaxKind.InternalKeyword or SyntaxKind.ProtectedKeyword or SyntaxKind.PrivateKeyword;
+
+        var accessibility = modifiers.Where(IsAccessibility).ToList();
+        var index = modifiers.IndexOf(accessibility[0]);
+        var others = SyntaxFactory.TokenList(modifiers.Where(m => !IsAccessibility(m)));
+        var keyword = SyntaxFactory.Token(accessibility[0].LeadingTrivia, SyntaxKind.InternalKeyword, accessibility[^1].TrailingTrivia);
+        return others.Insert(index, keyword);
     }
 
     /// <summary>The via parameter goes, and the source instance comes first when the body needs it.</summary>
@@ -486,7 +492,7 @@ internal sealed class MemberMover
         return method.WithParameterList(method.ParameterList.WithParameters(parameters));
     }
 
-    private void EnsureNoConflict(MemberDeclarationSyntax moved)
+    private void EnsureNoConflict()
     {
         foreach (var existing in _target.GetMembers(_member.Name))
         {
@@ -629,6 +635,9 @@ internal sealed class MemberMover
                 RewriteCallThroughParameter(reference, parameter, document, cancellationToken);
                 continue;
             }
+
+            if (_member is IFieldSymbol { IsReadOnly: true } && MemberReferences.IsWrittenTo(reference.Name))
+                throw new McpException($"Error: {_member.Name} is readonly and assigned in {file}, which it could not be through {_via!.Name}");
 
             if (!reference.Model.IsAccessible(reference.Name.SpanStart, _via!))
                 throw new McpException($"Error: {_via!.Name} is not accessible where {_member.Name} is used in {file}");

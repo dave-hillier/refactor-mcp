@@ -1392,6 +1392,61 @@ groups them. Each tool's fixtures are the fuller specification.
 
 <!-- Moving members and types: examples for this group's tools go below this line. -->
 
+`move-member` moves a method, field or property. An instance member moves
+through a field, property or parameter of the target type (`via`), which
+becomes `this` in the target; a static member moves to `targetType`, created
+as a static class if it does not exist. A moved method leaves a delegating
+stub unless `keepStub` is false, in which case every call is updated.
+`kind` optionally refuses a member of another kind than expected.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json move-member '{"solutionPath":"./Shop.sln","filePath":"./Shop/Customer.cs","memberName":"Label","via":"_address","keepStub":false}'
+dotnet run --project RefactorMCP.ConsoleApp -- --json move-member '{"solutionPath":"./Shop.sln","filePath":"./Shop/Order.cs","memberName":"Vat","targetType":"TaxRules","kind":"static-method"}'
+```
+
+`move-member-to-partial-file` moves a member of a partial type into the part
+declared in another file, creating the file with a new part if needed.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json move-member-to-partial-file '{"solutionPath":"./Shop.sln","filePath":"./Shop/Order.cs","memberName":"Discount","targetFilePath":"./Shop/Order.Pricing.cs"}'
+```
+
+`move-type-to-namespace` changes a type's namespace and updates qualified
+names and usings across the solution; `sync-namespace-with-folder` sets a
+file's namespace from the project's root namespace and its folders.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json move-type-to-namespace '{"solutionPath":"./Shop.sln","filePath":"./Shop/Invoice.cs","typeName":"Invoice","targetNamespace":"Shop.Billing"}'
+dotnet run --project RefactorMCP.ConsoleApp -- --json sync-namespace-with-folder '{"solutionPath":"./Shop.sln","filePath":"./Shop/Billing/Invoice.cs"}'
+```
+
+`rename-file-to-match-type` renames a file after the single top-level type it
+declares.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json rename-file-to-match-type '{"solutionPath":"./Shop.sln","filePath":"./Shop/Ledger.cs"}'
+```
+
+`make-method-static` makes an instance method static, passing the instance
+(`"pass":"instance"`, the default) or the members it reads
+(`"pass":"parameters"`), and updates every call; `make-method-instance` turns
+a static method taking its own type back into an instance method.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json make-method-static '{"solutionPath":"./Shop.sln","filePath":"./Shop/Order.cs","methodName":"Describe","pass":"parameters"}'
+dotnet run --project RefactorMCP.ConsoleApp -- --json make-method-instance '{"solutionPath":"./Shop.sln","filePath":"./Shop/Order.cs","methodName":"Discounted"}'
+```
+
+`convert-to-extension-method` also converts a static method of a static class
+in place, adding `this` to its first parameter and rewriting calls to the
+extension form; `convert-extension-method-to-static` does the reverse.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json convert-to-extension-method '{"solutionPath":"./Shop.sln","filePath":"./Shop/Text.cs","methodName":"Shout"}'
+dotnet run --project RefactorMCP.ConsoleApp -- --json convert-extension-method-to-static '{"solutionPath":"./Shop.sln","filePath":"./Shop/Text.cs","methodName":"Shout"}'
+```
+
+
 <!-- End of Moving members and types. -->
 
 ### Types and hierarchy

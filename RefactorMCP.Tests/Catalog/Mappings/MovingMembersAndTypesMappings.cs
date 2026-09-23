@@ -214,7 +214,8 @@ internal sealed class MovingMembersAndTypesMappings : ICatalogMappings
         ("complex-receiver", "store it in a local first"),
         ("null-argument", "passes null for"),
         ("name-conflict", "already has a parameter or local named"),
-        ("target-cannot-see-source", "which cannot see"));
+        ("target-cannot-see-source", "which cannot see"),
+        ("readonly-assigned", "is readonly and assigned"));
 
     /// <summary><see cref="MemberArguments"/> for tools that call the member a method.</summary>
     private static async Task<Dictionary<string, JsonElement>> MethodArguments(StepContext context)
