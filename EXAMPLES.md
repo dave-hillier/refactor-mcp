@@ -1553,6 +1553,137 @@ refactor --json change-accessibility '{"solutionPath":"./RefactorMCP.sln","fileP
 
 <!-- Type conversions: examples for this group's tools go below this line. -->
 
+These tools find a type by its name in a file; `line`, any line of its
+declaration, chooses between types of the same name. Each tool refuses a
+change that would not compile, or that would change behaviour the solution
+can observe.
+
+#### Make Type Partial
+
+```bash
+refactor --json make-type-partial '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Invoice.cs","typeName":"Invoice"}'
+```
+
+#### Merge Partial Declarations
+
+Moves every part's members, modifiers, base types and needed `using`
+directives into the declaration in `filePath`, deleting files left empty.
+
+```bash
+refactor --json merge-partial-declarations '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Basket.cs","typeName":"Basket"}'
+```
+
+#### Convert Class to Record
+
+Positional when the constructor only assigns get-only properties. Refused when
+the solution compares, hashes or prints instances, where a record would behave
+differently.
+
+```bash
+refactor --json convert-class-to-record '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Point.cs","typeName":"Point"}'
+```
+
+```csharp
+// before
+public sealed class Point
+{
+    public Point(int x, int y) { X = x; Y = y; }
+    public int X { get; }
+    public int Y { get; }
+}
+
+// after
+public sealed record Point(int X, int Y);
+```
+
+#### Convert Record to Class
+
+Writes out the constructor, properties and `Deconstruct` of a positional
+record, and the `Equals`, `GetHashCode`, `ToString`, `==` and `!=` the record
+provided.
+
+```bash
+refactor --json convert-record-to-class '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Point.cs","typeName":"Point"}'
+```
+
+#### Convert Tuple to Named Type
+
+Replaces the tuple in the return type, or in `parameterName`, with a
+`readonly record struct` (`kind` `class` gives a `sealed record`), updating
+returned or passed literals and element accesses.
+
+```bash
+refactor --json convert-tuple-to-named-type '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Stats.cs","methodName":"Range","typeName":"MinMax"}'
+```
+
+```csharp
+// before
+public static (int min, int max) Range(int[] values) { ... return (min, max); }
+var width = Stats.Range(values).max;
+
+// after
+public static MinMax Range(int[] values) { ... return new MinMax(min, max); }
+var width = Stats.Range(values).Max;
+public readonly record struct MinMax(int Min, int Max);
+```
+
+#### Convert Anonymous Type to Class
+
+Declares a class with the same properties, equality and `ToString` as the
+anonymous type at `line` and `column`, and constructs it throughout the
+containing member.
+
+```bash
+refactor --json convert-anonymous-type-to-class '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Report.cs","line":7,"column":20,"className":"Line"}'
+```
+
+#### Convert to Primary Constructor
+
+```bash
+refactor --json convert-to-primary-constructor '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/OrderService.cs","typeName":"OrderService"}'
+```
+
+```csharp
+// before
+public class OrderService
+{
+    private readonly IRepository _repository;
+    public OrderService(IRepository repository) { _repository = repository; }
+    public void Place(Order order) => _repository.Save(order);
+}
+
+// after
+public class OrderService(IRepository repository)
+{
+    public void Place(Order order) => repository.Save(order);
+}
+```
+
+#### Convert Primary Constructor to Constructor
+
+Captured parameters become private fields named `_parameter`.
+
+```bash
+refactor --json convert-primary-constructor-to-constructor '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/OrderService.cs","typeName":"OrderService"}'
+```
+
+#### Replace Constructor with Factory Method
+
+`line` picks the constructor; `methodName` defaults to `Create` and
+`accessibility`, the constructor's new accessibility, to `private`.
+
+```bash
+refactor --json replace-constructor-with-factory-method '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Order.cs","typeName":"Order","line":5,"methodName":"Create"}'
+```
+
+```csharp
+// before
+var order = new Order("tea", 2);
+
+// after
+var order = Order.Create("tea", 2);
+```
+
 <!-- End of Type conversions. -->
 
 ### Conditionals

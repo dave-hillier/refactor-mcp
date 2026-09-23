@@ -271,8 +271,8 @@ public static class ConvertTupleToNamedTypeTool
             if (argument?.Expression is not TupleExpressionSyntax literal)
                 continue;
 
-            var model = await location.Document.GetSemanticModelAsync(cancellationToken);
-            var invoked = (IMethodSymbol)model!.GetSymbolInfo(invocation, cancellationToken).Symbol!;
+            var model = (await location.Document.GetSemanticModelAsync(cancellationToken))!;
+            var invoked = (IMethodSymbol)model.GetSymbolInfo(invocation, cancellationToken).Symbol!;
             var typeArguments = shape.TypeParameters.Count == 0
                 ? ""
                 : $"<{string.Join(", ", shape.TypeParameters.Select(t => (t.DeclaringMethod is not null ? invoked.TypeArguments[t.Ordinal] : invoked.ContainingType.TypeArguments[t.Ordinal]).ToMinimalDisplayString(model, invocation.SpanStart)))}>";
