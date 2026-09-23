@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-to-primary-constructor",
+  "description": "Refuses a constructor with a documentation comment, which a primary constructor has nowhere to keep",
+  "target": { "symbol": "T:Shop.Greeter" },
+  "expect": "error",
+  "errorCode": "constructor-annotated"
+}

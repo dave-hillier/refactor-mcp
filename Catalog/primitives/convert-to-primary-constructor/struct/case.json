@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-to-primary-constructor",
+  "description": "Gives a readonly struct a primary constructor that initializes its property",
+  "target": { "symbol": "T:Shop.Temperature" }
+}

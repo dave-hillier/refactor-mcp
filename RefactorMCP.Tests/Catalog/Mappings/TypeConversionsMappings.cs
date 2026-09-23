@@ -55,6 +55,20 @@ internal sealed class TypeConversionsMappings : ICatalogMappings
                 ["equality-observed"] = "value equality would change behaviour",
                 ["to-string-observed"] = "ToString would change behaviour",
             }),
+        new CatalogMapping(
+            "convert-to-primary-constructor",
+            "convert-to-primary-constructor",
+            context => DeclarationArguments(context, "typeName"),
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["unsupported-type"] = "is not a class or struct",
+                ["language-version"] = "raise the language version first",
+                ["several-constructors"] = "a primary constructor replaces exactly one",
+                ["constructor-accessibility"] = "but a primary constructor is public",
+                ["constructor-annotated"] = "which a primary constructor has nowhere to keep",
+                ["constructor-has-logic"] = "does more than assign its parameters",
+                ["parameter-shadowed"] = "would not read the primary constructor's parameter",
+            }),
     };
 
     /// <summary>

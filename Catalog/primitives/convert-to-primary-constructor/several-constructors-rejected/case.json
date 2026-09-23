@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-to-primary-constructor",
+  "description": "Refuses a class with more than one constructor",
+  "target": { "symbol": "T:Shop.Range" },
+  "expect": "error",
+  "errorCode": "several-constructors"
+}
