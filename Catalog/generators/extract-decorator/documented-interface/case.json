@@ -1,0 +1,5 @@
+{
+  "refactoring": "extract-decorator",
+  "description": "Leaves the interface's comments and region where they are and gives the decorator's members none",
+  "target": { "symbol": "T:Shop.IClock" }
+}

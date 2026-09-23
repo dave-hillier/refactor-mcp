@@ -1,0 +1,6 @@
+{
+  "refactoring": "create-adapter",
+  "description": "Implements the members an interface inherits as well as its own",
+  "target": { "symbol": "T:Shop.Tape" },
+  "arguments": { "interface": "IStream", "name": "TapeStream", "map": { "Read": "Play", "Write": "Record" } }
+}

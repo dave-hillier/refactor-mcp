@@ -1,0 +1,8 @@
+{
+  "refactoring": "extract-decorator",
+  "description": "Refuses when the namespace already has a type with the decorator's name",
+  "target": { "symbol": "T:Shop.IGreeter" },
+  "expect": "error",
+  "errorCode": "type-already-exists",
+  "errorContains": "GreeterDecorator"
+}

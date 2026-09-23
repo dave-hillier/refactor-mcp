@@ -1,0 +1,9 @@
+{
+  "refactoring": "create-adapter",
+  "description": "Refuses a target type that is a class rather than an interface",
+  "target": { "symbol": "T:Shop.LegacyLogger" },
+  "arguments": { "interface": "Logger", "name": "LegacyLoggerAdapter" },
+  "expect": "error",
+  "errorCode": "not-an-interface",
+  "errorContains": "Logger"
+}

@@ -1,0 +1,9 @@
+{
+  "refactoring": "extract-decorator",
+  "description": "Places the decorator in the class's project when the interface lives in a project it references",
+  "projects": [
+    { "name": "Core" },
+    { "name": "App", "references": ["Core"] }
+  ],
+  "target": { "symbol": "T:App.Greeter" }
+}
