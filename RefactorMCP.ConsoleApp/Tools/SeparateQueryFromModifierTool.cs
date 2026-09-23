@@ -217,13 +217,17 @@ public static class SeparateQueryFromModifierTool
             Replace(editor, host, replacement);
         }
 
-        var declaringEditor = await EditorFor(solution.GetDocument(declaration.SyntaxTree)!.Id);
-        declaringEditor.RemoveNode(declaration, SyntaxRemoveOptions.KeepNoTrivia);
+        var declaring = solution.GetDocument(declaration.SyntaxTree)!.Id;
+        await EditorFor(declaring);
 
         var changed = solution;
         foreach (var (id, editor) in editors)
         {
-            var document = changed.GetDocument(id)!.WithSyntaxRoot(editor.GetChangedRoot());
+            var root = editor.GetChangedRoot();
+            if (id == declaring)
+                root = MemberRemoval.Remove(root, mark);
+
+            var document = changed.GetDocument(id)!.WithSyntaxRoot(root);
             document = await Formatter.FormatAsync(document, Formatter.Annotation, cancellationToken: cancellationToken);
             changed = document.Project.Solution;
         }

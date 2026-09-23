@@ -2080,6 +2080,95 @@ dotnet run --project RefactorMCP.ConsoleApp -- --json use-pattern-matching '{"so
 
 <!-- Composites: examples for this group's tools go below this line. -->
 
+**Replace Temp with Query**: the local `basePrice`, named at line 18, column
+21, becomes a private method `BasePrice()` called wherever the local was read.
+
+```bash
+refactor --json replace-temp-with-query \
+    '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Order.cs","line":18,"column":21,"queryName":"BasePrice"}'
+```
+
+**Decompose Conditional**: the `if` statement whose `if` keyword is at line 24,
+column 13 calls `NotSummer(date)` for its condition and `WinterCharge` and
+`SummerCharge` for its branches. `elseName` is optional; without it the else
+branch stays as it is.
+
+```bash
+refactor --json decompose-conditional \
+    '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Tariff.cs","line":24,"column":13,"conditionName":"NotSummer","thenName":"WinterCharge","elseName":"SummerCharge"}'
+```
+
+**Introduce Parameter Object**: `TotalBetween(DateTime start, DateTime end)`
+becomes `TotalBetween(DateRange range)`, with `DateRange` declared as a
+`readonly record struct`, or a `sealed record` with `"kind":"class"`, and
+every call passing `new DateRange(...)`.
+
+```bash
+refactor --json introduce-parameter-object \
+    '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Account.cs","methodName":"TotalBetween","parameters":["start","end"],"typeName":"DateRange","parameterName":"range"}'
+```
+
+**Preserve Whole Object**: calls such as
+`plan.WithinRange(room.Range.Low, room.Range.High)` pass `room.Range`
+instead, and the method reads `range.Low` and `range.High`.
+
+```bash
+refactor --json preserve-whole-object \
+    '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/HeatingPlan.cs","methodName":"WithinRange","parameters":["low","high"],"parameterName":"range"}'
+```
+
+**Separate Query from Modifier**: `Withdraw` becomes `Debit`, which changes
+the balance, and `Balance`, which returns it; each caller calls both.
+
+```bash
+refactor --json separate-query-from-modifier \
+    '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Account.cs","methodName":"Withdraw","queryName":"Balance","modifierName":"Debit"}'
+```
+
+**Parameterise Method**: `TenPercentRaise()` and `FivePercentRaise()`, which
+differ only in a literal, become `Raise(decimal factor)`, and their callers
+pass `1.10m` and `1.05m`.
+
+```bash
+refactor --json parameterise-method \
+    '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Employee.cs","methods":["TenPercentRaise","FivePercentRaise"],"name":"Raise","parameterNames":["factor"]}'
+```
+
+**Replace Parameter with Explicit Methods**: the branches of `SetValue` for
+`"height"` and `"width"` become `SetHeight` and `SetWidth`, and calls passing
+those constants call them directly.
+
+```bash
+refactor --json replace-parameter-with-explicit-methods \
+    '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Box.cs","methodName":"SetValue","parameterName":"name","methods":[{"value":"\"height\"","name":"SetHeight"},{"value":"\"width\"","name":"SetWidth"}]}'
+```
+
+**Constructor Injection**: the `mailer` a method constructs at line 17 becomes
+a constructor parameter kept in `_mailer`, and every construction of the class
+passes a new one. `parameterName` and `fieldName` are optional.
+
+```bash
+refactor --json inject-constructor-dependency \
+    '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/OrderService.cs","line":17,"column":17}'
+```
+
+**Convert to Async**: `Available`, which reads a task's `Result`, awaits it and
+returns `Task<int>`; its callers await it and become async in turn, and a
+caller that cannot be async, such as a constructor, blocks on the task.
+
+```bash
+refactor --json convert-to-async \
+    '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Inventory.cs","methodName":"Available"}'
+```
+
+Change Signature's `replacements` let the composites above remove a parameter
+the body still reads, replacing each read with an expression:
+
+```bash
+refactor --json change-signature \
+    '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Grid.cs","methodName":"DistanceFromOrigin","parameters":[{"name":"point","type":"Point","value":"new Point(3, 4)"}],"replacements":{"x":"point.X","y":"point.Y"}}'
+```
+
 <!-- End of Composites. -->
 
 ### Generators

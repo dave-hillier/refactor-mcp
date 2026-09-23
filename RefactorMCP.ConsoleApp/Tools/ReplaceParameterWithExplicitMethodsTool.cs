@@ -254,29 +254,10 @@ public static class ReplaceParameterWithExplicitMethodsTool
         {
             var documentId = solution.GetDocumentId(declaration.SyntaxTree)!;
             var root = (await changed.GetDocument(documentId)!.GetSyntaxRootAsync(cancellationToken))!;
-            changed = changed.WithDocumentSyntaxRoot(documentId, RemoveMethod(root, mark));
+            changed = changed.WithDocumentSyntaxRoot(documentId, MemberRemoval.Remove(root, mark));
         }
 
         return changed;
-    }
-
-    /// <summary>
-    /// Deletes the marked method with its comments. When it was the first member, the
-    /// blank line that set the next member apart goes too.
-    /// </summary>
-    private static SyntaxNode RemoveMethod(SyntaxNode root, SyntaxAnnotation mark)
-    {
-        var method = (MemberDeclarationSyntax)root.GetAnnotatedNodes(mark).Single();
-        var type = (TypeDeclarationSyntax)method.Parent!;
-        if (type.Members.IndexOf(method) == 0 && type.Members.Count > 1 &&
-            type.Members[1].GetLeadingTrivia().FirstOrDefault().IsKind(SyntaxKind.EndOfLineTrivia))
-        {
-            var next = type.Members[1];
-            root = root.ReplaceNode(next, next.WithLeadingTrivia(next.GetLeadingTrivia().RemoveAt(0)));
-            method = (MemberDeclarationSyntax)root.GetAnnotatedNodes(mark).Single();
-        }
-
-        return root.RemoveNode(method, SyntaxRemoveOptions.KeepNoTrivia)!;
     }
 
     /// <summary>A call of the explicit method on the call's receiver, passing what the call passed for its parameters.</summary>
