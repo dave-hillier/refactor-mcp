@@ -1380,6 +1380,104 @@ groups them. Each tool's fixtures are the fuller specification.
 
 <!-- Signatures: examples for this group's tools go below this line. -->
 
+These tools find a method by its name in a file; `line`, any line of its
+declaration, chooses between overloads. A constructor is named by its type.
+Overrides, interface members and their implementations change with the
+method, and every call in the solution is updated. Each tool refuses a change
+that would not compile.
+
+#### Change Signature
+
+`parameters` is the whole new list in order. Existing parameters are named; a
+new one gives its `type` and the `value` existing calls pass, a `default`, or
+both. Leaving a parameter out removes it.
+
+```bash
+refactor --json change-signature '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Pricing.cs","methodName":"Discount","parameters":[{"name":"percent"},{"name":"price"},{"name":"rounding","type":"int","value":"2"}]}'
+```
+
+```csharp
+// before
+public decimal Discount(decimal price, int percent) { ... }
+var sale = Discount(price, 10);
+
+// after
+public decimal Discount(int percent, decimal price, int rounding) { ... }
+var sale = Discount(10, price, 2);
+```
+
+#### Inline Parameter
+
+When every call passes the same constant, the body uses the constant and the
+parameter goes.
+
+```bash
+refactor --json inline-parameter '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Greeting.cs","methodName":"Greet","parameterName":"punctuation"}'
+```
+
+#### Remove Unused Parameter
+
+Removes a parameter no body in the family reads, refusing when an argument a
+call passes for it may have side effects.
+
+```bash
+refactor --json remove-unused-parameter '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Report.cs","methodName":"Title","parameterName":"width"}'
+```
+
+#### Add Parameter Default Value
+
+Gives a parameter a default; `removeFromCallSites` drops arguments that pass
+the same value.
+
+```bash
+refactor --json add-parameter-default-value '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Catalogue.cs","methodName":"Page","parameterName":"size","value":"20","removeFromCallSites":true}'
+```
+
+```csharp
+// before
+public string Page(int number, int size) { ... }
+catalogue.Page(1, 20) + catalogue.Page(2, 50)
+
+// after
+public string Page(int number, int size = 20) { ... }
+catalogue.Page(1) + catalogue.Page(2, 50)
+```
+
+#### Use Named Arguments
+
+Names the arguments of the call at `line` and `column`.
+
+```bash
+refactor --json use-named-arguments '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Shipping.cs","line":12,"column":16}'
+```
+
+```csharp
+// before
+return Quote(1.5m, "EU", true);
+
+// after
+return Quote(weight: 1.5m, region: "EU", express: true);
+```
+
+#### Change Return Type
+
+Changes the return type when the body and every caller still compile, and
+every call around the result binds to the same overload as before.
+
+```bash
+refactor --json change-return-type '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Catalogue.cs","methodName":"Names","returnType":"IEnumerable<string>"}'
+```
+
+#### Change Accessibility
+
+Changes the accessibility of a type or member, refusing when a reference,
+override or interface implementation would break, or a call would bind to a
+different overload.
+
+```bash
+refactor --json change-accessibility '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Order.cs","memberName":"Tax","accessibility":"internal"}'
+```
+
 <!-- End of Signatures. -->
 
 ### Fields, properties and constants
