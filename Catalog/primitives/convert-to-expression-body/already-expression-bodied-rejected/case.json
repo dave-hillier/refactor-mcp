@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-to-expression-body",
+  "description": "Refuses a member that is already expression-bodied",
+  "target": { "symbol": "M:Sample.Total" },
+  "expect": "error",
+  "errorCode": "already-expression-bodied"
+}

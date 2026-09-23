@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-to-expression-body",
+  "description": "A body that only throws becomes a throw expression",
+  "target": { "symbol": "M:Sample.Next" }
+}

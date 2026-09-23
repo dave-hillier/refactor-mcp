@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-to-expression-body",
+  "description": "Refuses a property with a setter as well as a getter; its accessors can be converted one at a time",
+  "target": { "symbol": "P:Sample.Name" },
+  "expect": "error",
+  "errorCode": "several-accessors"
+}

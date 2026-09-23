@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-to-block-body",
+  "description": "Refuses a field, which has no body",
+  "target": { "symbol": "F:Sample._total" },
+  "expect": "error",
+  "errorCode": "not-a-member-with-body"
+}

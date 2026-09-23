@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-to-block-body",
+  "description": "An expression-bodied local function, targeted by a caret on its name, gets a block",
+  "target": { "file": "Sample.cs", "caret": "marker" }
+}

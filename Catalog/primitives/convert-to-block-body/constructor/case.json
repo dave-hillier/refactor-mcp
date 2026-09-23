@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-to-block-body",
+  "description": "An expression-bodied constructor with an initializer gets a block",
+  "target": { "symbol": "M:Shop.Order.#ctor(System.Int32)" }
+}

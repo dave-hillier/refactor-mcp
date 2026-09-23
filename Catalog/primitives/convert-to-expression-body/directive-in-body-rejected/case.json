@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-to-expression-body",
+  "description": "Refuses a body containing a preprocessor directive, which would no longer surround the same code",
+  "target": { "symbol": "M:Sample.Log(System.String)" },
+  "expect": "error",
+  "errorCode": "directive-in-body"
+}

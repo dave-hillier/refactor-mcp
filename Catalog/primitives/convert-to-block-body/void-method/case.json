@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-to-block-body",
+  "description": "An expression-bodied void method gets a block with an expression statement",
+  "target": { "symbol": "M:Sample.Log(System.String)" }
+}

@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-to-block-body",
+  "description": "An expression-bodied operator gets a block with a single return",
+  "target": { "symbol": "M:Shop.Money.op_Addition(Shop.Money,Shop.Money)" }
+}

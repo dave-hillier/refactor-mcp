@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-to-block-body",
+  "description": "A throw expression becomes a throw statement",
+  "target": { "symbol": "M:Sample.Next" }
+}

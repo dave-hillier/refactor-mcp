@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-to-block-body",
+  "description": "One expression-bodied accessor gets a block; the other accessor is left alone",
+  "target": { "symbol": "M:Sample.set_Name(System.String)" }
+}

@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-to-expression-body",
+  "description": "An operator returning a single expression becomes expression-bodied",
+  "target": { "symbol": "M:Shop.Money.op_Addition(Shop.Money,Shop.Money)" }
+}

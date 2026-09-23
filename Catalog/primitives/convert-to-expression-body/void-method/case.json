@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-to-expression-body",
+  "description": "A void method whose block holds a single expression statement becomes expression-bodied",
+  "target": { "symbol": "M:Sample.Log(System.String)" }
+}

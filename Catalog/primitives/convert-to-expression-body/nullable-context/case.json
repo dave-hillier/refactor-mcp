@@ -1,0 +1,6 @@
+{
+  "refactoring": "convert-to-expression-body",
+  "description": "A method returning a nullable reference converts without new warnings",
+  "project": { "nullable": "enable" },
+  "target": { "symbol": "M:Sample.Find(System.String)" }
+}

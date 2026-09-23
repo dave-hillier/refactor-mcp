@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-to-block-body",
+  "description": "An async method returning Task awaits in a statement rather than returning the awaited value",
+  "target": { "symbol": "M:Sample.SaveAsync" }
+}

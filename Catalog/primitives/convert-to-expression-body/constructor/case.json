@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-to-expression-body",
+  "description": "A constructor with a single assignment and an initializer becomes expression-bodied",
+  "target": { "symbol": "M:Shop.Order.#ctor(System.Int32)" }
+}

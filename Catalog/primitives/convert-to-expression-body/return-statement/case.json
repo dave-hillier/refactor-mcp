@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-to-expression-body",
+  "description": "A method whose block holds a single return becomes expression-bodied",
+  "target": { "symbol": "M:Sample.Total" }
+}
