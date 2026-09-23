@@ -1,0 +1,7 @@
+{
+  "refactoring": "replace-conditional-with-polymorphism",
+  "description": "Refuses a method whose body is not a conditional on a type code or a type",
+  "target": { "symbol": "M:Shapes.Geometry.Label(Shapes.Shape)" },
+  "expect": "error",
+  "errorCode": "no-conditional"
+}

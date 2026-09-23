@@ -1,0 +1,5 @@
+{
+  "refactoring": "replace-type-code-with-subclasses",
+  "description": "Makes the property that returned the field abstract, and drops a constructor left with nothing to do",
+  "target": { "symbol": "F:Shapes.Shape._kind" }
+}

@@ -1,0 +1,6 @@
+{
+  "refactoring": "replace-type-code-with-enum",
+  "description": "Replaces string constants, dropping their values, and retargets the constant patterns of a switch expression",
+  "target": { "symbol": "T:Library.Loan" },
+  "arguments": { "name": "LoanKind", "constants": ["Book", "Film"] }
+}

@@ -1,0 +1,9 @@
+{
+  "refactoring": "replace-type-code-with-enum",
+  "description": "Refuses a constant the type does not declare",
+  "target": { "symbol": "T:Staff.Employee" },
+  "arguments": { "name": "EmployeeType", "constants": ["Engineer", "Director"] },
+  "expect": "error",
+  "errorCode": "constant-not-found",
+  "errorContains": "Director"
+}

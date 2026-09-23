@@ -1,0 +1,5 @@
+{
+  "refactoring": "replace-type-code-with-subclasses",
+  "description": "Keeps the field's and constructor's comments and removes the assignment with its trailing comment",
+  "target": { "symbol": "F:Staff.Employee._type" }
+}

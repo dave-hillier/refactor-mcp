@@ -1,0 +1,83 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json;
+using System.Threading.Tasks;
+using static RefactorMCP.Tests.Catalog.CatalogMapping;
+
+namespace RefactorMCP.Tests.Catalog.Mappings;
+
+/// <summary>Generators from the catalog that replace a type code: with an enum, with subclasses, and the conditionals on it with polymorphism.</summary>
+internal sealed class GeneratorsTypeCodeMappings : ICatalogMappings
+{
+    public IEnumerable<CatalogMapping> Mappings => new[]
+    {
+        new CatalogMapping(
+            "replace-type-code-with-enum",
+            "replace-type-code-with-enum",
+            async context =>
+            {
+                var location = await context.SymbolLocationAsync();
+                return new Dictionary<string, JsonElement>
+                {
+                    ["solutionPath"] = Json(context.SolutionPath),
+                    ["filePath"] = Json(location.FilePath),
+                    ["typeName"] = Json(location.Symbol.Name),
+                    ["constantNames"] = context.RequiredArgument("constants"),
+                    ["enumName"] = context.RequiredArgument("name"),
+                };
+            },
+            Codes(
+                ("constant-not-found", "has no constant named"),
+                ("mixed-types", "mix int and string"),
+                ("not-a-type-code", "is not an int or string constant"),
+                ("type-already-exists", "already exists"),
+                ("breaks-compilation", "would not compile"))),
+
+        new CatalogMapping(
+            "replace-type-code-with-subclasses",
+            "replace-type-code-with-subclasses",
+            async context =>
+            {
+                var location = await context.SymbolLocationAsync();
+                return new Dictionary<string, JsonElement>
+                {
+                    ["solutionPath"] = Json(context.SolutionPath),
+                    ["filePath"] = Json(location.FilePath),
+                    ["fieldName"] = Json(location.Symbol.Name),
+                };
+            },
+            Codes(
+                ("not-an-enum", "not an enum"),
+                ("class-sealed", "is not a class that can have subclasses"),
+                ("type-already-exists", "already exists"),
+                ("code-changes", "changes after construction"),
+                ("unsupported-constructor", "must have one constructor that assigns"),
+                ("breaks-compilation", "would not compile"))),
+
+        new CatalogMapping(
+            "replace-conditional-with-polymorphism",
+            "replace-conditional-with-polymorphism",
+            async context =>
+            {
+                var location = await context.SymbolLocationAsync();
+                return new Dictionary<string, JsonElement>
+                {
+                    ["solutionPath"] = Json(context.SolutionPath),
+                    ["filePath"] = Json(location.FilePath),
+                    ["methodName"] = Json(location.Symbol.Name),
+                    ["line"] = Json(location.Line),
+                };
+            },
+            Codes(
+                ("no-conditional", "is not a single switch or if chain"),
+                ("unsupported-case", "cannot be moved to one subclass"),
+                ("subclass-without-case", "has no case and there is no default"),
+                ("base-not-abstract", "is not abstract"),
+                ("uses-caller-members", "which the subclass cannot reach"),
+                ("breaks-compilation", "would not compile"))),
+    };
+
+    private static IReadOnlyDictionary<string, string> Codes(params (string Code, string Fragment)[] codes) =>
+        codes.ToDictionary(c => c.Code, c => c.Fragment, StringComparer.Ordinal);
+}

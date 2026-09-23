@@ -1,0 +1,5 @@
+{
+  "refactoring": "replace-conditional-with-polymorphism",
+  "description": "Chooses one overload, passes its other parameters on, and keeps a default arm as a virtual method of a concrete base",
+  "target": { "symbol": "M:Shapes.Geometry.Describe(Shapes.Shape,System.String)" }
+}

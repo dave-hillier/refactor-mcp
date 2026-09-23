@@ -1,0 +1,6 @@
+{
+  "refactoring": "replace-type-code-with-enum",
+  "description": "Keeps the constants' values when they are not 0, 1, 2 and so on, in the block namespace style of the type's file",
+  "target": { "symbol": "T:Shipping.Parcel" },
+  "arguments": { "name": "DeliverySpeed", "constants": ["Standard", "Express", "Overnight"] }
+}

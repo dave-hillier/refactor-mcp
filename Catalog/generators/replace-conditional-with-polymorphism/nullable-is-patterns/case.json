@@ -1,0 +1,6 @@
+{
+  "refactoring": "replace-conditional-with-polymorphism",
+  "description": "Moves the branches of an if chain of is patterns into overrides, keeping the nullable return type",
+  "project": { "nullable": "enable" },
+  "target": { "symbol": "M:Pets.Vet.Label(Pets.Pet)" }
+}
