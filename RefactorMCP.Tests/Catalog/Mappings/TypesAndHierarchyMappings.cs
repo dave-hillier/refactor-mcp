@@ -181,6 +181,40 @@ internal sealed class TypesAndHierarchyMappings : ICatalogMappings
                 ("changes-overload", "would change which member"))),
 
         new CatalogMapping(
+            "introduce-generic-type-parameter",
+            "introduce-generic-type-parameter",
+            async context =>
+            {
+                var location = await context.SymbolLocationAsync();
+                var arguments = new Dictionary<string, JsonElement>
+                {
+                    ["solutionPath"] = Json(context.SolutionPath),
+                    ["filePath"] = Json(location.FilePath),
+                    ["typeToReplace"] = context.RequiredArgument("type"),
+                    ["typeParameterName"] = context.RequiredArgument("name"),
+                };
+                if (location.Symbol is Microsoft.CodeAnalysis.IMethodSymbol)
+                {
+                    arguments["className"] = Json(location.Symbol.ContainingType.Name);
+                    arguments["methodName"] = Json(location.Symbol.Name);
+                    arguments["line"] = Json(location.Line);
+                }
+                else
+                {
+                    arguments["className"] = Json(location.Symbol.Name);
+                }
+
+                return arguments;
+            },
+            Codes(
+                ("type-not-found", "No type named"),
+                ("type-not-used", "does not use"),
+                ("invalid-name", "is not a valid type parameter name"),
+                ("name-conflict", "already names something"),
+                ("uses-static-members", "is a static member"),
+                ("no-valid-constraint", "There is no constraint"))),
+
+        new CatalogMapping(
             "push-down-field",
             "push-down-field",
             async context => await MemberArguments(context, "fieldName"),

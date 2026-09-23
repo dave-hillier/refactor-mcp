@@ -1,0 +1,6 @@
+{
+  "refactoring": "introduce-generic-type-parameter",
+  "description": "Makes a method generic, leaving calls whose arguments let the compiler infer the type",
+  "target": { "symbol": "M:Shop.Ledger.Sum(System.Collections.Generic.List{Shop.Invoice})" },
+  "arguments": { "type": "Invoice", "name": "T" }
+}

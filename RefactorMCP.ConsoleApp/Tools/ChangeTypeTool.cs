@@ -60,9 +60,6 @@ public static class ChangeTypeTool
         }
     }
 
-    /// <summary>A use of the value and what it bound to before the change.</summary>
-    private sealed record Consumer(DocumentId Document, SyntaxNode Node, SyntaxAnnotation Mark, ISymbol Bound);
-
     private static ISymbol FindDeclared(SyntaxNode root, SemanticModel model, Microsoft.CodeAnalysis.Text.SourceText text, string name, int? line, int? column)
     {
         if (line is > 0 && column is > 0 && line <= text.Lines.Count)
@@ -113,9 +110,9 @@ public static class ChangeTypeTool
     /// The uses whose meaning depends on the value's type: the member reached
     /// through it, and the method it is passed to.
     /// </summary>
-    private static async Task<IReadOnlyList<Consumer>> ConsumersAsync(Solution solution, ISymbol symbol, CancellationToken cancellationToken)
+    private static async Task<IReadOnlyList<TypeRefactoringHelpers.Binding>> ConsumersAsync(Solution solution, ISymbol symbol, CancellationToken cancellationToken)
     {
-        var consumers = new List<Consumer>();
+        var consumers = new List<TypeRefactoringHelpers.Binding>();
         var references = await SymbolFinder.FindReferencesAsync(symbol, solution, cancellationToken);
         foreach (var location in references.SelectMany(r => r.Locations))
         {
@@ -137,7 +134,7 @@ public static class ChangeTypeTool
             };
 
             if (consumer is not null && model.GetSymbolInfo(consumer, cancellationToken).Symbol is { } bound)
-                consumers.Add(new Consumer(location.Document.Id, consumer, new SyntaxAnnotation(), bound));
+                consumers.Add(new TypeRefactoringHelpers.Binding(location.Document.Id, consumer, new SyntaxAnnotation(), bound));
         }
 
         return consumers;
@@ -145,7 +142,7 @@ public static class ChangeTypeTool
 
     private static async Task<Solution> AnnotateAsync(
         Solution solution,
-        IReadOnlyList<Consumer> consumers,
+        IReadOnlyList<TypeRefactoringHelpers.Binding> consumers,
         DocumentId declaringDocument,
         SyntaxNode declaration,
         SyntaxAnnotation declarationMark,
@@ -243,77 +240,27 @@ public static class ChangeTypeTool
 
     /// <summary>
     /// Refuses when a use now reaches a different member: another overload,
-    /// or an interface member the old one does not implement.
+    /// or an interface member the old one does not implement. A call to the
+    /// method whose parameter changed is the same call.
     /// </summary>
     private static async Task EnsureSameBindingsAsync(
         Solution changed,
-        IReadOnlyList<Consumer> consumers,
+        IReadOnlyList<TypeRefactoringHelpers.Binding> consumers,
         ISymbol target,
         string description,
         string newType,
         CancellationToken cancellationToken)
     {
-        foreach (var consumer in consumers)
-        {
-            var document = changed.GetDocument(consumer.Document)!;
-            var root = (await document.GetSyntaxRootAsync(cancellationToken))!;
-            var model = (await document.GetSemanticModelAsync(cancellationToken))!;
-            var node = root.GetAnnotatedNodes(consumer.Mark).Single();
-            var bound = model.GetSymbolInfo(node, cancellationToken).Symbol;
-            var before = Definition(consumer.Bound);
+        var relevant = target is IParameterSymbol
+            ? consumers.Where(c => !SymbolEqualityComparer.Default.Equals(TypeRefactoringHelpers.Definition(c.Bound), target.ContainingSymbol.OriginalDefinition))
+            : consumers;
+        var changedBinding = await TypeRefactoringHelpers.FirstChangedBindingAsync(changed, relevant, cancellationToken);
+        if (changedBinding is not { } found)
+            return;
 
-            // A call to the method whose parameter changed is the same call.
-            if (SymbolEqualityComparer.Default.Equals(before, target.ContainingSymbol?.OriginalDefinition) && target is IParameterSymbol)
-                continue;
-
-            if (bound is not null && SameMember(before, Definition(bound), model.Compilation))
-                continue;
-
-            var at = node.GetLocation().GetLineSpan();
-            throw new McpException(
-                $"Error: Changing {description} to {newType} would change which member {Path.GetFileName(at.Path)}({at.StartLinePosition.Line + 1}) uses: " +
-                $"{bound?.ToDisplayString() ?? "nothing"} instead of {before.ToDisplayString()}");
-        }
+        var at = found.Node.GetLocation().GetLineSpan();
+        throw new McpException(
+            $"Error: Changing {description} to {newType} would change which member {Path.GetFileName(at.Path)}({at.StartLinePosition.Line + 1}) uses: " +
+            $"{found.Now?.ToDisplayString() ?? "nothing"} instead of {found.Binding.Bound.ToDisplayString()}");
     }
-
-    private static ISymbol Definition(ISymbol symbol) =>
-        ((symbol as IMethodSymbol)?.ReducedFrom ?? symbol).OriginalDefinition;
-
-    /// <summary>
-    /// Whether <paramref name="after"/> reaches <paramref name="before"/> at
-    /// run time: the same member, one it overrides, or an interface member it
-    /// implements.
-    /// </summary>
-    private static bool SameMember(ISymbol before, ISymbol after, Compilation compilation)
-    {
-        var beforeId = DocumentationCommentId.CreateDeclarationId(before);
-        if (beforeId == DocumentationCommentId.CreateDeclarationId(after))
-            return true;
-
-        var current = DocumentationCommentId.GetFirstSymbolForDeclarationId(beforeId, compilation);
-        if (current is null)
-            return false;
-
-        if (after.ContainingType?.TypeKind == TypeKind.Interface)
-        {
-            var implementation = current.ContainingType.FindImplementationForInterfaceMember(after);
-            return SymbolEqualityComparer.Default.Equals(implementation?.OriginalDefinition, current.OriginalDefinition);
-        }
-
-        for (var overridden = Overridden(current); overridden is not null; overridden = Overridden(overridden))
-        {
-            if (SymbolEqualityComparer.Default.Equals(overridden.OriginalDefinition, after))
-                return true;
-        }
-
-        return false;
-    }
-
-    private static ISymbol? Overridden(ISymbol symbol) => symbol switch
-    {
-        IMethodSymbol method => method.OverriddenMethod,
-        IPropertySymbol property => property.OverriddenProperty,
-        IEventSymbol @event => @event.OverriddenEvent,
-        _ => null,
-    };
 }

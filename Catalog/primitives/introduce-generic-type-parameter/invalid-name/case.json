@@ -1,0 +1,8 @@
+{
+  "refactoring": "introduce-generic-type-parameter",
+  "description": "Refuses a name that is not an identifier",
+  "target": { "symbol": "T:Shop.Box" },
+  "arguments": { "type": "Invoice", "name": "T-Item" },
+  "expect": "error",
+  "errorCode": "invalid-name"
+}

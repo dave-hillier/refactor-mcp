@@ -1,0 +1,9 @@
+{
+  "refactoring": "introduce-generic-type-parameter",
+  "description": "Refuses when the old type is sealed and no interface it implements offers the members used",
+  "target": { "symbol": "T:Shop.Box" },
+  "arguments": { "type": "Invoice", "name": "T" },
+  "expect": "error",
+  "errorCode": "no-valid-constraint",
+  "errorContains": "Invoice"
+}

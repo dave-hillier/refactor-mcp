@@ -1,0 +1,7 @@
+{
+  "refactoring": "introduce-generic-type-parameter",
+  "description": "Keeps nullable annotations, now on the type parameter",
+  "project": { "nullable": "enable" },
+  "target": { "symbol": "T:Shop.Box" },
+  "arguments": { "type": "Invoice", "name": "T" }
+}

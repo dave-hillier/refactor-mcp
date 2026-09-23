@@ -355,6 +355,78 @@ internal static class TypeRefactoringHelpers
         return errors;
     }
 
+    /// <summary>
+    /// A use whose meaning depends on a type about to change, marked so it can
+    /// be found in the changed solution, and the member it bound to before.
+    /// </summary>
+    internal sealed record Binding(DocumentId Document, SyntaxNode Node, SyntaxAnnotation Mark, ISymbol Bound);
+
+    /// <summary>
+    /// The first use that reaches a different member in <paramref name="changed"/>
+    /// than it did before, with what it reaches now; null when every use
+    /// reaches the same code.
+    /// </summary>
+    internal static async Task<(Binding Binding, SyntaxNode Node, ISymbol? Now)?> FirstChangedBindingAsync(
+        Solution changed,
+        IEnumerable<Binding> bindings,
+        CancellationToken cancellationToken)
+    {
+        foreach (var binding in bindings)
+        {
+            var document = changed.GetDocument(binding.Document)!;
+            var root = (await document.GetSyntaxRootAsync(cancellationToken))!;
+            var model = (await document.GetSemanticModelAsync(cancellationToken))!;
+            var node = root.GetAnnotatedNodes(binding.Mark).Single();
+            var now = model.GetSymbolInfo(node, cancellationToken).Symbol;
+            if (now is null || !ReachesSameMember(Definition(binding.Bound), Definition(now), model.Compilation))
+                return (binding, node, now);
+        }
+
+        return null;
+    }
+
+    internal static ISymbol Definition(ISymbol symbol) =>
+        ((symbol as IMethodSymbol)?.ReducedFrom ?? symbol).OriginalDefinition;
+
+    /// <summary>
+    /// Whether <paramref name="after"/> reaches <paramref name="before"/> at
+    /// run time: the same member, one it overrides, or an interface member it
+    /// implements. <paramref name="compilation"/> is the one
+    /// <paramref name="after"/> belongs to.
+    /// </summary>
+    internal static bool ReachesSameMember(ISymbol before, ISymbol after, Compilation compilation)
+    {
+        var beforeId = DocumentationCommentId.CreateDeclarationId(before);
+        if (beforeId == DocumentationCommentId.CreateDeclarationId(after))
+            return true;
+
+        var current = DocumentationCommentId.GetFirstSymbolForDeclarationId(beforeId, compilation);
+        if (current is null)
+            return false;
+
+        if (after.ContainingType?.TypeKind == TypeKind.Interface)
+        {
+            var implementation = current.ContainingType.FindImplementationForInterfaceMember(after);
+            return SymbolEqualityComparer.Default.Equals(implementation?.OriginalDefinition, current.OriginalDefinition);
+        }
+
+        for (var overridden = Overridden(current); overridden is not null; overridden = Overridden(overridden))
+        {
+            if (SymbolEqualityComparer.Default.Equals(overridden.OriginalDefinition, after))
+                return true;
+        }
+
+        return false;
+    }
+
+    private static ISymbol? Overridden(ISymbol symbol) => symbol switch
+    {
+        IMethodSymbol method => method.OverriddenMethod,
+        IPropertySymbol property => property.OverriddenProperty,
+        IEventSymbol @event => @event.OverriddenEvent,
+        _ => null,
+    };
+
     internal static string Describe(IEnumerable<Diagnostic> diagnostics) =>
         string.Join("; ", diagnostics.Take(3).Select(d =>
             $"{Path.GetFileName(d.Location.SourceTree?.FilePath)}({d.Location.GetLineSpan().StartLinePosition.Line + 1}): {d.GetMessage()}"));

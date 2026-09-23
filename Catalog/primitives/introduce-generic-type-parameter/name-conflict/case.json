@@ -1,0 +1,9 @@
+{
+  "refactoring": "introduce-generic-type-parameter",
+  "description": "Refuses a type parameter name the class already uses",
+  "target": { "symbol": "T:Shop.Index`1" },
+  "arguments": { "type": "Invoice", "name": "TKey" },
+  "expect": "error",
+  "errorCode": "name-conflict",
+  "errorContains": "TKey"
+}

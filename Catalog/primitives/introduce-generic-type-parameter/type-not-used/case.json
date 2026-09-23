@@ -1,0 +1,9 @@
+{
+  "refactoring": "introduce-generic-type-parameter",
+  "description": "Refuses a type the class does not use",
+  "target": { "symbol": "T:Shop.Box" },
+  "arguments": { "type": "Receipt", "name": "T" },
+  "expect": "error",
+  "errorCode": "type-not-used",
+  "errorContains": "Receipt"
+}

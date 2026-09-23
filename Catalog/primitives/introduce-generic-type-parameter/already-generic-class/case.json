@@ -1,0 +1,6 @@
+{
+  "refactoring": "introduce-generic-type-parameter",
+  "description": "Adds a second type parameter to a generic class and to every use of it",
+  "target": { "symbol": "T:Shop.Index`1" },
+  "arguments": { "type": "Invoice", "name": "TValue" }
+}

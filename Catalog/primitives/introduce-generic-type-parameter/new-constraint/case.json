@@ -1,0 +1,6 @@
+{
+  "refactoring": "introduce-generic-type-parameter",
+  "description": "Adds a new() constraint when the class creates instances of the old type",
+  "target": { "symbol": "T:Shop.Factory" },
+  "arguments": { "type": "Invoice", "name": "T" }
+}
