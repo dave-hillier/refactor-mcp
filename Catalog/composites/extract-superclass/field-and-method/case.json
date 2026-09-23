@@ -1,0 +1,6 @@
+{
+  "refactoring": "extract-superclass",
+  "description": "Creates an Employee base class for Manager and pulls the name and badge up into it in one call, with the same result as the recipe",
+  "target": { "symbol": "T:Staff.Manager" },
+  "arguments": { "name": "Employee", "members": ["Badge", "_name"], "file": "Employee.cs" }
+}

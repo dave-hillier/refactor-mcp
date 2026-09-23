@@ -1,0 +1,9 @@
+{
+  "refactoring": "extract-superclass",
+  "description": "A named member does not exist in the class",
+  "target": { "symbol": "T:Staff.Manager" },
+  "arguments": { "name": "Employee", "members": ["_name", "Salary"] },
+  "expect": "error",
+  "errorCode": "member-not-found",
+  "errorContains": "Salary"
+}

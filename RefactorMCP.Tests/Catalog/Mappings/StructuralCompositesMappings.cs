@@ -42,6 +42,33 @@ internal sealed class StructuralCompositesMappings : ICatalogMappings
                 ("polymorphic-method", "callers rely on dispatch through the instance"),
                 ("uses-protected-member", "uses the protected member"),
                 ("via-not-accessible", "is not accessible where"))),
+
+        new CatalogMapping(
+            "extract-superclass",
+            "extract-superclass",
+            async context =>
+            {
+                var location = await context.SymbolLocationAsync();
+                var arguments = new Dictionary<string, JsonElement>
+                {
+                    ["solutionPath"] = Json(context.SolutionPath),
+                    ["filePath"] = Json(location.FilePath),
+                    ["className"] = Json(location.Symbol.Name),
+                    ["superclassName"] = context.RequiredArgument("name"),
+                };
+                CopyOptional(context, arguments, "members", "memberNames");
+                if (context.HasArgument("file"))
+                    arguments["targetFilePath"] = Json(context.WorkspacePath(context.RequiredString("file")));
+                return arguments;
+            },
+            Codes(
+                ("not-a-class", "cannot be given a superclass"),
+                ("member-not-found", "has no member named"),
+                ("member-not-movable", "cannot be pulled up"),
+                ("type-already-exists", "already exists"),
+                ("uses-subclass-members", "which only"),
+                ("member-exists-in-base", "already has a member named"),
+                ("breaks-compilation", "would break the build"))),
     };
 
     private static void CopyOptional(

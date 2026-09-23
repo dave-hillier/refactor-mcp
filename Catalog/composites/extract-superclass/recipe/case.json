@@ -1,0 +1,10 @@
+{
+  "refactoring": "extract-superclass",
+  "description": "Creates an Employee base class for Manager and pulls the name and badge up into it, as the recipe of primitive steps",
+  "steps": [
+    { "refactoring": "create-type", "arguments": { "name": "Employee", "file": "Employee.cs" } },
+    { "refactoring": "change-base-type", "target": { "symbol": "T:Staff.Manager" }, "arguments": { "to": "Employee" } },
+    { "refactoring": "pull-up-field", "target": { "symbol": "F:Staff.Manager._name" } },
+    { "refactoring": "pull-up-method", "target": { "symbol": "M:Staff.Manager.Badge" } }
+  ]
+}
