@@ -1,0 +1,7 @@
+{
+  "refactoring": "inline-method",
+  "description": "Refuses an auto-property, whose value is stored rather than computed",
+  "target": { "symbol": "P:Shop.Order.Id" },
+  "expect": "error",
+  "errorCode": "auto-property"
+}

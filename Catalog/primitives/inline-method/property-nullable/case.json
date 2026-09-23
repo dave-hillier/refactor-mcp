@@ -1,0 +1,6 @@
+{
+  "refactoring": "inline-method",
+  "description": "With nullable annotations, the inlined getter keeps its null handling at the read",
+  "project": { "nullable": "enable" },
+  "target": { "symbol": "P:People.Person.Display" }
+}

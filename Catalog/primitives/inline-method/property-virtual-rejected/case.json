@@ -1,0 +1,7 @@
+{
+  "refactoring": "inline-method",
+  "description": "Refuses a virtual property, whose reads may run an override",
+  "target": { "symbol": "P:Shop.Order.Total" },
+  "expect": "error",
+  "errorCode": "polymorphic-method"
+}

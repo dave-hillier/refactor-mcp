@@ -1,0 +1,8 @@
+{
+  "refactoring": "inline-method",
+  "description": "Refuses a property whose getter reads a private field that a read in another class cannot access",
+  "target": { "symbol": "P:Shop.Cart.Count" },
+  "expect": "error",
+  "errorCode": "inaccessible-member",
+  "errorContains": "_items"
+}

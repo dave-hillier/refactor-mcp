@@ -1,0 +1,5 @@
+{
+  "refactoring": "inline-method",
+  "description": "A getter with a block body returning one expression is inlined, and its comments above the property go with it",
+  "target": { "symbol": "P:Shop.Cart.IsEmpty" }
+}

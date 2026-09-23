@@ -1,0 +1,8 @@
+{
+  "refactoring": "remove-middle-man",
+  "description": "The recipe for properties: Inline Method on each property that only delegates, which rewrites its reads, including through ?., and deletes it",
+  "steps": [
+    { "refactoring": "inline-method", "target": { "symbol": "P:Company.Person.Manager" } },
+    { "refactoring": "inline-method", "target": { "symbol": "P:Company.Person.Code" } }
+  ]
+}
