@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-linq-to-foreach",
+  "description": "A query over a sequence of a type parameter fills a list of that type",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  }
+}

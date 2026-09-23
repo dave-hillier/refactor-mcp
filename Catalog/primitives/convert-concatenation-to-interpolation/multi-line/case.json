@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-concatenation-to-interpolation",
+  "description": "A concatenation split over several lines becomes one line, keeping the statement's comments",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  }
+}

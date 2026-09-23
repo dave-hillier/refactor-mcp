@@ -1,0 +1,10 @@
+{
+  "refactoring": "convert-foreach-to-linq",
+  "description": "Refuses a body whose condition reads the accumulator",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  },
+  "expect": "error",
+  "errorCode": "accumulator-used-in-body"
+}

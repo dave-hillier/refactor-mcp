@@ -1,0 +1,10 @@
+{
+  "refactoring": "convert-foreach-to-for",
+  "description": "Refuses a caret that is not in a foreach loop",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  },
+  "expect": "error",
+  "errorCode": "not-a-foreach-loop"
+}

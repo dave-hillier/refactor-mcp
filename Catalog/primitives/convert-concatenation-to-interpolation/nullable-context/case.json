@@ -1,0 +1,11 @@
+{
+  "refactoring": "convert-concatenation-to-interpolation",
+  "description": "In a nullable context a nullable operand is interpolated as it was concatenated",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  },
+  "project": {
+    "nullable": "enable"
+  }
+}

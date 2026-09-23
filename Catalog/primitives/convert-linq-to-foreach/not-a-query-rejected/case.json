@@ -1,0 +1,10 @@
+{
+  "refactoring": "convert-linq-to-foreach",
+  "description": "Refuses a statement that is not a LINQ query",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  },
+  "expect": "error",
+  "errorCode": "not-a-query"
+}

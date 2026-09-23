@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-foreach-to-linq",
+  "description": "A loop over a sequence of a type parameter becomes a query of that type",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  }
+}

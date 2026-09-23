@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-foreach-to-linq",
+  "description": "A local computed from the element becomes a Select, and the rest of the query uses its name",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  }
+}

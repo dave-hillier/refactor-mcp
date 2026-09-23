@@ -1,0 +1,10 @@
+{
+  "refactoring": "convert-foreach-to-linq",
+  "description": "Refuses a non-generic collection, which LINQ does not query without a cast",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  },
+  "expect": "error",
+  "errorCode": "not-queryable"
+}

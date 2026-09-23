@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-concatenation-to-interpolation",
+  "description": "A number is interpolated as concatenation would format it",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  }
+}

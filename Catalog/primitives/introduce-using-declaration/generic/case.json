@@ -1,0 +1,8 @@
+{
+  "refactoring": "introduce-using-declaration",
+  "description": "A resource of a generic type is declared with the type as written",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  }
+}

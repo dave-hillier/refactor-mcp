@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-linq-to-foreach",
+  "description": "A list in a file without System.Collections.Generic adds the using",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  }
+}

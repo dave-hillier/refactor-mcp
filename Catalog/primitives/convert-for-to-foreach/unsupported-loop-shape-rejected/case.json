@@ -1,0 +1,10 @@
+{
+  "refactoring": "convert-for-to-foreach",
+  "description": "Refuses a loop that does not start at the first element",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  },
+  "expect": "error",
+  "errorCode": "unsupported-loop-shape"
+}

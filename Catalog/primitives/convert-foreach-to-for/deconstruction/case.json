@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-foreach-to-for",
+  "description": "A deconstructing foreach deconstructs the element at the index",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "refactoring": "introduce-using-declaration",
+  "description": "Refuses a using directly in a switch section, where a using declaration is not allowed",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  },
+  "expect": "error",
+  "errorCode": "in-switch-section"
+}

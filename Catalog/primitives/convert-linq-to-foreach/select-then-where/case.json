@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-linq-to-foreach",
+  "description": "A Select followed by more operators becomes a local named by the next lambda's parameter",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  }
+}

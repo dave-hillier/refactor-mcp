@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-foreach-to-linq",
+  "description": "Adding the element itself needs no Select, an explicitly typed list keeps its type, and an existing using is not repeated",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  }
+}

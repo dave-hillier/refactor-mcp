@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-foreach-to-linq",
+  "description": "A total that does not start at zero right before the loop is added to, and summing the elements themselves needs no selector",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  }
+}

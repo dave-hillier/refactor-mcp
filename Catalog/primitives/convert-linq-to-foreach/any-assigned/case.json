@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-linq-to-foreach",
+  "description": "Any assigned to a local becomes a flag set on the first match before breaking out",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "refactoring": "convert-linq-to-foreach",
+  "description": "Refuses a query used inside a larger expression",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  },
+  "expect": "error",
+  "errorCode": "unsupported-statement"
+}

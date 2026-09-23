@@ -1,0 +1,10 @@
+{
+  "refactoring": "convert-concatenation-to-interpolation",
+  "description": "Refuses an addition that does not produce a string",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  },
+  "expect": "error",
+  "errorCode": "not-a-concatenation"
+}

@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-foreach-to-linq",
+  "description": "A loop that returns true on the first match, followed by return false, becomes a return of Any",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  }
+}

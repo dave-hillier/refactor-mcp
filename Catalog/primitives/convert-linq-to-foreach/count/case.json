@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-linq-to-foreach",
+  "description": "Count with a predicate becomes a counter incremented for each match",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  }
+}

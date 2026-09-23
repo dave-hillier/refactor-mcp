@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-concatenation-to-interpolation",
+  "description": "A parenthesised numeric addition is interpolated without its parentheses",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  }
+}

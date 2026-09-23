@@ -1,0 +1,11 @@
+{
+  "refactoring": "convert-for-to-foreach",
+  "description": "The element variable takes the given name",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  },
+  "arguments": {
+    "name": "price"
+  }
+}
