@@ -1,0 +1,6 @@
+{
+  "refactoring": "replace-type-code-with-enum",
+  "description": "Retargets qualified references in another namespace and retypes the local, auto-property and overload the codes flow into",
+  "target": { "symbol": "T:Staff.Employee" },
+  "arguments": { "name": "EmployeeType", "constants": ["Engineer", "Manager"] }
+}
