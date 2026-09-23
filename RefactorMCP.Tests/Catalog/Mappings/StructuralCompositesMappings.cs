@@ -160,6 +160,38 @@ internal sealed class StructuralCompositesMappings : ICatalogMappings
                 ("uses-protected-member", "uses the protected member"),
                 ("via-not-accessible", "is not accessible where"),
                 ("member-exists", "already has a"))),
+
+        new CatalogMapping(
+            "replace-method-with-method-object",
+            "replace-method-with-method-object",
+            async context =>
+            {
+                var location = await context.SymbolLocationAsync();
+                var arguments = new Dictionary<string, JsonElement>
+                {
+                    ["solutionPath"] = Json(context.SolutionPath),
+                    ["filePath"] = Json(location.FilePath),
+                    ["methodName"] = Json(location.Symbol.Name),
+                    ["line"] = Json(location.Line),
+                    ["className"] = context.RequiredArgument("name"),
+                };
+                CopyOptional(context, arguments, "method", "computeMethodName");
+                if (context.HasArgument("file"))
+                    arguments["targetFilePath"] = Json(context.WorkspacePath(context.RequiredString("file")));
+                return arguments;
+            },
+            Codes(
+                ("type-already-exists", "already exists"),
+                ("partial-method", "is a partial method"),
+                ("method-type-parameter", "has type parameters"),
+                ("generic-type", "is generic"),
+                ("not-a-class", "would work on a copy of it"),
+                ("by-reference-parameter", "is passed by reference"),
+                ("uses-base", "calls through base"),
+                ("uses-protected-member", "uses the protected member"),
+                ("repeated-local-name", "more than once"),
+                ("name-conflict", "which would hide a field"),
+                ("instance-parameter-conflict", "which the constructor needs for the instance"))),
     };
 
     private static void CopyOptional(

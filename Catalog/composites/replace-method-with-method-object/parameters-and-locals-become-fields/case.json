@@ -1,0 +1,6 @@
+{
+  "refactoring": "replace-method-with-method-object",
+  "description": "Price creates a PriceCalculation for each call, holding the order and the parameters in readonly fields and the locals in fields, and returns what its Compute method works out",
+  "target": { "symbol": "M:Shop.Order.Price(System.Int32,System.Decimal)" },
+  "arguments": { "name": "PriceCalculation" }
+}

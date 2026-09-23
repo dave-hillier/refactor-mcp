@@ -1,0 +1,8 @@
+{
+  "refactoring": "replace-method-with-method-object",
+  "description": "The method already has a parameter named order, the name the constructor would give the instance",
+  "target": { "symbol": "M:Shop.Order.Difference(Shop.Order)" },
+  "arguments": { "name": "Comparison" },
+  "expect": "error",
+  "errorCode": "instance-parameter-conflict"
+}

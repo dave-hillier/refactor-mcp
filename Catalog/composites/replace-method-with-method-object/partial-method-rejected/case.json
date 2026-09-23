@@ -1,0 +1,8 @@
+{
+  "refactoring": "replace-method-with-method-object",
+  "description": "A partial method is declared in two places, so it is refused rather than choosing a part",
+  "target": { "symbol": "M:Shop.Order.Weigh(System.Int32)" },
+  "arguments": { "name": "Weighing" },
+  "expect": "error",
+  "errorCode": "partial-method"
+}
