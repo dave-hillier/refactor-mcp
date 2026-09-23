@@ -1,0 +1,8 @@
+{
+  "refactoring": "introduce-interface-for-dependency",
+  "description": "The dependency's class comes from a library, so no interface can be extracted from it",
+  "target": { "symbol": "F:Shop.Report._writer" },
+  "arguments": { "name": "IWriter" },
+  "expect": "error",
+  "errorCode": "type-not-in-source"
+}

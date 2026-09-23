@@ -1,0 +1,9 @@
+{
+  "refactoring": "introduce-interface-for-dependency",
+  "description": "Extracts IWriter from FileWriter and declares the report's writer field and constructor parameter as IWriter, as the recipe of primitive steps",
+  "steps": [
+    { "refactoring": "extract-interface", "target": { "symbol": "T:Shop.FileWriter" }, "arguments": { "name": "IWriter", "members": ["Write"] } },
+    { "refactoring": "change-type", "target": { "symbol": "F:Shop.Report._writer" }, "arguments": { "to": "IWriter" } },
+    { "refactoring": "change-type", "target": { "symbol": "M:Shop.Report.#ctor(Shop.FileWriter)" }, "arguments": { "parameter": "writer", "to": "IWriter" } }
+  ]
+}

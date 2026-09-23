@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
 using static RefactorMCP.Tests.Catalog.CatalogMapping;
 
 namespace RefactorMCP.Tests.Catalog.Mappings;
@@ -69,6 +70,36 @@ internal sealed class StructuralCompositesMappings : ICatalogMappings
                 ("uses-subclass-members", "which only"),
                 ("member-exists-in-base", "already has a member named"),
                 ("breaks-compilation", "would break the build"))),
+
+        new CatalogMapping(
+            "introduce-interface-for-dependency",
+            "introduce-interface-for-dependency",
+            async context =>
+            {
+                var location = await context.SymbolLocationAsync();
+                var arguments = new Dictionary<string, JsonElement>
+                {
+                    ["solutionPath"] = Json(context.SolutionPath),
+                    ["filePath"] = Json(location.FilePath),
+                    ["name"] = Json(location.Symbol is IMethodSymbol { MethodKind: MethodKind.Constructor }
+                        ? location.Symbol.ContainingType.Name
+                        : location.Symbol.Name),
+                    ["line"] = Json(location.Line),
+                    ["interfaceName"] = context.RequiredArgument("name"),
+                };
+                CopyOptional(context, arguments, "parameter", "parameterName");
+                CopyOptional(context, arguments, "members", "memberNames");
+                if (context.HasArgument("file"))
+                    arguments["interfaceFilePath"] = Json(context.WorkspacePath(context.RequiredString("file")));
+                return arguments;
+            },
+            Codes(
+                ("type-not-in-source", "is not a class declared in the solution"),
+                ("parameter-not-found", "has no parameter named"),
+                ("member-not-found", "No member named"),
+                ("type-already-exists", "already exists"),
+                ("incompatible-use", "breaks code that uses it"),
+                ("changes-overload", "would change which member"))),
     };
 
     private static void CopyOptional(
