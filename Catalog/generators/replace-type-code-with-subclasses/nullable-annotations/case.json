@@ -1,0 +1,6 @@
+{
+  "refactoring": "replace-type-code-with-subclasses",
+  "description": "Keeps the nullable annotations of the parameters the subclasses and factory pass on",
+  "project": { "nullable": "enable" },
+  "target": { "symbol": "F:Bank.Account._kind" }
+}

@@ -1,0 +1,5 @@
+{
+  "refactoring": "replace-type-code-with-subclasses",
+  "description": "Makes the class abstract with a sealed subclass per enum member, an abstract property in place of the field and a factory taking the code",
+  "target": { "symbol": "F:Staff.Employee._type" }
+}

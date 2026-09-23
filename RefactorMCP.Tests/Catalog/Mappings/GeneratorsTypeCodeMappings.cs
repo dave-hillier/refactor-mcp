@@ -33,6 +33,27 @@ internal sealed class GeneratorsTypeCodeMappings : ICatalogMappings
                 ("not-a-type-code", "is not an int or string constant"),
                 ("type-already-exists", "already exists"),
                 ("breaks-compilation", "would not compile"))),
+
+        new CatalogMapping(
+            "replace-type-code-with-subclasses",
+            "replace-type-code-with-subclasses",
+            async context =>
+            {
+                var location = await context.SymbolLocationAsync();
+                return new Dictionary<string, JsonElement>
+                {
+                    ["solutionPath"] = Json(context.SolutionPath),
+                    ["filePath"] = Json(location.FilePath),
+                    ["fieldName"] = Json(location.Symbol.Name),
+                };
+            },
+            Codes(
+                ("not-an-enum", "not an enum"),
+                ("class-sealed", "is not a class that can have subclasses"),
+                ("type-already-exists", "already exists"),
+                ("code-changes", "changes after construction"),
+                ("unsupported-constructor", "must have one constructor that assigns"),
+                ("breaks-compilation", "would not compile"))),
     };
 
     private static IReadOnlyDictionary<string, string> Codes(params (string Code, string Fragment)[] codes) =>

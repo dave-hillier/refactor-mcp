@@ -1,0 +1,8 @@
+{
+  "refactoring": "replace-type-code-with-subclasses",
+  "description": "Refuses a code that changes after construction, which an object's class cannot",
+  "target": { "symbol": "F:Staff.Employee._type" },
+  "expect": "error",
+  "errorCode": "code-changes",
+  "errorContains": "Promote"
+}

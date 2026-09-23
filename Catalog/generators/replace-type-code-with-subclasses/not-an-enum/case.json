@@ -1,0 +1,7 @@
+{
+  "refactoring": "replace-type-code-with-subclasses",
+  "description": "Refuses an int code, which Replace Type Code with Enum turns into an enum first",
+  "target": { "symbol": "F:Staff.Employee._type" },
+  "expect": "error",
+  "errorCode": "not-an-enum"
+}
