@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-anonymous-type-to-class",
+  "description": "Keeps nullable annotations on the properties and annotates Equals when nullable annotations are enabled",
+  "target": { "file": "Contacts.cs", "caret": "marker" },
+  "arguments": { "name": "Contact" },
+  "project": { "nullable": "enable" }
+}

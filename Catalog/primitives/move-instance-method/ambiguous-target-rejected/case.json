@@ -1,0 +1,8 @@
+{
+  "refactoring": "move-instance-method",
+  "description": "Refuses a target type reachable through two fields; via names the one to use",
+  "target": { "symbol": "M:Shop.Customer.Towns" },
+  "arguments": { "to": "Address" },
+  "expect": "error",
+  "errorCode": "ambiguous-target"
+}

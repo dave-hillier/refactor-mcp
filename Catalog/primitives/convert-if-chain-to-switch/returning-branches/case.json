@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-if-chain-to-switch",
+  "description": "Branches that return need no break, and constants on either side of == are recognised",
+  "target": { "file": "Grade.cs", "caret": "marker" }
+}

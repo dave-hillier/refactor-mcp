@@ -1,0 +1,5 @@
+{
+  "refactoring": "merge-nested-if",
+  "description": "Nested ifs without braces merge, keeping the embedded statement",
+  "target": { "file": "Log.cs", "caret": "marker" }
+}

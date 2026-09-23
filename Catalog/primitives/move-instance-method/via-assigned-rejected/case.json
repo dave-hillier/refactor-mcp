@@ -1,0 +1,8 @@
+{
+  "refactoring": "move-instance-method",
+  "description": "Refuses a method that assigns the field it would move through",
+  "target": { "symbol": "M:Shop.Customer.Reset" },
+  "arguments": { "via": "_address" },
+  "expect": "error",
+  "errorCode": "via-assigned"
+}

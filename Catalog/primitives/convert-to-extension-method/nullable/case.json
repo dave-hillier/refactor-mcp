@@ -1,0 +1,6 @@
+{
+  "refactoring": "convert-to-extension-method",
+  "description": "Nullable annotations on the first parameter are kept, and a null argument keeps the static call",
+  "target": { "symbol": "M:Shop.Text.OrEmpty(System.String)" },
+  "project": { "nullable": "enable" }
+}

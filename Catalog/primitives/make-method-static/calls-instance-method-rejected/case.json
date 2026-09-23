@@ -1,0 +1,8 @@
+{
+  "refactoring": "make-method-static",
+  "description": "Refuses to pass members as parameters when the method calls an instance method, which needs the instance itself",
+  "target": { "symbol": "M:Shop.Order.Report" },
+  "arguments": { "pass": "parameters" },
+  "expect": "error",
+  "errorCode": "uses-instance"
+}

@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-extension-method-to-static",
+  "description": "A generic extension method keeps its explicit type arguments at call sites",
+  "target": { "symbol": "M:Shop.Sequences.FirstOr``1(System.Collections.Generic.IEnumerable{``0},``0)" }
+}

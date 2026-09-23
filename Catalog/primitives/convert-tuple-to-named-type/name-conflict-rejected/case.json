@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-tuple-to-named-type",
+  "description": "Refuses a type name that is already taken",
+  "target": { "symbol": "M:Shop.Stats.Range(System.Int32[])" },
+  "arguments": { "name": "Range" },
+  "expect": "error",
+  "errorCode": "name-conflict"
+}

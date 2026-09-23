@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-anonymous-type-to-class",
+  "description": "Refuses a class name that is already taken where the class would be declared",
+  "target": { "file": "Report.cs", "caret": "marker" },
+  "arguments": { "name": "Line" },
+  "expect": "error",
+  "errorCode": "name-conflict"
+}

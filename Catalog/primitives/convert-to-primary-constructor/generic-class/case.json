@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-to-primary-constructor",
+  "description": "Puts the parameters of a generic class after its type parameters and before its constraint",
+  "target": { "symbol": "T:Shop.Shelf`1" }
+}

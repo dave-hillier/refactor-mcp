@@ -1,0 +1,8 @@
+{
+  "refactoring": "replace-constructor-with-factory-method",
+  "description": "Refuses an accessibility that is not a C# accessibility",
+  "target": { "symbol": "M:Shop.Order.#ctor(System.String)" },
+  "arguments": { "accessibility": "hidden" },
+  "expect": "error",
+  "errorCode": "invalid-accessibility"
+}

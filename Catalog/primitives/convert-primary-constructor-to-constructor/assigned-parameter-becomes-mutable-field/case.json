@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-primary-constructor-to-constructor",
+  "description": "Keeps a field writable when the members assign the captured parameter",
+  "target": { "symbol": "T:Shop.Counter" }
+}

@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-extension-method-to-static",
+  "description": "Drops this from an extension method, and extension calls in other files become static calls on its class",
+  "target": { "symbol": "M:Shop.Text.Shout(System.String)" }
+}

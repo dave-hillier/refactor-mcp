@@ -1,0 +1,7 @@
+{
+  "refactoring": "rename-file-to-match-type",
+  "description": "Refuses when the file is already named after its type",
+  "target": { "file": "Order.cs" },
+  "expect": "error",
+  "errorCode": "name-already-matches"
+}

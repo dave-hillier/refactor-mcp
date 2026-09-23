@@ -1,0 +1,7 @@
+{
+  "refactoring": "use-pattern-matching",
+  "description": "Refuses a value assigned in the branch, after which a cast would see the new value",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "variable-assigned"
+}

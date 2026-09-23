@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-if-chain-to-switch",
+  "description": "Refuses an if that is not part of a chain",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "too-few-cases"
+}

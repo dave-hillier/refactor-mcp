@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-record-to-class",
+  "description": "Keeps the ToString and typed Equals the record declares itself, generating only the members it did not",
+  "target": { "symbol": "T:Shop.Sku" }
+}

@@ -1,0 +1,6 @@
+{
+  "refactoring": "move-type-to-namespace",
+  "description": "The moved type imports its old namespace for the types it uses from there, and a file that imported the old namespace only for the moved type imports the new one instead",
+  "target": { "symbol": "T:Shop.Billing.Invoice" },
+  "arguments": { "namespace": "Shop.Accounts" }
+}

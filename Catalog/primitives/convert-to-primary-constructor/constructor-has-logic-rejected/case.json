@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-to-primary-constructor",
+  "description": "Refuses a constructor that validates its argument as well as assigning it",
+  "target": { "symbol": "T:Shop.Money" },
+  "expect": "error",
+  "errorCode": "constructor-has-logic"
+}

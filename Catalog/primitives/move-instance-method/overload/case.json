@@ -1,0 +1,6 @@
+{
+  "refactoring": "move-instance-method",
+  "description": "Only the chosen overload moves; the other stays and still calls through the stub",
+  "target": { "symbol": "M:Shop.Customer.Label(System.String)" },
+  "arguments": { "via": "_address" }
+}

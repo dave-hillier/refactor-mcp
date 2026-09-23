@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-if-chain-to-switch",
+  "description": "Refuses a branch with a break, which would leave the switch instead of the loop",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "contains-break"
+}

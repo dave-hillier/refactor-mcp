@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-switch-expression-to-statement",
+  "description": "A local initialised by a switch expression is declared with its type first, and when clauses are kept",
+  "target": { "file": "Shapes.cs", "caret": "marker" }
+}

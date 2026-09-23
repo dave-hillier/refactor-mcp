@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-to-primary-constructor",
+  "description": "Keeps a field that another instance's member reads, initializing it from the parameter, and keeps a commented field too",
+  "target": { "symbol": "T:Shop.Money" }
+}

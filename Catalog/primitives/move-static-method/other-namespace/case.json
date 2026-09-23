@@ -1,0 +1,6 @@
+{
+  "refactoring": "move-static-method",
+  "description": "Moving to a class in another namespace imports what the method needs there, and callers import the new namespace",
+  "target": { "symbol": "M:Shop.Order.Largest(System.Collections.Generic.IEnumerable{Shop.Order})" },
+  "arguments": { "to": "OrderQueries", "stub": false }
+}

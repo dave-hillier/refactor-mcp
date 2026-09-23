@@ -1,0 +1,5 @@
+{
+  "refactoring": "rename-file-to-match-type",
+  "description": "Nested types do not count; the file is named after its single top-level type",
+  "target": { "file": "Orders.cs" }
+}

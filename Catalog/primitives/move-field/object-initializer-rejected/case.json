@@ -1,0 +1,8 @@
+{
+  "refactoring": "move-field",
+  "description": "Refuses while an object initializer sets the field, which cannot set it through another member",
+  "target": { "symbol": "F:Shop.Customer.Postcode" },
+  "arguments": { "via": "Address" },
+  "expect": "error",
+  "errorCode": "object-initializer"
+}

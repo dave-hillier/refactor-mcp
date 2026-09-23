@@ -1,0 +1,7 @@
+namespace Shop;
+
+// Issued once an order ships.
+public class Invoice
+{
+    public decimal Amount { get; set; }
+}

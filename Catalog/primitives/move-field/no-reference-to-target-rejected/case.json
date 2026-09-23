@@ -1,0 +1,8 @@
+{
+  "refactoring": "move-field",
+  "description": "Refuses an instance field when no field or property of the target type leads to it",
+  "target": { "symbol": "F:Shop.Customer._street" },
+  "arguments": { "to": "Address" },
+  "expect": "error",
+  "errorCode": "no-reference-to-target"
+}

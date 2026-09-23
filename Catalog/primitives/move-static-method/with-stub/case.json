@@ -1,0 +1,6 @@
+{
+  "refactoring": "move-static-method",
+  "description": "Moves a static method to another class, qualifying what it used from its old class, and leaves a delegating stub",
+  "target": { "symbol": "M:Shop.Order.Vat(System.Decimal)" },
+  "arguments": { "to": "TaxRules" }
+}

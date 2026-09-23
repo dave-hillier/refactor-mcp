@@ -1,0 +1,8 @@
+{
+  "refactoring": "move-field",
+  "description": "Refuses when code outside the class uses the field but cannot reach the private field it would go through",
+  "target": { "symbol": "F:Shop.Customer.Postcode" },
+  "arguments": { "via": "_address" },
+  "expect": "error",
+  "errorCode": "via-not-accessible"
+}

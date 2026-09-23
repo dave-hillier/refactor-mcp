@@ -1,0 +1,6 @@
+{
+  "refactoring": "move-property",
+  "description": "A computed property that reads the target's members moves and reads them directly",
+  "target": { "symbol": "P:Shop.Customer.Town" },
+  "arguments": { "via": "_address" }
+}

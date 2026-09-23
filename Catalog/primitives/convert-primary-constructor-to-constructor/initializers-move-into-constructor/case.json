@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-primary-constructor-to-constructor",
+  "description": "Moves a property initializer that reads a parameter into the constructor, after the field assignments, keeping the other initializer",
+  "target": { "symbol": "T:Shop.Customer" }
+}

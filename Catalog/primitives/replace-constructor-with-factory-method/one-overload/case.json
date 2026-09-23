@@ -1,0 +1,6 @@
+{
+  "refactoring": "replace-constructor-with-factory-method",
+  "description": "Replaces only the calls of the chosen overload; the other constructor, which chains to it, is untouched",
+  "target": { "symbol": "M:Shop.Money.#ctor(System.Decimal,System.String)" },
+  "arguments": { "name": "Of" }
+}

@@ -1,0 +1,7 @@
+{
+  "refactoring": "use-pattern-matching",
+  "description": "Refuses an as result used after the if, where the pattern variable would not be assigned",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "used-outside-if"
+}

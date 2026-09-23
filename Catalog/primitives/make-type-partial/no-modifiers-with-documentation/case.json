@@ -1,0 +1,5 @@
+{
+  "refactoring": "make-type-partial",
+  "description": "Adds partial to a class with no modifiers, after its documentation comment, attribute and comment",
+  "target": { "symbol": "T:Shop.Basket" }
+}

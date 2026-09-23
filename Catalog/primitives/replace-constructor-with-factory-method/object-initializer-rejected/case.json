@@ -1,0 +1,7 @@
+{
+  "refactoring": "replace-constructor-with-factory-method",
+  "description": "Refuses when a call sets properties with an object initializer, which a method call cannot carry",
+  "target": { "symbol": "M:Shop.Order.#ctor(System.String)" },
+  "expect": "error",
+  "errorCode": "object-initializer"
+}

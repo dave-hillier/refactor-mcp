@@ -1,0 +1,6 @@
+{
+  "refactoring": "move-field",
+  "description": "References in other files go through the via member too, which must be accessible there",
+  "target": { "symbol": "F:Shop.Customer.Postcode" },
+  "arguments": { "to": "Address" }
+}

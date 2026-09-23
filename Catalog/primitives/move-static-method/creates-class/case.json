@@ -1,0 +1,6 @@
+{
+  "refactoring": "move-static-method",
+  "description": "A target class that does not exist is created as a static class in a new file beside the source, in the same namespace",
+  "target": { "symbol": "M:Shop.Order.Vat(System.Decimal)" },
+  "arguments": { "to": "Pricing" }
+}

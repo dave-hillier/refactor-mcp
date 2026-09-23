@@ -1,0 +1,5 @@
+{
+  "refactoring": "sync-namespace-with-folder",
+  "description": "Sets the namespace of a file in a folder to the project's root namespace followed by the folder, and imports it where its types are used",
+  "target": { "file": "Billing/Invoice.cs" }
+}

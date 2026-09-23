@@ -1,0 +1,5 @@
+{
+  "refactoring": "use-pattern-matching",
+  "description": "An as conversion followed by a check that the result is not null becomes a declaration pattern",
+  "target": { "file": "Shapes.cs", "caret": "marker" }
+}

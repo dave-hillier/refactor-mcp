@@ -1,0 +1,7 @@
+{
+  "refactoring": "make-method-static",
+  "description": "Parameters made from nullable members keep their annotations",
+  "target": { "symbol": "M:Shop.Customer.Greeting" },
+  "arguments": { "pass": "parameters" },
+  "project": { "nullable": "enable" }
+}

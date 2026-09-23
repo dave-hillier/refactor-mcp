@@ -1,0 +1,8 @@
+{
+  "refactoring": "merge-partial-declarations",
+  "description": "Refuses when the other part's using directive would make a name in the receiving file ambiguous",
+  "target": { "symbol": "T:Shop.Invoice", "file": "Invoice.cs" },
+  "expect": "error",
+  "errorCode": "conflicting-imports",
+  "errorContains": "Rate"
+}

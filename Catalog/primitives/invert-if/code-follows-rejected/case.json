@@ -1,0 +1,7 @@
+{
+  "refactoring": "invert-if",
+  "description": "Refuses an if with no else whose branch can fall through to the code after it",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "code-follows"
+}

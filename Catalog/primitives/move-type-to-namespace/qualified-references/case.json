@@ -1,0 +1,6 @@
+{
+  "refactoring": "move-type-to-namespace",
+  "description": "Fully qualified references, a using alias and a using static are rewritten to the new namespace",
+  "target": { "symbol": "T:Shop.Billing.Tax" },
+  "arguments": { "namespace": "Shop.Accounts" }
+}

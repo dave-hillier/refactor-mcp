@@ -1,0 +1,7 @@
+{
+  "refactoring": "make-method-instance",
+  "description": "Refuses a method that is already an instance method",
+  "target": { "symbol": "M:Shop.Order.Describe" },
+  "expect": "error",
+  "errorCode": "not-static"
+}

@@ -1,0 +1,8 @@
+{
+  "refactoring": "use-pattern-matching",
+  "description": "Refuses a name already in use where the pattern would declare it",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "arguments": { "name": "other" },
+  "expect": "error",
+  "errorCode": "name-conflict"
+}

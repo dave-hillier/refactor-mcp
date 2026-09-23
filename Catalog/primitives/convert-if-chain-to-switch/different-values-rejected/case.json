@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-if-chain-to-switch",
+  "description": "Refuses a chain that does not compare the same value throughout",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "different-values"
+}
