@@ -1,0 +1,6 @@
+{
+  "refactoring": "preserve-whole-object",
+  "description": "Takes the object a caller in another file reads both values from, as the recipe does",
+  "target": { "symbol": "M:Heating.HeatingPlan.WithinRange(System.Int32,System.Int32)" },
+  "arguments": { "parameters": ["low", "high"], "parameterName": "range" }
+}

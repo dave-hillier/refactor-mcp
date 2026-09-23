@@ -1,0 +1,8 @@
+{
+  "refactoring": "introduce-parameter-object",
+  "description": "Refuses a record name already in use, undoing the signature change made before the record would be declared",
+  "target": { "symbol": "M:Bank.Account.TotalBetween(System.DateTime,System.DateTime)" },
+  "arguments": { "parameters": ["start", "end"], "typeName": "Entry", "parameterName": "range" },
+  "expect": "error",
+  "errorCode": "type-name-conflict"
+}

@@ -1,0 +1,21 @@
+{
+  "refactoring": "introduce-parameter-object",
+  "description": "Runs the recipe: Change Signature to take the parameters as one tuple, reading its elements in the body, then Convert Tuple to Named Type",
+  "steps": [
+    {
+      "refactoring": "change-signature",
+      "target": { "symbol": "M:Bank.Account.TotalBetween(System.DateTime,System.DateTime)" },
+      "arguments": {
+        "parameters": [
+          { "name": "range", "type": "(DateTime start, DateTime end)", "value": "(from, to)" }
+        ],
+        "replacements": { "start": "range.start", "end": "range.end" }
+      }
+    },
+    {
+      "refactoring": "convert-tuple-to-named-type",
+      "target": { "symbol": "M:Bank.Account.TotalBetween(System.ValueTuple{System.DateTime,System.DateTime})" },
+      "arguments": { "name": "DateRange", "parameter": "range" }
+    }
+  ]
+}

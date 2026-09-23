@@ -1,0 +1,9 @@
+{
+  "refactoring": "introduce-parameter-object",
+  "description": "Refuses to group an optional parameter, whose calls may leave it out",
+  "target": { "symbol": "M:Shop.Report.Print(System.Int32,System.Int32)" },
+  "arguments": { "parameters": ["low", "high"], "typeName": "Band", "parameterName": "band" },
+  "expect": "error",
+  "errorCode": "unsupported-parameter",
+  "errorContains": "'high'"
+}

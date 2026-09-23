@@ -1,0 +1,16 @@
+{
+  "refactoring": "preserve-whole-object",
+  "description": "Runs the recipe: Change Signature to take the object the call reads the values from, replacing each use of a removed parameter with a read of its member",
+  "steps": [
+    {
+      "refactoring": "change-signature",
+      "target": { "symbol": "M:Heating.HeatingPlan.WithinRange(System.Int32,System.Int32)" },
+      "arguments": {
+        "parameters": [
+          { "name": "range", "type": "TempRange", "value": "DaysTempRange" }
+        ],
+        "replacements": { "low": "range.Low", "high": "range.High" }
+      }
+    }
+  ]
+}

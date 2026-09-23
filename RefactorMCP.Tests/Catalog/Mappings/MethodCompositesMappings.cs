@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using static RefactorMCP.Tests.Catalog.CatalogMapping;
 
@@ -70,7 +71,74 @@ internal sealed class MethodCompositesMappings : ICatalogMappings
                 ["name-conflict"] = "already has a member named",
                 ["not-in-method"] = "Selected code is not within a method",
             }),
+        new CatalogMapping(
+            "introduce-parameter-object",
+            "introduce-parameter-object",
+            async context =>
+            {
+                var arguments = await MethodArguments(context);
+                arguments["parameters"] = context.RequiredArgument("parameters");
+                arguments["typeName"] = context.RequiredArgument("typeName");
+                arguments["parameterName"] = context.RequiredArgument("parameterName");
+                if (context.HasArgument("kind"))
+                    arguments["kind"] = context.RequiredArgument("kind");
+                return arguments;
+            },
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["too-few-parameters"] = "needs at least two parameters to group",
+                ["unknown-parameter"] = "has no parameter named",
+                ["unsupported-parameter"] = "so it cannot join a parameter object",
+                ["duplicate-parameter"] = "already has a parameter named",
+                ["not-a-method"] = "is not an ordinary method",
+                ["type-name-conflict"] = "is already visible where the type would be declared",
+                ["method-group-reference"] = "is used as a method group",
+                ["external-member"] = "which is declared outside the solution",
+            }),
+        new CatalogMapping(
+            "preserve-whole-object",
+            "preserve-whole-object",
+            async context =>
+            {
+                var arguments = await MethodArguments(context);
+                arguments["parameters"] = context.RequiredArgument("parameters");
+                arguments["parameterName"] = context.RequiredArgument("parameterName");
+                return arguments;
+            },
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["not-from-one-object"] = "from a member of an object",
+                ["several-objects"] = "reads its arguments from more than one object",
+                ["members-differ"] = "from different members",
+                ["types-differ"] = "members of objects of different types",
+                ["no-calls"] = "is never called",
+                ["unknown-parameter"] = "has no parameter named",
+                ["duplicate-parameter"] = "already has a parameter named",
+                ["replaced-parameter-assigned"] = "so its uses cannot be replaced",
+                ["method-group-reference"] = "is used as a method group",
+                ["external-member"] = "which is declared outside the solution",
+            }),
     };
+
+    /// <summary>
+    /// The file, name and line of the method <c>target.symbol</c> names. A constructor
+    /// is named by its type.
+    /// </summary>
+    private static async Task<Dictionary<string, JsonElement>> MethodArguments(StepContext context)
+    {
+        var location = await context.SymbolLocationAsync();
+        var name = location.Symbol is IMethodSymbol { MethodKind: MethodKind.Constructor } constructor
+            ? constructor.ContainingType.Name
+            : location.Symbol.Name;
+
+        return new Dictionary<string, JsonElement>
+        {
+            ["solutionPath"] = Json(context.SolutionPath),
+            ["filePath"] = Json(location.FilePath),
+            ["methodName"] = Json(name),
+            ["line"] = Json(location.Line),
+        };
+    }
 
     /// <summary>
     /// A local is targeted by a caret on it, or in a later step of a composite by the

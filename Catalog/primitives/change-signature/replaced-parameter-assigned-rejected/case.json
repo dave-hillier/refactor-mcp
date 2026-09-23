@@ -1,0 +1,15 @@
+{
+  "refactoring": "change-signature",
+  "description": "Refuses to replace the uses of a parameter the body assigns, since an expression cannot be assigned in its place",
+  "target": { "symbol": "M:Geometry.Grid.Clamp(System.Int32,System.Int32)" },
+  "arguments": {
+    "parameters": [
+      { "name": "max" },
+      { "name": "limits", "type": "Limits", "value": "new Limits(0)" }
+    ],
+    "replacements": { "value": "limits.Min" }
+  },
+  "expect": "error",
+  "errorCode": "replaced-parameter-assigned",
+  "errorContains": "'value'"
+}

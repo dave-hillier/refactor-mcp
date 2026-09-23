@@ -1,0 +1,18 @@
+{
+  "refactoring": "preserve-whole-object",
+  "description": "The recipe's Change Signature refuses to remove parameters the body reads when no replacements are given, and nothing changes",
+  "steps": [
+    {
+      "refactoring": "change-signature",
+      "target": { "symbol": "M:Heating.HeatingPlan.WithinRange(System.Int32,System.Int32)" },
+      "arguments": {
+        "parameters": [
+          { "name": "range", "type": "TempRange", "value": "DaysTempRange" }
+        ]
+      }
+    }
+  ],
+  "expect": "error",
+  "errorCode": "removed-parameter-in-use",
+  "errorContains": "'low'"
+}
