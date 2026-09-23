@@ -1,0 +1,7 @@
+{
+  "refactoring": "make-method-async",
+  "description": "Refuses a constructor, which cannot be async",
+  "target": { "symbol": "M:Stock.Inventory.#ctor" },
+  "expect": "error",
+  "errorCode": "not-a-method"
+}

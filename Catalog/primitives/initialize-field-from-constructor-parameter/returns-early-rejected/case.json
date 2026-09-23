@@ -1,0 +1,8 @@
+{
+  "refactoring": "initialize-field-from-constructor-parameter",
+  "description": "Refuses a constructor that can return before its end, where the assignment would not run",
+  "target": { "symbol": "M:Shop.OrderService.#ctor(System.String,Shop.Mail.Mailer)" },
+  "arguments": { "field": "_mailer", "parameter": "mailer" },
+  "expect": "error",
+  "errorCode": "returns-early"
+}

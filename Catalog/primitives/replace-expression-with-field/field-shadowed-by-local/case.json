@@ -1,0 +1,6 @@
+{
+  "refactoring": "replace-expression-with-field",
+  "description": "A field whose name a local in the method shares is qualified with this",
+  "target": { "file": "OrderService.cs", "selection": "marker" },
+  "arguments": { "field": "mailer" }
+}

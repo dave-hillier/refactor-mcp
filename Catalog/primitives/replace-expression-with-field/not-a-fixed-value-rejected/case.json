@@ -1,0 +1,8 @@
+{
+  "refactoring": "replace-expression-with-field",
+  "description": "Refuses an expression that reads a parameter, whose value a constructor could not have been given",
+  "target": { "file": "OrderService.cs", "selection": "marker" },
+  "arguments": { "field": "_mailer" },
+  "expect": "error",
+  "errorCode": "not-a-fixed-value"
+}

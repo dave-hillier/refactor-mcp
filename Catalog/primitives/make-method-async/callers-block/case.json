@@ -1,0 +1,5 @@
+{
+  "refactoring": "make-method-async",
+  "description": "A method reading a task's Result awaits it and returns Task<int>; every caller, in its own file or another, blocks on the task it now returns",
+  "target": { "symbol": "M:Stock.Inventory.Available(System.String)" }
+}

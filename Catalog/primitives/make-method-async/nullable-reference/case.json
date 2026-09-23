@@ -1,0 +1,6 @@
+{
+  "refactoring": "make-method-async",
+  "description": "With nullable reference types enabled, a method returning string? returns Task<string?>",
+  "target": { "symbol": "M:Data.Directory.Find(System.String)" },
+  "project": { "nullable": "enable" }
+}

@@ -1,0 +1,8 @@
+{
+  "refactoring": "replace-expression-with-field",
+  "description": "Refuses an expression in a static method, which has no object whose field it could read",
+  "target": { "file": "OrderService.cs", "selection": "marker" },
+  "arguments": { "field": "_mailer" },
+  "expect": "error",
+  "errorCode": "not-in-instance-member"
+}

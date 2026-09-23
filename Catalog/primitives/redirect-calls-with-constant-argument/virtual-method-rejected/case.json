@@ -1,0 +1,8 @@
+{
+  "refactoring": "redirect-calls-with-constant-argument",
+  "description": "Refuses a virtual method, since an override may do something else for the value",
+  "target": { "symbol": "M:Shapes.Box.SetValue(System.String,System.Int32)" },
+  "arguments": { "parameter": "name", "value": "\"height\"", "method": "SetHeight" },
+  "expect": "error",
+  "errorCode": "polymorphic-method"
+}

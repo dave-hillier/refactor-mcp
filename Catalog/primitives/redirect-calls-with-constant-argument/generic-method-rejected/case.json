@@ -1,0 +1,8 @@
+{
+  "refactoring": "redirect-calls-with-constant-argument",
+  "description": "Refuses a generic method, whose type arguments the named method would not take",
+  "target": { "symbol": "M:Shapes.Box.SetValue``1(System.String,System.Int32)" },
+  "arguments": { "parameter": "name", "value": "\"height\"", "method": "SetHeight" },
+  "expect": "error",
+  "errorCode": "generic-method"
+}

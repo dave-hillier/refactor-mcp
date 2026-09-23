@@ -1,7 +1,6 @@
 {
   "refactoring": "replace-parameter-with-explicit-methods",
-  "description": "Runs the recipe as far as the catalog's primitives go: Extract Method on each branch and Change Accessibility on each new method. No primitive points a call that passes a constant at the matching method, so the callers are not redirected",
-  "status": "unimplemented",
+  "description": "Runs the recipe: Extract Method on each branch, Change Accessibility on each new method, then Redirect Calls with Constant Argument for each value; the call passing a variable keeps the original method",
   "steps": [
     {
       "refactoring": "extract-method",
@@ -22,6 +21,16 @@
       "refactoring": "change-accessibility",
       "target": { "symbol": "M:Shapes.Box.SetWidth(System.Int32)" },
       "arguments": { "accessibility": "public" }
+    },
+    {
+      "refactoring": "redirect-calls-with-constant-argument",
+      "target": { "symbol": "M:Shapes.Box.SetValue(System.String,System.Int32)" },
+      "arguments": { "parameter": "name", "value": "\"height\"", "method": "SetHeight" }
+    },
+    {
+      "refactoring": "redirect-calls-with-constant-argument",
+      "target": { "symbol": "M:Shapes.Box.SetValue(System.String,System.Int32)" },
+      "arguments": { "parameter": "name", "value": "\"width\"", "method": "SetWidth" }
     }
   ]
 }

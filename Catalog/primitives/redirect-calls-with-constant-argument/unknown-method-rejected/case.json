@@ -1,0 +1,9 @@
+{
+  "refactoring": "redirect-calls-with-constant-argument",
+  "description": "Refuses a method name the class has no method for",
+  "target": { "symbol": "M:Shapes.Box.SetValue(System.String,System.Int32)" },
+  "arguments": { "parameter": "name", "value": "\"height\"", "method": "SetDepth" },
+  "expect": "error",
+  "errorCode": "unknown-method",
+  "errorContains": "'SetDepth'"
+}

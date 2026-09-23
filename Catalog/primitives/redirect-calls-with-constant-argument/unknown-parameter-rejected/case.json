@@ -1,0 +1,9 @@
+{
+  "refactoring": "redirect-calls-with-constant-argument",
+  "description": "Refuses a parameter the method does not have",
+  "target": { "symbol": "M:Shapes.Box.SetValue(System.String,System.Int32)" },
+  "arguments": { "parameter": "dimension", "value": "\"height\"", "method": "SetHeight" },
+  "expect": "error",
+  "errorCode": "unknown-parameter",
+  "errorContains": "'dimension'"
+}

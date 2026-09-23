@@ -1,12 +1,18 @@
 {
   "refactoring": "convert-to-async",
-  "description": "Runs the recipe's first step, Change Return Type to a task. It refuses, since no primitive makes the method async or awaits the task it blocks on, so the recipe cannot go further",
-  "status": "unimplemented",
+  "description": "Runs the recipe: Make Method Async on the method, which leaves its callers blocking on the task, then on each caller that can be async, up to a constructor, which keeps blocking",
   "steps": [
     {
-      "refactoring": "change-return-type",
-      "target": { "symbol": "M:Stock.Inventory.Available(System.String)" },
-      "arguments": { "type": "Task<int>" }
+      "refactoring": "make-method-async",
+      "target": { "symbol": "M:Stock.Inventory.Available(System.String)" }
+    },
+    {
+      "refactoring": "make-method-async",
+      "target": { "symbol": "M:Stock.Inventory.InStock(System.String)" }
+    },
+    {
+      "refactoring": "make-method-async",
+      "target": { "symbol": "M:Stock.Report.Summary(Stock.Inventory)" }
     }
   ]
 }

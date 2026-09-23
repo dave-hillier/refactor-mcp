@@ -1,0 +1,6 @@
+{
+  "refactoring": "redirect-calls-with-constant-argument",
+  "description": "The branch of an else-if chain calls a method taking none of the parameters; a call whose other argument is a variable drops it, and a call whose other argument has side effects keeps calling the original method",
+  "target": { "symbol": "M:Tally.Counter.Apply(System.String,System.Int32)" },
+  "arguments": { "parameter": "mode", "value": "\"reset\"", "method": "Reset" }
+}

@@ -1,7 +1,6 @@
 {
   "refactoring": "constructor-injection",
-  "description": "Runs the recipe as far as the catalog's primitives go: Change Signature adds the dependency to the constructor and Introduce Field adds a field of its type. No primitive assigns the field from the parameter or replaces the local construction with the field",
-  "status": "unimplemented",
+  "description": "Runs the recipe: Change Signature adds the dependency to the constructor, Introduce Field adds a field of its type, the constructor assigns it from the parameter and it becomes readonly, the construction in the method becomes the field, and the local is inlined",
   "steps": [
     {
       "refactoring": "change-signature",
@@ -17,6 +16,25 @@
       "refactoring": "introduce-field",
       "target": { "symbol": "T:Shop.OrderService" },
       "arguments": { "type": "Mailer", "name": "_mailer" }
+    },
+    {
+      "refactoring": "initialize-field-from-constructor-parameter",
+      "target": { "symbol": "M:Shop.OrderService.#ctor(System.String,Shop.Mail.Mailer)" },
+      "arguments": { "field": "_mailer", "parameter": "mailer" }
+    },
+    {
+      "refactoring": "make-field-readonly",
+      "target": { "symbol": "F:Shop.OrderService._mailer" }
+    },
+    {
+      "refactoring": "replace-expression-with-field",
+      "target": { "symbol": "M:Shop.OrderService.Place(System.String)" },
+      "arguments": { "expression": "new Mailer(\"smtp.example.com\")", "field": "_mailer" }
+    },
+    {
+      "refactoring": "inline-local-variable",
+      "target": { "symbol": "M:Shop.OrderService.Place(System.String)" },
+      "arguments": { "local": "mailer" }
     }
   ]
 }

@@ -1,0 +1,6 @@
+{
+  "refactoring": "replace-expression-with-field",
+  "description": "Constructions through a chained constructor and a derived class's base call count as constructions, and pass the same construction",
+  "target": { "file": "OrderService.cs", "selection": "marker" },
+  "arguments": { "field": "_mailer" }
+}

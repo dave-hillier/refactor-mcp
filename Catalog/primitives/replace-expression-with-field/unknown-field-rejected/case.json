@@ -1,0 +1,9 @@
+{
+  "refactoring": "replace-expression-with-field",
+  "description": "Refuses a field the class does not declare",
+  "target": { "file": "OrderService.cs", "selection": "marker" },
+  "arguments": { "field": "_sender" },
+  "expect": "error",
+  "errorCode": "unknown-field",
+  "errorContains": "'_sender'"
+}

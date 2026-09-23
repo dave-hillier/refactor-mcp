@@ -6,22 +6,27 @@ callers that cannot be async, which go on blocking on the task.
 
 ## Recipe
 
-1. `change-return-type` on the method to `Task`, or `Task<T>` for a method
-   returning `T`.
-2. Mark the method `async` and replace each blocking wait in it with `await`.
-3. For each caller, await the call and repeat from step 1 on the caller, up
-   to a caller that cannot be async, where the call blocks.
+1. `make-method-async` on the method. It awaits the tasks the method blocked
+   on and returns a task; every caller blocks on that task with
+   `.GetAwaiter().GetResult()`.
+2. `make-method-async` on each caller that can be async, which now blocks on
+   the task, so it awaits it and its own callers block in turn. Repeat up to
+   callers that cannot be async, such as constructors, which keep blocking.
 
 ```json
 "steps": [
-  { "refactoring": "change-return-type", "target": { "symbol": "M:Stock.Inventory.Available(System.String)" }, "arguments": { "type": "Task<int>" } }
+  { "refactoring": "make-method-async", "target": { "symbol": "M:Stock.Inventory.Available(System.String)" } },
+  { "refactoring": "make-method-async", "target": { "symbol": "M:Stock.Inventory.InStock(System.String)" } },
+  { "refactoring": "make-method-async", "target": { "symbol": "M:Stock.Report.Summary(Stock.Inventory)" } }
 ]
 ```
 
-No primitive in the catalog does step 2, and Change Return Type refuses step
-1 on its own, since the method's body still returns an `int`. The recipe case
-records that and is marked unimplemented. The dedicated implementation does
-all three steps as one change.
+The plan's first step, Change Return Type to `Task`, cannot run on its own:
+the method's body still returns the value, not a task. Make Method Async
+changes the return type, adds `async` and awaits the waits as one step, and
+leaves the callers blocking so each step compiles and preserves behaviour.
+The dedicated implementation finds the callers that can be async itself and
+converts them all as one change.
 
 ## Arguments
 

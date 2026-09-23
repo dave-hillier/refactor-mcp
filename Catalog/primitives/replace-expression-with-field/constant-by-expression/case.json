@@ -1,0 +1,6 @@
+{
+  "refactoring": "replace-expression-with-field",
+  "description": "Given the member and the expression's text, every occurrence of a constant in the member becomes the field that every construction sets to that constant",
+  "target": { "symbol": "M:Paging.Paginator.Pages(System.Int32)" },
+  "arguments": { "expression": "20", "field": "_pageSize" }
+}

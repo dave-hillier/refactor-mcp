@@ -1,0 +1,6 @@
+{
+  "refactoring": "redirect-calls-with-constant-argument",
+  "description": "A method of a generic class dispatching with a switch whose sections break; a call on a constructed type calls the named method on it",
+  "target": { "symbol": "M:Config.Setting`1.Set(System.String,`0)" },
+  "arguments": { "parameter": "key", "value": "\"name\"", "method": "SetName" }
+}

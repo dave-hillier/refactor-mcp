@@ -15,9 +15,13 @@ preserve behaviour and is not this refactoring.
    dependency's type whose `value` at each construction is the object the
    method constructed.
 2. `introduce-field` on the class, adding a field of the dependency's type.
-3. Assign the field from the new parameter in the constructor.
-4. Replace the local's construction with the field, and `inline-local-variable`
-   the local.
+3. `initialize-field-from-constructor-parameter` on the constructor, with the
+   new `field` and `parameter`.
+4. `make-field-readonly` on the field.
+5. `replace-expression-with-field` on the method, replacing the local's
+   construction with the field. Every construction of the class now passes
+   the same construction for the parameter the field is assigned from.
+6. `inline-local-variable` on the local, which now holds the field.
 
 ```json
 "steps": [
@@ -26,15 +30,18 @@ preserve behaviour and is not this refactoring.
     "target": { "symbol": "M:Shop.OrderService.#ctor(System.String)" },
     "arguments": { "parameters": [ { "name": "prefix" }, { "name": "mailer", "type": "Mailer", "value": "new Mail.Mailer(\"smtp.example.com\")" } ] }
   },
-  { "refactoring": "introduce-field", "target": { "symbol": "T:Shop.OrderService" }, "arguments": { "type": "Mailer", "name": "_mailer" } }
+  { "refactoring": "introduce-field", "target": { "symbol": "T:Shop.OrderService" }, "arguments": { "type": "Mailer", "name": "_mailer" } },
+  { "refactoring": "initialize-field-from-constructor-parameter", "target": { "symbol": "M:Shop.OrderService.#ctor(System.String,Shop.Mail.Mailer)" }, "arguments": { "field": "_mailer", "parameter": "mailer" } },
+  { "refactoring": "make-field-readonly", "target": { "symbol": "F:Shop.OrderService._mailer" } },
+  { "refactoring": "replace-expression-with-field", "target": { "symbol": "M:Shop.OrderService.Place(System.String)" }, "arguments": { "expression": "new Mailer(\"smtp.example.com\")", "field": "_mailer" } },
+  { "refactoring": "inline-local-variable", "target": { "symbol": "M:Shop.OrderService.Place(System.String)" }, "arguments": { "local": "mailer" } }
 ]
 ```
 
-No primitive in the catalog does steps 3 and 4: Introduce Field adds a field
-initialised in place or not at all, and nothing moves an assignment into a
-constructor or replaces an expression with a field. The recipe case stops
-after step 2 and is marked unimplemented. The dedicated implementation does
-all four.
+The plan's recipe has no step making the field readonly; Replace Expression
+with Field needs it, so that only the constructor sets the field. The recipe
+covers a class with one constructor; the dedicated implementation also gives
+a class without one a constructor, and does every step as one change.
 
 ## Arguments
 

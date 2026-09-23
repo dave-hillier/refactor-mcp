@@ -1,0 +1,8 @@
+{
+  "refactoring": "redirect-calls-with-constant-argument",
+  "description": "Refuses a value that is not a constant, which calls could not be matched against",
+  "target": { "symbol": "M:Shapes.Box.SetValue(System.String,System.Int32)" },
+  "arguments": { "parameter": "name", "value": "value.ToString()", "method": "SetHeight" },
+  "expect": "error",
+  "errorCode": "not-a-constant"
+}

@@ -1,0 +1,5 @@
+{
+  "refactoring": "make-method-async",
+  "description": "Comments on the declaration and around the awaited call stay in place, and a wait inside a lambda, which may run later, keeps blocking",
+  "target": { "symbol": "M:Stock.Inventory.Available(System.String)" }
+}

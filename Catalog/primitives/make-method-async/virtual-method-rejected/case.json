@@ -1,0 +1,7 @@
+{
+  "refactoring": "make-method-async",
+  "description": "Refuses a virtual method, whose signature overrides share",
+  "target": { "symbol": "M:Stock.Inventory.Available(System.String)" },
+  "expect": "error",
+  "errorCode": "polymorphic-method"
+}

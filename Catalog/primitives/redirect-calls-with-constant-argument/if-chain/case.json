@@ -1,0 +1,6 @@
+{
+  "refactoring": "redirect-calls-with-constant-argument",
+  "description": "A call in another file passing \"height\" calls SetHeight, which the if chain runs for that value; calls passing another value or a variable are left alone",
+  "target": { "symbol": "M:Shapes.Box.SetValue(System.String,System.Int32)" },
+  "arguments": { "parameter": "name", "value": "\"height\"", "method": "SetHeight" }
+}

@@ -1,0 +1,7 @@
+{
+  "refactoring": "replace-expression-with-field",
+  "description": "With nullable reference types enabled, a non-nullable field assigned in the constructor replaces the construction",
+  "target": { "file": "OrderService.cs", "selection": "marker" },
+  "arguments": { "field": "_mailer" },
+  "project": { "nullable": "enable" }
+}

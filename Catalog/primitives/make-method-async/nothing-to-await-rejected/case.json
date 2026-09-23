@@ -1,0 +1,7 @@
+{
+  "refactoring": "make-method-async",
+  "description": "Refuses a method that blocks on no task, which would become an async method with nothing to await",
+  "target": { "symbol": "M:Stock.Inventory.Available(System.String)" },
+  "expect": "error",
+  "errorCode": "nothing-to-await"
+}

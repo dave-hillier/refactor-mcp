@@ -12,24 +12,24 @@ becomes `SetHeight(10)`.
    branch stays in the branch.
 2. `change-accessibility` on each new method, giving it the dispatching
    method's accessibility.
-3. Redirect each call that passes one of the values as a constant to the
-   value's method.
-4. Delete the dispatching method once nothing calls it.
+3. `redirect-calls-with-constant-argument` on the dispatching method for each
+   value, with `parameter`, the `value` and the new `method`: each call that
+   passes the value as a constant calls the value's method.
+4. `safe-delete-member` on the dispatching method once nothing calls it.
 
 ```json
 "steps": [
   { "refactoring": "extract-method", "target": { "file": "Box.cs", "selection": "marker" }, "arguments": { "name": "SetWidth" } },
   { "refactoring": "extract-method", "target": { "file": "Box.cs", "range": "14:17-14:33" }, "arguments": { "name": "SetHeight" } },
   { "refactoring": "change-accessibility", "target": { "symbol": "M:Shapes.Box.SetHeight(System.Int32)" }, "arguments": { "accessibility": "public" } },
-  { "refactoring": "change-accessibility", "target": { "symbol": "M:Shapes.Box.SetWidth(System.Int32)" }, "arguments": { "accessibility": "public" } }
+  { "refactoring": "change-accessibility", "target": { "symbol": "M:Shapes.Box.SetWidth(System.Int32)" }, "arguments": { "accessibility": "public" } },
+  { "refactoring": "redirect-calls-with-constant-argument", "target": { "symbol": "M:Shapes.Box.SetValue(System.String,System.Int32)" }, "arguments": { "parameter": "name", "value": "\"height\"", "method": "SetHeight" } },
+  { "refactoring": "redirect-calls-with-constant-argument", "target": { "symbol": "M:Shapes.Box.SetValue(System.String,System.Int32)" }, "arguments": { "parameter": "name", "value": "\"width\"", "method": "SetWidth" } }
 ]
 ```
 
-No primitive in the catalog does step 3: rewriting a call according to the
-constant it passes needs the call to be specialised, which neither Inline
-Method nor Change Signature does, so the recipe case stops after step 2 and
-is marked unimplemented. The dedicated implementation redirects the calls
-itself.
+In the recipe case a call passing a variable remains, so step 4 does not
+apply. The dedicated implementation does all four steps as one change.
 
 ## Arguments
 
@@ -72,8 +72,10 @@ The target is the method, by symbol.
 
 ## Limitations
 
-- A call whose arguments have side effects keeps calling the dispatching
-  method, since the explicit method may not take all of them.
+- The dedicated implementation keeps any call whose arguments have side
+  effects calling the dispatching method, since the explicit method may not
+  take all of them. The recipe's redirect step is finer: it keeps only calls
+  where an argument it would drop or reorder has side effects.
 - Values are matched by their constant value; a call passing a variable that
   happens to hold a value is not redirected.
 - A dispatch that does other work first, or a branch that runs on into

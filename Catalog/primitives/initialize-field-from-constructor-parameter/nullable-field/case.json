@@ -1,0 +1,7 @@
+{
+  "refactoring": "initialize-field-from-constructor-parameter",
+  "description": "With nullable reference types enabled, a nullable field of an interface type is assigned from a parameter of a class implementing it",
+  "target": { "symbol": "M:Shop.OrderService.#ctor(Shop.Mailer)" },
+  "arguments": { "field": "_mailer", "parameter": "mailer" },
+  "project": { "nullable": "enable" }
+}
