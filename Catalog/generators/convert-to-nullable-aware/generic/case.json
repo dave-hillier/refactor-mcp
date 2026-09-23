@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-to-nullable-aware",
+  "description": "Annotates an unconstrained type parameter that may hold its default value",
+  "target": { "file": "Cache.cs" }
+}

@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-to-nullable-aware",
+  "description": "Refuses a file that already sets its nullable context",
+  "target": { "file": "Greeter.cs" },
+  "expect": "error",
+  "errorCode": "already-nullable-aware"
+}

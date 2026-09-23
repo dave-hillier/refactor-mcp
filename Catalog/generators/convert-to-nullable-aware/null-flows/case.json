@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-to-nullable-aware",
+  "description": "Enables nullable in the file and annotates the field, return and parameter that hold null; a file calling it that is not converted is left alone",
+  "target": { "file": "Directory.cs" }
+}

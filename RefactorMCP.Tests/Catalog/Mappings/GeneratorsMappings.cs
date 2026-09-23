@@ -37,6 +37,18 @@ internal sealed class GeneratorsMappings : ICatalogMappings
                 ("member-exists", "already has a member named"))),
 
         new CatalogMapping(
+            "convert-to-nullable-aware",
+            "convert-to-nullable-aware",
+            context => new Dictionary<string, JsonElement>
+            {
+                ["solutionPath"] = Json(context.SolutionPath),
+                ["filePath"] = Json(context.TargetFilePath()),
+            },
+            Codes(
+                ("already-nullable-aware", "is already nullable-aware"),
+                ("unresolved-warning", "leaves a warning no annotation fixes"))),
+
+        new CatalogMapping(
             "feature-flag-wrapping",
             "feature-flag-refactor",
             context => new Dictionary<string, JsonElement>
