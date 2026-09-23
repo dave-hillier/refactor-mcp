@@ -1,0 +1,6 @@
+{
+  "refactoring": "inline-type-alias",
+  "description": "Replaces every use of an alias with the type it names and removes the alias",
+  "target": { "file": "Inventory.cs" },
+  "arguments": { "alias": "StockIndex" }
+}

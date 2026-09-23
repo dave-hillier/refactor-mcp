@@ -1,0 +1,10 @@
+{
+  "refactoring": "convert-foreach-to-linq",
+  "description": "Refuses a body that is not a filter, projection or aggregation",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  },
+  "expect": "error",
+  "errorCode": "unsupported-loop-body"
+}

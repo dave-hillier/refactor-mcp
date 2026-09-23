@@ -1,0 +1,7 @@
+{
+  "refactoring": "inline-type-alias",
+  "description": "Keeps the nullable annotation on a use of the alias",
+  "project": { "nullable": "enable" },
+  "target": { "file": "Cache.cs" },
+  "arguments": { "alias": "Lookup" }
+}

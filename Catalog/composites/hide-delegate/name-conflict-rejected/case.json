@@ -1,0 +1,8 @@
+{
+  "refactoring": "hide-delegate",
+  "description": "Person already has a member called Name, the name asked for the forwarding property",
+  "target": { "symbol": "P:Staff.Person.Department" },
+  "arguments": { "member": "Manager", "name": "Name" },
+  "expect": "error",
+  "errorCode": "name-conflict"
+}

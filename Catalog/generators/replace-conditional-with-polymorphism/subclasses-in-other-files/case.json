@@ -1,0 +1,5 @@
+{
+  "refactoring": "replace-conditional-with-polymorphism",
+  "description": "Moves the cases of a switch statement into subclasses in their own files, keeps the default as a virtual method and makes the private field the cases use protected",
+  "target": { "symbol": "M:Staff.Employee.Bonus" }
+}

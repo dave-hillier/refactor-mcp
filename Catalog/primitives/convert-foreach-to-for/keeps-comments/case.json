@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-foreach-to-for",
+  "description": "Comments above the loop, after its header and in its body stay where they were",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  }
+}

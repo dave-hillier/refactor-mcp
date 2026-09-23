@@ -1,0 +1,6 @@
+{
+  "refactoring": "safe-delete-type",
+  "description": "Deletes every part of an unused partial class and the files that held only its parts",
+  "target": { "symbol": "T:Shop.Report" },
+  "arguments": {}
+}

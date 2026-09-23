@@ -1,0 +1,8 @@
+{
+  "refactoring": "inline-type-alias",
+  "description": "Refuses an alias that names a namespace rather than a type",
+  "target": { "file": "Files.cs" },
+  "arguments": { "alias": "IO" },
+  "expect": "error",
+  "errorCode": "not-a-type-alias"
+}

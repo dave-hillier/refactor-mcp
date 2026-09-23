@@ -1,0 +1,10 @@
+{
+  "refactoring": "convert-concatenation-to-interpolation",
+  "description": "Refuses a concatenation with comments between its operands, which the string could not keep",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  },
+  "expect": "error",
+  "errorCode": "contains-comments"
+}

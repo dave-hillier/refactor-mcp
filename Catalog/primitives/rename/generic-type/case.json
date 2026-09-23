@@ -1,0 +1,6 @@
+{
+  "refactoring": "rename",
+  "description": "Renames a generic class and its constructed uses, and renames its file",
+  "target": { "symbol": "T:Shop.Box`1" },
+  "arguments": { "name": "Container" }
+}

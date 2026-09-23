@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-concatenation-to-interpolation",
+  "description": "Escape sequences in the literals are kept as written",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  }
+}

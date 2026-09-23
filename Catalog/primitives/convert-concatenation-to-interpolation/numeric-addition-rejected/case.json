@@ -1,0 +1,10 @@
+{
+  "refactoring": "convert-concatenation-to-interpolation",
+  "description": "Refuses a chain whose leading operands are added as numbers before the concatenation",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  },
+  "expect": "error",
+  "errorCode": "numeric-addition"
+}

@@ -1,0 +1,11 @@
+{
+  "refactoring": "convert-foreach-to-for",
+  "description": "The index takes the given name",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  },
+  "arguments": {
+    "name": "index"
+  }
+}

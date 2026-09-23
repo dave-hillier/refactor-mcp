@@ -1,0 +1,6 @@
+{
+  "refactoring": "make-static-then-move",
+  "description": "Makes Describe static and moves it to a new Receipts class in one call, pointing every call at it, with the same result as the recipe",
+  "target": { "symbol": "M:Shop.Order.Describe(System.String)" },
+  "arguments": { "to": "Receipts", "stub": false }
+}

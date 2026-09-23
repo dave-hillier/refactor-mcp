@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-foreach-to-for",
+  "description": "When i is already declared in scope the index is named j",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  }
+}

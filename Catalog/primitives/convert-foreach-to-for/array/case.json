@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-foreach-to-for",
+  "description": "A foreach over an array becomes an index loop that reads each element into the loop variable",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  }
+}

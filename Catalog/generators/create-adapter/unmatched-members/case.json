@@ -1,0 +1,6 @@
+{
+  "refactoring": "create-adapter",
+  "description": "Delegates a member the adaptee has by the same name and leaves members with no counterpart throwing NotImplementedException, without touching the interface's comments",
+  "target": { "symbol": "T:Shop.SystemClock" },
+  "arguments": { "interface": "IClock", "name": "SystemClockAdapter" }
+}

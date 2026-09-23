@@ -1,0 +1,8 @@
+{
+  "refactoring": "safe-delete-member",
+  "description": "Refuses to delete a virtual method that a subclass overrides",
+  "target": { "symbol": "M:Shop.Shape.Area" },
+  "arguments": {},
+  "expect": "error",
+  "errorCode": "has-overrides"
+}

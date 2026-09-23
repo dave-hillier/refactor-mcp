@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-to-file-scoped-namespace",
+  "description": "Refuses a file whose namespace is already file-scoped",
+  "target": { "file": "Order.cs" },
+  "expect": "error",
+  "errorCode": "no-block-namespace"
+}

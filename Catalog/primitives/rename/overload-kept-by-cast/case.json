@@ -1,0 +1,6 @@
+{
+  "refactoring": "rename",
+  "description": "Gives a method the name of an existing overload, casting an argument where the call would otherwise bind to that overload",
+  "target": { "symbol": "M:Shop.Printer.Print(System.Object)" },
+  "arguments": { "name": "Show" }
+}

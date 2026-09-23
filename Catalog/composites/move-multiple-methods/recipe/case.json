@@ -1,0 +1,8 @@
+{
+  "refactoring": "move-multiple-methods",
+  "description": "Moves Street, then Label which calls it, onto Address through the address field, each leaving a delegating stub, as the recipe of primitive steps",
+  "steps": [
+    { "refactoring": "move-instance-method", "target": { "symbol": "M:Shop.Customer.Street" }, "arguments": { "via": "_address" } },
+    { "refactoring": "move-instance-method", "target": { "symbol": "M:Shop.Customer.Label" }, "arguments": { "via": "_address" } }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "refactoring": "safe-delete-member",
+  "description": "Refuses to delete a method called from another file",
+  "target": { "symbol": "M:Shop.Order.Total" },
+  "arguments": {},
+  "expect": "error",
+  "errorCode": "member-referenced",
+  "errorContains": "Checkout.cs"
+}

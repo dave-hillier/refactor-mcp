@@ -1,0 +1,6 @@
+{
+  "refactoring": "safe-delete-member",
+  "description": "Deletes a method whose only calls are its own recursive ones",
+  "target": { "symbol": "M:Shop.Maths.Factorial(System.Int32)" },
+  "arguments": {}
+}

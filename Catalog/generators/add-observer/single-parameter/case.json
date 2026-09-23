@@ -1,0 +1,6 @@
+{
+  "refactoring": "add-observer",
+  "description": "Declares an Action event taking the method's parameter just before the method, raises it at the end of the method, and imports System",
+  "target": { "symbol": "M:Shop.Counter.Update(System.Int32)" },
+  "arguments": { "event": "Updated" }
+}

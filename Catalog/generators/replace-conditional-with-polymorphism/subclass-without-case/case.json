@@ -1,0 +1,8 @@
+{
+  "refactoring": "replace-conditional-with-polymorphism",
+  "description": "Refuses when a subclass has no case and the only default throws, so it would not implement the abstract method",
+  "target": { "symbol": "M:Shapes.Geometry.Area(Shapes.Shape)" },
+  "expect": "error",
+  "errorCode": "subclass-without-case",
+  "errorContains": "Triangle"
+}

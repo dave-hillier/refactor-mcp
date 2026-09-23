@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-foreach-to-linq",
+  "description": "A loop that increments a counter for the matching elements becomes Count with a predicate",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  }
+}

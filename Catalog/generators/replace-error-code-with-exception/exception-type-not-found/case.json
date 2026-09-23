@@ -1,0 +1,9 @@
+{
+  "refactoring": "replace-error-code-with-exception",
+  "description": "Refuses an exception type that does not exist or does not derive from Exception",
+  "target": { "symbol": "M:Shop.Account.Withdraw(System.Decimal)" },
+  "arguments": { "exception": "Account" },
+  "expect": "error",
+  "errorCode": "exception-type-not-found",
+  "errorContains": "Account"
+}

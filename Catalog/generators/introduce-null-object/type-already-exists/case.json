@@ -1,0 +1,8 @@
+{
+  "refactoring": "introduce-null-object",
+  "description": "Refuses when the namespace already has a type with the null object's name",
+  "target": { "symbol": "F:Shop.Order._logger" },
+  "expect": "error",
+  "errorCode": "type-already-exists",
+  "errorContains": "NullLogger"
+}

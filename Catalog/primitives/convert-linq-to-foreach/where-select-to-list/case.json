@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-linq-to-foreach",
+  "description": "Where, Select and ToList assigned to a local become a new list filled by a loop",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  }
+}

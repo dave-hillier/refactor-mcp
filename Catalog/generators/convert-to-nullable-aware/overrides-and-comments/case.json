@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-to-nullable-aware",
+  "description": "Matches the nullability of an overridden parameter, and puts the directive above a leading comment",
+  "target": { "file": "Money.cs" }
+}

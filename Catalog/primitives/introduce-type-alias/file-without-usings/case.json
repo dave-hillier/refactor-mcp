@@ -1,0 +1,6 @@
+{
+  "refactoring": "introduce-type-alias",
+  "description": "Adds the alias below the header comment of a file without using directives, replacing qualified names in types and expressions",
+  "target": { "file": "Clock.cs", "caret": "marker" },
+  "arguments": { "name": "Stamp" }
+}

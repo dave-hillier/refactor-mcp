@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-to-file-scoped-namespace",
+  "description": "Refuses a file with more than one namespace declaration",
+  "target": { "file": "Models.cs" },
+  "expect": "error",
+  "errorCode": "several-namespaces"
+}

@@ -1,0 +1,6 @@
+{
+  "refactoring": "feature-flag-wrapping",
+  "description": "Passes the parameters and locals a branch reads to Apply, keeps comments inside and above the check, and gives the disabled strategy an empty body when there is no else",
+  "target": { "file": "Mailer.cs" },
+  "arguments": { "flag": "Receipts" }
+}

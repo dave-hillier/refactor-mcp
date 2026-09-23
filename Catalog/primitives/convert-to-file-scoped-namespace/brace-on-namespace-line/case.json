@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-to-file-scoped-namespace",
+  "description": "Handles an opening brace on the namespace line",
+  "target": { "file": "Order.cs" }
+}

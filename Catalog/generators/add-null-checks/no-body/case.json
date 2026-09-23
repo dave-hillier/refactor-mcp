@@ -1,0 +1,7 @@
+{
+  "refactoring": "add-null-checks",
+  "description": "Refuses an abstract method, which has no body to guard",
+  "target": { "symbol": "M:Shop.Shape.Describe(System.String)" },
+  "expect": "error",
+  "errorCode": "no-body"
+}

@@ -1,0 +1,6 @@
+{
+  "refactoring": "safe-delete-type",
+  "description": "Deletes an unused generic class that refers to itself, leaving the non-generic class of the same name",
+  "target": { "symbol": "T:Shop.Box`1" },
+  "arguments": {}
+}

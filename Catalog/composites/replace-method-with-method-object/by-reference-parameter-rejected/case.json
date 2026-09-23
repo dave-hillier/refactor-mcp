@@ -1,0 +1,9 @@
+{
+  "refactoring": "replace-method-with-method-object",
+  "description": "An out parameter cannot be held in a field and written back to the caller",
+  "target": { "symbol": "M:Shop.Parser.TryParse(System.String,System.Int32@)" },
+  "arguments": { "name": "Parsing" },
+  "expect": "error",
+  "errorCode": "by-reference-parameter",
+  "errorContains": "value"
+}

@@ -996,7 +996,7 @@ return values.Sum() / (double)values.Count;
 
 ## 17. Feature Flag Refactor
 
-**Purpose**: Replace `features.IsEnabled(flag)` checks with strategy classes.
+**Purpose**: Replace a `features.IsEnabled(flag)` check with strategy classes chosen by a property that checks the flag.
 
 ### Example
 **Before**:
@@ -1026,17 +1026,26 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli feature-flag-refactor \
 ```csharp
 public void DoWork()
 {
-    _coolFeatureStrategy.Apply();
+    CoolFeature.Apply();
 }
+
+private ICoolFeatureStrategy CoolFeature => featureFlags.IsEnabled("CoolFeature") ? new CoolFeatureStrategy() : new NoCoolFeatureStrategy();
 ```
+
+`CoolFeatureStrategy` and `NoCoolFeatureStrategy` implement `ICoolFeatureStrategy`, and their `Apply` methods hold the two branches.
 ## 18. Extract Decorator
 
-**Purpose**: Generate a decorator class that delegates to an existing method.
+**Purpose**: Generate a decorator that implements an interface and forwards every member to a wrapped instance.
 
 ### Example
 **Before**:
 ```csharp
-public class Greeter
+public interface IGreeter
+{
+    void Greet(string name);
+}
+
+public class Greeter : IGreeter
 {
     public void Greet(string name)
     {
@@ -1046,29 +1055,35 @@ public class Greeter
 ```
 **Command**:
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --cli extract-decorator \
-  "./RefactorMCP.sln" \
-  "./RefactorMCP.Tests/Decorator.cs" \
-  Greeter \
-  Greet
+dotnet run --project RefactorMCP.ConsoleApp -- --json extract-decorator '{"solutionPath":"./RefactorMCP.sln","filePath":"./RefactorMCP.Tests/Decorator.cs","typeName":"Greeter"}'
 ```
-**After**:
+**After** (in `GreeterDecorator.cs`):
 ```csharp
-public class GreeterDecorator
+public class GreeterDecorator : IGreeter
 {
-    private readonly Greeter _inner;
-    public GreeterDecorator(Greeter inner) { _inner = inner; }
-    public void Greet(string name) { _inner.Greet(name); }
+    private readonly IGreeter _inner;
+
+    public GreeterDecorator(IGreeter inner)
+    {
+        _inner = inner;
+    }
+
+    public void Greet(string name) => _inner.Greet(name);
 }
 ```
 
 ## 19. Create Adapter
 
-**Purpose**: Create an adapter class wrapping an existing method.
+**Purpose**: Implement an interface over an existing class by forwarding to its members.
 
 ### Example
 **Before**:
 ```csharp
+public interface ILogger
+{
+    void Log(string message);
+}
+
 public class LegacyLogger
 {
     public void Write(string message)
@@ -1079,20 +1094,20 @@ public class LegacyLogger
 ```
 **Command**:
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --cli create-adapter \
-  "./RefactorMCP.sln" \
-  "./RefactorMCP.Tests/Adapter.cs" \
-  LegacyLogger \
-  Write \
-  LoggerAdapter
+dotnet run --project RefactorMCP.ConsoleApp -- --json create-adapter '{"solutionPath":"./RefactorMCP.sln","filePath":"./RefactorMCP.Tests/Adapter.cs","className":"LegacyLogger","interfaceName":"ILogger","adapterName":"LegacyLoggerAdapter","memberMap":"Log:Write"}'
 ```
-**After**:
+**After** (in `LegacyLoggerAdapter.cs`):
 ```csharp
-public class LoggerAdapter
+public class LegacyLoggerAdapter : ILogger
 {
-    private readonly LegacyLogger _inner;
-    public LoggerAdapter(LegacyLogger inner) { _inner = inner; }
-    public void Adapt(string message) { _inner.Write(message); }
+    private readonly LegacyLogger _adaptee;
+
+    public LegacyLoggerAdapter(LegacyLogger adaptee)
+    {
+        _adaptee = adaptee;
+    }
+
+    public void Log(string message) => _adaptee.Write(message);
 }
 ```
 
@@ -2068,17 +2083,203 @@ dotnet run --project RefactorMCP.ConsoleApp -- --json use-pattern-matching '{"so
 
 <!-- Loops and expressions: examples for this group's tools go below this line. -->
 
+These tools act on the loop, statement or expression under a caret: any line
+and column inside it.
+
+**Convert For to Foreach**: `for (int i = 0; i < orders.Count; i++)` that only
+reads `orders[i]` becomes `foreach (Order order in orders)`. The optional
+`name` names the element.
+
+```bash
+refactor --json convert-for-to-foreach \
+    '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Foo.cs","line":12,"column":9}'
+```
+
+**Convert Foreach to For**: `foreach (var order in orders)` becomes an index
+loop over `orders.Count` that starts with `var order = orders[i];`. The
+optional `name` names the index.
+
+```bash
+refactor --json convert-foreach-to-for \
+    '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Foo.cs","line":12,"column":9,"name":"index"}'
+```
+
+**Convert Foreach to LINQ**: a loop that adds the matching elements to a new
+list, sums, counts or looks for a match becomes `Where`, `Select` and `ToList`,
+`Sum`, `Count` or `Any`.
+
+```bash
+refactor --json convert-foreach-to-linq \
+    '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Foo.cs","line":13,"column":9}'
+```
+
+**Convert LINQ to Foreach**: `var names = users.Where(...).Select(...).ToList();`
+becomes a list filled by a `foreach`. The optional `name` names the local that
+holds a returned query's result.
+
+```bash
+refactor --json convert-linq-to-foreach \
+    '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Foo.cs","line":12,"column":21}'
+```
+
+**Convert String Concatenation to Interpolation**: `"Total: " + count + " items"`
+becomes `$"Total: {count} items"`.
+
+```bash
+refactor --json convert-concatenation-to-interpolation \
+    '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Foo.cs","line":12,"column":20}'
+```
+
+**Introduce Using Declaration**: `using (var reader = ...) { ... }` at the end
+of its block becomes `using var reader = ...;` followed by the block's
+statements.
+
+```bash
+refactor --json introduce-using-declaration \
+    '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Foo.cs","line":12,"column":9}'
+```
+
 <!-- End of Loops and expressions. -->
 
 ### Naming and housekeeping
 
 <!-- Naming and housekeeping: examples for this group's tools go below this line. -->
 
+#### Rename
+
+Renames any symbol and every reference to it, including overrides, interface
+implementations, named arguments and documentation comments. A top-level type
+whose file is named after it has its file renamed too. `line` and `column`
+pick the symbol when the name is ambiguous; a rename that would clash with
+existing code is refused.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json rename-symbol \
+  '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Customer.cs","oldName":"Customer","newName":"Client","line":3,"column":18}'
+```
+
+#### Introduce Type Alias and Inline Type Alias
+
+`introduce-type-alias` declares a `using` alias for the type named at a line
+and column and uses it wherever the file names that type.
+`inline-type-alias` writes the type back in place of every use of an alias,
+in every file for a global alias, and removes the directive.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json introduce-type-alias \
+  '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Inventory.cs","line":7,"column":26,"aliasName":"StockIndex"}'
+
+dotnet run --project RefactorMCP.ConsoleApp -- --json inline-type-alias \
+  '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Inventory.cs","aliasName":"StockIndex"}'
+```
+
+#### Safe Delete Member, Type and Local
+
+Each deletes a declaration only when nothing depends on it.
+`safe-delete-member` takes a method, property, field or event, with `line` to
+pick an overload, and refuses overrides and interface implementations.
+`safe-delete-type` also deletes a file the type was alone in.
+`safe-delete-local` keeps an initializer with side effects as a statement.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json safe-delete-member \
+  '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Order.cs","memberName":"Legacy","line":12}'
+
+dotnet run --project RefactorMCP.ConsoleApp -- --json safe-delete-type \
+  '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/LegacyPricing.cs","typeName":"LegacyPricing"}'
+
+dotnet run --project RefactorMCP.ConsoleApp -- --json safe-delete-local \
+  '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Sample.cs","line":8,"column":13}'
+```
+
+#### Cleanup Usings
+
+Removes the using directives nothing in the file needs, leaving the rest of the
+file as written.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json cleanup-usings \
+  '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Sample.cs"}'
+```
+
+#### Convert to File-Scoped Namespace and Convert to Block Namespace
+
+Switches a file between `namespace Shop { ... }` and `namespace Shop;`,
+shifting the code inside by one level of indentation.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json convert-to-file-scoped-namespace \
+  '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Order.cs"}'
+
+dotnet run --project RefactorMCP.ConsoleApp -- --json convert-to-block-namespace \
+  '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Order.cs"}'
+```
+
 <!-- End of Naming and housekeeping. -->
 
 ### Composites
 
 <!-- Composites: examples for this group's tools go below this line. -->
+
+Composite refactorings run a sequence of primitive refactorings as one call.
+Those built from primitives name the step that refused in their error, and put
+every file back as it was.
+
+`extract-class` creates a class, gives the class a field holding an instance
+of it, and moves the named fields, properties and methods through that field.
+`extract-superclass` creates a base class between a class and its old base
+class and pulls the named fields and methods up into it.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json extract-class '{"solutionPath":"./Shop.sln","filePath":"./Shop/Customer.cs","className":"Customer","newClassName":"Address","memberNames":["_street","_town","FormatAddress"],"fieldName":"_address"}'
+dotnet run --project RefactorMCP.ConsoleApp -- --json extract-superclass '{"solutionPath":"./Staff.sln","filePath":"./Staff/Manager.cs","className":"Manager","superclassName":"Employee","memberNames":["_name","Badge"]}'
+```
+
+`introduce-interface-for-dependency` extracts an interface from the class a
+field, property or parameter holds and declares the dependency as the
+interface; for a field, the constructor parameters stored in it change too.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json introduce-interface-for-dependency '{"solutionPath":"./Shop.sln","filePath":"./Shop/Report.cs","name":"_writer","interfaceName":"IWriter","memberNames":["Write"]}'
+dotnet run --project RefactorMCP.ConsoleApp -- --json introduce-interface-for-dependency '{"solutionPath":"./Shop.sln","filePath":"./Shop/Report.cs","name":"Print","parameterName":"writer","interfaceName":"IWriter"}'
+```
+
+`make-static-then-move` makes an instance method static, taking the instance
+as a parameter, and moves it to another class; `move-multiple-methods` moves
+several methods, callees first, through a field (`via`) or to a type
+(`targetType`). Both keep delegating stubs unless told not to.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json make-static-then-move '{"solutionPath":"./Shop.sln","filePath":"./Shop/Order.cs","methodName":"Describe","targetClass":"Receipts","keepStub":false}'
+dotnet run --project RefactorMCP.ConsoleApp -- --json move-multiple-methods '{"solutionPath":"./Shop.sln","filePath":"./Shop/Customer.cs","className":"Customer","methodNames":["Label","Street"],"via":"_address"}'
+```
+
+`replace-method-with-method-object` moves a method's body into a new class
+whose fields hold the instance, the parameters and the locals; the method
+creates one for each call and runs it.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json replace-method-with-method-object '{"solutionPath":"./Shop.sln","filePath":"./Shop/Order.cs","methodName":"Price","className":"PriceCalculation"}'
+```
+
+`hide-delegate` gives a class a member forwarding to a member of an object it
+holds, and repoints clients: `person.Department.Manager` becomes
+`person.Manager`.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json hide-delegate '{"solutionPath":"./Staff.sln","filePath":"./Staff/Person.cs","delegateName":"Department","memberName":"Manager"}'
+```
+
+`replace-inheritance-with-delegation` turns a base class into a field,
+forwarding the inherited members other code uses;
+`replace-delegation-with-inheritance` goes the other way, deriving from the
+class of a field the class created and removing the members that only
+forwarded to it.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json replace-inheritance-with-delegation '{"solutionPath":"./Shop.sln","filePath":"./Shop/Stack.cs","className":"Stack"}'
+dotnet run --project RefactorMCP.ConsoleApp -- --json replace-delegation-with-inheritance '{"solutionPath":"./Staff.sln","filePath":"./Staff/Employee.cs","className":"Employee","fieldName":"_person"}'
+```
 
 **Replace Temp with Query**: the local `basePrice`, named at line 18, column
 21, becomes a private method `BasePrice()` called wherever the local was read.
@@ -2174,6 +2375,97 @@ refactor --json change-signature \
 ### Generators
 
 <!-- Generators: examples for this group's tools go below this line. -->
+
+Generators add structure or change behaviour, so each pins one design; the
+catalog README for each refactoring under `Catalog/generators/` describes it.
+
+`add-null-checks` guards a method's or constructor's reference-type
+parameters with `ArgumentNullException.ThrowIfNull`, skipping those already
+guarded, annotated nullable or defaulting to null. A constructor is named by
+its type; `line` picks an overload.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json add-null-checks '{"solutionPath":"./Shop.sln","filePath":"./Shop/Printer.cs","methodName":"Print"}'
+```
+
+`convert-to-nullable-aware` adds `#nullable enable` to one file and annotates
+the declarations its nullable warnings point to, refusing when a warning such
+as a possible null dereference remains.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json convert-to-nullable-aware '{"solutionPath":"./Shop.sln","filePath":"./Shop/Directory.cs"}'
+```
+
+`add-observer` declares `public event Action<...> <eventName>` before a void
+method and raises it with the method's parameters at the end and before each
+return.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json add-observer '{"solutionPath":"./Shop.sln","filePath":"./Shop/Counter.cs","className":"Counter","methodName":"Update","eventName":"Updated"}'
+```
+
+`feature-flag-refactor` moves the branches of the one `if (x.IsEnabled("Flag"))`
+in a file into `FlagStrategy` and `NoFlagStrategy` classes, selected by a
+private `Flag` property that checks the flag on each call.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json feature-flag-refactor '{"solutionPath":"./Shop.sln","filePath":"./Shop/Checkout.cs","flagName":"NewCheckout"}'
+```
+
+`introduce-null-object` generates `Null<Interface>`, a sealed class with a
+static `Instance`, for the interface a field is typed as. Null assignments to
+the field use it, and the field's null checks are removed, with the null
+object returning the fallback values those checks used.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json introduce-null-object '{"solutionPath":"./Shop.sln","filePath":"./Shop/Order.cs","fieldName":"_logger"}'
+```
+
+`replace-error-code-with-exception` makes a method returning an `int` code
+(0 for success) or a `bool` (true for success) return `void` and throw
+`exceptionType` (default `InvalidOperationException`) on failure; callers that
+tested the result in an `if` get a `try`/`catch` instead.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json replace-error-code-with-exception '{"solutionPath":"./Shop.sln","filePath":"./Shop/Account.cs","methodName":"Withdraw","exceptionType":"InvalidOperationException"}'
+```
+
+`replace-array-with-object` replaces an array field or local, named by the
+position of its name, with a new class that has one property per index, and
+rewrites its creations and constant-index accesses.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json replace-array-with-object '{"solutionPath":"./Shop.sln","filePath":"./Shop/Report.cs","line":7,"column":22,"className":"Performance","memberNames":["Club","Wins"]}'
+```
+
+`replace-type-code-with-enum` replaces int or string constants used as a type
+code with a public enum in `<enumName>.cs` beside the type, retargets every
+reference, and retypes the fields, properties, parameters, locals and return
+types the codes flow into. `replace-type-code-with-subclasses` turns an enum
+field into a sealed subclass per enum member: the class becomes abstract, the
+field an abstract property, and a static `Create` factory maps a code to its
+subclass. `replace-conditional-with-polymorphism` moves each case of a switch
+or if chain on a type-code property, or on a parameter's type, into an
+override in the matching subclass.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json replace-type-code-with-enum '{"solutionPath":"./Staff.sln","filePath":"./Staff/Employee.cs","typeName":"Employee","constantNames":["Engineer","Salesman","Manager"],"enumName":"EmployeeType"}'
+dotnet run --project RefactorMCP.ConsoleApp -- --json replace-type-code-with-subclasses '{"solutionPath":"./Staff.sln","filePath":"./Staff/Employee.cs","fieldName":"_type"}'
+dotnet run --project RefactorMCP.ConsoleApp -- --json replace-conditional-with-polymorphism '{"solutionPath":"./Shapes.sln","filePath":"./Shapes/Geometry.cs","methodName":"Area"}'
+```
+
+`extract-decorator` generates a class that implements an interface, wraps an
+instance of it and forwards every member, in a new file beside the target. The
+target is the interface, or a class implementing exactly one; `decoratorName`
+defaults to the interface name without its `I`, plus `Decorator`.
+`create-adapter` implements an interface over an existing class, forwarding
+each member to the class member named in `memberMap`, or to one with the same
+name. Members with no counterpart throw `NotImplementedException`.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json extract-decorator '{"solutionPath":"./Shop.sln","filePath":"./Shop/Greeter.cs","typeName":"Greeter"}'
+dotnet run --project RefactorMCP.ConsoleApp -- --json create-adapter '{"solutionPath":"./Shop.sln","filePath":"./Shop/LegacyLogger.cs","className":"LegacyLogger","interfaceName":"ILogger","adapterName":"LegacyLoggerAdapter","memberMap":"Log:Write"}'
+```
 
 <!-- End of Generators. -->
 

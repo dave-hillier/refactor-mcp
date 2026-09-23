@@ -1,0 +1,11 @@
+{
+  "refactoring": "convert-foreach-to-linq",
+  "description": "In a nullable context a count of null elements becomes Count",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  },
+  "project": {
+    "nullable": "enable"
+  }
+}

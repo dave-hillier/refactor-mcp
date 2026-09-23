@@ -1,0 +1,9 @@
+{
+  "refactoring": "feature-flag-wrapping",
+  "description": "Refuses when a strategy type's name is already taken",
+  "target": { "file": "Checkout.cs" },
+  "arguments": { "flag": "NewCheckout" },
+  "expect": "error",
+  "errorCode": "type-already-exists",
+  "errorContains": "NewCheckoutStrategy"
+}

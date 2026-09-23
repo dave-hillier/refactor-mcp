@@ -1,0 +1,5 @@
+{
+  "refactoring": "replace-conditional-with-polymorphism",
+  "description": "Writes each override in terms of its subclass's own type parameters, and moves a section with two labels to both subclasses",
+  "target": { "symbol": "M:Storage.Store`1.Describe(`0)" }
+}

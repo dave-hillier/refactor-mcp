@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-foreach-to-for",
+  "description": "A foreach over a list counts up to its Count and keeps var for the element",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  }
+}

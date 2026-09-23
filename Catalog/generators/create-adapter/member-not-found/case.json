@@ -1,0 +1,9 @@
+{
+  "refactoring": "create-adapter",
+  "description": "Refuses a mapping to a member the adaptee does not have",
+  "target": { "symbol": "T:Shop.LegacyLogger" },
+  "arguments": { "interface": "ILogger", "name": "LegacyLoggerAdapter", "map": { "Log": "Print" } },
+  "expect": "error",
+  "errorCode": "member-not-found",
+  "errorContains": "Print"
+}

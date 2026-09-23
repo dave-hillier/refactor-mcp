@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-to-nullable-aware",
+  "description": "Refuses a file in a project that already enables nullable",
+  "project": { "nullable": "enable" },
+  "target": { "file": "Greeter.cs" },
+  "expect": "error",
+  "errorCode": "already-nullable-aware"
+}

@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-to-file-scoped-namespace",
+  "description": "Refuses a project on a language version before C# 10",
+  "project": { "langVersion": "9" },
+  "target": { "file": "Order.cs" },
+  "expect": "error",
+  "errorCode": "language-version"
+}

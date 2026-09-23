@@ -1,0 +1,6 @@
+{
+  "refactoring": "add-observer",
+  "description": "A static method raises a static event; an expression body becomes a block",
+  "target": { "symbol": "M:Shop.Audit.Record(System.String)" },
+  "arguments": { "event": "Recorded" }
+}

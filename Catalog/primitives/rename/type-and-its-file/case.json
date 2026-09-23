@@ -1,0 +1,6 @@
+{
+  "refactoring": "rename",
+  "description": "Renames a class, its constructor and every use of it, and renames the file named after it",
+  "target": { "symbol": "T:Shop.Customer" },
+  "arguments": { "name": "Client" }
+}

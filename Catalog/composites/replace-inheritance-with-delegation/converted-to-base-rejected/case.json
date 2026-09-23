@@ -1,0 +1,8 @@
+{
+  "refactoring": "replace-inheritance-with-delegation",
+  "description": "A client passes the stack where a List<int> is expected, which it no longer is",
+  "target": { "symbol": "T:Shop.Stack" },
+  "expect": "error",
+  "errorCode": "breaks-compilation",
+  "errorContains": "Stack"
+}

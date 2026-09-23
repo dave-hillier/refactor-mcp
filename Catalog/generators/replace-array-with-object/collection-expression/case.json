@@ -1,0 +1,6 @@
+{
+  "refactoring": "replace-array-with-object",
+  "description": "Replaces collection expressions and an explicitly sized creation with an initialiser, in a file-scoped namespace",
+  "target": { "symbol": "F:Shop.Order._range" },
+  "arguments": { "name": "PriceRange", "members": ["Low", "High"] }
+}

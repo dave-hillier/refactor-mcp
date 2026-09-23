@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-foreach-to-for",
+  "description": "A body without braces gets a block holding the element and the statement",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  }
+}

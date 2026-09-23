@@ -1,0 +1,6 @@
+{
+  "refactoring": "rename",
+  "description": "Renames a method named in documentation comments and nameof, keeping the comments around it",
+  "target": { "symbol": "M:Shop.Order.Total" },
+  "arguments": { "name": "GrandTotal" }
+}

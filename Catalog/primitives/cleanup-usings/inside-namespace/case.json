@@ -1,0 +1,5 @@
+{
+  "refactoring": "cleanup-usings",
+  "description": "Removes unused directives declared inside a namespace",
+  "target": { "file": "Sample.cs" }
+}

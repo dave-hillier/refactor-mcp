@@ -1,0 +1,8 @@
+{
+  "refactoring": "rename",
+  "description": "Refuses to give a local the name of another local in the same scope",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "arguments": { "name": "total" },
+  "expect": "error",
+  "errorCode": "name-conflict"
+}

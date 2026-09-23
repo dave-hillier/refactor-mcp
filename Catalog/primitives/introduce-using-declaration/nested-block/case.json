@@ -1,0 +1,8 @@
+{
+  "refactoring": "introduce-using-declaration",
+  "description": "A using that ends an inner block, such as an if's, is disposed at the end of that block as before",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  }
+}

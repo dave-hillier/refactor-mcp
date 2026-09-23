@@ -1,0 +1,10 @@
+{
+  "refactoring": "introduce-using-declaration",
+  "description": "Refuses a resource whose name another local earlier in the block already uses",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  },
+  "expect": "error",
+  "errorCode": "name-conflict"
+}

@@ -1,0 +1,6 @@
+{
+  "refactoring": "replace-error-code-with-exception",
+  "description": "Keeps nullable annotations on the parameters and handles a negated bool check with nullable analysis enabled",
+  "project": { "nullable": "enable" },
+  "target": { "symbol": "M:Shop.Registry.Register(System.String)" }
+}

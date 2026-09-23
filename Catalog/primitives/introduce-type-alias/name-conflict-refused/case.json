@@ -1,0 +1,8 @@
+{
+  "refactoring": "introduce-type-alias",
+  "description": "Refuses an alias name that a type the file can see already has",
+  "target": { "file": "Order.cs", "caret": "marker" },
+  "arguments": { "name": "Customer" },
+  "expect": "error",
+  "errorCode": "name-conflict"
+}

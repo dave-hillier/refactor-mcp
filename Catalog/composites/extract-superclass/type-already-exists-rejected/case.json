@@ -1,0 +1,9 @@
+{
+  "refactoring": "extract-superclass",
+  "description": "A type with the superclass's name already exists",
+  "target": { "symbol": "T:Staff.Manager" },
+  "arguments": { "name": "Employee", "members": ["_name", "Badge"] },
+  "expect": "error",
+  "errorCode": "type-already-exists",
+  "errorContains": "step 1 (create-type)"
+}

@@ -1,0 +1,7 @@
+{
+  "refactoring": "safe-delete-member",
+  "description": "Deletes an event nothing raises or subscribes to",
+  "project": { "nullable": "enable" },
+  "target": { "symbol": "E:Shop.Door.Opened" },
+  "arguments": {}
+}

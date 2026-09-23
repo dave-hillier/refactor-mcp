@@ -1,0 +1,10 @@
+{
+  "refactoring": "rename",
+  "description": "Renames a public method and its calls in a project that references the declaring one",
+  "projects": [
+    { "name": "Core" },
+    { "name": "App", "references": ["Core"] }
+  ],
+  "target": { "symbol": "M:Core.Catalog.Find(System.String)" },
+  "arguments": { "name": "Lookup" }
+}

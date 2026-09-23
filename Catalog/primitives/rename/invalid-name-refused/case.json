@@ -1,0 +1,8 @@
+{
+  "refactoring": "rename",
+  "description": "Refuses a new name that is not a C# identifier",
+  "target": { "symbol": "M:Shop.Order.Total" },
+  "arguments": { "name": "class" },
+  "expect": "error",
+  "errorCode": "invalid-name"
+}

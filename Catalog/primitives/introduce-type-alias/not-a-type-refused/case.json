@@ -1,0 +1,8 @@
+{
+  "refactoring": "introduce-type-alias",
+  "description": "Refuses when the caret is not on the name of a type",
+  "target": { "file": "Order.cs", "caret": "marker" },
+  "arguments": { "name": "Lines" },
+  "expect": "error",
+  "errorCode": "not-a-type"
+}

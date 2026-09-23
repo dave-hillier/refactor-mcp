@@ -1,0 +1,6 @@
+{
+  "refactoring": "add-null-checks",
+  "description": "In a nullable context, parameters annotated as nullable accept null and are not guarded",
+  "project": { "nullable": "enable" },
+  "target": { "symbol": "M:Shop.Greeter.Greet(System.String,System.String)" }
+}

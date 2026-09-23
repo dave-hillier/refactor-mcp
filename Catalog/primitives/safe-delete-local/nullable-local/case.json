@@ -1,0 +1,7 @@
+{
+  "refactoring": "safe-delete-local",
+  "description": "Deletes an unused nullable local, keeping the lookup that initialised it",
+  "project": { "nullable": "enable" },
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "arguments": {}
+}

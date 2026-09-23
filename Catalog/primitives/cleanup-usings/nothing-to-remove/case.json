@@ -1,0 +1,5 @@
+{
+  "refactoring": "cleanup-usings",
+  "description": "Leaves a file whose directives are all used unchanged",
+  "target": { "file": "Sample.cs" }
+}

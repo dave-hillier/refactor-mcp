@@ -1,0 +1,8 @@
+{
+  "refactoring": "introduce-using-declaration",
+  "description": "A using statement that ends its block becomes a using declaration followed by its body",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  }
+}

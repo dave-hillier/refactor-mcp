@@ -1,0 +1,7 @@
+{
+  "refactoring": "replace-type-code-with-subclasses",
+  "description": "Refuses a class with several constructors, where the code does not come from one parameter",
+  "target": { "symbol": "F:Staff.Employee._type" },
+  "expect": "error",
+  "errorCode": "unsupported-constructor"
+}

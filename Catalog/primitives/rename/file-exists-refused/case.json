@@ -1,0 +1,8 @@
+{
+  "refactoring": "rename",
+  "description": "Refuses to rename a type when the file it would be renamed to already exists",
+  "target": { "symbol": "T:Shop.Customer" },
+  "arguments": { "name": "Client" },
+  "expect": "error",
+  "errorCode": "file-exists"
+}

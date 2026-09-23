@@ -1,0 +1,5 @@
+{
+  "refactoring": "replace-inheritance-with-delegation",
+  "description": "A constructor that passed arguments to the base class creates the field's instance with them; a property other code sets is forwarded with a setter, and the class keeps its interface",
+  "target": { "symbol": "T:Music.Playlist" }
+}

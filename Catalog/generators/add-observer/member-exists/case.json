@@ -1,0 +1,8 @@
+{
+  "refactoring": "add-observer",
+  "description": "Refuses an event name the class already uses",
+  "target": { "symbol": "M:Shop.Counter.Update(System.Int32)" },
+  "arguments": { "event": "Value" },
+  "expect": "error",
+  "errorCode": "member-exists"
+}

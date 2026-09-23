@@ -1,0 +1,6 @@
+{
+  "refactoring": "rename",
+  "description": "Renames a parameter chosen by caret, its uses in the body and the named arguments that pass it in another file",
+  "target": { "file": "Pricing.cs", "caret": "marker" },
+  "arguments": { "name": "rate" }
+}

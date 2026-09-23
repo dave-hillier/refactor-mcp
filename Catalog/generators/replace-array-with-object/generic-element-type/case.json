@@ -1,0 +1,9 @@
+{
+  "refactoring": "replace-array-with-object",
+  "description": "Refuses an array whose element type uses a type parameter, which the new class would have to declare",
+  "target": { "symbol": "F:Shop.Pair`1._items" },
+  "arguments": { "name": "Items", "members": ["Left", "Right"] },
+  "expect": "error",
+  "errorCode": "generic-element-type",
+  "errorContains": "T"
+}

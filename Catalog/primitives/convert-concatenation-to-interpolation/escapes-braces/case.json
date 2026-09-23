@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-concatenation-to-interpolation",
+  "description": "Braces in the literals are doubled so they stay text",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  }
+}

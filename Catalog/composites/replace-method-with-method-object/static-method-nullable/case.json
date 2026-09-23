@@ -1,0 +1,7 @@
+{
+  "refactoring": "replace-method-with-method-object",
+  "description": "A static void method needs no instance; a local declared without a value is dropped, a reference-type local becomes a nullable field, and a local a lambda captures stays a local",
+  "project": { "nullable": "enable" },
+  "target": { "symbol": "M:Reports.Printer.Print(System.Collections.Generic.IList{System.String},System.String)" },
+  "arguments": { "name": "PrintJob", "method": "Run" }
+}

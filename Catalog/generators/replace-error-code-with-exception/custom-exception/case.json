@@ -1,0 +1,6 @@
+{
+  "refactoring": "replace-error-code-with-exception",
+  "description": "Throws and catches the named exception type, constructed without a message when it has no string constructor",
+  "target": { "symbol": "M:Shop.Hall.Reserve(System.Int32)" },
+  "arguments": { "exception": "SeatsUnavailableException" }
+}

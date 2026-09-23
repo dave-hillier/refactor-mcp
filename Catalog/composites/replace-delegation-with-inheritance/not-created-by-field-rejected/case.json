@@ -1,0 +1,8 @@
+{
+  "refactoring": "replace-delegation-with-inheritance",
+  "description": "The person is passed in rather than created by the field, so it may be shared with other code",
+  "target": { "symbol": "T:Staff.Employee" },
+  "arguments": { "field": "_person" },
+  "expect": "error",
+  "errorCode": "not-created-by-field"
+}

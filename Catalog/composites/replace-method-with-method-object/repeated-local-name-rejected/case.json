@@ -1,0 +1,9 @@
+{
+  "refactoring": "replace-method-with-method-object",
+  "description": "Two locals in different blocks are both named total, and one field cannot stand for both",
+  "target": { "symbol": "M:Shop.Order.Price(System.Int32,System.Decimal)" },
+  "arguments": { "name": "PriceCalculation" },
+  "expect": "error",
+  "errorCode": "repeated-local-name",
+  "errorContains": "total"
+}

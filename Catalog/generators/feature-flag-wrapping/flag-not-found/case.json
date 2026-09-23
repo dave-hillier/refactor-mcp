@@ -1,0 +1,8 @@
+{
+  "refactoring": "feature-flag-wrapping",
+  "description": "Refuses a flag the file never checks",
+  "target": { "file": "Checkout.cs" },
+  "arguments": { "flag": "Missing" },
+  "expect": "error",
+  "errorCode": "flag-not-found"
+}

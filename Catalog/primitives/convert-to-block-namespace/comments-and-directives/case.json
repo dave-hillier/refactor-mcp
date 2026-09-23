@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-to-block-namespace",
+  "description": "Keeps the header comment, usings after the namespace, documentation comments and directives, indenting all but column-zero directives",
+  "target": { "file": "Order.cs" }
+}

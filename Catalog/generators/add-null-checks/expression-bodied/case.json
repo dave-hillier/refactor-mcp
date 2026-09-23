@@ -1,0 +1,5 @@
+{
+  "refactoring": "add-null-checks",
+  "description": "Gives an expression-bodied method a block body so the guard can precede the returned expression",
+  "target": { "symbol": "M:Shop.Text.Shout(System.String)" }
+}

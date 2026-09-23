@@ -1,0 +1,6 @@
+{
+  "refactoring": "replace-method-with-method-object",
+  "description": "An expression-bodied method keeps its form; its recursive call goes through the instance, and the private members it uses become internal",
+  "target": { "symbol": "M:Shop.Tree.Depth(Shop.Node)" },
+  "arguments": { "name": "DepthSearch" }
+}

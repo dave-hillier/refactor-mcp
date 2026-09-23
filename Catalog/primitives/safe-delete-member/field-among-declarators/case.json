@@ -1,0 +1,6 @@
+{
+  "refactoring": "safe-delete-member",
+  "description": "Deletes one unused field from a declaration of several",
+  "target": { "symbol": "F:Shop.Counter._spare" },
+  "arguments": {}
+}

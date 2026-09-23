@@ -1,0 +1,5 @@
+{
+  "refactoring": "introduce-null-object",
+  "description": "Returns the fallbacks the removed checks used, replaces null assignments and initialises a field no constructor sets",
+  "target": { "symbol": "F:Shop.Order._policy" }
+}

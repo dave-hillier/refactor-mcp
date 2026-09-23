@@ -1,0 +1,5 @@
+{
+  "refactoring": "add-null-checks",
+  "description": "Guards a constructor's parameters; the guards run after the base constructor call",
+  "target": { "symbol": "M:Shop.Order.#ctor(Shop.Customer,System.String)" }
+}

@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-concatenation-to-interpolation",
+  "description": "A conditional operand keeps its parentheses, whose colon would otherwise start a format",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  }
+}

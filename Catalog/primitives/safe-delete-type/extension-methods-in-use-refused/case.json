@@ -1,0 +1,8 @@
+{
+  "refactoring": "safe-delete-type",
+  "description": "Refuses to delete a static class whose extension methods are called, though its name appears nowhere else",
+  "target": { "symbol": "T:Shop.StringExtensions" },
+  "arguments": {},
+  "expect": "error",
+  "errorCode": "type-referenced"
+}

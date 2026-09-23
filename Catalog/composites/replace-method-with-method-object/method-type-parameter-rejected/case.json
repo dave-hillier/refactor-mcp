@@ -1,0 +1,8 @@
+{
+  "refactoring": "replace-method-with-method-object",
+  "description": "A generic method's type parameters would have to become the method object's",
+  "target": { "symbol": "M:Shop.Store.First``1(System.Collections.Generic.List{``0})" },
+  "arguments": { "name": "FirstSearch" },
+  "expect": "error",
+  "errorCode": "method-type-parameter"
+}

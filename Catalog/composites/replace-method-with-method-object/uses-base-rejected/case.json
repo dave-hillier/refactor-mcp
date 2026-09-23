@@ -1,0 +1,8 @@
+{
+  "refactoring": "replace-method-with-method-object",
+  "description": "A call through base cannot be made from the method object",
+  "target": { "symbol": "M:Shop.Order.Heading(System.Int32)" },
+  "arguments": { "name": "HeadingText" },
+  "expect": "error",
+  "errorCode": "uses-base"
+}

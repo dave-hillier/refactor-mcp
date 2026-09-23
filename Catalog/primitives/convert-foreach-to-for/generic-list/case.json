@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-foreach-to-for",
+  "description": "A read-only list of a type parameter is indexed through the interface",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "refactoring": "safe-delete-local",
+  "description": "Deletes one local from a declaration of several, keeping its call between the others in order",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "arguments": {}
+}

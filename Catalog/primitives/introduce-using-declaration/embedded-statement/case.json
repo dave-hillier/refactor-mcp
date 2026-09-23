@@ -1,0 +1,8 @@
+{
+  "refactoring": "introduce-using-declaration",
+  "description": "A using whose body is a single statement without braces",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  }
+}

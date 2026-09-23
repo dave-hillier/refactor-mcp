@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-concatenation-to-interpolation",
+  "description": "String literals and a string operand become one interpolated string",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  }
+}

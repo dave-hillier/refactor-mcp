@@ -1,0 +1,6 @@
+{
+  "refactoring": "feature-flag-wrapping",
+  "description": "Moves each branch of a flag check into a strategy class and selects the strategy through a private property that checks the flag",
+  "target": { "file": "Checkout.cs" },
+  "arguments": { "flag": "NewCheckout" }
+}

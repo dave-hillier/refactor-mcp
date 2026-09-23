@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-foreach-to-linq",
+  "description": "A loop that sets a flag and breaks on the first match becomes Any",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "refactoring": "safe-delete-local",
+  "description": "Keeps an initializer with side effects that is not a statement on its own as a discard assignment",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "arguments": {}
+}

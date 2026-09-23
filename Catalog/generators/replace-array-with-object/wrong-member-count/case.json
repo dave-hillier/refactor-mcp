@@ -1,0 +1,9 @@
+{
+  "refactoring": "replace-array-with-object",
+  "description": "Refuses an array created with more elements than there are member names",
+  "target": { "file": "Report.cs", "caret": "marker" },
+  "arguments": { "name": "Performance", "members": ["Club", "Wins"] },
+  "expect": "error",
+  "errorCode": "wrong-member-count",
+  "errorContains": "3"
+}

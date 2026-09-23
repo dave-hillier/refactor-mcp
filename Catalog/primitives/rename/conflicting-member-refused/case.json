@@ -1,0 +1,8 @@
+{
+  "refactoring": "rename",
+  "description": "Refuses to give a method the name and signature of another member of its class",
+  "target": { "symbol": "M:Shop.Cart.Add(System.Int32)" },
+  "arguments": { "name": "Remove" },
+  "expect": "error",
+  "errorCode": "name-conflict"
+}

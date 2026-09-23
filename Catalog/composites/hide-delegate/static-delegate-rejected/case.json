@@ -1,0 +1,8 @@
+{
+  "refactoring": "hide-delegate",
+  "description": "A static property holds no per-instance delegate for a person to hide",
+  "target": { "symbol": "P:Staff.Person.Employer" },
+  "arguments": { "member": "Name" },
+  "expect": "error",
+  "errorCode": "static-delegate"
+}

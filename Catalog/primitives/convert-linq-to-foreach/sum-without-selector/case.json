@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-linq-to-foreach",
+  "description": "Sum of the elements themselves names the loop variable after the collection",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  }
+}

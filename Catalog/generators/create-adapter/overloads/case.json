@@ -1,0 +1,6 @@
+{
+  "refactoring": "create-adapter",
+  "description": "Maps each overload of an interface method to the adaptee overload whose parameters it can pass",
+  "target": { "symbol": "T:Shop.OldPrinter" },
+  "arguments": { "interface": "IPrinter", "name": "PrinterAdapter", "map": { "Print": "Output" } }
+}

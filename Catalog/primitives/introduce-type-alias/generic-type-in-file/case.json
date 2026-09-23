@@ -1,0 +1,6 @@
+{
+  "refactoring": "introduce-type-alias",
+  "description": "Declares an alias for the constructed type under the caret and uses it everywhere the file names that type",
+  "target": { "file": "Inventory.cs", "caret": "marker" },
+  "arguments": { "name": "StockIndex" }
+}

@@ -1,0 +1,5 @@
+{
+  "refactoring": "cleanup-usings",
+  "description": "Removes every using directive and the blank line that followed them",
+  "target": { "file": "Sample.cs" }
+}

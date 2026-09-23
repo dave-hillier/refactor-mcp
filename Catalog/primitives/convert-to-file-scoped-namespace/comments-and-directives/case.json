@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-to-file-scoped-namespace",
+  "description": "Keeps the header comment, usings inside the namespace, documentation comments and directives, dedenting all but column-zero directives",
+  "target": { "file": "Order.cs" }
+}

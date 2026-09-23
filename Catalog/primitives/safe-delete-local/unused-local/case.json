@@ -1,0 +1,6 @@
+{
+  "refactoring": "safe-delete-local",
+  "description": "Deletes a local that is never read, whose initializer has no side effects",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "arguments": {}
+}

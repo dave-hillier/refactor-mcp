@@ -67,43 +67,6 @@ class C
     }
 
     // =========================================================================
-    // BUG 2: FeatureFlagRewriter creates Apply() methods without public modifier.
-    //        Interface implementations must be public, so the generated strategy
-    //        classes will not compile.
-    // File: RefactorMCP.ConsoleApp/SyntaxRewriters/FeatureFlagRewriter.cs:97
-    // =========================================================================
-
-    [Fact]
-    public void FeatureFlagRewriter_StrategyClasses_ApplyMethodShouldBePublic()
-    {
-        var code = @"
-class Service
-{
-    void DoWork()
-    {
-        if (flags.IsEnabled(""Feature""))
-        {
-            Console.WriteLine(""Enabled"");
-        }
-        else
-        {
-            Console.WriteLine(""Disabled"");
-        }
-    }
-}";
-        var tree = CSharpSyntaxTree.ParseText(code);
-        var rewriter = new FeatureFlagRewriter("Feature");
-        rewriter.Visit(tree.GetRoot());
-
-        var generated = rewriter.GeneratedMembers;
-        var generatedText = string.Join("\n", generated.Select(m => m.NormalizeWhitespace().ToFullString()));
-
-        // The Apply() method on both strategy classes should be public
-        // to satisfy the interface contract
-        Assert.Contains("public void Apply()", generatedText);
-    }
-
-    // =========================================================================
     // BUG 3: SetterToInitRewriter drops access modifiers from the setter.
     //        A property with "protected set;" becomes just "init;" (losing protected).
     // File: RefactorMCP.ConsoleApp/SyntaxRewriters/SetterToInitRewriter.cs:25-26

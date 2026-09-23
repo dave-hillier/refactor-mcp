@@ -1,0 +1,8 @@
+{
+  "refactoring": "introduce-using-declaration",
+  "description": "Usings stacked without braces between them all become declarations",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  }
+}

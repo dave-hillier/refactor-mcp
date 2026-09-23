@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-foreach-to-linq",
+  "description": "Comments above the declaration and above the loop stay above the query",
+  "target": {
+    "file": "Sample.cs",
+    "caret": "marker"
+  }
+}

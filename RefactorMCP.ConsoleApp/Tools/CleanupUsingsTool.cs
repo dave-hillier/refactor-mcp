@@ -4,7 +4,6 @@ using System.ComponentModel;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Text;
 using System.IO;
 using System;
@@ -52,14 +51,18 @@ public static class CleanupUsingsTool
             .Where(d => d.Id == "CS8019")
             .Select(d => root.FindNode(d.Location.SourceSpan))
             .OfType<UsingDirectiveSyntax>()
+            .Distinct()
             .ToList();
 
-        var newRoot = root!.RemoveNodes(unused, SyntaxRemoveOptions.KeepNoTrivia);
-        var formatted = Formatter.Format(newRoot!, RefactoringHelpers.SharedWorkspace);
-        var encoding = await RefactoringHelpers.GetFileEncodingAsync(document.FilePath!);
-        await File.WriteAllTextAsync(document.FilePath!, formatted.ToFullString(), encoding);
+        if (unused.Count == 0)
+            return $"No unused usings in {document.FilePath}";
 
-        var newDocument = document.WithSyntaxRoot(formatted);
+        // Only the directives change; the rest of the file stays as written.
+        var newRoot = DeclarationRemoval.RemoveUsings(root, unused);
+        var encoding = await RefactoringHelpers.GetFileEncodingAsync(document.FilePath!);
+        await File.WriteAllTextAsync(document.FilePath!, newRoot.ToFullString(), encoding);
+
+        var newDocument = document.WithSyntaxRoot(newRoot);
         RefactoringHelpers.UpdateSolutionCache(newDocument);
         return $"Removed unused usings in {document.FilePath}";
     }
@@ -86,10 +89,9 @@ public static class CleanupUsingsTool
             .Where(d => d.Id == "CS8019")
             .Select(d => root.FindNode(d.Location.SourceSpan))
             .OfType<UsingDirectiveSyntax>()
+            .Distinct()
             .ToList();
 
-        var newRoot = root.RemoveNodes(unused, SyntaxRemoveOptions.KeepNoTrivia);
-        var formatted = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
-        return formatted.ToFullString();
+        return DeclarationRemoval.RemoveUsings(root, unused).ToFullString();
     }
 }

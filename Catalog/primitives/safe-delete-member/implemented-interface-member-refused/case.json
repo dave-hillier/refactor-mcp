@@ -1,0 +1,8 @@
+{
+  "refactoring": "safe-delete-member",
+  "description": "Refuses to delete an interface member that a class implements",
+  "target": { "symbol": "M:Shop.INotifier.Send(System.String)" },
+  "arguments": {},
+  "expect": "error",
+  "errorCode": "has-implementations"
+}

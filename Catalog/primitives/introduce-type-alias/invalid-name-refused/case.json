@@ -1,0 +1,8 @@
+{
+  "refactoring": "introduce-type-alias",
+  "description": "Refuses an alias name that is not an identifier",
+  "target": { "file": "Order.cs", "caret": "marker" },
+  "arguments": { "name": "2Lines" },
+  "expect": "error",
+  "errorCode": "invalid-name"
+}

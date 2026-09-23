@@ -1,0 +1,8 @@
+{
+  "refactoring": "extract-class",
+  "description": "A struct copies its fields on assignment, so it is refused rather than given a field holding the extracted object",
+  "target": { "symbol": "T:Shop.Customer" },
+  "arguments": { "name": "Address", "members": ["Street", "Town", "FormatAddress"] },
+  "expect": "error",
+  "errorCode": "not-a-class"
+}
