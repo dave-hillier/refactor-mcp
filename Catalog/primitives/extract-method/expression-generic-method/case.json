@@ -1,0 +1,6 @@
+{
+  "refactoring": "extract-method",
+  "description": "An expression using a type parameter of the containing method is extracted into a generic method with its constraint, called without type arguments the arguments infer",
+  "target": { "file": "Finder.cs", "selection": "marker" },
+  "arguments": { "name": "Matches" }
+}

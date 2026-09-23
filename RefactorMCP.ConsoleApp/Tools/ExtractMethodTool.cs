@@ -6,11 +6,12 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Text;
+using System.Threading;
 
 [McpServerToolType]
 public static class ExtractMethodTool
 {
-    [McpServerTool, Description("Extract a code block into a new method (preferred for large C# file refactoring)")]
+    [McpServerTool, Description("Extract a run of statements, or an expression selected exactly, into a new method (preferred for large C# file refactoring)")]
     public static async Task<string> ExtractMethod(
         [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
@@ -36,6 +37,10 @@ public static class ExtractMethodTool
         var sourceText = await document.GetTextAsync();
         var syntaxRoot = await document.GetSyntaxRootAsync();
         var span = RefactoringHelpers.ParseSelectionRange(sourceText, selectionRange);
+
+        // A selection that is exactly an expression extracts the expression, not its statement.
+        if (ExpressionExtraction.Selected(syntaxRoot!, sourceText, span) is { } expression)
+            return await ExpressionExtraction.ExtractAsync(document, expression, methodName, CancellationToken.None);
 
         var selectedNodes = syntaxRoot!.DescendantNodes()
             .Where(n => span.Contains(n.Span))

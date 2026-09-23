@@ -31,6 +31,9 @@ internal sealed class MethodsAndLocalsMappings : ICatalogMappings
                 ["assigned-local-used-after"] = "The extracted block assigns",
                 ["not-in-method"] = "Selected code is not within a method",
                 ["no-statements-selected"] = "does not contain extractable statements",
+                ["not-a-value"] = "is not a value a method could return",
+                ["expression-assigns-local"] = "The selected expression assigns",
+                ["expression-awaits"] = "The selected expression awaits",
             }),
         new CatalogMapping(
             "inline-method",

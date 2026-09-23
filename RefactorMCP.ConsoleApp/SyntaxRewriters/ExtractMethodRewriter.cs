@@ -32,7 +32,7 @@ internal class ExtractMethodRewriter : CSharpSyntaxRewriter
         // void. Callers that have a model get the parameters and return type inferred.
         var parameters = semanticModel == null
             ? new List<ExtractedParameter>()
-            : FindParameters(containingMethod, statements, semanticModel);
+            : FindParameters(statements, semanticModel);
         var resultType = semanticModel == null
             ? null
             : FindResultType(containingMethod, statements, semanticModel);
@@ -140,29 +140,25 @@ internal class ExtractMethodRewriter : CSharpSyntaxRewriter
         return visited;
     }
 
-    private sealed record ExtractedParameter(ParameterSyntax Syntax, ITypeSymbol Type);
+    internal sealed record ExtractedParameter(ParameterSyntax Syntax, ITypeSymbol Type);
 
     /// <summary>
-    /// Finds the locals and parameters of the containing method that the extracted
-    /// statements read. Values declared inside the statements move with them, and
-    /// fields and members of the class stay reachable, so neither becomes a parameter.
+    /// Finds the locals and parameters that the extracted code reads, whether it is a
+    /// run of statements or an expression. Values declared inside the code move with it,
+    /// and fields and members of the class stay reachable, so neither becomes a parameter.
     /// </summary>
-    private static List<ExtractedParameter> FindParameters(
-        MethodDeclarationSyntax containingMethod,
-        List<StatementSyntax> statements,
+    internal static List<ExtractedParameter> FindParameters(
+        IReadOnlyList<SyntaxNode> extracted,
         SemanticModel semanticModel)
     {
-        var containingSymbol = semanticModel.GetDeclaredSymbol(containingMethod);
-        var extractedSpan = TextSpan.FromBounds(statements.First().SpanStart, statements.Last().Span.End);
+        var extractedSpan = TextSpan.FromBounds(extracted[0].SpanStart, extracted[^1].Span.End);
         var parameters = new List<ExtractedParameter>();
         var seen = new HashSet<ISymbol>(SymbolEqualityComparer.Default);
 
-        foreach (var identifier in statements.SelectMany(s => s.DescendantNodes().OfType<IdentifierNameSyntax>()))
+        foreach (var identifier in extracted.SelectMany(s => s.DescendantNodesAndSelf().OfType<IdentifierNameSyntax>()))
         {
             var symbol = semanticModel.GetSymbolInfo(identifier).Symbol;
             if (symbol is not ILocalSymbol && symbol is not IParameterSymbol)
-                continue;
-            if (!SymbolEqualityComparer.Default.Equals(symbol.ContainingSymbol, containingSymbol))
                 continue;
 
             var declaration = symbol.DeclaringSyntaxReferences.FirstOrDefault();
@@ -192,11 +188,11 @@ internal class ExtractMethodRewriter : CSharpSyntaxRewriter
 
     /// <summary>
     /// The containing method's type parameters the extracted method needs: those its
-    /// parameters or result mention, or that the statements name directly.
+    /// parameters or result mention, or that the extracted code names directly.
     /// </summary>
-    private static List<ITypeParameterSymbol> FindTypeParameters(
+    internal static List<ITypeParameterSymbol> FindTypeParameters(
         MethodDeclarationSyntax containingMethod,
-        List<StatementSyntax> statements,
+        IReadOnlyList<SyntaxNode> extracted,
         List<ExtractedParameter> parameters,
         ITypeSymbol? resultType,
         SemanticModel semanticModel)
@@ -204,8 +200,8 @@ internal class ExtractMethodRewriter : CSharpSyntaxRewriter
         if (semanticModel.GetDeclaredSymbol(containingMethod) is not IMethodSymbol { TypeParameters.Length: > 0 } method)
             return new List<ITypeParameterSymbol>();
 
-        var named = statements
-            .SelectMany(s => s.DescendantNodes().OfType<IdentifierNameSyntax>())
+        var named = extracted
+            .SelectMany(s => s.DescendantNodesAndSelf().OfType<IdentifierNameSyntax>())
             .Select(i => semanticModel.GetSymbolInfo(i).Symbol)
             .OfType<ITypeParameterSymbol>()
             .ToList();
@@ -217,7 +213,7 @@ internal class ExtractMethodRewriter : CSharpSyntaxRewriter
             .ToList();
     }
 
-    private static bool Mentions(ITypeSymbol type, ITypeParameterSymbol typeParameter)
+    internal static bool Mentions(ITypeSymbol type, ITypeParameterSymbol typeParameter)
     {
         return type switch
         {
