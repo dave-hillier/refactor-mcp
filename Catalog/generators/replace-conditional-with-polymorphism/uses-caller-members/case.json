@@ -1,0 +1,8 @@
+{
+  "refactoring": "replace-conditional-with-polymorphism",
+  "description": "Refuses a case that uses a member of the class declaring the method, which the subclass cannot reach",
+  "target": { "symbol": "M:Shapes.Geometry.Area(Shapes.Shape)" },
+  "expect": "error",
+  "errorCode": "uses-caller-members",
+  "errorContains": "_scale"
+}

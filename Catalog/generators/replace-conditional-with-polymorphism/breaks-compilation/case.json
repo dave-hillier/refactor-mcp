@@ -1,0 +1,7 @@
+{
+  "refactoring": "replace-conditional-with-polymorphism",
+  "description": "Refuses when a subclass already declares a method with the override's signature",
+  "target": { "symbol": "M:Staff.Employee.Bonus" },
+  "expect": "error",
+  "errorCode": "breaks-compilation"
+}

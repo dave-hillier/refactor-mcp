@@ -1,0 +1,6 @@
+{
+  "refactoring": "create-adapter",
+  "description": "Accepts adaptee members whose parameters take, and whose results convert implicitly to, the interface's types",
+  "target": { "symbol": "T:Shop.Meter" },
+  "arguments": { "interface": "IGauge", "name": "MeterGauge", "map": { "Read": "Measure", "Scale": "Factor" } }
+}

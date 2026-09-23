@@ -1,0 +1,5 @@
+{
+  "refactoring": "introduce-null-object",
+  "description": "Gives the null object the generic interface's type parameters and constraints, in the interface file's namespace style",
+  "target": { "symbol": "F:Shop.Checkout._orders" }
+}

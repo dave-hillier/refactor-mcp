@@ -1,0 +1,7 @@
+{
+  "refactoring": "replace-array-with-object",
+  "description": "With nullable analysis enabled, marks a member of a non-nullable reference type as starting null, as an array element does",
+  "project": { "nullable": "enable" },
+  "target": { "symbol": "F:Shop.Contact._name" },
+  "arguments": { "name": "PersonName", "members": ["First", "Last"] }
+}

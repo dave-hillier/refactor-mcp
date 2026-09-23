@@ -1,0 +1,7 @@
+{
+  "refactoring": "replace-conditional-with-polymorphism",
+  "description": "Refuses when there is no default to keep and the base class is not abstract, so the method could not be abstract",
+  "target": { "symbol": "M:Shapes.Geometry.Area(Shapes.Shape)" },
+  "expect": "error",
+  "errorCode": "base-not-abstract"
+}

@@ -1,0 +1,8 @@
+{
+  "refactoring": "feature-flag-wrapping",
+  "description": "Refuses when the class already has a member named after the flag, which the selecting property needs",
+  "target": { "file": "Checkout.cs" },
+  "arguments": { "flag": "NewCheckout" },
+  "expect": "error",
+  "errorCode": "member-exists"
+}

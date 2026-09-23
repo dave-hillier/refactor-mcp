@@ -1,0 +1,7 @@
+{
+  "refactoring": "feature-flag-wrapping",
+  "description": "In a nullable context a parameter the branch reads is passed with the nullability it has there",
+  "project": { "nullable": "enable" },
+  "target": { "file": "Greeter.cs" },
+  "arguments": { "flag": "Nicknames" }
+}

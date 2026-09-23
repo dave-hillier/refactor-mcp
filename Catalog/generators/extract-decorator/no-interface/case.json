@@ -1,0 +1,8 @@
+{
+  "refactoring": "extract-decorator",
+  "description": "Refuses a class that implements no interface, since a decorator needs one to stand in for the class",
+  "target": { "symbol": "T:Shop.Greeter" },
+  "expect": "error",
+  "errorCode": "no-interface",
+  "errorContains": "Greeter"
+}

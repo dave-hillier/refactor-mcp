@@ -1,0 +1,5 @@
+{
+  "refactoring": "extract-decorator",
+  "description": "Decorates the constructed generic interface a class implements with a non-generic decorator",
+  "target": { "symbol": "T:Shop.OrderRepository" }
+}

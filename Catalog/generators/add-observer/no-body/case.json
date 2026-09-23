@@ -1,0 +1,8 @@
+{
+  "refactoring": "add-observer",
+  "description": "Refuses an abstract method, which has no body to raise the event from",
+  "target": { "symbol": "M:Shop.Shape.Resize(System.Double)" },
+  "arguments": { "event": "Resized" },
+  "expect": "error",
+  "errorCode": "no-body"
+}

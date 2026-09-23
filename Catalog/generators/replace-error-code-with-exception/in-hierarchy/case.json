@@ -1,0 +1,7 @@
+{
+  "refactoring": "replace-error-code-with-exception",
+  "description": "Refuses a virtual method, whose overrides would keep returning codes",
+  "target": { "symbol": "M:Shop.Job.Run" },
+  "expect": "error",
+  "errorCode": "in-hierarchy"
+}

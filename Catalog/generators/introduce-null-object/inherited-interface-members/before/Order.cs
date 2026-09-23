@@ -1,0 +1,17 @@
+namespace Shop
+{
+    public class Order
+    {
+        private readonly INotifier _notifier;
+
+        public Order(INotifier notifier)
+        {
+            _notifier = notifier;
+        }
+
+        public void Close()
+        {
+            _notifier?.Dispose();
+        }
+    }
+}

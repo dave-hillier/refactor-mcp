@@ -1,0 +1,8 @@
+{
+  "refactoring": "extract-decorator",
+  "description": "Refuses a class that implements several interfaces, since it is unclear which one to decorate",
+  "target": { "symbol": "T:Shop.Greeter" },
+  "expect": "error",
+  "errorCode": "ambiguous-interface",
+  "errorContains": "IDisposable"
+}

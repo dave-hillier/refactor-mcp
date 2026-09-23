@@ -1,0 +1,9 @@
+{
+  "refactoring": "replace-array-with-object",
+  "description": "Refuses a constant index with no member to name it",
+  "target": { "file": "Report.cs", "caret": "marker" },
+  "arguments": { "name": "Performance", "members": ["Club", "Wins"] },
+  "expect": "error",
+  "errorCode": "index-out-of-range",
+  "errorContains": "row[2]"
+}

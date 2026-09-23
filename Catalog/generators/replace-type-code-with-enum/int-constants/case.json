@@ -1,0 +1,6 @@
+{
+  "refactoring": "replace-type-code-with-enum",
+  "description": "Replaces int constants with an enum in a new file and retypes the field, parameter and property that carry them",
+  "target": { "symbol": "T:Staff.Employee" },
+  "arguments": { "name": "EmployeeType", "constants": ["Engineer", "Salesman", "Manager"] }
+}

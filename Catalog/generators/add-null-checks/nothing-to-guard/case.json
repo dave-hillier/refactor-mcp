@@ -1,0 +1,7 @@
+{
+  "refactoring": "add-null-checks",
+  "description": "Refuses a method whose parameters are all value types",
+  "target": { "symbol": "M:Shop.Maths.Add(System.Int32,System.Int32)" },
+  "expect": "error",
+  "errorCode": "nothing-to-guard"
+}

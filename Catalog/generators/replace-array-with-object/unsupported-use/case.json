@@ -1,0 +1,9 @@
+{
+  "refactoring": "replace-array-with-object",
+  "description": "Refuses when the array is used as an array, here by reading its Length",
+  "target": { "file": "Report.cs", "caret": "marker" },
+  "arguments": { "name": "Performance", "members": ["Club", "Wins"] },
+  "expect": "error",
+  "errorCode": "unsupported-use",
+  "errorContains": "Report.cs(9"
+}

@@ -1,0 +1,8 @@
+{
+  "refactoring": "feature-flag-wrapping",
+  "description": "Refuses a branch that returns from the method, which Apply cannot do on its caller's behalf",
+  "target": { "file": "Checkout.cs" },
+  "arguments": { "flag": "NewCheckout" },
+  "expect": "error",
+  "errorCode": "branch-leaves-early"
+}

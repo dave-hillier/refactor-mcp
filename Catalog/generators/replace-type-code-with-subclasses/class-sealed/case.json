@@ -1,0 +1,7 @@
+{
+  "refactoring": "replace-type-code-with-subclasses",
+  "description": "Refuses a sealed class, which cannot have subclasses",
+  "target": { "symbol": "F:Staff.Employee._type" },
+  "expect": "error",
+  "errorCode": "class-sealed"
+}

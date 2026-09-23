@@ -1,0 +1,5 @@
+{
+  "refactoring": "replace-error-code-with-exception",
+  "description": "Makes a method returning 0 for success void, throws for each other code, and turns a caller's check of the code into a catch",
+  "target": { "symbol": "M:Shop.Account.Withdraw(System.Decimal)" }
+}

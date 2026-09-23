@@ -1,0 +1,8 @@
+{
+  "refactoring": "replace-error-code-with-exception",
+  "description": "Refuses a method that returns a computed code, since it cannot tell success from failure",
+  "target": { "symbol": "M:Shop.Account.Withdraw(System.Decimal)" },
+  "expect": "error",
+  "errorCode": "non-constant-return",
+  "errorContains": "_lastError"
+}

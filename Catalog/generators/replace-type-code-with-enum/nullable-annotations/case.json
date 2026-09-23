@@ -1,0 +1,7 @@
+{
+  "refactoring": "replace-type-code-with-enum",
+  "description": "A nullable string code becomes a nullable enum, so the null check still compiles",
+  "project": { "nullable": "enable" },
+  "target": { "symbol": "T:Library.Member" },
+  "arguments": { "name": "MemberStatus", "constants": ["Student", "Staff"] }
+}

@@ -1,34 +1,54 @@
 using ModelContextProtocol.Server;
 using ModelContextProtocol;
-using System;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.CodeAnalysis.Text;
 using System.ComponentModel;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Formatting;
-
 
 [McpServerToolType]
 public static class ExtractDecoratorTool
 {
-    [McpServerTool, Description("Create a simple decorator class for a method")]
+    [McpServerTool, Description("Generate a decorator for an interface, or for the one interface a class implements: " +
+        "a class implementing the interface that wraps an instance of it and forwards every member to it, in a new file")]
     public static async Task<string> ExtractDecorator(
         [Description("Absolute path to the solution file (.sln)")] string solutionPath,
-        [Description("Path to the C# file")] string filePath,
-        [Description("Name of the class containing the method")] string className,
-        [Description("Name of the method to decorate")] string methodName)
+        [Description("Path to the C# file declaring the interface or class")] string filePath,
+        [Description("Name of the interface to decorate, or of a class implementing exactly one interface")] string typeName,
+        [Description("Name of the decorator class (optional; defaults to the interface name without its I, followed by Decorator)")] string? decoratorName = null,
+        CancellationToken cancellationToken = default)
     {
         try
         {
-            return await RefactoringHelpers.RunWithSolutionOrFile(
-                solutionPath,
-                filePath,
-                doc => DecorateWithSolution(doc, className, methodName),
-                path => DecorateSingleFile(path, className, methodName));
+            var (solution, document) = await TypeRefactoringHelpers.LoadDocumentAsync(solutionPath, filePath, cancellationToken);
+            var (type, _) = await TypeRefactoringHelpers.FindTypeAsync(document, typeName, cancellationToken);
+            var @interface = InterfaceToDecorate(type);
+
+            decoratorName ??= DefaultName(@interface);
+            var path = InterfaceImplementation.PathFor(document, decoratorName);
+            InterfaceImplementation.EnsureNameIsFree(type.ContainingNamespace, decoratorName, path);
+
+            var inner = SyntaxFactory.IdentifierName("_inner");
+            var decorator = InterfaceImplementation.WrapperClass(
+                decoratorName,
+                @interface,
+                @interface,
+                "_inner",
+                "inner",
+                TypeRefactoringHelpers.EndOfLine((await document.GetSyntaxRootAsync(cancellationToken))!),
+                (member, isExplicit, part) => InterfaceImplementation.Forward(
+                    isExplicit ? Cast(member.ContainingType, inner) : inner,
+                    member.Name,
+                    member,
+                    part));
+
+            var updated = await InterfaceImplementation.AddTypeFileAsync(document, type.ContainingNamespace, decorator, cancellationToken);
+            await TypeRefactoringHelpers.ApplyIfCompilesAsync(
+                solution,
+                updated,
+                errors => $"Error: The decorator {decoratorName} would not compile: {TypeRefactoringHelpers.Describe(errors)}",
+                cancellationToken);
+
+            return $"Created decorator {decoratorName} for {@interface.Name} in {path}";
         }
         catch (Exception ex)
         {
@@ -36,93 +56,32 @@ public static class ExtractDecoratorTool
         }
     }
 
-    private static async Task<string> DecorateWithSolution(Document document, string className, string methodName)
+    /// <summary>
+    /// The interface itself, or the one interface a class or struct declares
+    /// it implements.
+    /// </summary>
+    private static INamedTypeSymbol InterfaceToDecorate(INamedTypeSymbol type)
     {
-        var sourceText = await document.GetTextAsync();
-        var newText = ExtractDecoratorInSource(sourceText.ToString(), className, methodName);
-        var encoding = await RefactoringHelpers.GetFileEncodingAsync(document.FilePath!);
-        await File.WriteAllTextAsync(document.FilePath!, newText, encoding);
-        RefactoringHelpers.UpdateSolutionCache(document.WithText(SourceText.From(newText, encoding)));
-        return $"Created decorator for {className}.{methodName} in {document.FilePath} (solution mode)";
+        if (type.TypeKind == TypeKind.Interface)
+            return type;
+
+        return type.Interfaces.Length switch
+        {
+            0 => throw new McpException($"Error: {type.Name} implements no interface, so there is nothing for a decorator to implement"),
+            1 => type.Interfaces[0],
+            _ => throw new McpException(
+                $"Error: {type.Name} implements several interfaces ({string.Join(", ", type.Interfaces.Select(i => i.ToDisplayString()))}); decorate one of them by name"),
+        };
     }
 
-    private static Task<string> DecorateSingleFile(string filePath, string className, string methodName)
+    /// <summary><c>IGreeter</c> gives <c>GreeterDecorator</c>.</summary>
+    private static string DefaultName(INamedTypeSymbol @interface)
     {
-        return RefactoringHelpers.ApplySingleFileEdit(
-            filePath,
-            text => ExtractDecoratorInSource(text, className, methodName),
-            $"Created decorator for {className}.{methodName} in {filePath} (single file mode)");
+        var name = @interface.Name;
+        var stem = name.Length > 1 && name[0] == 'I' && char.IsUpper(name[1]) ? name[1..] : name;
+        return stem + "Decorator";
     }
 
-    public static string ExtractDecoratorInSource(string sourceText, string className, string methodName)
-    {
-        var tree = CSharpSyntaxTree.ParseText(sourceText);
-        var root = (CompilationUnitSyntax)tree.GetRoot();
-        var classNode = root.DescendantNodes().OfType<ClassDeclarationSyntax>()
-            .FirstOrDefault(c => c.Identifier.ValueText == className);
-        if (classNode == null)
-            throw new McpException($"Error: Class '{className}' not found");
-        var method = classNode.Members.OfType<MethodDeclarationSyntax>()
-            .FirstOrDefault(m => m.Identifier.ValueText == methodName);
-        if (method == null)
-            throw new McpException($"Error: Method '{methodName}' not found");
-
-        var decorator = CreateDecoratorClass(className, method);
-
-        SyntaxNode newRoot;
-        if (classNode.Parent is BaseNamespaceDeclarationSyntax ns)
-            newRoot = root.ReplaceNode(ns, ns.AddMembers(decorator));
-        else
-            newRoot = root.AddMembers(decorator);
-
-        var formatted = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
-        return formatted.ToFullString();
-    }
-
-    private static ClassDeclarationSyntax CreateDecoratorClass(string className, MethodDeclarationSyntax method)
-    {
-        var decoratorName = className + "Decorator";
-        var fieldName = "_inner";
-
-        var field = SyntaxFactory.FieldDeclaration(
-                SyntaxFactory.VariableDeclaration(SyntaxFactory.IdentifierName(className))
-                    .AddVariables(SyntaxFactory.VariableDeclarator(fieldName)))
-            .AddModifiers(SyntaxFactory.Token(SyntaxKind.PrivateKeyword), SyntaxFactory.Token(SyntaxKind.ReadOnlyKeyword));
-
-        var ctor = SyntaxFactory.ConstructorDeclaration(decoratorName)
-            .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
-            .AddParameterListParameters(
-                SyntaxFactory.Parameter(SyntaxFactory.Identifier("inner"))
-                    .WithType(SyntaxFactory.IdentifierName(className)))
-            .WithBody(
-                SyntaxFactory.Block(
-                    SyntaxFactory.ExpressionStatement(
-                        SyntaxFactory.AssignmentExpression(
-                            SyntaxKind.SimpleAssignmentExpression,
-                            SyntaxFactory.IdentifierName(fieldName),
-                            SyntaxFactory.IdentifierName("inner")))));
-
-        var args = method.ParameterList.Parameters
-            .Select(p => SyntaxFactory.Argument(SyntaxFactory.IdentifierName(p.Identifier)));
-        var call = SyntaxFactory.InvocationExpression(
-                SyntaxFactory.MemberAccessExpression(
-                    SyntaxKind.SimpleMemberAccessExpression,
-                    SyntaxFactory.IdentifierName(fieldName),
-                    SyntaxFactory.IdentifierName(method.Identifier)))
-            .WithArgumentList(SyntaxFactory.ArgumentList(SyntaxFactory.SeparatedList(args)));
-
-        StatementSyntax callStmt;
-        var isVoid = method.ReturnType is PredefinedTypeSyntax pts && pts.Keyword.IsKind(SyntaxKind.VoidKeyword);
-        if (isVoid)
-            callStmt = SyntaxFactory.ExpressionStatement(call);
-        else
-            callStmt = SyntaxFactory.ReturnStatement(call);
-
-        var decoratedMethod = method.WithBody(SyntaxFactory.Block(callStmt))
-            .WithSemicolonToken(default);
-
-        return SyntaxFactory.ClassDeclaration(decoratorName)
-            .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
-            .AddMembers(field, ctor, decoratedMethod);
-    }
+    private static ExpressionSyntax Cast(INamedTypeSymbol type, ExpressionSyntax expression) =>
+        SyntaxFactory.ParenthesizedExpression(SyntaxFactory.CastExpression(InterfaceImplementation.TypeFor(type), expression));
 }

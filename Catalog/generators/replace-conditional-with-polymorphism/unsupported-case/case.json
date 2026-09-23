@@ -1,0 +1,8 @@
+{
+  "refactoring": "replace-conditional-with-polymorphism",
+  "description": "Refuses a case guarded by a when clause, which does not belong to the whole subclass",
+  "target": { "symbol": "M:Shapes.Geometry.IsLarge(Shapes.Shape)" },
+  "expect": "error",
+  "errorCode": "unsupported-case",
+  "errorContains": "when"
+}

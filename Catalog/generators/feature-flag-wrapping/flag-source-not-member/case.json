@@ -1,0 +1,8 @@
+{
+  "refactoring": "feature-flag-wrapping",
+  "description": "Refuses a check on flags passed as a parameter, which a property of the class cannot read",
+  "target": { "file": "Checkout.cs" },
+  "arguments": { "flag": "NewCheckout" },
+  "expect": "error",
+  "errorCode": "flag-source-not-member"
+}

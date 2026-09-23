@@ -1,0 +1,8 @@
+{
+  "refactoring": "feature-flag-wrapping",
+  "description": "Refuses a flag checked in more than one place, whose branches would need separate strategies",
+  "target": { "file": "Checkout.cs" },
+  "arguments": { "flag": "NewCheckout" },
+  "expect": "error",
+  "errorCode": "ambiguous-flag-check"
+}

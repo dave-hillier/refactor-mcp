@@ -1,0 +1,9 @@
+{
+  "refactoring": "replace-array-with-object",
+  "description": "Refuses when the result would not compile, here because an element is passed as an out argument, which a property cannot be",
+  "target": { "file": "Parser.cs", "caret": "marker" },
+  "arguments": { "name": "Dimensions", "members": ["Width", "Height"] },
+  "expect": "error",
+  "errorCode": "breaks-compilation",
+  "errorContains": "Parser.cs"
+}
