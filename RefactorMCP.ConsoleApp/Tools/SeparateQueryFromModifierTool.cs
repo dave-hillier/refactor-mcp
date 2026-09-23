@@ -167,21 +167,8 @@ public static class SeparateQueryFromModifierTool
     }
 
     /// <summary>The query and modifier are called wherever the method was, so they take its accessibility.</summary>
-    private static SyntaxNode GiveAccessibility(SyntaxNode root, SyntaxAnnotation mark, params string[] names)
-    {
-        var method = (MethodDeclarationSyntax)root.GetAnnotatedNodes(mark).Single();
-        var accessibility = method.Modifiers.Where(m => SyntaxFacts.IsAccessibilityModifier(m.Kind())).ToList();
-        var parts = ((ClassDeclarationSyntax)method.Parent!).Members.OfType<MethodDeclarationSyntax>()
-            .Where(m => names.Contains(m.Identifier.ValueText));
-
-        return root.ReplaceNodes(parts, (_, part) =>
-        {
-            var others = part.Modifiers.Where(m => !SyntaxFacts.IsAccessibilityModifier(m.Kind()));
-            var modifiers = accessibility.Select(m => m.WithoutTrivia().WithTrailingTrivia(SyntaxFactory.Space)).Concat(others).ToList();
-            modifiers[0] = modifiers[0].WithLeadingTrivia(part.Modifiers[0].LeadingTrivia);
-            return part.WithModifiers(SyntaxFactory.TokenList(modifiers));
-        });
-    }
+    private static SyntaxNode GiveAccessibility(SyntaxNode root, SyntaxAnnotation mark, params string[] names) =>
+        MemberAccessibility.CopyTo(root, (MethodDeclarationSyntax)root.GetAnnotatedNodes(mark).Single(), names);
 
     /// <summary>
     /// Replaces each call of the original method with a call of the modifier and a call

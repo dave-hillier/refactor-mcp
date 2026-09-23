@@ -27,7 +27,8 @@ internal static class ExistingMethodCall
         var code = selected switch
         {
             [ReturnStatementSyntax { Expression: { } returned }] => new List<SyntaxNode> { returned },
-            [.., ReturnStatementSyntax { Expression: null }] when selected.Count > 1 => selected.Take(selected.Count - 1).ToList(),
+            [.., ReturnStatementSyntax { Expression: null } or BreakStatementSyntax or ContinueStatementSyntax] when selected.Count > 1 =>
+                selected.Take(selected.Count - 1).ToList(),
             _ => selected.ToList(),
         };
 
@@ -109,15 +110,24 @@ internal static class ExistingMethodCall
         var statement = SyntaxFactory.ExpressionStatement(call)
             .WithLeadingTrivia(code[0].GetLeadingTrivia())
             .WithTrailingTrivia(code[^1].GetTrailingTrivia());
-        if (code[0].Parent is not BlockSyntax block)
+        var container = code[0].Parent!;
+        var siblings = container switch
+        {
+            BlockSyntax block => block.Statements,
+            SwitchSectionSyntax section => section.Statements,
+            _ => default(SyntaxList<StatementSyntax>?),
+        };
+        if (siblings is not { } list)
             return root.ReplaceNode(code[0], statement);
 
-        var first = block.Statements.IndexOf((StatementSyntax)code[0]);
-        var statements = block.Statements
+        var first = list.IndexOf((StatementSyntax)code[0]);
+        var statements = list
             .Where((_, i) => i < first || i >= first + code.Count)
             .ToList();
         statements.Insert(first, statement);
-        return root.ReplaceNode(block, block.WithStatements(SyntaxFactory.List(statements)));
+        return root.ReplaceNode(container, container is BlockSyntax b
+            ? b.WithStatements(SyntaxFactory.List(statements))
+            : ((SwitchSectionSyntax)container).WithStatements(SyntaxFactory.List(statements)));
     }
 
     /// <summary>

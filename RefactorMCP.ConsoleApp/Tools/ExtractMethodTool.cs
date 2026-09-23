@@ -110,8 +110,9 @@ public static class ExtractMethodTool
     }
 
     /// <summary>
-    /// The statements the selection touches, in the innermost block of the method that
-    /// holds all of it, or the single statement an if, else or loop runs without braces.
+    /// The statements the selection touches, in the innermost block or switch section of
+    /// the method that holds all of it, or the single statement an if, else or loop runs
+    /// without braces.
     /// A selection that spans several blocks takes whole statements of the block around
     /// them. Blocks of lambdas and local functions are not searched.
     /// </summary>
@@ -124,6 +125,8 @@ public static class ExtractMethodTool
             var holdsSelection = node switch
             {
                 BlockSyntax block => block.OpenBraceToken.Span.End <= trimmed.Start && trimmed.End <= block.CloseBraceToken.SpanStart,
+                SwitchSectionSyntax { Statements.Count: > 0 } section =>
+                    TextSpan.FromBounds(section.Statements.First().FullSpan.Start, section.Statements.Last().Span.End).Contains(trimmed),
                 StatementSyntax statement => IsEmbedded(statement) && statement.Span.Contains(trimmed),
                 _ => false,
             };
@@ -131,9 +134,12 @@ public static class ExtractMethodTool
                 container = node;
         }
 
-        return container is BlockSyntax inner
-            ? inner.Statements.Where(s => span.IntersectsWith(s.FullSpan)).ToList()
-            : new List<StatementSyntax> { (StatementSyntax)container };
+        return container switch
+        {
+            BlockSyntax inner => inner.Statements.Where(s => span.IntersectsWith(s.FullSpan)).ToList(),
+            SwitchSectionSyntax section => section.Statements.Where(s => span.IntersectsWith(s.FullSpan)).ToList(),
+            _ => new List<StatementSyntax> { (StatementSyntax)container },
+        };
     }
 
     // A statement an if, else or loop runs directly, rather than one in a block.

@@ -23,13 +23,14 @@ a new private method, and replaces them with a call to it.
 
 - The new method is placed after the containing method, with the given name,
   and is `private`. It is `static` when the containing method is.
-- Statements are taken from the innermost block that holds the whole
-  selection, so a selection inside the block of an `if` or loop extracts
-  statements of that block. A statement an `if`, `else` or loop runs without
-  braces is extracted on its own and replaced by the call.
+- Statements are taken from the innermost block or switch section that holds
+  the whole selection, so a selection inside the block of an `if` or loop
+  extracts statements of that block. A statement an `if`, `else` or loop runs
+  without braces is extracted on its own and replaced by the call.
 - An expression becomes a method returning it, with the expression's type,
   and the call takes its place.
-- A `return;` ending the selection stays at the call site, after the call.
+- A `return;`, `break;` or `continue;` ending the selection stays at the call
+  site, after the call.
 - When the name is that of a method the class already has, whose body is the
   selected code with each of its parameters standing for an expression in
   it, no method is created: the selection becomes a call of that method,

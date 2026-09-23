@@ -27,10 +27,11 @@ internal class ExtractMethodRewriter : CSharpSyntaxRewriter
         _statements = statements;
         _methodName = methodName;
 
-        // A return that ends the selection leaves the containing method, so it stays at
-        // the call site rather than only leaving the new method.
-        var keptReturn = statements.Count > 1 && statements.Last() is ReturnStatementSyntax { Expression: null } bareReturn
-            ? bareReturn
+        // A return, break or continue that ends the selection leaves the containing
+        // method, switch section or loop, so it stays at the call site rather than only
+        // leaving the new method.
+        var keptReturn = statements.Count > 1 && statements.Last() is ReturnStatementSyntax { Expression: null } or BreakStatementSyntax or ContinueStatementSyntax
+            ? statements.Last()
             : null;
         var extracted = keptReturn == null ? statements : statements.Take(statements.Count - 1).ToList();
 
@@ -86,7 +87,8 @@ internal class ExtractMethodRewriter : CSharpSyntaxRewriter
             callSite[i] = callSite[i].WithLeadingTrivia(SyntaxFactory.CarriageReturnLineFeed);
         callSite[0] = callSite[0].WithLeadingTrivia(callSiteLeading);
 
-        if (statements.First().Parent is not BlockSyntax block)
+        var container = statements.First().Parent!;
+        if (container is not (BlockSyntax or SwitchSectionSyntax))
         {
             // A statement that is the body of an if, else or loop without braces is
             // replaced by the call, in a block of its own when the call takes several.
@@ -101,7 +103,8 @@ internal class ExtractMethodRewriter : CSharpSyntaxRewriter
         // whole run in a single edit. Removing the statements one at a time would only
         // drop the first of them, because the nodes being removed come from the tree the
         // first removal already replaced.
-        var firstStatementIndex = block.Statements.IndexOf(statements.First());
+        var siblings = container is BlockSyntax block ? block.Statements : ((SwitchSectionSyntax)container).Statements;
+        var firstStatementIndex = siblings.IndexOf(statements.First());
 
         // A call site that ends in the block checking for a result is set apart from the
         // statement after it by a blank line, as the extracted method's own is.
@@ -109,21 +112,23 @@ internal class ExtractMethodRewriter : CSharpSyntaxRewriter
         var nextIndex = firstStatementIndex + statements.Count;
         if (callSite.Count > 1 &&
             keptReturn == null &&
-            nextIndex < block.Statements.Count &&
-            !block.Statements[nextIndex].GetLeadingTrivia().Any(SyntaxKind.EndOfLineTrivia))
+            nextIndex < siblings.Count &&
+            !siblings[nextIndex].GetLeadingTrivia().Any(SyntaxKind.EndOfLineTrivia))
         {
             endOfLine = endOfLine.AddRange(endOfLine);
         }
 
         callSite[^1] = callSite[^1].WithTrailingTrivia(endOfLine);
-        var kept = block.Statements
+        var kept = siblings
             .Where((s, i) => i < firstStatementIndex || i >= firstStatementIndex + statements.Count)
             .ToList();
-        var updatedStatements = kept.Take(firstStatementIndex)
+        var updatedStatements = SyntaxFactory.List(kept.Take(firstStatementIndex)
             .Concat(callSite)
-            .Concat(kept.Skip(firstStatementIndex));
+            .Concat(kept.Skip(firstStatementIndex)));
 
-        _updatedMethod = containingMethod.ReplaceNode(block, block.WithStatements(SyntaxFactory.List(updatedStatements)));
+        _updatedMethod = containingMethod.ReplaceNode(container, container is BlockSyntax
+            ? ((BlockSyntax)container).WithStatements(updatedStatements)
+            : ((SwitchSectionSyntax)container).WithStatements(updatedStatements));
     }
 
     /// <summary>

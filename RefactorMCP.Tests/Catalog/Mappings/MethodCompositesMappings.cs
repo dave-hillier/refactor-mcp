@@ -167,6 +167,29 @@ internal sealed class MethodCompositesMappings : ICatalogMappings
                 ["polymorphic-method"] = "is virtual, an override or an interface implementation",
                 ["method-group-reference"] = "is used without being called",
             }),
+        new CatalogMapping(
+            "replace-parameter-with-explicit-methods",
+            "replace-parameter-with-explicit-methods",
+            async context =>
+            {
+                var arguments = await MethodArguments(context);
+                arguments["parameterName"] = context.RequiredArgument("parameter");
+                arguments["methods"] = context.RequiredArgument("methods");
+                return arguments;
+            },
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["not-a-dispatch"] = "does not start by choosing what to do from",
+                ["unknown-value"] = "The method does not dispatch on the value",
+                ["falls-through"] = "runs on into the rest of the method",
+                ["empty-branch"] = "is empty, so there is nothing to give a method",
+                ["no-values"] = "Name at least one value",
+                ["polymorphic-method"] = "is virtual, an override or an interface implementation",
+                ["not-in-class"] = "is not a block-bodied method of a class",
+                ["unknown-parameter"] = "has no parameter named",
+                ["assigned-local-used-after"] = "The extracted block assigns",
+                ["name-conflict"] = "already has a member named",
+            }),
     };
 
     /// <summary>
