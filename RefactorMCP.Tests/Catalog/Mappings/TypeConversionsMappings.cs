@@ -79,6 +79,26 @@ internal sealed class TypeConversionsMappings : ICatalogMappings
                 ["no-primary-constructor"] = "has no primary constructor",
                 ["name-conflict"] = "already has a member of that name",
             }),
+        new CatalogMapping(
+            "replace-constructor-with-factory-method",
+            "replace-constructor-with-factory-method",
+            async context =>
+            {
+                var arguments = await DeclarationArguments(context, "typeName");
+                if (context.HasArgument("name"))
+                    arguments["methodName"] = context.RequiredArgument("name");
+                if (context.HasArgument("accessibility"))
+                    arguments["accessibility"] = context.RequiredArgument("accessibility");
+                return arguments;
+            },
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["invalid-accessibility"] = "is not an accessibility",
+                ["abstract-type"] = "is not a concrete class",
+                ["name-conflict"] = "that the factory method would clash with",
+                ["object-initializer"] = "uses an object initializer",
+                ["constructor-still-needed"] = "is still needed at its old accessibility",
+            }),
     };
 
     /// <summary>

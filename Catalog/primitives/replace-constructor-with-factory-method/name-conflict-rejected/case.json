@@ -1,0 +1,7 @@
+{
+  "refactoring": "replace-constructor-with-factory-method",
+  "description": "Refuses when the type already has a method with the factory's name and parameters",
+  "target": { "symbol": "M:Shop.Order.#ctor(System.String)" },
+  "expect": "error",
+  "errorCode": "name-conflict"
+}
