@@ -1,0 +1,6 @@
+{
+  "refactoring": "convert-local-to-field",
+  "description": "In a later step of a composite the local is named by argument within the method's symbol",
+  "target": { "symbol": "M:Shop.Order.Total(System.Int32)" },
+  "arguments": { "local": "sum", "name": "_sum" }
+}

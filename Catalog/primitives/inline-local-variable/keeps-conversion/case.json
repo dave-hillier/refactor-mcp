@@ -1,0 +1,5 @@
+{
+  "refactoring": "inline-local-variable",
+  "description": "An implicit conversion the declaration performed is kept as a cast, so arithmetic keeps its meaning",
+  "target": { "file": "Sample.cs", "caret": "marker" }
+}

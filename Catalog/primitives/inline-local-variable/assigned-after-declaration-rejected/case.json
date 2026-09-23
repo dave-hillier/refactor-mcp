@@ -1,0 +1,7 @@
+{
+  "refactoring": "inline-local-variable",
+  "description": "Refuses a local that is assigned again, whose uses see different values",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "assigned-after-declaration"
+}

@@ -1,0 +1,5 @@
+{
+  "refactoring": "split-declaration-and-assignment",
+  "description": "A comment above the declaration stays on it, and a trailing comment follows the value into the assignment",
+  "target": { "file": "Sample.cs", "caret": "marker" }
+}

@@ -1,0 +1,5 @@
+{
+  "refactoring": "inline-local-variable",
+  "description": "Inlines one local of a declaration that declares several, leaving the others",
+  "target": { "file": "Sample.cs", "caret": "marker" }
+}

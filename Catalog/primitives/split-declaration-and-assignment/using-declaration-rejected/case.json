@@ -1,0 +1,7 @@
+{
+  "refactoring": "split-declaration-and-assignment",
+  "description": "Refuses a using declaration, whose disposal is tied to its initialiser",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "using-declaration"
+}

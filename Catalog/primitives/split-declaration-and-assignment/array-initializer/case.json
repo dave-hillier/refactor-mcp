@@ -1,0 +1,5 @@
+{
+  "refactoring": "split-declaration-and-assignment",
+  "description": "An array initializer, which is only valid in a declaration, becomes an array creation",
+  "target": { "file": "Sample.cs", "caret": "marker" }
+}

@@ -1,0 +1,7 @@
+{
+  "refactoring": "join-declaration-and-assignment",
+  "description": "Refuses when the local is first written as an out argument rather than assigned",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "first-use-not-assignment"
+}

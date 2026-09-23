@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-local-to-field",
+  "description": "Without a new name the field takes the local's; a declaration with no value is removed with its comment kept",
+  "target": { "file": "Sample.cs", "caret": "marker" }
+}

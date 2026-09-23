@@ -1,0 +1,7 @@
+{
+  "refactoring": "inline-local-variable",
+  "description": "Refuses when a variable the initializer reads is assigned before a use",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "initializer-inputs-change"
+}

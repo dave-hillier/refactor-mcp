@@ -1,0 +1,8 @@
+{
+  "refactoring": "split-temporary-variable",
+  "description": "Refuses a compound assignment, which reads the old value",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "arguments": { "name": "more" },
+  "expect": "error",
+  "errorCode": "assignment-reads-variable"
+}

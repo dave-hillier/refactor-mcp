@@ -1,0 +1,7 @@
+{
+  "refactoring": "join-declaration-and-assignment",
+  "description": "Refuses a declaration that already has a value",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "has-initializer"
+}

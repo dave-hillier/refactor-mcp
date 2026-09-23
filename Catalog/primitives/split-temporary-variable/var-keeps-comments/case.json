@@ -1,0 +1,6 @@
+{
+  "refactoring": "split-temporary-variable",
+  "description": "A var local splits into another var local, and the comments around the reassignment stay",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "arguments": { "name": "farewell" }
+}

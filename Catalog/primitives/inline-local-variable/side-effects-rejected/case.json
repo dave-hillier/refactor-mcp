@@ -1,0 +1,7 @@
+{
+  "refactoring": "inline-local-variable",
+  "description": "Refuses to repeat an initializer with side effects at several uses",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "initializer-has-side-effects"
+}

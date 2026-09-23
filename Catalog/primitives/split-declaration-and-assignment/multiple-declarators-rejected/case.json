@@ -1,0 +1,7 @@
+{
+  "refactoring": "split-declaration-and-assignment",
+  "description": "Refuses a declaration of several locals, whose initialisers would run out of order",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "multiple-declarators"
+}

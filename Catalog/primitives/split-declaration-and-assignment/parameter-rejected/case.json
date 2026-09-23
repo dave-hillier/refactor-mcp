@@ -1,0 +1,7 @@
+{
+  "refactoring": "split-declaration-and-assignment",
+  "description": "Refuses a parameter, which is not a local",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "not-a-local"
+}

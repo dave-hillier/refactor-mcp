@@ -1,0 +1,7 @@
+{
+  "refactoring": "inline-local-variable",
+  "description": "Refuses a local that is never read, leaving its removal to Safe Delete Local",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "never-used"
+}

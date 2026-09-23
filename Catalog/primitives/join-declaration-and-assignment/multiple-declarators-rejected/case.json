@@ -1,0 +1,7 @@
+{
+  "refactoring": "join-declaration-and-assignment",
+  "description": "Refuses a declaration of several locals",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "multiple-declarators"
+}

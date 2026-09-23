@@ -1,0 +1,5 @@
+{
+  "refactoring": "join-declaration-and-assignment",
+  "description": "Joins a declaration and the assignment that follows it into one declaration",
+  "target": { "file": "Sample.cs", "caret": "marker" }
+}

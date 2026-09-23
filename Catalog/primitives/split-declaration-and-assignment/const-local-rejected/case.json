@@ -1,0 +1,7 @@
+{
+  "refactoring": "split-declaration-and-assignment",
+  "description": "Refuses a constant, which cannot be assigned",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "const-local"
+}

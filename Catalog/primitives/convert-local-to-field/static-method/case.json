@@ -1,0 +1,6 @@
+{
+  "refactoring": "convert-local-to-field",
+  "description": "A local of a static method becomes a static field, placed after the existing fields",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "arguments": { "name": "_last" }
+}

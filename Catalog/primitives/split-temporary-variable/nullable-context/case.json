@@ -1,0 +1,7 @@
+{
+  "refactoring": "split-temporary-variable",
+  "description": "The new local keeps the nullable annotation of the declared type",
+  "project": { "nullable": "enable" },
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "arguments": { "name": "backup" }
+}

@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-local-to-field",
+  "description": "Refuses a field name the type already has a member of",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "arguments": { "name": "_count" },
+  "expect": "error",
+  "errorCode": "name-conflict"
+}

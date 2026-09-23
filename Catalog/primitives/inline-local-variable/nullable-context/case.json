@@ -1,0 +1,6 @@
+{
+  "refactoring": "inline-local-variable",
+  "description": "Inlines a nullable local into a null-coalescing expression without new warnings",
+  "project": { "nullable": "enable" },
+  "target": { "file": "Sample.cs", "caret": "marker" }
+}

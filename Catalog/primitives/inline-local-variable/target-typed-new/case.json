@@ -1,0 +1,5 @@
+{
+  "refactoring": "inline-local-variable",
+  "description": "A target-typed new names its type once it no longer has a declaration to take it from",
+  "target": { "file": "Sample.cs", "caret": "marker" }
+}

@@ -1,0 +1,8 @@
+{
+  "refactoring": "split-temporary-variable",
+  "description": "Refuses a new name that is already a local or parameter of the method",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "arguments": { "name": "a" },
+  "expect": "error",
+  "errorCode": "name-conflict"
+}

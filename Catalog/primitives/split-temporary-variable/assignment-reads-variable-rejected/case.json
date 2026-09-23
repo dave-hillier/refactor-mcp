@@ -1,0 +1,8 @@
+{
+  "refactoring": "split-temporary-variable",
+  "description": "Refuses a reassignment that reads the old value, which is not an unrelated purpose",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "arguments": { "name": "doubled" },
+  "expect": "error",
+  "errorCode": "assignment-reads-variable"
+}

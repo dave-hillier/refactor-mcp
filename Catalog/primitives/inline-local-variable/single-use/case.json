@@ -1,0 +1,5 @@
+{
+  "refactoring": "inline-local-variable",
+  "description": "Replaces the only use with the initializer, parenthesised where precedence needs it, and removes the declaration",
+  "target": { "file": "Sample.cs", "caret": "marker" }
+}

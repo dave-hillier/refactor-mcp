@@ -1,0 +1,5 @@
+{
+  "refactoring": "join-declaration-and-assignment",
+  "description": "The declaration moves down to the first assignment, bringing its comment, past statements that do not use the local",
+  "target": { "file": "Sample.cs", "caret": "marker" }
+}

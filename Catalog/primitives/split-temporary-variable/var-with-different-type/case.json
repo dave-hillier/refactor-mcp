@@ -1,0 +1,6 @@
+{
+  "refactoring": "split-temporary-variable",
+  "description": "When the new value's own type differs from the local's, the new local is declared with the local's type",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "arguments": { "name": "fallback" }
+}

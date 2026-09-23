@@ -1,0 +1,5 @@
+{
+  "refactoring": "split-declaration-and-assignment",
+  "description": "Splits a var declaration into a declaration with the inferred type and an assignment",
+  "target": { "file": "Sample.cs", "caret": "marker" }
+}

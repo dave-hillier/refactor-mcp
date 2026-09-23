@@ -1,0 +1,7 @@
+{
+  "refactoring": "split-declaration-and-assignment",
+  "description": "Refuses a declaration that has no value to split off",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "no-initializer"
+}

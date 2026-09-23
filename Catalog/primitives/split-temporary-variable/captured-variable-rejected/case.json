@@ -1,0 +1,8 @@
+{
+  "refactoring": "split-temporary-variable",
+  "description": "Refuses a local captured by a lambda, which may read it after the reassignment",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "arguments": { "name": "other" },
+  "expect": "error",
+  "errorCode": "captured-variable"
+}

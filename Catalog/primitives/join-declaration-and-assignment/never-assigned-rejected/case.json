@@ -1,0 +1,7 @@
+{
+  "refactoring": "join-declaration-and-assignment",
+  "description": "Refuses a local that is never assigned",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "never-assigned"
+}

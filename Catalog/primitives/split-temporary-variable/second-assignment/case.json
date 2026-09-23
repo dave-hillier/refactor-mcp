@@ -1,0 +1,6 @@
+{
+  "refactoring": "split-temporary-variable",
+  "description": "A local reused for an unrelated value gets a new local from the reassignment on",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "arguments": { "name": "area" }
+}

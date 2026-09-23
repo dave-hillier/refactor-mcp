@@ -1,0 +1,6 @@
+{
+  "refactoring": "join-declaration-and-assignment",
+  "description": "The declared type, with its nullable annotation, is kept as written",
+  "project": { "nullable": "enable" },
+  "target": { "file": "Sample.cs", "caret": "marker" }
+}

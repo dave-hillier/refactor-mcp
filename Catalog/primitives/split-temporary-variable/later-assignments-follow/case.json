@@ -1,0 +1,6 @@
+{
+  "refactoring": "split-temporary-variable",
+  "description": "Every use after the split point, including later assignments, moves to the new local; the uses before keep the old one",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "arguments": { "name": "second" }
+}

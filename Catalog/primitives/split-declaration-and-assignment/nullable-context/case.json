@@ -1,0 +1,6 @@
+{
+  "refactoring": "split-declaration-and-assignment",
+  "description": "In a nullable context the declared type keeps the nullable annotation var implied",
+  "project": { "nullable": "enable" },
+  "target": { "file": "Sample.cs", "caret": "marker" }
+}

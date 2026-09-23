@@ -1,0 +1,5 @@
+{
+  "refactoring": "split-declaration-and-assignment",
+  "description": "The inferred type is written with the method's type parameters",
+  "target": { "file": "Sample.cs", "caret": "marker" }
+}

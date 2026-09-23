@@ -1,0 +1,5 @@
+{
+  "refactoring": "inline-local-variable",
+  "description": "Replaces every use of a side-effect free initializer; the comment above the declaration stays in place",
+  "target": { "file": "Sample.cs", "caret": "marker" }
+}

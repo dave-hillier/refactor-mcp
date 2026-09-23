@@ -1,0 +1,8 @@
+{
+  "refactoring": "split-temporary-variable",
+  "description": "Refuses a caret on a use that is not a reassignment of the local",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "arguments": { "name": "other" },
+  "expect": "error",
+  "errorCode": "not-an-assignment"
+}

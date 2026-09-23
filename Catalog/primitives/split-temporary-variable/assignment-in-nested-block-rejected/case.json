@@ -1,0 +1,8 @@
+{
+  "refactoring": "split-temporary-variable",
+  "description": "Refuses a reassignment in a nested block, after which either value may be read",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "arguments": { "name": "other" },
+  "expect": "error",
+  "errorCode": "assignment-in-nested-block"
+}

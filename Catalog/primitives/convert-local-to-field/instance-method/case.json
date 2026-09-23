@@ -1,0 +1,6 @@
+{
+  "refactoring": "convert-local-to-field",
+  "description": "Promotes a local to a private field; the declaration becomes an assignment and every use refers to the field",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "arguments": { "name": "_total" }
+}
