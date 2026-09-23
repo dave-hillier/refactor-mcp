@@ -1,0 +1,8 @@
+{
+  "refactoring": "replace-expression-with-field",
+  "description": "Refuses a field a constructor assigns other than from a parameter",
+  "target": { "file": "OrderService.cs", "selection": "marker" },
+  "arguments": { "field": "_mailer" },
+  "expect": "error",
+  "errorCode": "field-not-from-parameter"
+}

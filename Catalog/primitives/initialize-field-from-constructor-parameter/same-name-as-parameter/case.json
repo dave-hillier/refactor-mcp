@@ -1,0 +1,6 @@
+{
+  "refactoring": "initialize-field-from-constructor-parameter",
+  "description": "A field with the parameter's name is assigned through this",
+  "target": { "symbol": "M:Shop.OrderService.#ctor(System.String,Shop.Mail.Mailer)" },
+  "arguments": { "field": "mailer", "parameter": "mailer" }
+}

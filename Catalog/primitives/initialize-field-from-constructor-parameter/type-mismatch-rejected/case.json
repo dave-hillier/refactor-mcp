@@ -1,0 +1,8 @@
+{
+  "refactoring": "initialize-field-from-constructor-parameter",
+  "description": "Refuses a field whose type cannot hold the parameter",
+  "target": { "symbol": "M:Shop.OrderService.#ctor(System.String,Shop.Mail.Mailer)" },
+  "arguments": { "field": "_prefix", "parameter": "mailer" },
+  "expect": "error",
+  "errorCode": "type-mismatch"
+}

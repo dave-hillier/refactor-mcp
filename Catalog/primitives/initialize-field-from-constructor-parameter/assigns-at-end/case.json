@@ -1,0 +1,6 @@
+{
+  "refactoring": "initialize-field-from-constructor-parameter",
+  "description": "Assigns an unused field from a constructor parameter at the end of the constructor",
+  "target": { "symbol": "M:Shop.OrderService.#ctor(System.String,Shop.Mail.Mailer)" },
+  "arguments": { "field": "_mailer", "parameter": "mailer" }
+}

@@ -1,0 +1,6 @@
+{
+  "refactoring": "replace-expression-with-field",
+  "description": "A construction in a method becomes the readonly field every constructor assigns from a parameter, since every construction of the class, here in another namespace, passes the same construction for it",
+  "target": { "file": "OrderService.cs", "selection": "marker" },
+  "arguments": { "field": "_mailer" }
+}

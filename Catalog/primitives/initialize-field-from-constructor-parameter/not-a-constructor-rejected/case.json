@@ -1,0 +1,8 @@
+{
+  "refactoring": "initialize-field-from-constructor-parameter",
+  "description": "Refuses a method, which runs after construction",
+  "target": { "symbol": "M:Shop.OrderService.Place(System.String)" },
+  "arguments": { "field": "_mailer", "parameter": "order" },
+  "expect": "error",
+  "errorCode": "not-a-constructor"
+}

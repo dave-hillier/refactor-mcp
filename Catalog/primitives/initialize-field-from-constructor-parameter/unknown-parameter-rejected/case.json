@@ -1,0 +1,9 @@
+{
+  "refactoring": "initialize-field-from-constructor-parameter",
+  "description": "Refuses a parameter the constructor does not have",
+  "target": { "symbol": "M:Shop.OrderService.#ctor(System.String,Shop.Mail.Mailer)" },
+  "arguments": { "field": "_mailer", "parameter": "sender" },
+  "expect": "error",
+  "errorCode": "unknown-parameter",
+  "errorContains": "'sender'"
+}

@@ -1,0 +1,8 @@
+{
+  "refactoring": "replace-expression-with-field",
+  "description": "Refuses an expression the member does not contain",
+  "target": { "symbol": "M:Shop.OrderService.Place(System.String)" },
+  "arguments": { "expression": "new Mailer(\"smtp.other.com\")", "field": "_mailer" },
+  "expect": "error",
+  "errorCode": "expression-not-found"
+}

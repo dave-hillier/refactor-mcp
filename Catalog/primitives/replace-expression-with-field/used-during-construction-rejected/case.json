@@ -1,0 +1,8 @@
+{
+  "refactoring": "replace-expression-with-field",
+  "description": "Refuses when a constructor calls the member before assigning the field, when the field would still be null",
+  "target": { "file": "OrderService.cs", "selection": "marker" },
+  "arguments": { "field": "_mailer" },
+  "expect": "error",
+  "errorCode": "used-during-construction"
+}

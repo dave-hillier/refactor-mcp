@@ -234,6 +234,9 @@ implemented today.
 - Use Named Arguments at Call Site
 - Change Return Type
 - Change Accessibility
+- Redirect Calls with Constant Argument (to the method the original calls
+  for that value)
+- Make Method Async (await the tasks it blocks on; callers block on it)
 
 #### Fields, properties and constants
 
@@ -249,6 +252,9 @@ implemented today.
 - Make Field Readonly
 - Convert Setter to Init-Only
 - Encapsulate Collection (expose a read-only view, add and remove methods)
+- Initialize Field from Constructor Parameter (for a field nothing uses yet)
+- Replace Expression with Field (a readonly field every construction sets to
+  an equivalent value)
 
 #### Moving members and types
 
@@ -362,7 +368,7 @@ defines the expected result.
 - **Parameterise Method**: Change Signature on one method to add the varying
   value, redirect the similar methods, Inline Method.
 - **Replace Parameter with Explicit Methods**: Extract Method per value,
-  redirect call sites that pass a constant.
+  Change Accessibility, Redirect Calls with Constant Argument per value.
 - **Separate Query from Modifier**: Extract Method for the query, Extract
   Method for the modifier, redirect callers.
 - **Replace Inheritance with Delegation**: Introduce Field of the base type,
@@ -372,12 +378,14 @@ defines the expected result.
 - **Introduce Interface for Dependency**: Extract Interface, Change Type on
   the field or parameter.
 - **Constructor Injection**: Change Signature on the constructor to add the
-  dependency, Introduce Field, replace the local construction.
+  dependency, Introduce Field, Initialize Field from Constructor Parameter,
+  Make Field Readonly, Replace Expression with Field on the local
+  construction, Inline Local Variable.
 - **Make Static then Move**: Make Method Static, Move Static Method.
 - **Move Multiple Methods**: Move Instance Method or Move Static Method per
   method, in dependency order.
-- **Convert to Async**: Change Return Type to `Task`, await the calls inside,
-  then repeat for each caller up to a boundary.
+- **Convert to Async**: Make Method Async, then repeat for each caller that
+  can be async, up to a boundary.
 
 ### Generators
 

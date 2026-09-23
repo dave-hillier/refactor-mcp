@@ -1,0 +1,8 @@
+{
+  "refactoring": "replace-expression-with-field",
+  "description": "Refuses a field that is not readonly, which other code could change after construction",
+  "target": { "file": "OrderService.cs", "selection": "marker" },
+  "arguments": { "field": "_mailer" },
+  "expect": "error",
+  "errorCode": "field-not-readonly"
+}

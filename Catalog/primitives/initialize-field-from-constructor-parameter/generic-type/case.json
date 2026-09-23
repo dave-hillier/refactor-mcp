@@ -1,0 +1,6 @@
+{
+  "refactoring": "initialize-field-from-constructor-parameter",
+  "description": "In a generic class with an empty constructor, a field of the type parameter is assigned from a parameter of that type",
+  "target": { "symbol": "M:Caching.Cache`1.#ctor(`0)" },
+  "arguments": { "field": "_fallback", "parameter": "fallback" }
+}

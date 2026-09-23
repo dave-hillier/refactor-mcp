@@ -1,0 +1,8 @@
+{
+  "refactoring": "initialize-field-from-constructor-parameter",
+  "description": "Refuses a field that is already read, whose value the assignment would change",
+  "target": { "symbol": "M:Shop.OrderService.#ctor(System.String,Shop.Mail.Mailer)" },
+  "arguments": { "field": "_mailer", "parameter": "mailer" },
+  "expect": "error",
+  "errorCode": "field-in-use"
+}

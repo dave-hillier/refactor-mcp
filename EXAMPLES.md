@@ -2540,6 +2540,50 @@ dotnet run --project RefactorMCP.ConsoleApp -- --json create-adapter '{"solution
 
 <!-- End of Generators. -->
 
+### Method recipe primitives
+
+<!-- Method recipe primitives: examples for this group's tools go below this line. -->
+
+These primitives are steps in the recipes of Replace Parameter with Explicit
+Methods, Constructor Injection and Convert to Async; the catalog README for
+each under `Catalog/primitives/` states its preconditions.
+
+`redirect-calls-with-constant-argument` makes calls of `SetValue` that pass
+`"height"` for `name` call `SetHeight`, which `SetValue` runs for that value,
+passing the arguments `SetHeight` takes.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json redirect-calls-with-constant-argument '{"solutionPath":"./Shapes.sln","filePath":"./Shapes/Box.cs","methodName":"SetValue","parameterName":"name","value":"\"height\"","targetMethodName":"SetHeight"}'
+```
+
+`initialize-field-from-constructor-parameter` assigns `_mailer`, which
+nothing uses yet, from the constructor's `mailer` parameter. A constructor is
+named by its class; `line` picks one.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json initialize-field-from-constructor-parameter '{"solutionPath":"./Shop.sln","filePath":"./Shop/OrderService.cs","className":"OrderService","fieldName":"_mailer","parameterName":"mailer"}'
+```
+
+`replace-expression-with-field` replaces an expression with a readonly field
+when every constructor assigns the field from a parameter and every
+construction passes an equivalent expression for it. Give the expression by
+`selectionRange`, or give `memberName` and `expression` to replace every
+occurrence in a member.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json replace-expression-with-field '{"solutionPath":"./Shop.sln","filePath":"./Shop/OrderService.cs","fieldName":"_mailer","memberName":"Place","expression":"new Mailer(\"smtp.example.com\")"}'
+```
+
+`make-method-async` makes `Available`, which reads a task's `Result`, await
+it and return `Task<int>`. Calls in async methods await it; every other
+caller blocks with `.GetAwaiter().GetResult()`.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json make-method-async '{"solutionPath":"./Stock.sln","filePath":"./Stock/Inventory.cs","methodName":"Available"}'
+```
+
+<!-- End of Method recipe primitives. -->
+
 ## Metrics Resource
 
 Metrics can be queried using the resource scheme:

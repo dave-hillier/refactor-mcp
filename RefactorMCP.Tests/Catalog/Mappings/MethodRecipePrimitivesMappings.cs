@@ -39,6 +39,63 @@ internal sealed class MethodRecipePrimitivesMappings : ICatalogMappings
                 ["does-not-compile"] = "The change would not compile",
             }),
         new CatalogMapping(
+            "initialize-field-from-constructor-parameter",
+            "initialize-field-from-constructor-parameter",
+            async context =>
+            {
+                var arguments = await MethodArguments(context);
+                arguments["className"] = arguments["methodName"];
+                arguments.Remove("methodName");
+                arguments["fieldName"] = context.RequiredArgument("field");
+                arguments["parameterName"] = context.RequiredArgument("parameter");
+                return arguments;
+            },
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["not-a-constructor"] = "is not an instance constructor with a body",
+                ["unknown-parameter"] = "has no parameter named",
+                ["unknown-field"] = "has no instance field named",
+                ["type-mismatch"] = "cannot hold",
+                ["field-in-use"] = "is already used",
+                ["returns-early"] = "returns before its end",
+            }),
+        new CatalogMapping(
+            "replace-expression-with-field",
+            "replace-expression-with-field",
+            async context =>
+            {
+                if (context.Step.Target?.Symbol is null)
+                {
+                    return new Dictionary<string, JsonElement>
+                    {
+                        ["solutionPath"] = Json(context.SolutionPath),
+                        ["filePath"] = Json(context.TargetFilePath()),
+                        ["selectionRange"] = Json(context.SelectionRange()),
+                        ["fieldName"] = context.RequiredArgument("field"),
+                    };
+                }
+
+                var arguments = await MethodArguments(context);
+                arguments["memberName"] = arguments["methodName"];
+                arguments.Remove("methodName");
+                arguments["expression"] = context.RequiredArgument("expression");
+                arguments["fieldName"] = context.RequiredArgument("field");
+                return arguments;
+            },
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["not-an-expression"] = "The selection is not an expression",
+                ["expression-not-found"] = "does not contain the expression",
+                ["unknown-field"] = "has no instance field named",
+                ["field-not-readonly"] = "is not readonly",
+                ["type-mismatch"] = "is not of the expression's type",
+                ["not-in-instance-member"] = "is not in an instance method, property or accessor of",
+                ["not-a-fixed-value"] = "is not built only from constants and constructions",
+                ["field-not-from-parameter"] = "is not assigned from a parameter in every constructor",
+                ["used-during-construction"] = "could run before",
+                ["different-value-passed"] = "passes a different value",
+            }),
+        new CatalogMapping(
             "make-method-async",
             "make-method-async",
             MethodArguments,

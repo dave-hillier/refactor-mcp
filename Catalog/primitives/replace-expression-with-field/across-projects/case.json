@@ -1,0 +1,10 @@
+{
+  "refactoring": "replace-expression-with-field",
+  "description": "A construction of the class in a project that references it is checked as well",
+  "target": { "file": "Core/OrderService.cs", "selection": "marker" },
+  "arguments": { "field": "_mailer" },
+  "projects": [
+    { "name": "Core" },
+    { "name": "App", "references": [ "Core" ] }
+  ]
+}

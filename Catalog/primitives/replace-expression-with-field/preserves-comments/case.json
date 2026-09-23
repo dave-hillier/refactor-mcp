@@ -1,0 +1,6 @@
+{
+  "refactoring": "replace-expression-with-field",
+  "description": "Comments before and after the replaced expression stay in place",
+  "target": { "file": "OrderService.cs", "selection": "marker" },
+  "arguments": { "field": "_mailer" }
+}
