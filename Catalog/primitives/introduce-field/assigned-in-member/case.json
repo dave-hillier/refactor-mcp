@@ -1,0 +1,6 @@
+{
+  "refactoring": "introduce-field",
+  "description": "An expression reading parameters is assigned to the new field just before its statement, and only the selected occurrence is replaced",
+  "target": { "file": "Order.cs", "selection": "marker" },
+  "arguments": { "name": "_subtotal" }
+}

@@ -1,0 +1,6 @@
+{
+  "refactoring": "introduce-field",
+  "description": "An expression whose type uses the class's type parameter gives a field of that type",
+  "target": { "file": "Cache.cs", "selection": "marker" },
+  "arguments": { "name": "_snapshot" }
+}

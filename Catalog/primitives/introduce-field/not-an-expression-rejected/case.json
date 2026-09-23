@@ -1,0 +1,8 @@
+{
+  "refactoring": "introduce-field",
+  "description": "Refuses a selection that is a statement rather than an expression",
+  "target": { "file": "Sample.cs", "selection": "marker" },
+  "arguments": { "name": "_value" },
+  "expect": "error",
+  "errorCode": "not-an-expression"
+}
