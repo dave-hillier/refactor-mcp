@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-if-to-switch-expression",
+  "description": "A chain whose branches assign one variable becomes an assignment of a switch expression, with || alternatives joined by or",
+  "target": { "file": "Ticket.cs", "caret": "marker" }
+}

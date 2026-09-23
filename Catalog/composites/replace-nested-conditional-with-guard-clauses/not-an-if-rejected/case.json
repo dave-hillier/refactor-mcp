@@ -1,0 +1,7 @@
+{
+  "refactoring": "replace-nested-conditional-with-guard-clauses",
+  "description": "The caret must be on an if statement",
+  "target": { "file": "Shipping.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "not-an-if"
+}

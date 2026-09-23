@@ -22,32 +22,7 @@ public static class ConvertIfChainToSwitchTool
         {
             var caret = await CaretDocument.FindAsync(solutionPath, filePath, line, column, cancellationToken);
             var statement = caret.IfStatement();
-            var (branches, otherwise) = Chain(statement);
-            if (branches.Count + (otherwise is null ? 0 : 1) < 2)
-                throw new McpException("Error: The if statement is not part of a chain with at least two cases");
-
-            ExpressionSyntax? subject = null;
-            var sections = new List<SwitchSectionSyntax>();
-            foreach (var (condition, body) in branches)
-            {
-                var (tested, labels) = Labels(condition, caret.Model);
-                subject ??= tested;
-                if (!SyntaxFactory.AreEquivalent(subject, tested))
-                    throw new McpException($"Error: The conditions do not all compare the same value: '{subject}' and '{tested}'");
-
-                sections.Add(Section(labels, body, caret));
-            }
-
-            if (ExpressionFacts.HasSideEffects(subject!))
-                throw new McpException($"Error: '{subject}' has side effects, and the chain evaluates it once per comparison where a switch evaluates it once");
-
-            if (otherwise is not null)
-                sections.Add(Section(new SwitchLabelSyntax[] { SyntaxFactory.DefaultSwitchLabel() }, otherwise, caret));
-
-            var switchStatement = SyntaxFactory.SwitchStatement(subject!.WithoutTrivia(), SyntaxFactory.List(sections))
-                .WithTriviaFrom(statement)
-                .WithAdditionalAnnotations(Formatter.Annotation);
-
+            var switchStatement = ToSwitchStatement(statement, caret);
             await caret.ApplyAsync(caret.Root.ReplaceNode(statement, switchStatement), cancellationToken);
             return $"Successfully converted the if chain to a switch statement in {filePath}";
         }
@@ -55,6 +30,39 @@ public static class ConvertIfChainToSwitchTool
         {
             throw new McpException($"Error converting if chain to switch: {ex.Message}", ex);
         }
+    }
+
+    /// <summary>
+    /// The switch statement an if chain becomes, laid out by the formatter
+    /// when it is applied. Convert If to Switch Expression continues from it.
+    /// </summary>
+    internal static SwitchStatementSyntax ToSwitchStatement(IfStatementSyntax statement, CaretDocument caret)
+    {
+        var (branches, otherwise) = Chain(statement);
+        if (branches.Count + (otherwise is null ? 0 : 1) < 2)
+            throw new McpException("Error: The if statement is not part of a chain with at least two cases");
+
+        ExpressionSyntax? subject = null;
+        var sections = new List<SwitchSectionSyntax>();
+        foreach (var (condition, body) in branches)
+        {
+            var (tested, labels) = Labels(condition, caret.Model);
+            subject ??= tested;
+            if (!SyntaxFactory.AreEquivalent(subject, tested))
+                throw new McpException($"Error: The conditions do not all compare the same value: '{subject}' and '{tested}'");
+
+            sections.Add(Section(labels, body, caret));
+        }
+
+        if (ExpressionFacts.HasSideEffects(subject!))
+            throw new McpException($"Error: '{subject}' has side effects, and the chain evaluates it once per comparison where a switch evaluates it once");
+
+        if (otherwise is not null)
+            sections.Add(Section(new SwitchLabelSyntax[] { SyntaxFactory.DefaultSwitchLabel() }, otherwise, caret));
+
+        return SyntaxFactory.SwitchStatement(subject!.WithoutTrivia(), SyntaxFactory.List(sections))
+            .WithTriviaFrom(statement)
+            .WithAdditionalAnnotations(Formatter.Annotation);
     }
 
     /// <summary>The condition and body of each if in the chain, and the final else's body.</summary>

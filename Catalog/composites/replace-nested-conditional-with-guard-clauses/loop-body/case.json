@@ -1,0 +1,5 @@
+{
+  "refactoring": "replace-nested-conditional-with-guard-clauses",
+  "description": "Nested ifs ending a loop body become guard clauses that continue",
+  "target": { "file": "Shipping.cs", "caret": "marker" }
+}

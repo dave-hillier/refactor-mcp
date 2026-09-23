@@ -1,0 +1,5 @@
+{
+  "refactoring": "replace-nested-conditional-with-guard-clauses",
+  "description": "An else after a branch that always returns follows the if instead, repeatedly, so each special case is a guard clause",
+  "target": { "file": "Payroll.cs", "caret": "marker" }
+}

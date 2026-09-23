@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-if-to-switch-expression",
+  "description": "Type patterns with conditions become arms with when clauses, a throwing branch becomes a throw expression, and the return after a chain with no else becomes the discard arm",
+  "target": { "file": "Geometry.cs", "caret": "marker" }
+}

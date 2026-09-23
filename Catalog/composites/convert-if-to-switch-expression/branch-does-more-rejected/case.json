@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-if-to-switch-expression",
+  "description": "A branch that does more than produce a value cannot become an arm; the chain is left as it was, not half converted to a switch statement",
+  "target": { "file": "Shipping.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "unsupported-section"
+}

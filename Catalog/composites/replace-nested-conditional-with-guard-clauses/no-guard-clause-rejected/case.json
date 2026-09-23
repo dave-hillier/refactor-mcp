@@ -1,0 +1,7 @@
+{
+  "refactoring": "replace-nested-conditional-with-guard-clauses",
+  "description": "An if with no else followed by code it can fall through to has no guard clause to become",
+  "target": { "file": "Shipping.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "no-guard-clause"
+}
