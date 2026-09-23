@@ -1,0 +1,8 @@
+{
+  "refactoring": "parameterise-method",
+  "description": "Refuses when a similar method is used as a method group, which Inline Method cannot redirect, undoing the steps already taken",
+  "target": { "file": "Employee.cs" },
+  "arguments": { "methods": ["TenPercentRaise", "FivePercentRaise"], "name": "Raise", "parameterNames": ["factor"] },
+  "expect": "error",
+  "errorCode": "method-group-reference"
+}

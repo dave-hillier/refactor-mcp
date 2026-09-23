@@ -1,0 +1,17 @@
+{
+  "refactoring": "parameterise-method",
+  "description": "The recipe stops at its first step when Introduce Parameter refuses a parameter name the method already uses, and nothing changes",
+  "steps": [
+    {
+      "refactoring": "introduce-parameter",
+      "target": { "file": "Employee.cs", "selection": "marker" },
+      "arguments": { "name": "bonus" }
+    },
+    {
+      "refactoring": "inline-method",
+      "target": { "symbol": "M:Payroll.Employee.FivePercentRaise(System.Decimal)" }
+    }
+  ],
+  "expect": "error",
+  "errorContains": "is already in use in"
+}

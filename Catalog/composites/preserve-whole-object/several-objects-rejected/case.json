@@ -1,0 +1,8 @@
+{
+  "refactoring": "preserve-whole-object",
+  "description": "Refuses when a call reads its values from two different objects",
+  "target": { "symbol": "M:Heating.HeatingPlan.WithinRange(System.Int32,System.Int32)" },
+  "arguments": { "parameters": ["low", "high"], "parameterName": "range" },
+  "expect": "error",
+  "errorCode": "several-objects"
+}

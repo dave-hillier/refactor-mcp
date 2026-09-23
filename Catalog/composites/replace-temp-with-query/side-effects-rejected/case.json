@@ -1,0 +1,8 @@
+{
+  "refactoring": "replace-temp-with-query",
+  "description": "Refuses an initializer that calls a method when the temp is read twice, since the call would run at each read",
+  "target": { "file": "Ticket.cs", "caret": "marker" },
+  "arguments": { "name": "Next" },
+  "expect": "error",
+  "errorCode": "initializer-has-side-effects"
+}

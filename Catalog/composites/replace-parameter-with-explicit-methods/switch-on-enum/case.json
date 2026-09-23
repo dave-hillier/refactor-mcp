@@ -1,0 +1,12 @@
+{
+  "refactoring": "replace-parameter-with-explicit-methods",
+  "description": "Sections of a switch on an enum parameter become methods returning the value; once every call passes a constant the original method is deleted",
+  "target": { "symbol": "M:Shipping.Rates.Cost(Shipping.Zone,System.Decimal)" },
+  "arguments": {
+    "parameter": "zone",
+    "methods": [
+      { "value": "Zone.Domestic", "name": "DomesticCost" },
+      { "value": "Zone.Europe", "name": "EuropeCost" }
+    ]
+  }
+}

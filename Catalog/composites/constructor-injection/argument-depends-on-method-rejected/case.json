@@ -1,0 +1,8 @@
+{
+  "refactoring": "constructor-injection",
+  "description": "Refuses an object constructed from the method's parameter, which the constructor's callers do not have",
+  "target": { "file": "OrderService.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "argument-depends-on-method",
+  "errorContains": "'host'"
+}

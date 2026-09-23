@@ -1,0 +1,27 @@
+{
+  "refactoring": "replace-parameter-with-explicit-methods",
+  "description": "Runs the recipe as far as the catalog's primitives go: Extract Method on each branch and Change Accessibility on each new method. No primitive points a call that passes a constant at the matching method, so the callers are not redirected",
+  "status": "unimplemented",
+  "steps": [
+    {
+      "refactoring": "extract-method",
+      "target": { "file": "Box.cs", "selection": "marker" },
+      "arguments": { "name": "SetWidth" }
+    },
+    {
+      "refactoring": "extract-method",
+      "target": { "file": "Box.cs", "range": "14:17-14:33" },
+      "arguments": { "name": "SetHeight" }
+    },
+    {
+      "refactoring": "change-accessibility",
+      "target": { "symbol": "M:Shapes.Box.SetHeight(System.Int32)" },
+      "arguments": { "accessibility": "public" }
+    },
+    {
+      "refactoring": "change-accessibility",
+      "target": { "symbol": "M:Shapes.Box.SetWidth(System.Int32)" },
+      "arguments": { "accessibility": "public" }
+    }
+  ]
+}

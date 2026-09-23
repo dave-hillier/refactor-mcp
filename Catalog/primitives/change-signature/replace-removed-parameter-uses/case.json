@@ -1,0 +1,11 @@
+{
+  "refactoring": "change-signature",
+  "description": "Removes parameters the body uses by replacing each use with an expression over the new parameter",
+  "target": { "symbol": "M:Geometry.Grid.DistanceFromOrigin(System.Int32,System.Int32)" },
+  "arguments": {
+    "parameters": [
+      { "name": "point", "type": "Point", "value": "new Point(3, 4)" }
+    ],
+    "replacements": { "x": "point.X", "y": "point.Y" }
+  }
+}

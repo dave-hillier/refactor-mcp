@@ -1,0 +1,17 @@
+{
+  "refactoring": "separate-query-from-modifier",
+  "description": "The recipe stops at its first step when the statements selected as the modifier declare the local the method returns, and nothing changes",
+  "steps": [
+    {
+      "refactoring": "extract-method",
+      "target": { "file": "Pile.cs", "selection": "marker" },
+      "arguments": { "name": "RemoveTop" }
+    },
+    {
+      "refactoring": "inline-method",
+      "target": { "symbol": "M:Stacks.Pile.Pop" }
+    }
+  ],
+  "expect": "error",
+  "errorContains": "The extracted block declares 'top'"
+}

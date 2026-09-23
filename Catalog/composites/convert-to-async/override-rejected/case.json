@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-to-async",
+  "description": "Refuses an override, whose signature it shares with the method it overrides",
+  "target": { "symbol": "M:Stock.CachedInventory.Available(System.String)" },
+  "expect": "error",
+  "errorCode": "polymorphic-method"
+}

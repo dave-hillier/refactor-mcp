@@ -1,0 +1,6 @@
+{
+  "refactoring": "replace-temp-with-query",
+  "description": "A temp read in several places, including a condition, becomes a query called at each of them",
+  "target": { "file": "Order.cs", "caret": "marker" },
+  "arguments": { "name": "BasePrice" }
+}

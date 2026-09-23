@@ -1,0 +1,8 @@
+{
+  "refactoring": "decompose-conditional",
+  "description": "Refuses a name for the else branch when the if statement has none",
+  "target": { "file": "Ledger.cs", "caret": "marker" },
+  "arguments": { "conditionName": "OutOfRange", "thenName": "Reject", "elseName": "Accept" },
+  "expect": "error",
+  "errorCode": "no-else-branch"
+}

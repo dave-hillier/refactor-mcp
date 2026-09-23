@@ -1,0 +1,8 @@
+{
+  "refactoring": "preserve-whole-object",
+  "description": "Refuses when calls fill a parameter from different members, since the body could read only one of them",
+  "target": { "symbol": "M:Heating.HeatingPlan.WithinRange(System.Int32,System.Int32)" },
+  "arguments": { "parameters": ["low", "high"], "parameterName": "range" },
+  "expect": "error",
+  "errorCode": "members-differ"
+}

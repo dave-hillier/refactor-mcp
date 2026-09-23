@@ -1,0 +1,23 @@
+{
+  "refactoring": "introduce-parameter-object",
+  "description": "The recipe stops at its first step when Change Signature cannot replace a parameter the body assigns, and nothing changes",
+  "steps": [
+    {
+      "refactoring": "change-signature",
+      "target": { "symbol": "M:Shop.Report.Print(System.Int32,System.Int32)" },
+      "arguments": {
+        "parameters": [
+          { "name": "band", "type": "(int low, int high)", "value": "(1, 5)" }
+        ],
+        "replacements": { "low": "band.low", "high": "band.high" }
+      }
+    },
+    {
+      "refactoring": "convert-tuple-to-named-type",
+      "target": { "symbol": "M:Shop.Report.Print(System.ValueTuple{System.Int32,System.Int32})" },
+      "arguments": { "name": "Band", "parameter": "band" }
+    }
+  ],
+  "expect": "error",
+  "errorContains": "Parameter 'low' is assigned in the body"
+}

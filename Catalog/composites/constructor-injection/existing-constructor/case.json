@@ -1,0 +1,5 @@
+{
+  "refactoring": "constructor-injection",
+  "description": "A mailer the method constructs becomes a constructor parameter kept in a field; a construction in another namespace passes a new mailer, its type qualified as that file needs",
+  "target": { "file": "OrderService.cs", "caret": "marker" }
+}

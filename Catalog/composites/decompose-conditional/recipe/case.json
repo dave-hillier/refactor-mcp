@@ -1,0 +1,21 @@
+{
+  "refactoring": "decompose-conditional",
+  "description": "Runs the recipe: Extract Method on the else branch, the then branch and the condition, in that order so the methods read in order",
+  "steps": [
+    {
+      "refactoring": "extract-method",
+      "target": { "file": "Tariff.cs", "selection": "marker" },
+      "arguments": { "name": "SummerCharge" }
+    },
+    {
+      "refactoring": "extract-method",
+      "target": { "file": "Tariff.cs", "range": "26:17-26:70" },
+      "arguments": { "name": "WinterCharge" }
+    },
+    {
+      "refactoring": "extract-method",
+      "target": { "file": "Tariff.cs", "range": "24:17-24:57" },
+      "arguments": { "name": "NotSummer" }
+    }
+  ]
+}

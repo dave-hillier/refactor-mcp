@@ -27,17 +27,25 @@ internal class ExtractMethodRewriter : CSharpSyntaxRewriter
         _statements = statements;
         _methodName = methodName;
 
+        // A return, break or continue that ends the selection leaves the containing
+        // method, switch section or loop, so it stays at the call site rather than only
+        // leaving the new method.
+        var keptReturn = statements.Count > 1 && statements.Last() is ReturnStatementSyntax { Expression: null } or BreakStatementSyntax or ContinueStatementSyntax
+            ? statements.Last()
+            : null;
+        var extracted = keptReturn == null ? statements : statements.Take(statements.Count - 1).ToList();
+
         // Names can only be resolved against a semantic model, so without one the
         // extracted method keeps the shape it has always had: no parameters, returning
         // void. Callers that have a model get the parameters and return type inferred.
         var parameters = semanticModel == null
             ? new List<ExtractedParameter>()
-            : FindParameters(containingMethod, statements, semanticModel);
+            : FindParameters(containingMethod, extracted, semanticModel);
         var resultType = semanticModel == null
             ? null
-            : FindResultType(containingMethod, statements, semanticModel);
-        var isAsync = semanticModel != null && ContainsAwait(statements);
-        var exitsBlock = statements.Last() is ReturnStatementSyntax or ThrowStatementSyntax;
+            : FindResultType(containingMethod, extracted, semanticModel);
+        var isAsync = semanticModel != null && ContainsAwait(extracted);
+        var exitsBlock = extracted.Last() is ReturnStatementSyntax or ThrowStatementSyntax;
         // Statements that fall out of the bottom have no result to return, which the
         // caller sees as a null.
         var nullableResult = resultType != null && !exitsBlock;
@@ -47,7 +55,7 @@ internal class ExtractMethodRewriter : CSharpSyntaxRewriter
         var selectionStart = selection?.Start ?? statements.First().SpanStart;
         var (callSiteLeading, extractedLeading) = SplitLeadingTrivia(statements.First(), selectionStart);
 
-        var newMethodBody = new List<StatementSyntax>(statements);
+        var newMethodBody = new List<StatementSyntax>(extracted);
         newMethodBody[0] = newMethodBody[0].WithLeadingTrivia(extractedLeading);
         if (nullableResult)
             newMethodBody.Add(SyntaxFactory.ReturnStatement(DefaultValue(resultType!)));
@@ -63,64 +71,106 @@ internal class ExtractMethodRewriter : CSharpSyntaxRewriter
                 ? (TypeSyntax)SyntaxFactory.IdentifierName("Task")
                 : SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.VoidKeyword)))
             : WrapTaskIfAsync(
-                ResultTypeName(resultType, nullableResult, semanticModel!, statements.First().SpanStart),
+                ResultTypeName(resultType, nullableResult, semanticModel!, extracted.First().SpanStart),
                 isAsync);
 
         var typeParameters = semanticModel == null
             ? new List<ITypeParameterSymbol>()
-            : FindTypeParameters(containingMethod, statements, parameters, resultType, semanticModel);
+            : FindTypeParameters(containingMethod, extracted, parameters, resultType, semanticModel);
 
-        _newMethod = SyntaxFactory.MethodDeclaration(newMethodReturnType, methodName)
-            .WithModifiers(SyntaxFactory.TokenList(newMethodModifiers))
-            .WithParameterList(SyntaxFactory.ParameterList(SyntaxFactory.SeparatedList(parameters.Select(p => p.Syntax))))
-            .WithBody(SyntaxFactory.Block(newMethodBody));
-        if (typeParameters.Count > 0)
-        {
-            var names = typeParameters.Select(t => t.Name).ToHashSet();
-            _newMethod = _newMethod
-                .WithTypeParameterList(SyntaxFactory.TypeParameterList(SyntaxFactory.SeparatedList(
-                    typeParameters.Select(t => SyntaxFactory.TypeParameter(t.Name)))))
-                .WithConstraintClauses(SyntaxFactory.List(
-                    containingMethod.ConstraintClauses.Where(c => names.Contains(c.Name.Identifier.ValueText))));
-        }
+        _newMethod = NewMethod(containingMethod, methodName, newMethodReturnType, newMethodModifiers, parameters, typeParameters, newMethodBody);
 
-        // Type arguments are spelled out only when the arguments cannot infer them.
-        var explicitTypeArguments = typeParameters.Any(t => !parameters.Any(p => Mentions(p.Type, t)))
-            ? typeParameters
-            : new List<ITypeParameterSymbol>();
-        var callSite = BuildCallSite(parameters, explicitTypeArguments, resultType, isAsync, nullableResult);
+        var callSite = BuildCallSite(parameters, ExplicitTypeArguments(parameters, typeParameters), resultType, isAsync, nullableResult);
+        if (keptReturn != null)
+            callSite.Add(keptReturn.WithoutTrivia());
         for (var i = 1; i < callSite.Count; i++)
             callSite[i] = callSite[i].WithLeadingTrivia(SyntaxFactory.CarriageReturnLineFeed);
         callSite[0] = callSite[0].WithLeadingTrivia(callSiteLeading);
+
+        var container = statements.First().Parent!;
+        if (container is not (BlockSyntax or SwitchSectionSyntax))
+        {
+            // A statement that is the body of an if, else or loop without braces is
+            // replaced by the call, in a block of its own when the call takes several.
+            var replacement = callSite.Count == 1
+                ? callSite[0]
+                : SyntaxFactory.Block(callSite.Select(s => s.WithoutLeadingTrivia()));
+            _updatedMethod = containingMethod.ReplaceNode(statements.First(), replacement.WithTriviaFrom(statements.First()));
+            return;
+        }
 
         // The selected statements sit next to each other, so the call site replaces the
         // whole run in a single edit. Removing the statements one at a time would only
         // drop the first of them, because the nodes being removed come from the tree the
         // first removal already replaced.
-        var body = containingMethod.Body!;
-        var firstStatementIndex = body.Statements.IndexOf(statements.First());
+        var siblings = container is BlockSyntax block ? block.Statements : ((SwitchSectionSyntax)container).Statements;
+        var firstStatementIndex = siblings.IndexOf(statements.First());
 
         // A call site that ends in the block checking for a result is set apart from the
         // statement after it by a blank line, as the extracted method's own is.
         var endOfLine = EndOfLine(statements.Last());
         var nextIndex = firstStatementIndex + statements.Count;
         if (callSite.Count > 1 &&
-            nextIndex < body.Statements.Count &&
-            !body.Statements[nextIndex].GetLeadingTrivia().Any(SyntaxKind.EndOfLineTrivia))
+            keptReturn == null &&
+            nextIndex < siblings.Count &&
+            !siblings[nextIndex].GetLeadingTrivia().Any(SyntaxKind.EndOfLineTrivia))
         {
             endOfLine = endOfLine.AddRange(endOfLine);
         }
 
         callSite[^1] = callSite[^1].WithTrailingTrivia(endOfLine);
-        var kept = body.Statements
+        var kept = siblings
             .Where((s, i) => i < firstStatementIndex || i >= firstStatementIndex + statements.Count)
             .ToList();
-        var updatedStatements = kept.Take(firstStatementIndex)
+        var updatedStatements = SyntaxFactory.List(kept.Take(firstStatementIndex)
             .Concat(callSite)
-            .Concat(kept.Skip(firstStatementIndex));
+            .Concat(kept.Skip(firstStatementIndex)));
 
-        _updatedMethod = containingMethod.WithBody(
-            body.WithStatements(SyntaxFactory.List(updatedStatements)));
+        _updatedMethod = containingMethod.ReplaceNode(container, container is BlockSyntax
+            ? ((BlockSyntax)container).WithStatements(updatedStatements)
+            : ((SwitchSectionSyntax)container).WithStatements(updatedStatements));
+    }
+
+    /// <summary>
+    /// Extracts a single expression into a method that returns its value, and puts a
+    /// call in its place. The method returns <paramref name="resultType"/> when given,
+    /// otherwise the expression's own type.
+    /// </summary>
+    public ExtractMethodRewriter(
+        MethodDeclarationSyntax containingMethod,
+        ClassDeclarationSyntax? containingClass,
+        ExpressionSyntax expression,
+        string methodName,
+        SemanticModel semanticModel,
+        ITypeSymbol? resultType = null)
+    {
+        _containingMethod = containingMethod;
+        _containingClass = containingClass;
+        _statements = new List<StatementSyntax>();
+        _methodName = methodName;
+
+        var nodes = new List<ExpressionSyntax> { expression };
+        var parameters = FindParameters(containingMethod, nodes, semanticModel);
+        var typeInfo = semanticModel.GetTypeInfo(expression);
+        resultType ??= typeInfo.Type ?? typeInfo.ConvertedType;
+        var isAsync = ContainsAwait(nodes);
+        var typeParameters = FindTypeParameters(containingMethod, nodes, parameters, resultType, semanticModel);
+
+        var modifiers = new List<SyntaxToken> { SyntaxFactory.Token(SyntaxKind.PrivateKeyword) };
+        if (containingMethod.Modifiers.Any(SyntaxKind.StaticKeyword))
+            modifiers.Add(SyntaxFactory.Token(SyntaxKind.StaticKeyword));
+        if (isAsync)
+            modifiers.Add(SyntaxFactory.Token(SyntaxKind.AsyncKeyword));
+
+        var returnType = WrapTaskIfAsync(resultType!.ToMinimalDisplayString(semanticModel, expression.SpanStart), isAsync);
+        var body = new List<StatementSyntax> { SyntaxFactory.ReturnStatement(expression.WithoutTrivia()) };
+        _newMethod = NewMethod(containingMethod, methodName, returnType, modifiers, parameters, typeParameters, body);
+
+        var call = Call(parameters, ExplicitTypeArguments(parameters, typeParameters), isAsync);
+        if (isAsync && expression.Parent is MemberAccessExpressionSyntax or ElementAccessExpressionSyntax or ConditionalAccessExpressionSyntax or InvocationExpressionSyntax)
+            call = SyntaxFactory.ParenthesizedExpression(call);
+
+        _updatedMethod = containingMethod.ReplaceNode(expression, call.WithTriviaFrom(expression));
     }
 
     public override SyntaxNode VisitMethodDeclaration(MethodDeclarationSyntax node)
@@ -130,39 +180,83 @@ internal class ExtractMethodRewriter : CSharpSyntaxRewriter
         return base.VisitMethodDeclaration(node)!;
     }
 
+    // The new method follows the method it was extracted from.
     public override SyntaxNode VisitClassDeclaration(ClassDeclarationSyntax node)
     {
         var visited = (ClassDeclarationSyntax)base.VisitClassDeclaration(node)!;
         if (_containingClass != null && node == _containingClass)
         {
-            visited = visited.AddMembers(_newMethod);
+            var index = node.Members.IndexOf(_containingMethod);
+            visited = index < 0
+                ? visited.AddMembers(_newMethod)
+                : visited.WithMembers(visited.Members.Insert(index + 1, _newMethod));
         }
         return visited;
     }
+
+    private static MethodDeclarationSyntax NewMethod(
+        MethodDeclarationSyntax containingMethod,
+        string methodName,
+        TypeSyntax returnType,
+        List<SyntaxToken> modifiers,
+        List<ExtractedParameter> parameters,
+        List<ITypeParameterSymbol> typeParameters,
+        List<StatementSyntax> body)
+    {
+        var method = SyntaxFactory.MethodDeclaration(returnType, methodName)
+            .WithModifiers(SyntaxFactory.TokenList(modifiers))
+            .WithParameterList(SyntaxFactory.ParameterList(SyntaxFactory.SeparatedList(parameters.Select(p => p.Syntax))))
+            .WithBody(SyntaxFactory.Block(body));
+        if (typeParameters.Count == 0)
+            return method;
+
+        var names = typeParameters.Select(t => t.Name).ToHashSet();
+        return method
+            .WithTypeParameterList(SyntaxFactory.TypeParameterList(SyntaxFactory.SeparatedList(
+                typeParameters.Select(t => SyntaxFactory.TypeParameter(t.Name)))))
+            .WithConstraintClauses(SyntaxFactory.List(
+                containingMethod.ConstraintClauses.Where(c => names.Contains(c.Name.Identifier.ValueText))));
+    }
+
+    // Type arguments are spelled out only when the arguments cannot infer them.
+    private static List<ITypeParameterSymbol> ExplicitTypeArguments(
+        List<ExtractedParameter> parameters,
+        List<ITypeParameterSymbol> typeParameters) =>
+        typeParameters.Any(t => !parameters.Any(p => Mentions(p.Type, t)))
+            ? typeParameters
+            : new List<ITypeParameterSymbol>();
 
     private sealed record ExtractedParameter(ParameterSyntax Syntax, ITypeSymbol Type);
 
     /// <summary>
     /// Finds the locals and parameters of the containing method that the extracted
-    /// statements read. Values declared inside the statements move with them, and
-    /// fields and members of the class stay reachable, so neither becomes a parameter.
+    /// code reads, including those of a lambda or local function the code sits in.
+    /// Values declared inside the code move with it, and fields and members of the
+    /// class stay reachable, so neither becomes a parameter.
     /// </summary>
-    private static List<ExtractedParameter> FindParameters(
+    private static List<ExtractedParameter> FindParameters<TNode>(
         MethodDeclarationSyntax containingMethod,
-        List<StatementSyntax> statements,
+        List<TNode> nodes,
         SemanticModel semanticModel)
+        where TNode : SyntaxNode
     {
-        var containingSymbol = semanticModel.GetDeclaredSymbol(containingMethod);
-        var extractedSpan = TextSpan.FromBounds(statements.First().SpanStart, statements.Last().Span.End);
+        var owners = nodes.First().Ancestors()
+            .TakeWhile(a => a != containingMethod)
+            .Where(a => a is AnonymousFunctionExpressionSyntax or LocalFunctionStatementSyntax)
+            .Select(a => a is LocalFunctionStatementSyntax local ? semanticModel.GetDeclaredSymbol(local) : semanticModel.GetSymbolInfo(a).Symbol)
+            .Append(semanticModel.GetDeclaredSymbol(containingMethod))
+            .OfType<ISymbol>()
+            .ToHashSet(SymbolEqualityComparer.Default);
+        var extractedSpan = TextSpan.FromBounds(nodes.First().SpanStart, nodes.Last().Span.End);
         var parameters = new List<ExtractedParameter>();
         var seen = new HashSet<ISymbol>(SymbolEqualityComparer.Default);
 
-        foreach (var identifier in statements.SelectMany(s => s.DescendantNodes().OfType<IdentifierNameSyntax>()))
+        foreach (var identifier in nodes.SelectMany(s => s.DescendantNodesAndSelf().OfType<IdentifierNameSyntax>()))
         {
             var symbol = semanticModel.GetSymbolInfo(identifier).Symbol;
             if (symbol is not ILocalSymbol && symbol is not IParameterSymbol)
                 continue;
-            if (!SymbolEqualityComparer.Default.Equals(symbol.ContainingSymbol, containingSymbol))
+            if (!owners.Contains(symbol.ContainingSymbol))
                 continue;
 
             var declaration = symbol.DeclaringSyntaxReferences.FirstOrDefault();
@@ -194,18 +288,19 @@ internal class ExtractMethodRewriter : CSharpSyntaxRewriter
     /// The containing method's type parameters the extracted method needs: those its
     /// parameters or result mention, or that the statements name directly.
     /// </summary>
-    private static List<ITypeParameterSymbol> FindTypeParameters(
+    private static List<ITypeParameterSymbol> FindTypeParameters<TNode>(
         MethodDeclarationSyntax containingMethod,
-        List<StatementSyntax> statements,
+        List<TNode> nodes,
         List<ExtractedParameter> parameters,
         ITypeSymbol? resultType,
         SemanticModel semanticModel)
+        where TNode : SyntaxNode
     {
         if (semanticModel.GetDeclaredSymbol(containingMethod) is not IMethodSymbol { TypeParameters.Length: > 0 } method)
             return new List<ITypeParameterSymbol>();
 
-        var named = statements
-            .SelectMany(s => s.DescendantNodes().OfType<IdentifierNameSyntax>())
+        var named = nodes
+            .SelectMany(s => s.DescendantNodesAndSelf().OfType<IdentifierNameSyntax>())
             .Select(i => semanticModel.GetSymbolInfo(i).Symbol)
             .OfType<ITypeParameterSymbol>()
             .ToList();
@@ -276,9 +371,10 @@ internal class ExtractMethodRewriter : CSharpSyntaxRewriter
             .OfType<ReturnStatementSyntax>();
     }
 
-    private static bool ContainsAwait(List<StatementSyntax> statements)
+    private static bool ContainsAwait<TNode>(List<TNode> nodes)
+        where TNode : SyntaxNode
     {
-        return statements
+        return nodes
             .SelectMany(s => s.DescendantNodesAndSelf(CanContainAwaitOrReturn))
             .Any(n => n is AwaitExpressionSyntax);
     }
@@ -337,15 +433,7 @@ internal class ExtractMethodRewriter : CSharpSyntaxRewriter
         bool isAsync,
         bool nullableResult)
     {
-        SimpleNameSyntax name = typeArguments.Count == 0
-            ? SyntaxFactory.IdentifierName(_methodName)
-            : SyntaxFactory.GenericName(_methodName).WithTypeArgumentList(SyntaxFactory.TypeArgumentList(
-                SyntaxFactory.SeparatedList<TypeSyntax>(typeArguments.Select(t => SyntaxFactory.IdentifierName(t.Name)))));
-        ExpressionSyntax call = SyntaxFactory.InvocationExpression(name)
-            .WithArgumentList(SyntaxFactory.ArgumentList(SyntaxFactory.SeparatedList(
-                parameters.Select(p => SyntaxFactory.Argument(SyntaxFactory.IdentifierName(p.Syntax.Identifier))))));
-        if (isAsync)
-            call = SyntaxFactory.AwaitExpression(call);
+        var call = Call(parameters, typeArguments, isAsync);
 
         if (resultType == null)
             return new List<StatementSyntax> { SyntaxFactory.ExpressionStatement(call) };
@@ -378,6 +466,18 @@ internal class ExtractMethodRewriter : CSharpSyntaxRewriter
                     SyntaxFactory.LiteralExpression(SyntaxKind.NullLiteralExpression)),
                 SyntaxFactory.Block(SyntaxFactory.ReturnStatement(result)))
         };
+    }
+
+    private ExpressionSyntax Call(List<ExtractedParameter> parameters, List<ITypeParameterSymbol> typeArguments, bool isAsync)
+    {
+        SimpleNameSyntax name = typeArguments.Count == 0
+            ? SyntaxFactory.IdentifierName(_methodName)
+            : SyntaxFactory.GenericName(_methodName).WithTypeArgumentList(SyntaxFactory.TypeArgumentList(
+                SyntaxFactory.SeparatedList<TypeSyntax>(typeArguments.Select(t => SyntaxFactory.IdentifierName(t.Name)))));
+        ExpressionSyntax call = SyntaxFactory.InvocationExpression(name)
+            .WithArgumentList(SyntaxFactory.ArgumentList(SyntaxFactory.SeparatedList(
+                parameters.Select(p => SyntaxFactory.Argument(SyntaxFactory.IdentifierName(p.Syntax.Identifier))))));
+        return isAsync ? SyntaxFactory.AwaitExpression(call) : call;
     }
 
     private static string ResultVariableName(string methodName)

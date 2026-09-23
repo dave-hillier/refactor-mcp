@@ -1,0 +1,16 @@
+{
+  "refactoring": "replace-temp-with-query",
+  "description": "Runs the recipe: Extract Method on the initializer, then Inline Local Variable on the temp",
+  "steps": [
+    {
+      "refactoring": "extract-method",
+      "target": { "file": "Order.cs", "selection": "marker" },
+      "arguments": { "name": "BasePrice" }
+    },
+    {
+      "refactoring": "inline-local-variable",
+      "target": { "symbol": "M:Shop.Order.Price" },
+      "arguments": { "local": "basePrice" }
+    }
+  ]
+}

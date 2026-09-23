@@ -1,0 +1,8 @@
+{
+  "refactoring": "decompose-conditional",
+  "description": "Refuses to extract an else branch that is another if statement, which is decomposed on its own",
+  "target": { "file": "Grader.cs", "caret": "marker" },
+  "arguments": { "conditionName": "IsDistinction", "thenName": "Distinction", "elseName": "Other" },
+  "expect": "error",
+  "errorCode": "else-if-branch"
+}

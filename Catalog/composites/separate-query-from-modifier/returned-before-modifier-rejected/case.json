@@ -1,0 +1,8 @@
+{
+  "refactoring": "separate-query-from-modifier",
+  "description": "Refuses a call that returns the value when the query must run before the modifier, since the return would have to come between them",
+  "target": { "symbol": "M:Stacks.Pile.Pop" },
+  "arguments": { "queryName": "Peek", "modifierName": "RemoveTop" },
+  "expect": "error",
+  "errorCode": "returned-before-modifier"
+}

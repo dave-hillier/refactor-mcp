@@ -1,0 +1,8 @@
+{
+  "refactoring": "separate-query-from-modifier",
+  "description": "Refuses when a call sits inside a larger expression, where it cannot become a statement calling the modifier",
+  "target": { "symbol": "M:Bank.Account.Withdraw(System.Decimal)" },
+  "arguments": { "queryName": "Balance", "modifierName": "Debit" },
+  "expect": "error",
+  "errorCode": "call-in-expression"
+}

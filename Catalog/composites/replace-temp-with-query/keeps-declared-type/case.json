@@ -1,0 +1,6 @@
+{
+  "refactoring": "replace-temp-with-query",
+  "description": "The query returns the temp's declared type, so a conversion the declaration made still happens, and a parameter the initializer reads is passed to it",
+  "target": { "file": "Stock.cs", "caret": "marker" },
+  "arguments": { "name": "TotalWeight" }
+}
