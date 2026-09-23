@@ -1,0 +1,8 @@
+{
+  "refactoring": "move-instance-method",
+  "description": "Refuses to remove the method when a caller could not reach the private field it would call through",
+  "target": { "symbol": "M:Shop.Customer.Where" },
+  "arguments": { "via": "_address", "stub": false },
+  "expect": "error",
+  "errorCode": "via-not-accessible"
+}

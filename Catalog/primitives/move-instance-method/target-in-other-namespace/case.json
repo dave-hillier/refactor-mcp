@@ -1,0 +1,6 @@
+{
+  "refactoring": "move-instance-method",
+  "description": "Moving into a type in another namespace imports what the method uses, and the method's static helpers are qualified by their class",
+  "target": { "symbol": "M:Shop.Customer.Summary" },
+  "arguments": { "via": "_address" }
+}

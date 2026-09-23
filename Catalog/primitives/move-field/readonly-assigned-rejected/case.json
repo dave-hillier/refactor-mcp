@@ -1,0 +1,8 @@
+{
+  "refactoring": "move-field",
+  "description": "Refuses a readonly field its class's constructor assigns, since the assignment could not go through the via",
+  "target": { "symbol": "F:Shop.Customer._street" },
+  "arguments": { "via": "_address" },
+  "expect": "error",
+  "errorCode": "readonly-assigned"
+}

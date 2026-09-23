@@ -1,0 +1,7 @@
+{
+  "refactoring": "move-field",
+  "description": "A nullable field keeps its annotation",
+  "target": { "symbol": "F:Shop.Customer._note" },
+  "arguments": { "via": "_address" },
+  "project": { "nullable": "enable" }
+}

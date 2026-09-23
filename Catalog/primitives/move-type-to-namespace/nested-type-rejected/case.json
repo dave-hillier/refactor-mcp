@@ -1,0 +1,8 @@
+{
+  "refactoring": "move-type-to-namespace",
+  "description": "Refuses a nested type, whose namespace is its container's",
+  "target": { "symbol": "T:Shop.Order.Line" },
+  "arguments": { "namespace": "Shop.Lines" },
+  "expect": "error",
+  "errorCode": "nested-type"
+}

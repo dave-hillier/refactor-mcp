@@ -1,0 +1,5 @@
+{
+  "refactoring": "make-method-instance",
+  "description": "Uses of the parameter itself become this, and a member hidden by a local keeps an explicit this",
+  "target": { "symbol": "M:Shop.Order.Register(Shop.Order,System.Collections.Generic.List{Shop.Order})" }
+}

@@ -1,0 +1,5 @@
+{
+  "refactoring": "rename-file-to-match-type",
+  "description": "A file in a folder is renamed in place, staying in its folder",
+  "target": { "file": "Billing/Types.cs" }
+}

@@ -1,0 +1,8 @@
+{
+  "refactoring": "move-static-method",
+  "description": "Refuses an instance method, which Move Instance Method moves",
+  "target": { "symbol": "M:Shop.Order.Describe" },
+  "arguments": { "to": "Formatting" },
+  "expect": "error",
+  "errorCode": "method-not-static"
+}

@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
 using System.Linq;
 using System.Threading;
+using RefactorMCP.ConsoleApp.Tools.Moving;
 
 [McpServerToolType]
 public static class MoveTypeToFileTool
@@ -24,6 +25,11 @@ public static class MoveTypeToFileTool
 
             var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath, cancellationToken);
             var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
+
+            // In a loaded solution the move is semantic: each file keeps only
+            // the usings it needs and the session sees both files.
+            if (document != null)
+                return await TypeFileMover.MoveAsync(document, typeName, cancellationToken);
 
             var newFilePath = Path.Combine(Path.GetDirectoryName(filePath)!, $"{typeName}.cs");
 

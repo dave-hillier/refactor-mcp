@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-extension-method-to-static",
+  "description": "Refuses while a null-conditional call uses the extension, since the static form would change when it runs",
+  "target": { "symbol": "M:Shop.Text.Shout(System.String)" },
+  "expect": "error",
+  "errorCode": "conditional-access"
+}

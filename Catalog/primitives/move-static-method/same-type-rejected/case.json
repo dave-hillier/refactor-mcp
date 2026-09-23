@@ -1,0 +1,8 @@
+{
+  "refactoring": "move-static-method",
+  "description": "Refuses to move a method to the class it is already in",
+  "target": { "symbol": "M:Shop.Order.Vat(System.Decimal)" },
+  "arguments": { "to": "Order" },
+  "expect": "error",
+  "errorCode": "same-type"
+}

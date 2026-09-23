@@ -1,0 +1,5 @@
+{
+  "refactoring": "rename-file-to-match-type",
+  "description": "A generic type's file takes the type's name without its type parameters",
+  "target": { "file": "Containers.cs" }
+}

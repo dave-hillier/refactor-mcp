@@ -1,0 +1,7 @@
+{
+  "refactoring": "sync-namespace-with-folder",
+  "description": "Refuses when the folder's namespace already has a type with the same name as one in the file",
+  "target": { "file": "Billing/Invoice.cs" },
+  "expect": "error",
+  "errorCode": "type-exists"
+}

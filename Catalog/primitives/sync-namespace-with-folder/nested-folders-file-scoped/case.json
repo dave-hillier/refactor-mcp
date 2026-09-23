@@ -1,0 +1,5 @@
+{
+  "refactoring": "sync-namespace-with-folder",
+  "description": "Nested folders become nested namespace parts, and a file-scoped namespace keeps its form; the file imports its old namespace for what it still uses from there",
+  "target": { "file": "Taxes/Rates/Rate.cs" }
+}

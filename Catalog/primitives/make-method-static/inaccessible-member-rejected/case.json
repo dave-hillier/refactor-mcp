@@ -1,0 +1,8 @@
+{
+  "refactoring": "make-method-static",
+  "description": "Refuses to pass a private member as a parameter when a caller outside the class could not read it",
+  "target": { "symbol": "M:Shop.Order.Describe" },
+  "arguments": { "pass": "parameters" },
+  "expect": "error",
+  "errorCode": "inaccessible-member"
+}

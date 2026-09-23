@@ -1,0 +1,8 @@
+{
+  "refactoring": "move-instance-method",
+  "description": "Refuses to move into a type the solution does not declare",
+  "target": { "symbol": "M:Shop.Customer.Shout" },
+  "arguments": { "via": "_name" },
+  "expect": "error",
+  "errorCode": "target-not-in-source"
+}

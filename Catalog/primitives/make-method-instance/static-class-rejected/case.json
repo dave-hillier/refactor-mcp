@@ -1,0 +1,7 @@
+{
+  "refactoring": "make-method-instance",
+  "description": "Refuses an extension method, whose parameter is not of its own static class",
+  "target": { "symbol": "M:Shop.OrderExtensions.Describe(Shop.Order)" },
+  "expect": "error",
+  "errorCode": "no-parameter-of-type"
+}

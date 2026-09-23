@@ -1,0 +1,8 @@
+{
+  "refactoring": "move-property",
+  "description": "Refuses while an object initializer sets the property",
+  "target": { "symbol": "P:Shop.Customer.Street" },
+  "arguments": { "via": "Address" },
+  "expect": "error",
+  "errorCode": "object-initializer"
+}

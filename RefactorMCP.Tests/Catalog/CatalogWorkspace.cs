@@ -249,8 +249,10 @@ internal sealed class CatalogWorkspace : IDisposable
     {
         // A single node: a solution of several projects otherwise starts worker
         // nodes that inherit the output pipes and can outlive the restore,
-        // leaving the reads below waiting forever.
-        var startInfo = new ProcessStartInfo("dotnet", $"restore \"{solutionPath}\" --verbosity quiet --disable-build-servers -m:1")
+        // leaving the reads below waiting forever. Restoring projects one at a
+        // time stops NuGet restoring a referenced project twice at once, once
+        // through each spelling of the temp directory, which fails.
+        var startInfo = new ProcessStartInfo("dotnet", $"restore \"{solutionPath}\" --verbosity quiet --disable-build-servers --disable-parallel -m:1")
         {
             RedirectStandardOutput = true,
             RedirectStandardError = true,

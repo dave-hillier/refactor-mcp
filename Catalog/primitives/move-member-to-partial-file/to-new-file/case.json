@@ -1,0 +1,6 @@
+{
+  "refactoring": "move-member-to-partial-file",
+  "description": "Creates the target file with a new part of the class, in the same namespace form, when it does not exist yet",
+  "target": { "symbol": "P:Shop.Order.IsEmpty" },
+  "arguments": { "file": "Order.Queries.cs" }
+}

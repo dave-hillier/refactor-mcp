@@ -1,0 +1,6 @@
+{
+  "refactoring": "move-type-to-namespace",
+  "description": "A type sharing its namespace block moves to a new block of its own after it, in the same file",
+  "target": { "symbol": "T:Shop.Invoice" },
+  "arguments": { "namespace": "Shop.Billing" }
+}

@@ -1,0 +1,5 @@
+{
+  "refactoring": "move-type-to-file",
+  "description": "The file's #nullable directive is copied to the new file, so annotations mean the same there",
+  "target": { "symbol": "T:Shop.Product" }
+}

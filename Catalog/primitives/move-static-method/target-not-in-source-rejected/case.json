@@ -1,0 +1,8 @@
+{
+  "refactoring": "move-static-method",
+  "description": "Refuses to move into a type the solution does not declare",
+  "target": { "symbol": "M:Shop.Order.Vat(System.Decimal)" },
+  "arguments": { "to": "System.Math" },
+  "expect": "error",
+  "errorCode": "target-not-in-source"
+}

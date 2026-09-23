@@ -1,0 +1,7 @@
+{
+  "refactoring": "move-type-to-file",
+  "description": "Refuses to move the only type in a file; renaming the file is the refactoring for that",
+  "target": { "symbol": "T:Shop.Order" },
+  "expect": "error",
+  "errorCode": "only-type-in-file"
+}

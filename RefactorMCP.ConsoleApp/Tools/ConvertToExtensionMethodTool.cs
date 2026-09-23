@@ -8,22 +8,36 @@ using Microsoft.CodeAnalysis.Formatting;
 using System.Linq;
 using System.Collections.Generic;
 using System.Threading;
+using RefactorMCP.ConsoleApp.Tools.Moving;
 
 [McpServerToolType]
 public static class ConvertToExtensionMethodTool
 {
-    [McpServerTool, Description("Convert an instance method to an extension method in a static class. " +
-        "A wrapper method remains so existing call sites continue to work." +
+    [McpServerTool, Description("Convert a method to an extension method. A static method of a static class " +
+        "gains 'this' on its first parameter and static calls take the extension form where they can. " +
+        "An instance method moves to a static extension class, and a wrapper method remains so existing call sites continue to work. " +
         "The extension class will be automatically created if it doesn't exist.")]
     public static async Task<string> ConvertToExtensionMethod(
         [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
-        [Description("Name of the instance method to convert")] string methodName,
+        [Description("Name of the method to convert")] string methodName,
         [Description("Name of the extension class - optional, class will be automatically created if it doesn't exist or us unspecified")] string? extensionClass = null,
+        [Description("Line of the method's declaration (1-based, optional), to choose between overloads")] int? line = null,
         CancellationToken cancellationToken = default)
     {
         try
         {
+            // A static method of a static class becomes an extension in place.
+            var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath, cancellationToken);
+            var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
+            if (document != null)
+            {
+                var method = (IMethodSymbol)await MovingSupport.FindDeclaredSymbolAsync(
+                    document, methodName, line, s => s is IMethodSymbol { MethodKind: MethodKind.Ordinary }, "method", cancellationToken);
+                if (method.IsStatic)
+                    return await ExtensionMethodConversions.ToExtensionAsync(solution, method, cancellationToken);
+            }
+
             return await RefactoringHelpers.RunWithSolutionOrFile(
                 solutionPath,
                 filePath,
@@ -99,8 +113,12 @@ public static class ConvertToExtensionMethodTool
                 .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.StaticKeyword))
                 .AddMembers(updatedMethod);
 
-            if (classDecl.Parent is NamespaceDeclarationSyntax ns)
+            // The namespace starts before the replaced method, so its position
+            // finds it in the updated tree.
+            if (classDecl.Parent is BaseNamespaceDeclarationSyntax oldNs)
             {
+                var ns = newRoot.DescendantNodes().OfType<BaseNamespaceDeclarationSyntax>()
+                    .First(n => n.SpanStart == oldNs.SpanStart);
                 var updatedNs = ns.AddMembers(extensionClassDecl);
                 newRoot = newRoot.ReplaceNode(ns, updatedNs);
             }
@@ -197,8 +215,12 @@ public static class ConvertToExtensionMethodTool
                 .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.StaticKeyword))
                 .AddMembers(updatedMethod);
 
-            if (classDecl.Parent is NamespaceDeclarationSyntax ns)
+            // The namespace starts before the replaced method, so its position
+            // finds it in the updated tree.
+            if (classDecl.Parent is BaseNamespaceDeclarationSyntax oldNs)
             {
+                var ns = newRoot.DescendantNodes().OfType<BaseNamespaceDeclarationSyntax>()
+                    .First(n => n.SpanStart == oldNs.SpanStart);
                 var updatedNs = ns.AddMembers(extensionClassDecl);
                 newRoot = newRoot.ReplaceNode(ns, updatedNs);
             }

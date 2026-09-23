@@ -1,0 +1,5 @@
+{
+  "refactoring": "make-method-static",
+  "description": "In a generic class the instance parameter keeps the type parameters, and calls name the constructed type",
+  "target": { "symbol": "M:Shop.Box`1.Describe" }
+}

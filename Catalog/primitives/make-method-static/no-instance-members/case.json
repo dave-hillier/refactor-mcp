@@ -1,0 +1,5 @@
+{
+  "refactoring": "make-method-static",
+  "description": "A method that uses no instance member only gains static; calls through an instance are requalified with the type",
+  "target": { "symbol": "M:Shop.Order.Tax(System.Decimal)" }
+}

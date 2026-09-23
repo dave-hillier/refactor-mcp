@@ -1,0 +1,6 @@
+{
+  "refactoring": "move-property",
+  "description": "Moves an auto-property onto the type of a property; every use, here and in other files, goes through it",
+  "target": { "symbol": "P:Shop.Customer.Street" },
+  "arguments": { "via": "Address" }
+}

@@ -1,0 +1,6 @@
+{
+  "refactoring": "make-method-instance",
+  "description": "The parameter to become the instance can be named when it is not the first; complex arguments become parenthesized receivers",
+  "target": { "symbol": "M:Shop.Order.Label(System.String,Shop.Order)" },
+  "arguments": { "parameter": "order" }
+}

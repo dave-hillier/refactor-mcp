@@ -1,0 +1,8 @@
+{
+  "refactoring": "move-instance-method",
+  "description": "Refuses a target type the method cannot reach through a field, property or parameter",
+  "target": { "symbol": "M:Shop.Customer.Label" },
+  "arguments": { "to": "Address" },
+  "expect": "error",
+  "errorCode": "no-reference-to-target"
+}

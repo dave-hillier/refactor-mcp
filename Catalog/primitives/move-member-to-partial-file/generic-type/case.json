@@ -1,0 +1,6 @@
+{
+  "refactoring": "move-member-to-partial-file",
+  "description": "A member of a generic partial class moves to a new part declared with the same type parameters",
+  "target": { "symbol": "M:Shop.Repository`1.Clear" },
+  "arguments": { "file": "Repository.Maintenance.cs" }
+}

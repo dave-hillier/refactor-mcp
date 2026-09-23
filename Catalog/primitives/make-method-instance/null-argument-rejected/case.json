@@ -1,0 +1,7 @@
+{
+  "refactoring": "make-method-instance",
+  "description": "Refuses while a call passes null for the parameter, which would then throw before the method runs",
+  "target": { "symbol": "M:Shop.Order.NumberOf(Shop.Order)" },
+  "expect": "error",
+  "errorCode": "null-argument"
+}

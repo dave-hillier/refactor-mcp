@@ -1,0 +1,6 @@
+{
+  "refactoring": "move-field",
+  "description": "A private constant moves as internal, since its old class still uses it",
+  "target": { "symbol": "F:Shop.Order.Rate" },
+  "arguments": { "to": "TaxRules" }
+}
