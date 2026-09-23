@@ -58,6 +58,44 @@ internal sealed class GeneratorsNullObjectErrorsArraysMappings : ICatalogMapping
                 ("exception-type-not-found", "No exception type named"),
                 ("unsupported-caller", "in a way a catch cannot replace"),
                 ("breaks-compilation", "would break the build"))),
+
+        new CatalogMapping(
+            "replace-array-with-object",
+            "replace-array-with-object",
+            async context =>
+            {
+                string filePath;
+                int line, column;
+                if (context.Step.Target?.Symbol is not null)
+                {
+                    var location = await context.SymbolLocationAsync();
+                    (filePath, line, column) = (location.FilePath, location.Line, location.Column);
+                }
+                else
+                {
+                    filePath = context.TargetFilePath();
+                    (line, column) = context.Caret();
+                }
+
+                return new Dictionary<string, JsonElement>
+                {
+                    ["solutionPath"] = Json(context.SolutionPath),
+                    ["filePath"] = Json(filePath),
+                    ["line"] = Json(line),
+                    ["column"] = Json(column),
+                    ["className"] = context.RequiredArgument("name"),
+                    ["memberNames"] = context.RequiredArgument("members"),
+                };
+            },
+            Codes(
+                ("not-an-array", "is not a single-dimensional array"),
+                ("generic-element-type", "uses a type parameter"),
+                ("invalid-name", "is not a valid name"),
+                ("type-already-exists", "already exists"),
+                ("unsupported-use", "is used as an array"),
+                ("index-out-of-range", "has no member to name it"),
+                ("wrong-member-count", "member names were given"),
+                ("breaks-compilation", "would break the build"))),
     };
 
     private static IReadOnlyDictionary<string, string> Codes(params (string Code, string Fragment)[] codes)
