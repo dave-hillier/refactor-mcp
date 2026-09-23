@@ -1,0 +1,9 @@
+{
+  "refactoring": "convert-anonymous-type-to-class",
+  "description": "Refuses an anonymous type with a property of another anonymous type, which the class could not name",
+  "target": { "file": "Report.cs", "caret": "marker" },
+  "arguments": { "name": "Line" },
+  "expect": "error",
+  "errorCode": "unnamable-property-type",
+  "errorContains": "Total"
+}

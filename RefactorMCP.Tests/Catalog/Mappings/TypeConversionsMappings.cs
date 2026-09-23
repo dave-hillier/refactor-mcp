@@ -99,6 +99,27 @@ internal sealed class TypeConversionsMappings : ICatalogMappings
                 ["object-initializer"] = "uses an object initializer",
                 ["constructor-still-needed"] = "is still needed at its old accessibility",
             }),
+        new CatalogMapping(
+            "convert-anonymous-type-to-class",
+            "convert-anonymous-type-to-class",
+            context =>
+            {
+                var (line, column) = context.Caret();
+                return new Dictionary<string, JsonElement>
+                {
+                    ["solutionPath"] = Json(context.SolutionPath),
+                    ["filePath"] = Json(context.TargetFilePath()),
+                    ["line"] = Json(line),
+                    ["column"] = Json(column),
+                    ["className"] = context.RequiredArgument("name"),
+                };
+            },
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["no-anonymous-type"] = "There is no anonymous object creation at",
+                ["unnamable-property-type"] = "has a type the class cannot name",
+                ["name-conflict"] = "is already visible where the class would be declared",
+            }),
     };
 
     /// <summary>
