@@ -1,0 +1,64 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json;
+using System.Threading.Tasks;
+using static RefactorMCP.Tests.Catalog.CatalogMapping;
+
+namespace RefactorMCP.Tests.Catalog.Mappings;
+
+/// <summary>Composites from the catalog that restructure types and move members.</summary>
+internal sealed class StructuralCompositesMappings : ICatalogMappings
+{
+    public IEnumerable<CatalogMapping> Mappings => new[]
+    {
+        new CatalogMapping(
+            "extract-class",
+            "extract-class",
+            async context =>
+            {
+                var location = await context.SymbolLocationAsync();
+                var arguments = new Dictionary<string, JsonElement>
+                {
+                    ["solutionPath"] = Json(context.SolutionPath),
+                    ["filePath"] = Json(location.FilePath),
+                    ["className"] = Json(location.Symbol.Name),
+                    ["newClassName"] = context.RequiredArgument("name"),
+                    ["memberNames"] = context.RequiredArgument("members"),
+                };
+                CopyOptional(context, arguments, "field", "fieldName");
+                CopyOptional(context, arguments, "stub", "keepStubs");
+                if (context.HasArgument("file"))
+                    arguments["targetFilePath"] = Json(context.WorkspacePath(context.RequiredString("file")));
+                return arguments;
+            },
+            Codes(
+                ("not-a-class", "is not a class"),
+                ("no-members", "No members were named"),
+                ("member-not-found", "has no member named"),
+                ("member-not-movable", "cannot move to the new class"),
+                ("type-already-exists", "already exists"),
+                ("name-conflict", "already has a member named"),
+                ("polymorphic-method", "callers rely on dispatch through the instance"),
+                ("uses-protected-member", "uses the protected member"),
+                ("via-not-accessible", "is not accessible where"))),
+    };
+
+    private static void CopyOptional(
+        StepContext context,
+        Dictionary<string, JsonElement> arguments,
+        string catalogName,
+        string toolName)
+    {
+        if (context.HasArgument(catalogName))
+            arguments[toolName] = context.RequiredArgument(catalogName);
+    }
+
+    private static IReadOnlyDictionary<string, string> Codes(params (string Code, string Fragment)[] codes)
+    {
+        var map = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var (code, fragment) in codes)
+            map[code] = fragment;
+        return map;
+    }
+}

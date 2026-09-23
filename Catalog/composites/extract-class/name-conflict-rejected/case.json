@@ -1,0 +1,9 @@
+{
+  "refactoring": "extract-class",
+  "description": "The class already has a member with the field's name, so adding the field refuses after the new class was created, and the new class is removed again",
+  "target": { "symbol": "T:Shop.Customer" },
+  "arguments": { "name": "Address", "members": ["_street", "_town", "FormatAddress"], "field": "Name" },
+  "expect": "error",
+  "errorCode": "name-conflict",
+  "errorContains": "step 2 (introduce-field)"
+}

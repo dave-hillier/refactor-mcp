@@ -1,0 +1,9 @@
+{
+  "refactoring": "extract-class",
+  "description": "A virtual method cannot move, so the move refuses after the class, the field and both fields' moves have been done, and every file is put back",
+  "target": { "symbol": "T:Shop.Customer" },
+  "arguments": { "name": "Address", "members": ["_street", "_town", "FormatAddress"] },
+  "expect": "error",
+  "errorCode": "polymorphic-method",
+  "errorContains": "step 5 (move-instance-method)"
+}

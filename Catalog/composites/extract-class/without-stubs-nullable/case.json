@@ -1,0 +1,7 @@
+{
+  "refactoring": "extract-class",
+  "description": "Without stubs, calls of a moved method go through the new field; a constant moves by type name, and nullable annotations are kept",
+  "project": { "nullable": "enable" },
+  "target": { "symbol": "T:Shop.Customer" },
+  "arguments": { "name": "Address", "members": ["FormatAddress", "MaxLineLength", "_street", "_town"], "stub": false }
+}
