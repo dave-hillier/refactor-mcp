@@ -1,0 +1,5 @@
+{
+  "refactoring": "inline-method",
+  "description": "A type the method names through a using the calling file lacks is qualified at the call site",
+  "target": { "symbol": "M:Shop.Report.Line(System.String)" }
+}

@@ -1,0 +1,7 @@
+{
+  "refactoring": "inline-method",
+  "description": "Refuses to inline a method that computes its result in several statements into an expression",
+  "target": { "symbol": "M:Sample.Area(System.Int32,System.Int32)" },
+  "expect": "error",
+  "errorCode": "multiple-statements"
+}

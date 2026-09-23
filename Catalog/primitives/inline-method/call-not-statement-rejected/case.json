@@ -1,0 +1,7 @@
+{
+  "refactoring": "inline-method",
+  "description": "Refuses a call to a void method that is a lambda's body rather than a statement",
+  "target": { "symbol": "M:Sample.Greet" },
+  "expect": "error",
+  "errorCode": "unsupported-call"
+}

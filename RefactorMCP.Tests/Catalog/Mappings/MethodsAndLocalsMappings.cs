@@ -33,6 +33,22 @@ internal sealed class MethodsAndLocalsMappings : ICatalogMappings
                 ["no-statements-selected"] = "does not contain extractable statements",
             }),
         new CatalogMapping(
+            "inline-method",
+            "inline-method",
+            InlineMethodArguments,
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["recursive-method"] = "calls itself",
+                ["polymorphic-method"] = "is virtual, an override or an interface implementation",
+                ["method-group-reference"] = "is used without being called",
+                ["inaccessible-member"] = "which is not accessible at",
+                ["multiple-statements"] = "computes its result in several statements",
+                ["early-return"] = "returns before its last statement",
+                ["name-conflict"] = "which is already used there",
+                ["unsupported-method"] = "is async or an iterator",
+                ["unsupported-call"] = "is not a statement of its own",
+            }),
+        new CatalogMapping(
             "extract-local-variable",
             "introduce-variable",
             context => new Dictionary<string, JsonElement>
@@ -120,6 +136,18 @@ internal sealed class MethodsAndLocalsMappings : ICatalogMappings
                 ["not-a-local"] = "There is no local variable",
             }),
     };
+
+    private static async Task<Dictionary<string, JsonElement>> InlineMethodArguments(StepContext context)
+    {
+        var location = await context.SymbolLocationAsync();
+        return new Dictionary<string, JsonElement>
+        {
+            ["solutionPath"] = Json(context.SolutionPath),
+            ["filePath"] = Json(location.FilePath),
+            ["methodName"] = Json(location.Symbol.Name),
+            ["line"] = Json(location.Line),
+        };
+    }
 
     /// <summary>
     /// Refactorings of a single local take its position. A caret marks it directly;

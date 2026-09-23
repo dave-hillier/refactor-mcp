@@ -40,7 +40,7 @@ public static class InlineLocalVariableTool
                 throw new McpException($"Error: '{target.Name}' is assigned after its declaration, at line {LineOf(write)}");
             if (references.Count == 0)
                 throw new McpException($"Error: '{target.Name}' is never used");
-            if (references.Count > 1 && HasSideEffects(initializer.Value))
+            if (references.Count > 1 && ExpressionFacts.HasSideEffects(initializer.Value))
                 throw new McpException(
                     $"Error: The initializer of '{target.Name}' has side effects, which would run at each of its {references.Count} uses");
 
@@ -100,20 +100,6 @@ public static class InlineLocalVariableTool
                 SyntaxFactory.CastExpression(target.TypeSyntax(), parenthesized)
                     .WithAdditionalAnnotations(Simplifier.Annotation))
             .WithAdditionalAnnotations(Simplifier.Annotation);
-    }
-
-    /// <summary>
-    /// Anything evaluating the initializer might do besides produce its value: a call,
-    /// an object creation, an assignment, an increment or an await.
-    /// </summary>
-    private static bool HasSideEffects(ExpressionSyntax value)
-    {
-        return value.DescendantNodesAndSelf().Any(n => n is InvocationExpressionSyntax
-            or BaseObjectCreationExpressionSyntax
-            or AssignmentExpressionSyntax
-            or AwaitExpressionSyntax
-            or PrefixUnaryExpressionSyntax { RawKind: (int)SyntaxKind.PreIncrementExpression or (int)SyntaxKind.PreDecrementExpression }
-            or PostfixUnaryExpressionSyntax);
     }
 
     /// <summary>

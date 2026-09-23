@@ -1,0 +1,5 @@
+{
+  "refactoring": "inline-method",
+  "description": "Comments in the method travel with its statements, below the comment above the call",
+  "target": { "symbol": "M:Sample.Greet" }
+}

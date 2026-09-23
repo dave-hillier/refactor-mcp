@@ -1,0 +1,5 @@
+{
+  "refactoring": "inline-method",
+  "description": "Calls from a derived class, one nested in the other's argument, are both inlined",
+  "target": { "symbol": "M:Shop.Pricing.Twice(System.Int32)" }
+}

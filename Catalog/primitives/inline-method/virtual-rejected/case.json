@@ -1,0 +1,7 @@
+{
+  "refactoring": "inline-method",
+  "description": "Refuses a virtual method, whose calls may reach an override",
+  "target": { "symbol": "M:Animal.Sound" },
+  "expect": "error",
+  "errorCode": "polymorphic-method"
+}

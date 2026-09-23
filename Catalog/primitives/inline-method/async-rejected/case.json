@@ -1,0 +1,7 @@
+{
+  "refactoring": "inline-method",
+  "description": "Refuses an async method, whose awaits belong to it",
+  "target": { "symbol": "M:Sample.Wait" },
+  "expect": "error",
+  "errorCode": "unsupported-method"
+}

@@ -1,0 +1,5 @@
+{
+  "refactoring": "inline-method",
+  "description": "Inlines one overload, chosen by its signature, and leaves the other",
+  "target": { "symbol": "M:Sample.Format(System.Int32)" }
+}

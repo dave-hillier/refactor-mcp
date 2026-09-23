@@ -5,59 +5,30 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
-using Microsoft.CodeAnalysis.FindSymbols;
 using System.Linq;
 using System.IO;
+using System.Threading;
 
 [McpServerToolType]
 public static class InlineMethodTool
 {
 
-    private static async Task InlineReferences(MethodDeclarationSyntax method, Solution solution, ISymbol methodSymbol)
-    {
-        var refs = await SymbolFinder.FindReferencesAsync(methodSymbol, solution);
-        var documents = refs.SelectMany(r => r.Locations)
-            .Where(l => l.Location.IsInSource)
-            .Select(l => solution.GetDocument(l.Location.SourceTree)!)
-            .Distinct();
-
-        foreach (var refDoc in documents)
-        {
-            var refRoot = await refDoc.GetSyntaxRootAsync();
-            var semanticModel = await refDoc.GetSemanticModelAsync();
-            var rewriter = new InlineInvocationRewriter(method, semanticModel!, (IMethodSymbol)methodSymbol);
-            var newRoot = rewriter.Visit(refRoot!);
-
-            if (!ReferenceEquals(refRoot, newRoot))
-            {
-                var formatted = Formatter.Format(newRoot!, refDoc.Project.Solution.Workspace);
-                await RefactoringHelpers.WriteAndUpdateCachesAsync(refDoc, formatted);
-            }
-        }
-    }
-
-    private static async Task<string> InlineMethodWithSolution(Document document, string methodName)
+    private static async Task<string> InlineMethodWithSolution(Document document, string methodName, int? line)
     {
         var root = await document.GetSyntaxRootAsync();
-        var semanticModel = await document.GetSemanticModelAsync();
+        var candidates = root!.DescendantNodes().OfType<MethodDeclarationSyntax>()
+            .Where(m => m.Identifier.ValueText == methodName)
+            .ToList();
+        if (line.HasValue)
+            candidates = candidates.Where(m => m.Identifier.GetLocation().GetLineSpan().StartLinePosition.Line + 1 == line.Value).ToList();
 
-        var method = root!.DescendantNodes().OfType<MethodDeclarationSyntax>()
-            .FirstOrDefault(m => m.Identifier.ValueText == methodName);
-        if (method == null)
+        if (candidates.Count == 0)
             throw new McpException($"Error: Method '{methodName}' not found");
+        if (candidates.Count > 1)
+            throw new McpException($"Error: '{methodName}' has overloads; pass the line of the one to inline");
 
-        var symbol = semanticModel!.GetDeclaredSymbol(method)!;
-        await InlineReferences(method, document.Project.Solution, symbol);
-
-        var newRoot = await document.GetSyntaxRootAsync();
-        var updatedMethod = newRoot!.DescendantNodes()
-            .OfType<MethodDeclarationSyntax>()
-            .First(m => m.Identifier.ValueText == methodName);
-        newRoot = newRoot.RemoveNode(updatedMethod, SyntaxRemoveOptions.KeepNoTrivia);
-        var formattedRoot = Formatter.Format(newRoot!, document.Project.Solution.Workspace);
-        await RefactoringHelpers.WriteAndUpdateCachesAsync(document, formattedRoot);
-
-        return $"Successfully inlined method '{methodName}' in {document.FilePath} (solution mode)";
+        var calls = await MethodInliner.InlineAsync(document, candidates[0], CancellationToken.None);
+        return $"Successfully inlined method '{methodName}' at {calls} call(s) in {document.FilePath} (solution mode)";
     }
 
     private static Task<string> InlineMethodSingleFile(string filePath, string methodName)
@@ -91,14 +62,15 @@ public static class InlineMethodTool
     public static async Task<string> InlineMethod(
         [Description("Absolute path to the solution file (.sln)")] string solutionPath,
         [Description("Path to the C# file containing the method")] string filePath,
-        [Description("Name of the method to inline")] string methodName)
+        [Description("Name of the method to inline")] string methodName,
+        [Description("Line of the method's declaration, to choose between overloads (1-based, optional)")] int? line = null)
     {
         try
         {
             return await RefactoringHelpers.RunWithSolutionOrFile(
                 solutionPath,
                 filePath,
-                doc => InlineMethodWithSolution(doc, methodName),
+                doc => InlineMethodWithSolution(doc, methodName, line),
                 path => InlineMethodSingleFile(path, methodName));
         }
         catch (Exception ex)

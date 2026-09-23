@@ -1,0 +1,7 @@
+{
+  "refactoring": "inline-method",
+  "description": "Refuses when a local the method declares would clash with one at the call site",
+  "target": { "symbol": "M:Sample.Print(System.Int32)" },
+  "expect": "error",
+  "errorCode": "name-conflict"
+}

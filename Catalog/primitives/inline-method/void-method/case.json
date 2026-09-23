@@ -1,0 +1,5 @@
+{
+  "refactoring": "inline-method",
+  "description": "Replaces a call statement with the method's statements, its parameters replaced by the arguments, and deletes the method",
+  "target": { "symbol": "M:Sample.Greet(System.String)" }
+}

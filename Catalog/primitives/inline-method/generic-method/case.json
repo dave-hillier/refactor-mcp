@@ -1,0 +1,5 @@
+{
+  "refactoring": "inline-method",
+  "description": "The method's type parameters are replaced by the type arguments the call inferred",
+  "target": { "symbol": "M:Sample.Pair``1(``0,``0)" }
+}

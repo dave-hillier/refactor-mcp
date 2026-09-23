@@ -1,0 +1,7 @@
+{
+  "refactoring": "inline-method",
+  "description": "Refuses a method that returns before its last statement, which would return from the caller instead",
+  "target": { "symbol": "M:Sample.Log(System.String)" },
+  "expect": "error",
+  "errorCode": "early-return"
+}

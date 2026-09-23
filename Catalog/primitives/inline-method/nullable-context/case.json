@@ -1,0 +1,6 @@
+{
+  "refactoring": "inline-method",
+  "description": "Inlines a method over nullable values without new warnings",
+  "project": { "nullable": "enable" },
+  "target": { "symbol": "M:Sample.OrDefault(System.String)" }
+}

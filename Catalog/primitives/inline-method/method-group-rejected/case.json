@@ -1,0 +1,7 @@
+{
+  "refactoring": "inline-method",
+  "description": "Refuses a method that is also used as a delegate, which has no call to inline",
+  "target": { "symbol": "M:Sample.Doubled(System.Int32)" },
+  "expect": "error",
+  "errorCode": "method-group-reference"
+}

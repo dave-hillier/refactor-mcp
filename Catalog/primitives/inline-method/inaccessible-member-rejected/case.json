@@ -1,0 +1,7 @@
+{
+  "refactoring": "inline-method",
+  "description": "Refuses when a call site cannot see a private member the method uses",
+  "target": { "symbol": "M:Shop.Order.Total" },
+  "expect": "error",
+  "errorCode": "inaccessible-member"
+}

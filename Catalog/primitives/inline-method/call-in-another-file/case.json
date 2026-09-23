@@ -1,0 +1,5 @@
+{
+  "refactoring": "inline-method",
+  "description": "A call on another object in another file has the members the method used qualified with that object",
+  "target": { "symbol": "M:Shop.Order.Describe" }
+}

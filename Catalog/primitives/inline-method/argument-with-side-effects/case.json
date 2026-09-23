@@ -1,0 +1,5 @@
+{
+  "refactoring": "inline-method",
+  "description": "An argument with side effects that the method reads twice is evaluated once, into a local named after the parameter",
+  "target": { "symbol": "M:Sample.Show(System.Int32)" }
+}

@@ -1,0 +1,7 @@
+{
+  "refactoring": "inline-method",
+  "description": "Refuses a method that calls itself",
+  "target": { "symbol": "M:Sample.Factorial(System.Int32)" },
+  "expect": "error",
+  "errorCode": "recursive-method"
+}

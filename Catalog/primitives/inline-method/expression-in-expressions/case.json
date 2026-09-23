@@ -1,0 +1,5 @@
+{
+  "refactoring": "inline-method",
+  "description": "A method returning an expression is inlined into the expressions that call it, parenthesised only where needed",
+  "target": { "symbol": "M:Sample.Doubled(System.Int32)" }
+}

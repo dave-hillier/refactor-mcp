@@ -169,16 +169,7 @@ public static class IntroduceVariableTool
     /// </summary>
     private static void EnsureNotInLoopCondition(ExpressionSyntax selected, StatementSyntax statement)
     {
-        var repeated = statement switch
-        {
-            WhileStatementSyntax whileLoop => whileLoop.Condition.Span.Contains(selected.Span),
-            DoStatementSyntax doLoop => doLoop.Condition.Span.Contains(selected.Span),
-            ForStatementSyntax forLoop => (forLoop.Condition?.Span.Contains(selected.Span) ?? false) ||
-                                          forLoop.Incrementors.Any(i => i.Span.Contains(selected.Span)),
-            _ => false,
-        };
-
-        if (repeated)
+        if (ExpressionFacts.IsInLoopCondition(selected, statement))
             throw new McpException("Error: The selected expression is part of a loop condition, which is evaluated on every iteration");
     }
 
@@ -212,30 +203,8 @@ public static class IntroduceVariableTool
     /// </summary>
     private static void EnsureAlwaysEvaluated(ExpressionSyntax selected, StatementSyntax statement)
     {
-        if (IsConditionallyEvaluated(selected, statement))
+        if (ExpressionFacts.IsConditionallyEvaluated(selected, statement))
             throw new McpException("Error: The selected expression is only evaluated on some paths, or later, so it cannot be computed before the statement");
-    }
-
-    private static bool IsConditionallyEvaluated(SyntaxNode node, StatementSyntax statement)
-    {
-        for (var child = node; child.Parent != null && child != statement; child = child.Parent)
-        {
-            var conditional = child.Parent switch
-            {
-                BinaryExpressionSyntax binary => binary.Right == child && binary.Kind() is
-                    SyntaxKind.LogicalAndExpression or SyntaxKind.LogicalOrExpression or SyntaxKind.CoalesceExpression,
-                AssignmentExpressionSyntax assignment => assignment.Right == child && assignment.IsKind(SyntaxKind.CoalesceAssignmentExpression),
-                ConditionalExpressionSyntax condition => condition.Condition != child,
-                ConditionalAccessExpressionSyntax access => access.WhenNotNull == child,
-                SwitchExpressionArmSyntax => true,
-                AnonymousFunctionExpressionSyntax or LocalFunctionStatementSyntax => true,
-                _ => false,
-            };
-            if (conditional)
-                return true;
-        }
-
-        return false;
     }
 
     /// <summary>
@@ -245,26 +214,16 @@ public static class IntroduceVariableTool
     private static IEnumerable<ExpressionSyntax> Occurrences(ExpressionSyntax selected, ExpressionSyntax value, StatementSyntax statement)
     {
         yield return value;
-        if (HasSideEffects(value))
+        if (ExpressionFacts.HasSideEffects(value))
             yield break;
 
         foreach (var other in statement.DescendantNodes().OfType<ExpressionSyntax>())
         {
             if (other == value || selected.Span.IntersectsWith(other.Span) || !SyntaxFactory.AreEquivalent(other, value))
                 continue;
-            if (!IsConditionallyEvaluated(other, statement))
+            if (!ExpressionFacts.IsConditionallyEvaluated(other, statement))
                 yield return other;
         }
-    }
-
-    private static bool HasSideEffects(ExpressionSyntax value)
-    {
-        return value.DescendantNodesAndSelf().Any(n => n is InvocationExpressionSyntax
-            or BaseObjectCreationExpressionSyntax
-            or AssignmentExpressionSyntax
-            or AwaitExpressionSyntax
-            or PrefixUnaryExpressionSyntax { RawKind: (int)SyntaxKind.PreIncrementExpression or (int)SyntaxKind.PreDecrementExpression }
-            or PostfixUnaryExpressionSyntax);
     }
 
     /// <summary>
