@@ -1,0 +1,5 @@
+{
+  "refactoring": "pull-up-field",
+  "description": "Moves a field into the base class in another file, widening private to protected so the subclass still sees it",
+  "target": { "symbol": "F:Shop.Manager._name" }
+}

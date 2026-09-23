@@ -1,0 +1,8 @@
+{
+  "refactoring": "push-down-field",
+  "description": "Refuses when a subclass that would receive the field already has a member of that name",
+  "target": { "symbol": "F:Shop.Employee.Quota" },
+  "expect": "error",
+  "errorCode": "member-exists-in-subclass",
+  "errorContains": "Salesman"
+}

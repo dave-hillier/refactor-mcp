@@ -1,0 +1,9 @@
+{
+  "refactoring": "change-type",
+  "description": "Refuses when a caller in another file needs the old return type",
+  "target": { "symbol": "M:Shop.Store.Pending" },
+  "arguments": { "to": "IEnumerable<Order>" },
+  "expect": "error",
+  "errorCode": "incompatible-use",
+  "errorContains": "Dispatch.cs"
+}

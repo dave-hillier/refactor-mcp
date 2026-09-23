@@ -1,0 +1,5 @@
+{
+  "refactoring": "push-down-method",
+  "description": "Moves a method into the one subclass whose code and callers use it",
+  "target": { "symbol": "M:Shop.Employee.QuotaReport" }
+}

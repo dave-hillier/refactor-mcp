@@ -1,0 +1,8 @@
+{
+  "refactoring": "push-down-field",
+  "description": "Refuses when code elsewhere reaches the field through a base-typed reference",
+  "target": { "symbol": "F:Shop.Employee.Quota" },
+  "expect": "error",
+  "errorCode": "used-through-base",
+  "errorContains": "Payroll.cs"
+}

@@ -1,0 +1,8 @@
+{
+  "refactoring": "push-down-field",
+  "description": "Refuses when the base class itself uses the field",
+  "target": { "symbol": "F:Shop.Employee.Quota" },
+  "expect": "error",
+  "errorCode": "used-by-base",
+  "errorContains": "Employee"
+}

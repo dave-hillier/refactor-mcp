@@ -1,0 +1,8 @@
+{
+  "refactoring": "push-down-method",
+  "description": "Refuses a method that overrides one from further up, which callers reach without naming the class",
+  "target": { "symbol": "M:Shop.Employee.ToString" },
+  "expect": "error",
+  "errorCode": "method-is-override",
+  "errorContains": "ToString"
+}

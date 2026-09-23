@@ -1,0 +1,9 @@
+{
+  "refactoring": "extract-interface",
+  "description": "Refuses an interface name the namespace already uses",
+  "target": { "symbol": "T:Shop.Order" },
+  "arguments": { "name": "IOrder", "file": "Contracts.cs" },
+  "expect": "error",
+  "errorCode": "type-already-exists",
+  "errorContains": "Shop.IOrder"
+}

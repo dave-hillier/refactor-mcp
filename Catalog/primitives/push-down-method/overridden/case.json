@@ -1,0 +1,8 @@
+{
+  "refactoring": "push-down-method",
+  "description": "Refuses a virtual method a subclass overrides, since the subclasses would disagree about what it does",
+  "target": { "symbol": "M:Shop.Employee.Rate" },
+  "expect": "error",
+  "errorCode": "method-is-overridden",
+  "errorContains": "Manager"
+}

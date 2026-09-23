@@ -1,0 +1,7 @@
+{
+  "refactoring": "pull-up-method",
+  "description": "Refuses when the class has no base class",
+  "target": { "symbol": "M:Shop.Manager.Describe" },
+  "expect": "error",
+  "errorCode": "no-base-class"
+}

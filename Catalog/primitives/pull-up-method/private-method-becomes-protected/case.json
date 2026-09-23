@@ -1,0 +1,5 @@
+{
+  "refactoring": "pull-up-method",
+  "description": "Widens a private method to protected so the subclass can still call it",
+  "target": { "symbol": "M:Shop.Manager.Tax(System.Decimal)" }
+}

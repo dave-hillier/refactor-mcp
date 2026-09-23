@@ -1,0 +1,5 @@
+{
+  "refactoring": "pull-up-constructor-body",
+  "description": "Declares the parameterless constructor the other subclasses relied on, since a new base constructor hides the implicit one",
+  "target": { "symbol": "M:Shop.Manager.#ctor(System.String)" }
+}

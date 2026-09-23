@@ -1,0 +1,9 @@
+{
+  "refactoring": "change-type",
+  "description": "Refuses when a member used through the new type is implemented by a different member than the one called today",
+  "target": { "symbol": "F:Shop.Report._writer" },
+  "arguments": { "to": "IWriter" },
+  "expect": "error",
+  "errorCode": "changes-overload",
+  "errorContains": "Write"
+}

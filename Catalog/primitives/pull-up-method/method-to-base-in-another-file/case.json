@@ -1,0 +1,5 @@
+{
+  "refactoring": "pull-up-method",
+  "description": "Moves a method that only uses inherited members into the base class in another file",
+  "target": { "symbol": "M:Shop.Manager.Describe" }
+}

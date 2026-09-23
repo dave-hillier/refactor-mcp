@@ -1,0 +1,7 @@
+{
+  "refactoring": "pull-up-field",
+  "description": "Refuses when the class has no base class to move the field into",
+  "target": { "symbol": "F:Shop.Manager._name" },
+  "expect": "error",
+  "errorCode": "no-base-class"
+}

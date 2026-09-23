@@ -1,0 +1,9 @@
+{
+  "refactoring": "change-type",
+  "description": "Refuses when a call passing the variable would pick a different overload",
+  "target": { "file": "Report.cs", "caret": "marker" },
+  "arguments": { "to": "IWriter" },
+  "expect": "error",
+  "errorCode": "changes-overload",
+  "errorContains": "Describe"
+}

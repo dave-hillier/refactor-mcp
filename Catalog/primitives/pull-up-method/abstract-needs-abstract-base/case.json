@@ -1,0 +1,9 @@
+{
+  "refactoring": "pull-up-method",
+  "description": "Refuses to declare an abstract method in a class that is not abstract",
+  "target": { "symbol": "M:Shop.Manager.Bonus" },
+  "arguments": { "abstract": true },
+  "expect": "error",
+  "errorCode": "base-not-abstract",
+  "errorContains": "Employee"
+}

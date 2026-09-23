@@ -1,0 +1,8 @@
+{
+  "refactoring": "push-down-method",
+  "description": "Refuses when a subclass that would receive the method already has one with the same parameters",
+  "target": { "symbol": "M:Shop.Employee.Describe" },
+  "expect": "error",
+  "errorCode": "member-exists-in-subclass",
+  "errorContains": "Salesman"
+}

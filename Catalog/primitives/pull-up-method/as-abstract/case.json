@@ -1,0 +1,6 @@
+{
+  "refactoring": "pull-up-method",
+  "description": "Declares the method abstract in the base class and makes each subclass's version an override",
+  "target": { "symbol": "M:Shop.Manager.Bonus" },
+  "arguments": { "abstract": true }
+}

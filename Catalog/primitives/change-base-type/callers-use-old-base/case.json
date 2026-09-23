@@ -1,0 +1,9 @@
+{
+  "refactoring": "change-base-type",
+  "description": "Refuses when code in another file relies on the class converting to the old base class",
+  "target": { "symbol": "T:Shop.Manager" },
+  "arguments": { "to": "Vendor" },
+  "expect": "error",
+  "errorCode": "base-conversion-in-use",
+  "errorContains": "Payroll.cs"
+}

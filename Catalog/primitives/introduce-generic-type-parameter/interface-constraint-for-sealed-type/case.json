@@ -1,0 +1,6 @@
+{
+  "refactoring": "introduce-generic-type-parameter",
+  "description": "Constrains to the interface the old type implements when the old type is sealed and the uses need only that interface",
+  "target": { "symbol": "T:Shop.Box" },
+  "arguments": { "type": "Invoice", "name": "T" }
+}

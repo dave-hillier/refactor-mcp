@@ -1,0 +1,5 @@
+{
+  "refactoring": "create-type",
+  "description": "Creates a generic class when the name carries type parameters",
+  "arguments": { "name": "Page<T>", "file": "Page.cs" }
+}

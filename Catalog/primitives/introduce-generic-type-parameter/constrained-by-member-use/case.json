@@ -1,0 +1,6 @@
+{
+  "refactoring": "introduce-generic-type-parameter",
+  "description": "Constrains the type parameter to the old type when the class uses its members",
+  "target": { "symbol": "T:Shop.Box" },
+  "arguments": { "type": "Invoice", "name": "TItem" }
+}

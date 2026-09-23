@@ -1,0 +1,7 @@
+{
+  "refactoring": "create-type",
+  "description": "Refuses to derive from a sealed class",
+  "arguments": { "name": "Address", "file": "Address.cs", "baseType": "Postcode" },
+  "expect": "error",
+  "errorCode": "invalid-base-type"
+}

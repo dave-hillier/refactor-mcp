@@ -1,0 +1,5 @@
+{
+  "refactoring": "change-base-type",
+  "description": "Removes the base class when no target is given, keeping the interfaces",
+  "target": { "symbol": "T:Shop.Manager" }
+}

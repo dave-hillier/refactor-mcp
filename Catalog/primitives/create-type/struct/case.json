@@ -1,0 +1,5 @@
+{
+  "refactoring": "create-type",
+  "description": "Creates a struct",
+  "arguments": { "name": "Point", "file": "Point.cs", "kind": "struct" }
+}

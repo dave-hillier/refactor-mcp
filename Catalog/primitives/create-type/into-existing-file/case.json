@@ -1,0 +1,5 @@
+{
+  "refactoring": "create-type",
+  "description": "Adds the class after the last type in an existing file, inside that file's namespace, leaving its comments and usings alone",
+  "arguments": { "name": "Address", "file": "Customer.cs" }
+}

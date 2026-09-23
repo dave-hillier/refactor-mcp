@@ -1,0 +1,7 @@
+{
+  "refactoring": "create-type",
+  "description": "Refuses a name that is not a C# identifier",
+  "arguments": { "name": "2ndAddress", "file": "Address.cs" },
+  "expect": "error",
+  "errorCode": "invalid-name"
+}

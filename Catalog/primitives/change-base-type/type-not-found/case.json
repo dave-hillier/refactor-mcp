@@ -1,0 +1,9 @@
+{
+  "refactoring": "change-base-type",
+  "description": "Refuses a base class that names no type",
+  "target": { "symbol": "T:Shop.Manager" },
+  "arguments": { "to": "Supervisor" },
+  "expect": "error",
+  "errorCode": "type-not-found",
+  "errorContains": "Supervisor"
+}

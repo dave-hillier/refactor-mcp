@@ -1,0 +1,6 @@
+{
+  "refactoring": "change-base-type",
+  "description": "Keeps a base constructor call the new base class also accepts",
+  "target": { "symbol": "T:Shop.Manager" },
+  "arguments": { "to": "Employee" }
+}

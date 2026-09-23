@@ -1,0 +1,7 @@
+{
+  "refactoring": "create-type",
+  "description": "Refuses a kind other than class, interface, record or struct",
+  "arguments": { "name": "Address", "file": "Address.cs", "kind": "module" },
+  "expect": "error",
+  "errorCode": "invalid-kind"
+}

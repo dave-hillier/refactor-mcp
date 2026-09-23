@@ -1,0 +1,9 @@
+{
+  "refactoring": "introduce-generic-type-parameter",
+  "description": "Refuses when the class reaches a static member through the old type, which a type parameter cannot do",
+  "target": { "symbol": "T:Shop.Box" },
+  "arguments": { "type": "Invoice", "name": "T" },
+  "expect": "error",
+  "errorCode": "uses-static-members",
+  "errorContains": "Blank"
+}

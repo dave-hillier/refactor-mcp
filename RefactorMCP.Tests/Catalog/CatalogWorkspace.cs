@@ -247,7 +247,10 @@ internal sealed class CatalogWorkspace : IDisposable
 
     private static async Task RestoreAsync(string solutionPath)
     {
-        var startInfo = new ProcessStartInfo("dotnet", $"restore \"{solutionPath}\" --verbosity quiet --disable-build-servers")
+        // A single node: a solution of several projects otherwise starts worker
+        // nodes that inherit the output pipes and can outlive the restore,
+        // leaving the reads below waiting forever.
+        var startInfo = new ProcessStartInfo("dotnet", $"restore \"{solutionPath}\" --verbosity quiet --disable-build-servers -m:1")
         {
             RedirectStandardOutput = true,
             RedirectStandardError = true,

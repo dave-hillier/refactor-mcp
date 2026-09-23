@@ -1,0 +1,6 @@
+{
+  "refactoring": "introduce-generic-type-parameter",
+  "description": "Passes the old type explicitly where the compiler could not infer the new type parameter",
+  "target": { "symbol": "M:Shop.Ledger.Load" },
+  "arguments": { "type": "Invoice", "name": "T" }
+}

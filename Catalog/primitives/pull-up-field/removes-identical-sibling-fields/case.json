@@ -1,0 +1,5 @@
+{
+  "refactoring": "pull-up-field",
+  "description": "Removes the same field from the other subclasses, which now inherit it",
+  "target": { "symbol": "F:Shop.Engineer.Name" }
+}

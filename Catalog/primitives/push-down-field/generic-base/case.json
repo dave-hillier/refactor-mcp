@@ -1,0 +1,5 @@
+{
+  "refactoring": "push-down-field",
+  "description": "Writes the base class's type parameter as the subclass's type argument and imports what the field needs",
+  "target": { "symbol": "F:Shop.Store`1.Cache" }
+}

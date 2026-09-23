@@ -1,0 +1,8 @@
+{
+  "refactoring": "pull-up-field",
+  "description": "Refuses when the field's initializer reads a member only the subclass has",
+  "target": { "symbol": "F:Shop.Manager._bonus" },
+  "expect": "error",
+  "errorCode": "uses-subclass-members",
+  "errorContains": "Grade"
+}

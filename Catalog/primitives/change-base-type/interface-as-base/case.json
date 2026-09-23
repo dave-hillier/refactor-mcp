@@ -1,0 +1,9 @@
+{
+  "refactoring": "change-base-type",
+  "description": "Refuses an interface, which a class implements rather than derives from",
+  "target": { "symbol": "T:Shop.Manager" },
+  "arguments": { "to": "System.IDisposable" },
+  "expect": "error",
+  "errorCode": "invalid-base-type",
+  "errorContains": "interface"
+}

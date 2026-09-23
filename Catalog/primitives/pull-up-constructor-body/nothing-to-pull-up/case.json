@@ -1,0 +1,7 @@
+{
+  "refactoring": "pull-up-constructor-body",
+  "description": "Refuses when the first statement already needs the subclass",
+  "target": { "symbol": "M:Shop.Manager.#ctor(System.String,System.Int32)" },
+  "expect": "error",
+  "errorCode": "nothing-to-pull-up"
+}

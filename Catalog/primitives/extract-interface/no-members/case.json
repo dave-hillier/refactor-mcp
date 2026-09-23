@@ -1,0 +1,8 @@
+{
+  "refactoring": "extract-interface",
+  "description": "Refuses when the class has no public instance members to declare",
+  "target": { "symbol": "T:Shop.Settings" },
+  "arguments": { "name": "ISettings" },
+  "expect": "error",
+  "errorCode": "no-members"
+}

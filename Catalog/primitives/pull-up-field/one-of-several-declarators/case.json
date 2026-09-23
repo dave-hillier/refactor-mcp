@@ -1,0 +1,5 @@
+{
+  "refactoring": "pull-up-field",
+  "description": "Splits a declaration of several fields and moves only the target",
+  "target": { "symbol": "F:Shop.Manager._reports" }
+}

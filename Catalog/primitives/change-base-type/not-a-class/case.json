@@ -1,0 +1,8 @@
+{
+  "refactoring": "change-base-type",
+  "description": "Refuses a struct, which cannot have a base class",
+  "target": { "symbol": "T:Shop.Money" },
+  "arguments": { "to": "Amount" },
+  "expect": "error",
+  "errorCode": "not-a-class"
+}

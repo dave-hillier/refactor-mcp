@@ -1,0 +1,5 @@
+{
+  "refactoring": "pull-up-constructor-body",
+  "description": "Chains the new base constructor to the parameterless one the subclass ran before, so its statements still run first",
+  "target": { "symbol": "M:Shop.Manager.#ctor(System.String,System.Int32)" }
+}

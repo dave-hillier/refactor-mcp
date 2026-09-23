@@ -1,0 +1,8 @@
+{
+  "refactoring": "push-down-field",
+  "description": "Refuses when the field's initializer uses a member private to the base class",
+  "target": { "symbol": "F:Shop.Employee.Quota" },
+  "expect": "error",
+  "errorCode": "uses-base-private-members",
+  "errorContains": "DefaultQuota"
+}

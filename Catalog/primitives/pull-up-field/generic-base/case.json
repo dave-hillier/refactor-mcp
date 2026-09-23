@@ -1,0 +1,5 @@
+{
+  "refactoring": "pull-up-field",
+  "description": "Rewrites the subclass's type parameter as the base class's and imports what the field's type needs",
+  "target": { "symbol": "F:Shop.Repository`1._items" }
+}

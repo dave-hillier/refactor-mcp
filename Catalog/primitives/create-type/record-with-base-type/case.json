@@ -1,0 +1,5 @@
+{
+  "refactoring": "create-type",
+  "description": "Creates a record deriving from an existing record",
+  "arguments": { "name": "Money", "file": "Money.cs", "kind": "record", "baseType": "Value" }
+}

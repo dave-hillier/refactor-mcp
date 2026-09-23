@@ -1,0 +1,5 @@
+{
+  "refactoring": "push-down-method",
+  "description": "Narrows a protected virtual method to a private one in a sealed subclass",
+  "target": { "symbol": "M:Shop.Employee.Rate" }
+}

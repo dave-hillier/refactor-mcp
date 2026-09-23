@@ -1,0 +1,9 @@
+{
+  "refactoring": "change-type",
+  "description": "Refuses when the variable is used for a member the new type does not have",
+  "target": { "symbol": "F:Shop.Report._writer" },
+  "arguments": { "to": "IWriter" },
+  "expect": "error",
+  "errorCode": "incompatible-use",
+  "errorContains": "Flush"
+}

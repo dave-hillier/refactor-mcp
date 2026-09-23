@@ -1,0 +1,6 @@
+{
+  "refactoring": "change-type",
+  "description": "Imports the namespace of the new type",
+  "target": { "symbol": "F:Shop.Reports.Report._log" },
+  "arguments": { "to": "ILog" }
+}

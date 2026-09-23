@@ -1,0 +1,5 @@
+{
+  "refactoring": "push-down-method",
+  "description": "Writes the base class's type parameter as the subclass's type argument in the moved method",
+  "target": { "symbol": "M:Shop.Store`1.Describe(`0)" }
+}

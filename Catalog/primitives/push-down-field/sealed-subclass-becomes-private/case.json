@@ -1,0 +1,5 @@
+{
+  "refactoring": "push-down-field",
+  "description": "Narrows a protected field to private in a sealed subclass, where protected means nothing",
+  "target": { "symbol": "F:Shop.Employee.Quota" }
+}

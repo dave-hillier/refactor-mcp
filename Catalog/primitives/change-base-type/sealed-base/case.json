@@ -1,0 +1,9 @@
+{
+  "refactoring": "change-base-type",
+  "description": "Refuses a sealed base class",
+  "target": { "symbol": "T:Shop.Manager" },
+  "arguments": { "to": "Director" },
+  "expect": "error",
+  "errorCode": "invalid-base-type",
+  "errorContains": "sealed"
+}

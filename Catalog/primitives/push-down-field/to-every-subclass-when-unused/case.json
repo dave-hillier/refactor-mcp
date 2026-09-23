@@ -1,0 +1,5 @@
+{
+  "refactoring": "push-down-field",
+  "description": "Copies a field no code uses into every direct subclass, so it is not lost",
+  "target": { "symbol": "F:Shop.Employee.Notes" }
+}

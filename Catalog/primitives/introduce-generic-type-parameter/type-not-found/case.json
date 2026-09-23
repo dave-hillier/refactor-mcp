@@ -1,0 +1,9 @@
+{
+  "refactoring": "introduce-generic-type-parameter",
+  "description": "Refuses a type that does not exist",
+  "target": { "symbol": "T:Shop.Box" },
+  "arguments": { "type": "Bill", "name": "T" },
+  "expect": "error",
+  "errorCode": "type-not-found",
+  "errorContains": "Bill"
+}

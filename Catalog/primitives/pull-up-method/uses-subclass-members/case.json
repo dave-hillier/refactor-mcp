@@ -1,0 +1,8 @@
+{
+  "refactoring": "pull-up-method",
+  "description": "Refuses when the method uses a member only the subclass has",
+  "target": { "symbol": "M:Shop.Manager.Bonus" },
+  "expect": "error",
+  "errorCode": "uses-subclass-members",
+  "errorContains": "Grade"
+}

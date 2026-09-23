@@ -1,0 +1,5 @@
+{
+  "refactoring": "pull-up-field",
+  "description": "Moves the field's documentation comment and initializer with it, and leaves the comments around it in place",
+  "target": { "symbol": "F:Shop.Manager.Holidays" }
+}

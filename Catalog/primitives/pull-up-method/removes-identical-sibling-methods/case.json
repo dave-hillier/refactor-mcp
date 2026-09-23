@@ -1,0 +1,5 @@
+{
+  "refactoring": "pull-up-method",
+  "description": "Removes the same method from the other subclasses, which now inherit it",
+  "target": { "symbol": "M:Shop.Engineer.AnnualCost" }
+}

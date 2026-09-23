@@ -1,0 +1,5 @@
+{
+  "refactoring": "pull-up-method",
+  "description": "Rewrites the subclass's type parameter as the base class's in the moved method",
+  "target": { "symbol": "M:Shop.Repository`1.First" }
+}

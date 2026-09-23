@@ -1,0 +1,7 @@
+{
+  "refactoring": "push-down-method",
+  "description": "Refuses when no class derives from the method's class",
+  "target": { "symbol": "M:Shop.Employee.Describe" },
+  "expect": "error",
+  "errorCode": "no-subclasses"
+}

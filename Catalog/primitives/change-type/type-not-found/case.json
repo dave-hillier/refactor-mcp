@@ -1,0 +1,9 @@
+{
+  "refactoring": "change-type",
+  "description": "Refuses a type that does not exist",
+  "target": { "symbol": "F:Shop.Report._writer" },
+  "arguments": { "to": "IPrinter" },
+  "expect": "error",
+  "errorCode": "type-not-found",
+  "errorContains": "IPrinter"
+}

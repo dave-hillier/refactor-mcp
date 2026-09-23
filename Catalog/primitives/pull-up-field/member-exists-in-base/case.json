@@ -1,0 +1,8 @@
+{
+  "refactoring": "pull-up-field",
+  "description": "Refuses when the base class already has a member of that name",
+  "target": { "symbol": "F:Shop.Manager.Name" },
+  "expect": "error",
+  "errorCode": "member-exists-in-base",
+  "errorContains": "Name"
+}

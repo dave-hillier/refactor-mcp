@@ -1,0 +1,5 @@
+{
+  "refactoring": "pull-up-constructor-body",
+  "description": "Moves only the leading statements, stopping at the first that touches the subclass, so the order of assignments is kept",
+  "target": { "symbol": "M:Shop.Manager.#ctor(System.String,System.Int32,System.String)" }
+}

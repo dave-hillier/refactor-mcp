@@ -1,0 +1,7 @@
+{
+  "refactoring": "pull-up-constructor-body",
+  "description": "Refuses when the base class has a constructor with the same parameters that does something else",
+  "target": { "symbol": "M:Shop.Manager.#ctor(System.String)" },
+  "expect": "error",
+  "errorCode": "base-constructor-exists"
+}

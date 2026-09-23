@@ -1,0 +1,6 @@
+{
+  "refactoring": "extract-interface",
+  "description": "Declares the chosen members in a new interface beside the class and makes the class implement it",
+  "target": { "symbol": "T:Shop.Order" },
+  "arguments": { "name": "IOrder", "members": ["Total", "Add"] }
+}

@@ -1,0 +1,5 @@
+{
+  "refactoring": "pull-up-constructor-body",
+  "description": "Moves the comments inside the moved statements with them and leaves the rest in place",
+  "target": { "symbol": "M:Shop.Manager.#ctor(System.String,System.Int32)" }
+}

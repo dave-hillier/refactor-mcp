@@ -1,0 +1,8 @@
+{
+  "refactoring": "pull-up-field",
+  "description": "Refuses when the base class is not declared in the solution",
+  "target": { "symbol": "F:Shop.OrderException.OrderId" },
+  "expect": "error",
+  "errorCode": "base-not-in-source",
+  "errorContains": "System.Exception"
+}
