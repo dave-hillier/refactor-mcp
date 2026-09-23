@@ -1689,6 +1689,61 @@ dotnet run --project RefactorMCP.ConsoleApp -- --json encapsulate-collection '{"
 
 <!-- Moving members and types: examples for this group's tools go below this line. -->
 
+`move-member` moves a method, field or property. An instance member moves
+through a field, property or parameter of the target type (`via`), which
+becomes `this` in the target; a static member moves to `targetType`, created
+as a static class if it does not exist. A moved method leaves a delegating
+stub unless `keepStub` is false, in which case every call is updated.
+`kind` optionally refuses a member of another kind than expected.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json move-member '{"solutionPath":"./Shop.sln","filePath":"./Shop/Customer.cs","memberName":"Label","via":"_address","keepStub":false}'
+dotnet run --project RefactorMCP.ConsoleApp -- --json move-member '{"solutionPath":"./Shop.sln","filePath":"./Shop/Order.cs","memberName":"Vat","targetType":"TaxRules","kind":"static-method"}'
+```
+
+`move-member-to-partial-file` moves a member of a partial type into the part
+declared in another file, creating the file with a new part if needed.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json move-member-to-partial-file '{"solutionPath":"./Shop.sln","filePath":"./Shop/Order.cs","memberName":"Discount","targetFilePath":"./Shop/Order.Pricing.cs"}'
+```
+
+`move-type-to-namespace` changes a type's namespace and updates qualified
+names and usings across the solution; `sync-namespace-with-folder` sets a
+file's namespace from the project's root namespace and its folders.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json move-type-to-namespace '{"solutionPath":"./Shop.sln","filePath":"./Shop/Invoice.cs","typeName":"Invoice","targetNamespace":"Shop.Billing"}'
+dotnet run --project RefactorMCP.ConsoleApp -- --json sync-namespace-with-folder '{"solutionPath":"./Shop.sln","filePath":"./Shop/Billing/Invoice.cs"}'
+```
+
+`rename-file-to-match-type` renames a file after the single top-level type it
+declares.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json rename-file-to-match-type '{"solutionPath":"./Shop.sln","filePath":"./Shop/Ledger.cs"}'
+```
+
+`make-method-static` makes an instance method static, passing the instance
+(`"pass":"instance"`, the default) or the members it reads
+(`"pass":"parameters"`), and updates every call; `make-method-instance` turns
+a static method taking its own type back into an instance method.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json make-method-static '{"solutionPath":"./Shop.sln","filePath":"./Shop/Order.cs","methodName":"Describe","pass":"parameters"}'
+dotnet run --project RefactorMCP.ConsoleApp -- --json make-method-instance '{"solutionPath":"./Shop.sln","filePath":"./Shop/Order.cs","methodName":"Discounted"}'
+```
+
+`convert-to-extension-method` also converts a static method of a static class
+in place, adding `this` to its first parameter and rewriting calls to the
+extension form; `convert-extension-method-to-static` does the reverse.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json convert-to-extension-method '{"solutionPath":"./Shop.sln","filePath":"./Shop/Text.cs","methodName":"Shout"}'
+dotnet run --project RefactorMCP.ConsoleApp -- --json convert-extension-method-to-static '{"solutionPath":"./Shop.sln","filePath":"./Shop/Text.cs","methodName":"Shout"}'
+```
+
+
 <!-- End of Moving members and types. -->
 
 ### Types and hierarchy
@@ -1792,11 +1847,220 @@ dotnet run --project RefactorMCP.ConsoleApp -- --json introduce-generic-type-par
 
 <!-- Type conversions: examples for this group's tools go below this line. -->
 
+These tools find a type by its name in a file; `line`, any line of its
+declaration, chooses between types of the same name. Each tool refuses a
+change that would not compile, or that would change behaviour the solution
+can observe.
+
+#### Make Type Partial
+
+```bash
+refactor --json make-type-partial '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Invoice.cs","typeName":"Invoice"}'
+```
+
+#### Merge Partial Declarations
+
+Moves every part's members, modifiers, base types and needed `using`
+directives into the declaration in `filePath`, deleting files left empty.
+
+```bash
+refactor --json merge-partial-declarations '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Basket.cs","typeName":"Basket"}'
+```
+
+#### Convert Class to Record
+
+Positional when the constructor only assigns get-only properties. Refused when
+the solution compares, hashes or prints instances, where a record would behave
+differently.
+
+```bash
+refactor --json convert-class-to-record '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Point.cs","typeName":"Point"}'
+```
+
+```csharp
+// before
+public sealed class Point
+{
+    public Point(int x, int y) { X = x; Y = y; }
+    public int X { get; }
+    public int Y { get; }
+}
+
+// after
+public sealed record Point(int X, int Y);
+```
+
+#### Convert Record to Class
+
+Writes out the constructor, properties and `Deconstruct` of a positional
+record, and the `Equals`, `GetHashCode`, `ToString`, `==` and `!=` the record
+provided.
+
+```bash
+refactor --json convert-record-to-class '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Point.cs","typeName":"Point"}'
+```
+
+#### Convert Tuple to Named Type
+
+Replaces the tuple in the return type, or in `parameterName`, with a
+`readonly record struct` (`kind` `class` gives a `sealed record`), updating
+returned or passed literals and element accesses.
+
+```bash
+refactor --json convert-tuple-to-named-type '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Stats.cs","methodName":"Range","typeName":"MinMax"}'
+```
+
+```csharp
+// before
+public static (int min, int max) Range(int[] values) { ... return (min, max); }
+var width = Stats.Range(values).max;
+
+// after
+public static MinMax Range(int[] values) { ... return new MinMax(min, max); }
+var width = Stats.Range(values).Max;
+public readonly record struct MinMax(int Min, int Max);
+```
+
+#### Convert Anonymous Type to Class
+
+Declares a class with the same properties, equality and `ToString` as the
+anonymous type at `line` and `column`, and constructs it throughout the
+containing member.
+
+```bash
+refactor --json convert-anonymous-type-to-class '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Report.cs","line":7,"column":20,"className":"Line"}'
+```
+
+#### Convert to Primary Constructor
+
+```bash
+refactor --json convert-to-primary-constructor '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/OrderService.cs","typeName":"OrderService"}'
+```
+
+```csharp
+// before
+public class OrderService
+{
+    private readonly IRepository _repository;
+    public OrderService(IRepository repository) { _repository = repository; }
+    public void Place(Order order) => _repository.Save(order);
+}
+
+// after
+public class OrderService(IRepository repository)
+{
+    public void Place(Order order) => repository.Save(order);
+}
+```
+
+#### Convert Primary Constructor to Constructor
+
+Captured parameters become private fields named `_parameter`.
+
+```bash
+refactor --json convert-primary-constructor-to-constructor '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/OrderService.cs","typeName":"OrderService"}'
+```
+
+#### Replace Constructor with Factory Method
+
+`line` picks the constructor; `methodName` defaults to `Create` and
+`accessibility`, the constructor's new accessibility, to `private`.
+
+```bash
+refactor --json replace-constructor-with-factory-method '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Order.cs","typeName":"Order","line":5,"methodName":"Create"}'
+```
+
+```csharp
+// before
+var order = new Order("tea", 2);
+
+// after
+var order = Order.Create("tea", 2);
+```
+
 <!-- End of Type conversions. -->
 
 ### Conditionals
 
 <!-- Conditionals: examples for this group's tools go below this line. -->
+
+The tools that act on a statement take the line and column of its keyword:
+`if` or `switch`, or anywhere on a switch expression before its opening
+brace.
+
+#### Invert If
+
+Negates the condition and swaps the branches. Without an `else`, an `if` that
+ends a method or loop body becomes an early `return` or `continue`, and an
+early return becomes an `if` around the code after it.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json invert-if '{"solutionPath":"./RefactorMCP.sln","filePath":"./Shop/Shipping.cs","line":10,"column":13}'
+```
+
+#### Merge Nested If
+
+Joins an `if` whose only statement is another `if` into one `if` on both
+conditions.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json merge-nested-if '{"solutionPath":"./RefactorMCP.sln","filePath":"./Shop/Shipping.cs","line":9,"column":13}'
+```
+
+#### Split If
+
+Splits an `if` on its first `&&` into nested ifs, or on its first `||` into
+two ifs with the same body.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json split-if '{"solutionPath":"./RefactorMCP.sln","filePath":"./Shop/Validator.cs","line":8,"column":13}'
+```
+
+#### Invert Boolean
+
+Renames a `bool` field, property, method or local and negates every value it
+is given and every use, so `IsEnabled` can become `IsDisabled`. The position
+is the symbol's declaration or a use of it.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json invert-boolean '{"solutionPath":"./RefactorMCP.sln","filePath":"./Shop/Feature.cs","line":7,"column":21,"newName":"IsDisabled"}'
+```
+
+#### Convert If Chain to Switch
+
+Turns an `if` / `else if` chain comparing one value with constants or patterns
+into a switch statement.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json convert-if-chain-to-switch '{"solutionPath":"./RefactorMCP.sln","filePath":"./Shop/Shipping.cs","line":9,"column":13}'
+```
+
+#### Convert Switch Statement to Expression
+
+Turns a switch statement whose sections all return, or all assign one
+variable, into a switch expression.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json convert-switch-statement-to-expression '{"solutionPath":"./RefactorMCP.sln","filePath":"./Shop/Shipping.cs","line":7,"column":13}'
+```
+
+#### Convert Switch Expression to Statement
+
+Turns a switch expression that is returned, assigned or initialises a local
+into a switch statement.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json convert-switch-expression-to-statement '{"solutionPath":"./RefactorMCP.sln","filePath":"./Shop/Shipping.cs","line":7,"column":25}'
+```
+
+#### Use Pattern Matching
+
+Replaces `x is T` followed by casts `(T)x`, or `x as T` followed by a null
+check, with a declaration pattern. `name` optionally names the variable.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json use-pattern-matching '{"solutionPath":"./RefactorMCP.sln","filePath":"./Shop/Shapes.cs","line":14,"column":13,"name":"circle"}'
+```
 
 <!-- End of Conditionals. -->
 

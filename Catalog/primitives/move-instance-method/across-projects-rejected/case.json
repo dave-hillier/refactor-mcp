@@ -1,0 +1,12 @@
+{
+  "refactoring": "move-instance-method",
+  "description": "Refuses when the target's project cannot see the class whose instance the moved method would take",
+  "target": { "symbol": "M:App.Customer.Label" },
+  "arguments": { "via": "_address" },
+  "projects": [
+    { "name": "Core" },
+    { "name": "App", "references": ["Core"] }
+  ],
+  "expect": "error",
+  "errorCode": "target-cannot-see-source"
+}

@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-to-extension-method",
+  "description": "Refuses a static method of a class that is not static, where extension methods cannot live",
+  "target": { "symbol": "M:Shop.Order.Parse(System.String)" },
+  "expect": "error",
+  "errorCode": "not-static-class"
+}

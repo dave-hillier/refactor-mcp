@@ -1,0 +1,5 @@
+{
+  "refactoring": "use-pattern-matching",
+  "description": "A test against a type parameter becomes a declaration pattern of that type",
+  "target": { "file": "Finder.cs", "caret": "marker" }
+}

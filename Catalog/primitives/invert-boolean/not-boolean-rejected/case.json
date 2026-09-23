@@ -1,0 +1,8 @@
+{
+  "refactoring": "invert-boolean",
+  "description": "Refuses a symbol that is not a bool",
+  "target": { "symbol": "F:Shop.Sample._count" },
+  "arguments": { "name": "_other" },
+  "expect": "error",
+  "errorCode": "not-boolean"
+}

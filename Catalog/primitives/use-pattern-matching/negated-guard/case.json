@@ -1,0 +1,5 @@
+{
+  "refactoring": "use-pattern-matching",
+  "description": "A negated type test whose branch always leaves becomes is not, and casts after it use the variable",
+  "target": { "file": "Shapes.cs", "caret": "marker" }
+}

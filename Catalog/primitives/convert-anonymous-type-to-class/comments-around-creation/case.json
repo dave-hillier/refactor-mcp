@@ -1,0 +1,6 @@
+{
+  "refactoring": "convert-anonymous-type-to-class",
+  "description": "Keeps the comments before and after the creation, and puts the class before the next type in the file",
+  "target": { "file": "Header.cs", "caret": "marker" },
+  "arguments": { "name": "Entry" }
+}

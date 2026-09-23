@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-class-to-record",
+  "description": "Declares a record with no body when nothing but the positional state remains, renaming named arguments in another file to the property names",
+  "target": { "symbol": "T:Shop.Size" }
+}

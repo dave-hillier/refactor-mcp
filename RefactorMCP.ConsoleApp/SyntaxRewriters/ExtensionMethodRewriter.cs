@@ -39,8 +39,11 @@ internal class ExtensionMethodRewriter : CSharpSyntaxRewriter
             .WithType(SyntaxFactory.ParseTypeName(_parameterType))
             .AddModifiers(SyntaxFactory.Token(SyntaxKind.ThisKeyword));
 
-        var parameters = node.ParameterList.Parameters.Insert(0, thisParam);
-        var updated = node.WithParameterList(node.ParameterList.WithParameters(parameters));
+        // Rewrite the body while the nodes still belong to the tree the
+        // semantic model was built from, then add the parameter.
+        var visited = (MethodDeclarationSyntax)base.VisitMethodDeclaration(node)!;
+        var parameters = visited.ParameterList.Parameters.Insert(0, thisParam);
+        var updated = visited.WithParameterList(visited.ParameterList.WithParameters(parameters));
         updated = AstTransformations.EnsureStaticModifier(updated);
 
         // Remove explicit interface specifier when converting to an extension method
@@ -51,7 +54,7 @@ internal class ExtensionMethodRewriter : CSharpSyntaxRewriter
                 .WithTriviaFrom(updated);
         }
 
-        return base.VisitMethodDeclaration(updated)!;
+        return updated;
     }
 
     public override SyntaxNode VisitThisExpression(ThisExpressionSyntax node)

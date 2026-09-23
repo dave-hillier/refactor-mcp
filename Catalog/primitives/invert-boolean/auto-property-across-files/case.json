@@ -1,0 +1,6 @@
+{
+  "refactoring": "invert-boolean",
+  "description": "Inverts an auto-property used in another file, including object initialisers",
+  "target": { "symbol": "P:Shop.Feature.IsEnabled" },
+  "arguments": { "name": "IsDisabled" }
+}

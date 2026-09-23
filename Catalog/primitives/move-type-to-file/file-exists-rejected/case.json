@@ -1,0 +1,7 @@
+{
+  "refactoring": "move-type-to-file",
+  "description": "Refuses when a file with the type's name already exists beside it",
+  "target": { "symbol": "T:Shop.Customer" },
+  "expect": "error",
+  "errorCode": "file-exists"
+}

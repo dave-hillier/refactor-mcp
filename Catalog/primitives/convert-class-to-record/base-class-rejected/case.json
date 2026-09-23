@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-class-to-record",
+  "description": "Refuses a class that derives from another class, since a record can only derive from a record",
+  "target": { "symbol": "T:Shop.Discount" },
+  "expect": "error",
+  "errorCode": "class-hierarchy"
+}

@@ -1,0 +1,5 @@
+{
+  "refactoring": "merge-nested-if",
+  "description": "An || condition is parenthesised when it becomes an operand of &&",
+  "target": { "file": "Discount.cs", "caret": "marker" }
+}

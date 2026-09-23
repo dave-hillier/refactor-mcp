@@ -1,0 +1,8 @@
+{
+  "refactoring": "move-field",
+  "description": "Refuses when the target already has a member with the field's name",
+  "target": { "symbol": "F:Shop.Customer.Town" },
+  "arguments": { "via": "Address" },
+  "expect": "error",
+  "errorCode": "member-exists"
+}

@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-to-extension-method",
+  "description": "Refuses a method that is already an extension method",
+  "target": { "symbol": "M:Shop.Text.Shout(System.String)" },
+  "expect": "error",
+  "errorCode": "already-extension"
+}

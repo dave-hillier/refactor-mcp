@@ -1,0 +1,7 @@
+{
+  "refactoring": "sync-namespace-with-folder",
+  "description": "Refuses when the namespace already matches the folder",
+  "target": { "file": "Billing/Invoice.cs" },
+  "expect": "error",
+  "errorCode": "namespace-matches-folder"
+}

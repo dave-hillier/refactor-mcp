@@ -1,0 +1,11 @@
+namespace Shop
+{
+    /// <summary>
+    /// A customer who places orders.
+    /// </summary>
+    // Names are not yet split into first and last.
+    public class Customer
+    {
+        public string Name { get; set; }
+    }
+}

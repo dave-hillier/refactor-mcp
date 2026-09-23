@@ -1,0 +1,8 @@
+{
+  "refactoring": "move-instance-method",
+  "description": "Refuses when the target already has a method with the moved method's name and parameters",
+  "target": { "symbol": "M:Shop.Customer.Label" },
+  "arguments": { "via": "_address" },
+  "expect": "error",
+  "errorCode": "member-exists"
+}

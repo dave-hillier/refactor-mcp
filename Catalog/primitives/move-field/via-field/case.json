@@ -1,0 +1,6 @@
+{
+  "refactoring": "move-field",
+  "description": "Moves a field, with its initializer, onto the type of another field; uses in its old class go through that field",
+  "target": { "symbol": "F:Shop.Customer._street" },
+  "arguments": { "via": "_address" }
+}

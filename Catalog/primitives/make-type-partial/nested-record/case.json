@@ -1,0 +1,5 @@
+{
+  "refactoring": "make-type-partial",
+  "description": "Adds partial to a nested record, leaving the containing class as it is",
+  "target": { "symbol": "T:Shop.Catalogue.Entry" }
+}

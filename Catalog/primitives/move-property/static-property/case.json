@@ -1,0 +1,6 @@
+{
+  "refactoring": "move-property",
+  "description": "A static property moves to the named type, and uses name that type",
+  "target": { "symbol": "P:Shop.Order.Currency" },
+  "arguments": { "to": "Settings" }
+}

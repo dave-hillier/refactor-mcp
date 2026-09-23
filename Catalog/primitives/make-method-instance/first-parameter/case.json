@@ -1,0 +1,5 @@
+{
+  "refactoring": "make-method-instance",
+  "description": "A static method taking its own type becomes an instance method on that argument; calls use the argument as the receiver",
+  "target": { "symbol": "M:Shop.Order.Discounted(Shop.Order,System.Decimal)" }
+}

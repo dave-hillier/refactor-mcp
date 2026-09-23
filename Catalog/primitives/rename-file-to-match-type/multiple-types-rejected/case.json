@@ -1,0 +1,7 @@
+{
+  "refactoring": "rename-file-to-match-type",
+  "description": "Refuses a file declaring two top-level types, since no single name fits",
+  "target": { "file": "Model.cs" },
+  "expect": "error",
+  "errorCode": "multiple-types"
+}

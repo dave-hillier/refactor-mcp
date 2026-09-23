@@ -1,0 +1,6 @@
+{
+  "refactoring": "move-instance-method",
+  "description": "Without a stub, each call's argument for the parameter becomes the receiver of the call",
+  "target": { "symbol": "M:Shop.Warehouse.Track(Shop.Parcel,System.String)" },
+  "arguments": { "via": "parcel", "stub": false }
+}

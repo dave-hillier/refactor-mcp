@@ -1,0 +1,8 @@
+{
+  "refactoring": "move-member-to-partial-file",
+  "description": "Refuses to move a member to the file it is already in",
+  "target": { "symbol": "M:Shop.Order.Total" },
+  "arguments": { "file": "Order.cs" },
+  "expect": "error",
+  "errorCode": "same-file"
+}

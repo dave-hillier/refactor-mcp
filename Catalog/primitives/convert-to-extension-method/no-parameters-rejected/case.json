@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-to-extension-method",
+  "description": "Refuses a method without parameters, which has nothing to extend",
+  "target": { "symbol": "M:Shop.Clock.Today" },
+  "expect": "error",
+  "errorCode": "no-parameters"
+}

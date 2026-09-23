@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-switch-statement-to-expression",
+  "description": "Refuses a caret that is not on a switch statement",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "not-a-switch"
+}

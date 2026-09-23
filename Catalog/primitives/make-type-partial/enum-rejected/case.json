@@ -1,0 +1,7 @@
+{
+  "refactoring": "make-type-partial",
+  "description": "Refuses an enum, which cannot be partial",
+  "target": { "symbol": "T:Shop.Status" },
+  "expect": "error",
+  "errorCode": "unsupported-type-kind"
+}

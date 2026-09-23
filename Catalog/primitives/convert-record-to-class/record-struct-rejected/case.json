@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-record-to-class",
+  "description": "Refuses a record struct, which would become a class with different copy semantics",
+  "target": { "symbol": "T:Shop.Point" },
+  "expect": "error",
+  "errorCode": "record-struct"
+}

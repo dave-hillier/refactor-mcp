@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-if-chain-to-switch",
+  "description": "An else-if chain comparing one value to constants becomes a switch, with the final else as default",
+  "target": { "file": "Shipping.cs", "caret": "marker" }
+}

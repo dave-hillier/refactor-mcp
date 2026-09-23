@@ -1,0 +1,7 @@
+{
+  "refactoring": "sync-namespace-with-folder",
+  "description": "Refuses a file whose types are in the global namespace, since there is no declaration to change",
+  "target": { "file": "Billing/Invoice.cs" },
+  "expect": "error",
+  "errorCode": "no-namespace"
+}

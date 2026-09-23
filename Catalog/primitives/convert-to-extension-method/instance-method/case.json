@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-to-extension-method",
+  "description": "An instance method becomes an extension method in a new static class beside its type, and the original delegates to it so callers are unchanged",
+  "target": { "symbol": "M:Shop.Order.Describe" }
+}

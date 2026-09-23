@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-switch-statement-to-expression",
+  "description": "Refuses a switch with no default and nothing after it to become the discard arm, since a switch expression would throw",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "no-default"
+}

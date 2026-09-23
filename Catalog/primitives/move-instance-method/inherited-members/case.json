@@ -1,0 +1,6 @@
+{
+  "refactoring": "move-instance-method",
+  "description": "Members the method uses from its class's base class are reached through the source instance like its own",
+  "target": { "symbol": "M:Shop.Customer.Greeting" },
+  "arguments": { "via": "_address" }
+}

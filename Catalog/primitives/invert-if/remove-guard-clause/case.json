@@ -1,0 +1,5 @@
+{
+  "refactoring": "invert-if",
+  "description": "An early return that ends a void method is inverted into an if around the code after it",
+  "target": { "file": "Shipping.cs", "caret": "marker" }
+}

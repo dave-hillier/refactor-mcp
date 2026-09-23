@@ -1,0 +1,6 @@
+{
+  "refactoring": "convert-tuple-to-named-type",
+  "description": "Replaces a method's tuple return type with a readonly record struct, constructing it in the return and renaming element accesses in callers; deconstruction keeps working",
+  "target": { "symbol": "M:Shop.Stats.Range(System.Int32[])" },
+  "arguments": { "name": "MinMax" }
+}

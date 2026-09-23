@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-class-to-record",
+  "description": "Refuses a class another class derives from",
+  "target": { "symbol": "T:Shop.Adjustment" },
+  "expect": "error",
+  "errorCode": "class-hierarchy",
+  "errorContains": "Discount"
+}

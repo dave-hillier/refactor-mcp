@@ -1,0 +1,6 @@
+{
+  "refactoring": "move-member-to-partial-file",
+  "description": "Moves a method, with the comment above it, to the end of another part of its partial class",
+  "target": { "symbol": "M:Shop.Order.Discount(System.Decimal)" },
+  "arguments": { "file": "Order.Pricing.cs" }
+}

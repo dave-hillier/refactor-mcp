@@ -1,0 +1,8 @@
+{
+  "refactoring": "make-method-static",
+  "description": "Refuses to pass members as parameters when the method assigns one, since the assignment would be lost",
+  "target": { "symbol": "M:Shop.Order.Add(System.Decimal)" },
+  "arguments": { "pass": "parameters" },
+  "expect": "error",
+  "errorCode": "assigns-instance-member"
+}

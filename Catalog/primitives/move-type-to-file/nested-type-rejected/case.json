@@ -1,0 +1,7 @@
+{
+  "refactoring": "move-type-to-file",
+  "description": "Refuses a nested type, which would change its name and access to its container",
+  "target": { "symbol": "T:Shop.Order.Line" },
+  "expect": "error",
+  "errorCode": "nested-type"
+}

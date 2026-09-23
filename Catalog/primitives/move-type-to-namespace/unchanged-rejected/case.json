@@ -1,0 +1,8 @@
+{
+  "refactoring": "move-type-to-namespace",
+  "description": "Refuses to move a type to the namespace it is already in",
+  "target": { "symbol": "T:Shop.Invoice" },
+  "arguments": { "namespace": "Shop" },
+  "expect": "error",
+  "errorCode": "namespace-unchanged"
+}

@@ -1,0 +1,7 @@
+{
+  "refactoring": "make-type-partial",
+  "description": "Refuses a type that is already partial",
+  "target": { "symbol": "T:Shop.Order" },
+  "expect": "error",
+  "errorCode": "already-partial"
+}

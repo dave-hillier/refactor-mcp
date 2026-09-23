@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-switch-expression-to-statement",
+  "description": "A returned switch expression becomes a switch statement whose sections return, or patterns becoming separate labels",
+  "target": { "file": "Shipping.cs", "caret": "marker" }
+}

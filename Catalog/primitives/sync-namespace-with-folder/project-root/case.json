@@ -1,0 +1,9 @@
+{
+  "refactoring": "sync-namespace-with-folder",
+  "description": "A file at the project root takes the root namespace, here the name of the project it belongs to",
+  "target": { "file": "Core/Money.cs" },
+  "projects": [
+    { "name": "Core" },
+    { "name": "App", "references": ["Core"] }
+  ]
+}

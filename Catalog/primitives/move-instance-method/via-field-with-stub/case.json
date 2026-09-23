@@ -1,0 +1,6 @@
+{
+  "refactoring": "move-instance-method",
+  "description": "Moves a method onto the type of a field; the source instance is passed for the members it still needs, and a delegating stub stays behind",
+  "target": { "symbol": "M:Shop.Customer.Label" },
+  "arguments": { "via": "_address" }
+}

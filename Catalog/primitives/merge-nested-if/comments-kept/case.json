@@ -1,0 +1,5 @@
+{
+  "refactoring": "merge-nested-if",
+  "description": "Comments on the inner if and inside its body are kept in the merged body",
+  "target": { "file": "Stock.cs", "caret": "marker" }
+}

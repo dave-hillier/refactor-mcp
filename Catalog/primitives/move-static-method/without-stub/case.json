@@ -1,0 +1,6 @@
+{
+  "refactoring": "move-static-method",
+  "description": "Without a stub, calls in every file, calls inside the old class and method groups name the new class",
+  "target": { "symbol": "M:Shop.Order.Vat(System.Decimal)" },
+  "arguments": { "to": "TaxRules", "stub": false }
+}

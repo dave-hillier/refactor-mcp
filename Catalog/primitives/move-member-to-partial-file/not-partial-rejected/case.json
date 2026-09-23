@@ -1,0 +1,8 @@
+{
+  "refactoring": "move-member-to-partial-file",
+  "description": "Refuses a member of a class that is not partial",
+  "target": { "symbol": "M:Shop.Order.Total" },
+  "arguments": { "file": "Order.Pricing.cs" },
+  "expect": "error",
+  "errorCode": "type-not-partial"
+}

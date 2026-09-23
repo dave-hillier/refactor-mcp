@@ -1,0 +1,6 @@
+{
+  "refactoring": "convert-class-to-record",
+  "description": "Keeps the nullable annotation of a parameter that becomes a positional property",
+  "target": { "symbol": "T:Shop.Contact" },
+  "project": { "nullable": "enable" }
+}

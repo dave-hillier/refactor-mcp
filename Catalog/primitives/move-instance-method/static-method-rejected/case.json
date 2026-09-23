@@ -1,0 +1,8 @@
+{
+  "refactoring": "move-instance-method",
+  "description": "Refuses a static method, which Move Static Method moves",
+  "target": { "symbol": "M:Shop.Customer.Format(System.String)" },
+  "arguments": { "to": "Address" },
+  "expect": "error",
+  "errorCode": "method-is-static"
+}

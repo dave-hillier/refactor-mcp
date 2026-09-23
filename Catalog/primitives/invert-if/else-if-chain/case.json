@@ -1,0 +1,5 @@
+{
+  "refactoring": "invert-if",
+  "description": "An else if becomes the body of the new then branch, in braces so the else cannot attach to it",
+  "target": { "file": "Grade.cs", "caret": "marker" }
+}

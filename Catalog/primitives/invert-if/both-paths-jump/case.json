@@ -1,0 +1,6 @@
+{
+  "refactoring": "invert-if",
+  "description": "When the branch and the code after the if both leave the method, they swap places",
+  "project": { "nullable": "enable" },
+  "target": { "file": "Names.cs", "caret": "marker" }
+}

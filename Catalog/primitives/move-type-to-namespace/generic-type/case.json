@@ -1,0 +1,6 @@
+{
+  "refactoring": "move-type-to-namespace",
+  "description": "A generic type moves, and its constructed uses in other files follow",
+  "target": { "symbol": "T:Shop.Result`1" },
+  "arguments": { "namespace": "Shop.Common" }
+}

@@ -1,0 +1,8 @@
+{
+  "refactoring": "move-static-method",
+  "description": "Refuses when the target already has a method with the same name and parameters",
+  "target": { "symbol": "M:Shop.Order.Vat(System.Decimal)" },
+  "arguments": { "to": "TaxRules" },
+  "expect": "error",
+  "errorCode": "member-exists"
+}

@@ -1,0 +1,6 @@
+{
+  "refactoring": "move-field",
+  "description": "A static field moves to the named type, and every use names that type",
+  "target": { "symbol": "F:Shop.Order.DefaultQuantity" },
+  "arguments": { "to": "Defaults" }
+}

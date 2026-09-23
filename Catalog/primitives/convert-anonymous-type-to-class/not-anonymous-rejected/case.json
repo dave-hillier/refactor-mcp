@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-anonymous-type-to-class",
+  "description": "Refuses when the caret is not on an anonymous object creation",
+  "target": { "file": "Report.cs", "caret": "marker" },
+  "arguments": { "name": "Line" },
+  "expect": "error",
+  "errorCode": "no-anonymous-type"
+}
