@@ -1,0 +1,8 @@
+{
+  "refactoring": "move-instance-method",
+  "description": "Refuses to move into a holding class that already has a method of the same name and parameters",
+  "target": { "symbol": "M:Shop.Address.Format" },
+  "arguments": { "into": "Customer" },
+  "expect": "error",
+  "errorCode": "member-exists"
+}

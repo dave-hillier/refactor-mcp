@@ -1,0 +1,8 @@
+{
+  "refactoring": "move-field",
+  "description": "Refuses a holder that is assigned in a constructor, since its object may then be shared or replaced",
+  "target": { "symbol": "F:Shop.Address.city" },
+  "arguments": { "into": "Customer" },
+  "expect": "error",
+  "errorCode": "holder-not-created"
+}

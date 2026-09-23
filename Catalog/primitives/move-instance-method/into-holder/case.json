@@ -1,0 +1,6 @@
+{
+  "refactoring": "move-instance-method",
+  "description": "Into the class holding the method's class: uses of the old class's members go through the holder, calls through the holder become direct, and a private member it uses becomes internal",
+  "target": { "symbol": "M:Shop.Address.Format" },
+  "arguments": { "into": "Customer" }
+}

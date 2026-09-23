@@ -18,9 +18,10 @@ namespace RefactorMCP.ConsoleApp.Tools.Moving;
 /// <summary>
 /// Moves a method, field or property to another type. An instance member
 /// moves through a field, property or parameter of the target type (the
-/// "via"), which becomes <c>this</c> in its new home; a static member moves to
-/// a named type. Uses are rewritten across the solution, or, for a method, a
-/// delegating stub can stay behind.
+/// "via"), which becomes <c>this</c> in its new home, or into the class that
+/// holds its own class in a field or property (the "holder"), which its uses
+/// went through; a static member moves to a named type. Uses are rewritten
+/// across the solution, or, for a method, a delegating stub can stay behind.
 /// </summary>
 internal sealed class MemberMover
 {
@@ -35,6 +36,7 @@ internal sealed class MemberMover
 
     private INamedTypeSymbol _target = null!;
     private ISymbol? _via;
+    private ISymbol? _holder;
     private bool _needsSource;
     private string _sourceParameter = "";
 
@@ -47,6 +49,8 @@ internal sealed class MemberMover
 
     private bool IsMethod => _member is IMethodSymbol;
 
+    private bool IntoHolder => _holder is not null;
+
     private IMethodSymbol Method => (IMethodSymbol)_member;
 
     public static async Task<Solution> MoveAsync(
@@ -57,6 +61,7 @@ internal sealed class MemberMover
         bool keepStub,
         string? targetFilePath,
         string? kind,
+        string? into,
         CancellationToken cancellationToken)
     {
         if (member is not (IMethodSymbol { MethodKind: MethodKind.Ordinary } or IFieldSymbol or IPropertySymbol { IsIndexer: false }))
@@ -64,16 +69,27 @@ internal sealed class MemberMover
         EnsureKind(member, kind);
 
         var mover = new MemberMover(solution, member);
-        return await mover.MoveAsync(via, targetType, keepStub && member is IMethodSymbol, targetFilePath, cancellationToken);
+        return await mover.MoveAsync(via, targetType, into, keepStub && member is IMethodSymbol, targetFilePath, cancellationToken);
     }
 
-    private async Task<Solution> MoveAsync(string? via, string? targetType, bool keepStub, string? targetFilePath, CancellationToken cancellationToken)
+    private async Task<Solution> MoveAsync(string? via, string? targetType, string? into, bool keepStub, string? targetFilePath, CancellationToken cancellationToken)
     {
         if (_member.IsVirtual || _member.IsOverride || _member.IsAbstract || ImplementsInterface())
             throw new McpException($"Error: {_member.Name} is virtual, abstract, an override or an interface implementation; callers rely on dispatch through the instance");
 
         var solution = _solution;
-        if (_member.IsStatic)
+        if (into is not null)
+        {
+            if (via is not null || targetType is not null)
+                throw new McpException("Error: Pass one of via, the target type or into, not several");
+            if (_member.IsStatic)
+                throw new McpException($"Error: {_member.Name} is static; name the target type instead of a class holding {_source.Name}");
+
+            // The old class has no way back to the holder, so no stub can stay behind.
+            await ResolveHolderAsync(into, cancellationToken);
+            keepStub = false;
+        }
+        else if (_member.IsStatic)
             solution = await ResolveStaticTargetAsync(via, targetType, targetFilePath, cancellationToken);
         else
             ResolveVia(via, targetType);
@@ -94,7 +110,9 @@ internal sealed class MemberMover
             .First()
             .GetSyntaxAsync(cancellationToken);
         EnsureTargetSeesSource(solution, document.Project, solution.GetDocument(targetDeclaration.SyntaxTree)!.Project);
-        _edits.Replace(solution, targetDeclaration, rewritten => MemberLayout.Append((TypeDeclarationSyntax)rewritten, moved));
+        _edits.Replace(solution, targetDeclaration, rewritten => IntoHolder
+            ? HierarchyMemberHelpers.InsertMember((TypeDeclarationSyntax)rewritten, moved, TypeDeclarations.NewLine(rewritten))
+            : MemberLayout.Append((TypeDeclarationSyntax)rewritten, moved));
 
         if (keepStub)
             _edits.Replace(solution, declaration, _ => Stub((MethodDeclarationSyntax)declaration));
@@ -108,7 +126,10 @@ internal sealed class MemberMover
 
         var updated = await _edits.ApplyAsync(solution, cancellationToken);
         updated = await AddExtensionNamespacesAsync(updated, targetDeclaration.SyntaxTree, solution, cancellationToken);
-        return await MovingSupport.RemoveNewlyUnnecessaryUsingsAsync(solution, updated, cancellationToken);
+        updated = await MovingSupport.RemoveNewlyUnnecessaryUsingsAsync(solution, updated, cancellationToken);
+        if (IntoHolder)
+            await SolutionEdits.EnsureCompilesAsync(solution, updated, cancellationToken);
+        return updated;
     }
 
     /// <summary>Refuses a member of another kind than the caller expected, when it said.</summary>
@@ -183,6 +204,54 @@ internal sealed class MemberMover
             throw new McpException($"Error: {_via.Name} is of the constructed generic type {target.ToDisplayString()}; move into its definition by hand");
 
         _target = target;
+    }
+
+    /// <summary>
+    /// The class named <paramref name="into"/> and its one field or property
+    /// holding an instance of the member's class. The holder must create that
+    /// instance in its initializer and never be assigned, so each instance of
+    /// the class has exactly one, from the start, whose state the member can
+    /// take over.
+    /// </summary>
+    private async Task ResolveHolderAsync(string into, CancellationToken cancellationToken)
+    {
+        var found = (await FindTypesAsync(into, cancellationToken)).Where(t => t.Locations.Any(l => l.IsInSource)).ToList();
+        if (found.Count == 0)
+            throw new McpException($"Error: {into} is a type the solution does not declare");
+        if (found.Count > 1)
+            throw new McpException($"Error: Several types are named {into}; qualify it with its namespace");
+
+        var target = found[0];
+        if (SymbolEqualityComparer.Default.Equals(target.OriginalDefinition, _source.OriginalDefinition))
+            throw new McpException($"Error: {_member.Name} is already in {_source.Name}");
+
+        var holders = target.GetMembers()
+            .Where(m => m is IFieldSymbol { IsImplicitlyDeclared: false } or IPropertySymbol { IsIndexer: false })
+            .Where(m => SymbolEqualityComparer.Default.Equals(TypeOf(m), _source))
+            .ToList();
+        var holder = holders.Count switch
+        {
+            0 => throw new McpException($"Error: {target.Name} holds no instance of {_source.Name} in a field or property, so {_member.Name} has no way into it"),
+            1 => holders[0],
+            _ => throw new McpException($"Error: {target.Name} holds {_source.Name} in several fields or properties ({string.Join(", ", holders.Select(h => h.Name))}), each of which would need its own {_member.Name}"),
+        };
+
+        var declaration = await holder.DeclaringSyntaxReferences.Single().GetSyntaxAsync(cancellationToken);
+        var initializer = declaration switch
+        {
+            VariableDeclaratorSyntax variable => variable.Initializer,
+            PropertyDeclarationSyntax { AccessorList.Accessors: [{ Keyword.RawKind: (int)SyntaxKind.GetKeyword, Body: null, ExpressionBody: null }] } property => property.Initializer,
+            _ => null,
+        };
+        var assigned = (await MemberReferences.FindAsync(_solution, holder, cancellationToken)).Any(r => MemberReferences.IsWrittenTo(r.Callee));
+        if (holder.IsStatic || initializer?.Value is not BaseObjectCreationExpressionSyntax || assigned)
+        {
+            throw new McpException(
+                $"Error: {holder.Name} must be an instance field or get-only property that creates the object in its initializer and is never assigned, so each {target.Name} has its own {_source.Name} from the start");
+        }
+
+        _target = target;
+        _holder = holder;
     }
 
     private async Task<Solution> ResolveStaticTargetAsync(string? via, string? targetType, string? targetFilePath, CancellationToken cancellationToken)
@@ -290,8 +359,9 @@ internal sealed class MemberMover
             ? (MemberDeclarationSyntax)variable.Parent!.Parent!
             : (MemberDeclarationSyntax)declaration;
 
-        // Only an instance method can come to need its old instance as a parameter.
-        if (IsMethod && !_member.IsStatic)
+        // Only an instance method can come to need its old instance as a parameter;
+        // moved into the holder, it reaches that instance through the holder instead.
+        if (IsMethod && !_member.IsStatic && !IntoHolder)
         {
             _sourceParameter = MovingSupport.CamelCase(_source.Name);
             var taken = member.DescendantNodes().OfType<ParameterSyntax>().Select(p => p.Identifier.ValueText)
@@ -320,7 +390,9 @@ internal sealed class MemberMover
                 .WithLeadingTrivia(SyntaxFactory.ElasticMarker);
         }
 
-        rewritten = rewritten.WithModifiers(RaisedForTarget(rewritten.Modifiers));
+        // Moved into the holder, the member leaves no uses behind to keep reaching it.
+        if (!IntoHolder)
+            rewritten = rewritten.WithModifiers(RaisedForTarget(rewritten.Modifiers));
         if (rewritten is MethodDeclarationSyntax method)
             rewritten = WithMovedParameters(method);
 
@@ -337,6 +409,12 @@ internal sealed class MemberMover
             case ThisExpressionSyntax self when IsViaUse(self.Parent, model):
                 return;
 
+            case ThisExpressionSyntax self when IntoHolder:
+                if (self.Parent is MemberAccessExpressionSyntax own && SymbolEqualityComparer.Default.Equals(model.GetSymbolInfo(own.Name).Symbol, _member))
+                    return;
+                rewrites[self] = current => HolderAccess(self, model).WithTriviaFrom(current);
+                return;
+
             case ThisExpressionSyntax self:
                 _needsSource = true;
                 rewrites[self] = current => SyntaxFactory.IdentifierName(_sourceParameter).WithTriviaFrom(current);
@@ -344,6 +422,18 @@ internal sealed class MemberMover
 
             case SimpleNameSyntax name when _via is not null && SymbolEqualityComparer.Default.Equals(model.GetSymbolInfo(name).Symbol, _via):
                 RewriteViaUse(name, model, rewrites);
+                return;
+
+            case SimpleNameSyntax name when MemberReferences.IsImplicitInstanceMember(name, model, _source, out var used) && IntoHolder:
+                // The member itself moves along; the rest of its old class is reached through the holder.
+                if (SymbolEqualityComparer.Default.Equals(used, _member))
+                    return;
+                NoteAccess(used);
+                rewrites[name] = current => SyntaxFactory.MemberAccessExpression(
+                        SyntaxKind.SimpleMemberAccessExpression,
+                        HolderAccess(name, model),
+                        ((SimpleNameSyntax)current).WithoutTrivia())
+                    .WithTriviaFrom(current);
                 return;
 
             case SimpleNameSyntax name when MemberReferences.IsImplicitInstanceMember(name, model, _source, out var used):
@@ -398,6 +488,21 @@ internal sealed class MemberMover
             rewrites[use] = current => SyntaxFactory.ThisExpression().WithTriviaFrom(current);
         }
     }
+
+    /// <summary>
+    /// The holder as the moved code names it in the target: <c>_address</c>, or
+    /// <c>this._address</c> where a local or parameter of that name hides it.
+    /// </summary>
+    private ExpressionSyntax HolderAccess(SyntaxNode at, SemanticModel model)
+    {
+        var name = SyntaxFactory.IdentifierName(_holder!.Name);
+        return Hidden(model, at.SpanStart, _holder.Name)
+            ? SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, SyntaxFactory.ThisExpression(), name)
+            : name;
+    }
+
+    private static bool Hidden(SemanticModel model, int position, string name) =>
+        model.LookupSymbols(position, name: name).Any(s => s is ILocalSymbol or IParameterSymbol or IRangeVariableSymbol);
 
     private bool IsViaUse(SyntaxNode? parent, SemanticModel model) =>
         _via is not null
@@ -637,6 +742,12 @@ internal sealed class MemberMover
                 continue;
             }
 
+            if (IntoHolder)
+            {
+                RewriteUseThroughHolder(reference, document, file);
+                continue;
+            }
+
             if (IsMethod && reference.Invocation is null)
                 throw new McpException($"Error: {_member.Name} is used as a method group in {file}; its signature changes, so keep a stub");
 
@@ -679,6 +790,38 @@ internal sealed class MemberMover
                 return call.WithExpression(callee.WithTriviaFrom(call.Expression)).WithArgumentList(call.ArgumentList.WithArguments(arguments));
             });
         }
+    }
+
+    /// <summary>
+    /// A use through the holder reaches the member directly once it has moved:
+    /// <c>_address.Street</c> becomes <c>Street</c> (or <c>this.Street</c> where
+    /// a local hides it), <c>this._address.Street</c> becomes <c>this.Street</c>,
+    /// and <c>customer.Address.Street</c> becomes <c>customer.Street</c>. Any
+    /// other use has no holder to go through.
+    /// </summary>
+    private void RewriteUseThroughHolder(MemberReference reference, DocumentId document, string file)
+    {
+        var receiver = reference.Receiver;
+        var holderName = receiver switch
+        {
+            IdentifierNameSyntax identifier => identifier,
+            MemberAccessExpressionSyntax access => access.Name,
+            MemberBindingExpressionSyntax binding => binding.Name,
+            _ => null,
+        };
+        if (holderName is null || !SymbolEqualityComparer.Default.Equals(reference.Model.GetSymbolInfo(holderName).Symbol, _holder))
+            throw new McpException($"Error: {_member.Name} is used in {file} other than through {_target.Name}.{_holder!.Name}, so it would have no {_target.Name} to reach it in");
+
+        var name = reference.Name.WithoutTrivia();
+        ExpressionSyntax direct = receiver switch
+        {
+            MemberAccessExpressionSyntax access => access.WithName(name),
+            MemberBindingExpressionSyntax => SyntaxFactory.MemberBindingExpression(name),
+            _ when Hidden(reference.Model, reference.Name.SpanStart, name.Identifier.ValueText) =>
+                SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, SyntaxFactory.ThisExpression(), name),
+            _ => name,
+        };
+        _edits.Replace(document, reference.Callee, current => direct.WithTriviaFrom(current));
     }
 
     /// <summary>

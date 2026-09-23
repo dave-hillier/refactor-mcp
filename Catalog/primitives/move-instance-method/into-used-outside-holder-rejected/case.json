@@ -1,0 +1,8 @@
+{
+  "refactoring": "move-instance-method",
+  "description": "Refuses to move into the holding class a method its own class still calls, since that call has no holder to go through",
+  "target": { "symbol": "M:Shop.Address.Format" },
+  "arguments": { "into": "Customer" },
+  "expect": "error",
+  "errorCode": "used-outside-holder"
+}

@@ -1,0 +1,6 @@
+{
+  "refactoring": "move-property",
+  "description": "Into the class holding the property's class: its accessors reach the rest of its old class through the holder, and uses through the holder, here in another file, become direct",
+  "target": { "symbol": "P:Shop.Address.Full" },
+  "arguments": { "into": "Customer" }
+}

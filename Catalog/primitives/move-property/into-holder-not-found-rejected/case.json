@@ -1,0 +1,8 @@
+{
+  "refactoring": "move-property",
+  "description": "Refuses a class that holds no instance of the property's class",
+  "target": { "symbol": "P:Shop.Address.Street" },
+  "arguments": { "into": "Order" },
+  "expect": "error",
+  "errorCode": "holder-not-found"
+}

@@ -1,0 +1,13 @@
+{
+  "refactoring": "inline-class",
+  "description": "The recipe for a class with state: each member moves into the holding class, a method before the members it uses; the private field it raised to internal is made private again; then the holding field and the class are deleted",
+  "steps": [
+    { "refactoring": "move-instance-method", "target": { "symbol": "M:Shop.Address.Format" }, "arguments": { "into": "Customer" } },
+    { "refactoring": "move-property", "target": { "symbol": "P:Shop.Address.Street" }, "arguments": { "into": "Customer" } },
+    { "refactoring": "move-property", "target": { "symbol": "P:Shop.Address.City" }, "arguments": { "into": "Customer" } },
+    { "refactoring": "move-field", "target": { "symbol": "F:Shop.Address._country" }, "arguments": { "into": "Customer" } },
+    { "refactoring": "change-accessibility", "target": { "symbol": "F:Shop.Customer._country" }, "arguments": { "accessibility": "private" } },
+    { "refactoring": "safe-delete-member", "target": { "symbol": "F:Shop.Customer._address" } },
+    { "refactoring": "safe-delete-type", "target": { "symbol": "T:Shop.Address" } }
+  ]
+}

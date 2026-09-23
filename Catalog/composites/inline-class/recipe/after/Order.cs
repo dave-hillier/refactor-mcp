@@ -7,6 +7,6 @@ namespace Shop
             return Discounted(subtotal);
         }
 
-        public static decimal Discounted(decimal amount) => amount * 0.9m;
+        public decimal Discounted(decimal amount) => amount * 0.9m;
     }
 }

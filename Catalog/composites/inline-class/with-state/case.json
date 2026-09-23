@@ -1,0 +1,5 @@
+{
+  "refactoring": "inline-class",
+  "description": "A class with state and a method using it moves into the class holding it: a private field stays private, and the members keep their order",
+  "target": { "symbol": "T:Shop.Address" }
+}
