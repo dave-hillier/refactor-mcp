@@ -1,0 +1,9 @@
+{
+  "refactoring": "change-signature",
+  "description": "Refuses an order that puts an optional parameter before a required one",
+  "target": { "symbol": "M:Shop.Mailer.Compose(System.String,System.String)" },
+  "arguments": { "parameters": [ { "name": "subject" }, { "name": "to" } ] },
+  "expect": "error",
+  "errorCode": "optional-before-required",
+  "errorContains": "subject"
+}

@@ -1,0 +1,6 @@
+{
+  "refactoring": "change-signature",
+  "description": "Reorders a generic method's parameters at calls with inferred and explicit type arguments",
+  "target": { "symbol": "M:Shop.Choice.Pick``1(System.Boolean,``0,``0)" },
+  "arguments": { "parameters": [ { "name": "first" }, { "name": "second" }, { "name": "preferFirst" } ] }
+}

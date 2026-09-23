@@ -1,0 +1,15 @@
+{
+  "refactoring": "change-signature",
+  "description": "Refuses to add a parameter with the name of one the method already has",
+  "target": { "symbol": "M:Shop.Pricing.Discount(System.Decimal,System.Int32)" },
+  "arguments": {
+    "parameters": [
+      { "name": "price" },
+      { "name": "percent" },
+      { "name": "price", "type": "decimal", "value": "0m" }
+    ]
+  },
+  "expect": "error",
+  "errorCode": "duplicate-parameter",
+  "errorContains": "price"
+}

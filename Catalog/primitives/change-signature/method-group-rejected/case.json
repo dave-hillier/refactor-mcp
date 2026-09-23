@@ -1,0 +1,9 @@
+{
+  "refactoring": "change-signature",
+  "description": "Refuses when the method is converted to a delegate, which would no longer match",
+  "target": { "symbol": "M:Shop.Calculator.Add(System.Int32,System.Int32)" },
+  "arguments": { "parameters": [ { "name": "b" }, { "name": "a" } ] },
+  "expect": "error",
+  "errorCode": "method-group-reference",
+  "errorContains": "Add"
+}

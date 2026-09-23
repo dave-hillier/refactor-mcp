@@ -1,0 +1,14 @@
+{
+  "refactoring": "change-signature",
+  "description": "Refuses to change a method that implements an interface declared outside the solution",
+  "target": { "symbol": "M:Shop.Item.CompareTo(Shop.Item)" },
+  "arguments": {
+    "parameters": [
+      { "name": "other" },
+      { "name": "descending", "type": "bool", "value": "false" }
+    ]
+  },
+  "expect": "error",
+  "errorCode": "external-member",
+  "errorContains": "IComparable"
+}

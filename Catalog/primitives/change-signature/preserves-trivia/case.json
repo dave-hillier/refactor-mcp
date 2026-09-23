@@ -1,0 +1,6 @@
+{
+  "refactoring": "change-signature",
+  "description": "Reorders parameters and arguments laid out one per line; comments travel with their parameter or argument and the layout stays",
+  "target": { "symbol": "M:Shop.Invoice.Line(System.String,System.Int32,System.Decimal)" },
+  "arguments": { "parameters": [ { "name": "quantity" }, { "name": "product" }, { "name": "price" } ] }
+}

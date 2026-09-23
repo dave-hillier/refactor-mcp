@@ -1,0 +1,6 @@
+{
+  "refactoring": "change-signature",
+  "description": "Removes a parameter the body does not read, and its argument",
+  "target": { "symbol": "M:Shop.Report.Title(System.String,System.Int32)" },
+  "arguments": { "parameters": [ { "name": "name" } ] }
+}

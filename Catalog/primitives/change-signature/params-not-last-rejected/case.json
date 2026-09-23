@@ -1,0 +1,9 @@
+{
+  "refactoring": "change-signature",
+  "description": "Refuses an order that moves a params array away from the end",
+  "target": { "symbol": "M:Shop.Logger.Log(System.String,System.Object[])" },
+  "arguments": { "parameters": [ { "name": "values" }, { "name": "format" } ] },
+  "expect": "error",
+  "errorCode": "params-not-last",
+  "errorContains": "values"
+}

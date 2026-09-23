@@ -1,0 +1,12 @@
+{
+  "refactoring": "change-signature",
+  "description": "Adds a parameter to an extension method, called both as an extension and as a static method",
+  "target": { "symbol": "M:Shop.TextExtensions.Truncate(System.String,System.Int32)" },
+  "arguments": {
+    "parameters": [
+      { "name": "text" },
+      { "name": "length" },
+      { "name": "ellipsis", "type": "string", "value": "\"...\"" }
+    ]
+  }
+}

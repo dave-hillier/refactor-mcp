@@ -1,0 +1,12 @@
+{
+  "refactoring": "change-signature",
+  "description": "Targeting an override changes the virtual method it overrides too, and the base call inside it",
+  "target": { "symbol": "M:Shop.LoudNotifier.Format(System.String,System.Int32)" },
+  "arguments": {
+    "parameters": [
+      { "name": "message" },
+      { "name": "level" },
+      { "name": "channel", "type": "string", "value": "\"email\"" }
+    ]
+  }
+}

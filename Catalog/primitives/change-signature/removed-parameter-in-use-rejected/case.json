@@ -1,0 +1,9 @@
+{
+  "refactoring": "change-signature",
+  "description": "Refuses to remove a parameter the body reads",
+  "target": { "symbol": "M:Shop.Pricing.Discount(System.Decimal,System.Int32)" },
+  "arguments": { "parameters": [ { "name": "percent" } ] },
+  "expect": "error",
+  "errorCode": "removed-parameter-in-use",
+  "errorContains": "price"
+}

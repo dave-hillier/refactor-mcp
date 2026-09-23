@@ -1,0 +1,6 @@
+{
+  "refactoring": "change-signature",
+  "description": "Changes one overload and its calls, leaving the other overload and its calls alone",
+  "target": { "symbol": "M:Shop.Geometry.Area(System.Int32,System.Int32)" },
+  "arguments": { "parameters": [ { "name": "height" }, { "name": "width" } ] }
+}
