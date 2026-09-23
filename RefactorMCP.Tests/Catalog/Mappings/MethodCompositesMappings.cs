@@ -190,6 +190,39 @@ internal sealed class MethodCompositesMappings : ICatalogMappings
                 ["assigned-local-used-after"] = "The extracted block assigns",
                 ["name-conflict"] = "already has a member named",
             }),
+        new CatalogMapping(
+            "constructor-injection",
+            "inject-constructor-dependency",
+            async context =>
+            {
+                var (filePath, line, column) = await LocalPosition(context);
+                var arguments = new Dictionary<string, JsonElement>
+                {
+                    ["solutionPath"] = Json(context.SolutionPath),
+                    ["filePath"] = Json(filePath),
+                    ["line"] = Json(line),
+                    ["column"] = Json(column),
+                };
+                if (context.HasArgument("parameter"))
+                    arguments["parameterName"] = context.RequiredArgument("parameter");
+                if (context.HasArgument("field"))
+                    arguments["fieldName"] = context.RequiredArgument("field");
+                return arguments;
+            },
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["not-a-construction"] = "is not initialised by constructing an object",
+                ["not-in-instance-method"] = "is not in an instance method of a class",
+                ["not-declared-alone"] = "is not declared on its own in a block",
+                ["assigned-after-declaration"] = "is assigned after its declaration",
+                ["argument-depends-on-method"] = "depends on the method's state",
+                ["object-initializer"] = "is constructed with an initializer",
+                ["several-constructors"] = "has several constructors",
+                ["chained-constructor"] = "calls another with this(...)",
+                ["name-conflict"] = "already has a member named",
+                ["duplicate-parameter"] = "The constructor already has a parameter named",
+                ["not-a-local"] = "There is no local variable",
+            }),
     };
 
     /// <summary>

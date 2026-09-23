@@ -1,0 +1,7 @@
+{
+  "refactoring": "constructor-injection",
+  "description": "Refuses a class with several constructors, since it is not clear which should take the dependency",
+  "target": { "file": "Greeter.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "several-constructors"
+}

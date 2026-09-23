@@ -1,0 +1,22 @@
+{
+  "refactoring": "constructor-injection",
+  "description": "Runs the recipe as far as the catalog's primitives go: Change Signature adds the dependency to the constructor and Introduce Field adds a field of its type. No primitive assigns the field from the parameter or replaces the local construction with the field",
+  "status": "unimplemented",
+  "steps": [
+    {
+      "refactoring": "change-signature",
+      "target": { "symbol": "M:Shop.OrderService.#ctor(System.String)" },
+      "arguments": {
+        "parameters": [
+          { "name": "prefix" },
+          { "name": "mailer", "type": "Mailer", "value": "new Mail.Mailer(\"smtp.example.com\")" }
+        ]
+      }
+    },
+    {
+      "refactoring": "introduce-field",
+      "target": { "symbol": "T:Shop.OrderService" },
+      "arguments": { "type": "Mailer", "name": "_mailer" }
+    }
+  ]
+}
