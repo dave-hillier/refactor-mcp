@@ -1,0 +1,8 @@
+{
+  "refactoring": "collapse-hierarchy",
+  "description": "into must name the class's base class or one of its direct subclasses",
+  "target": { "symbol": "T:Staff.Salesman" },
+  "arguments": { "into": "Payroll" },
+  "expect": "error",
+  "errorCode": "not-related"
+}

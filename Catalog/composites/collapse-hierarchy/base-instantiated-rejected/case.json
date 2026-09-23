@@ -1,0 +1,8 @@
+{
+  "refactoring": "collapse-hierarchy",
+  "description": "A base class merged into a subclass must never be created itself, or its instances would gain the subclass's behaviour",
+  "target": { "symbol": "T:Staff.Employee" },
+  "arguments": { "into": "Salesman" },
+  "expect": "error",
+  "errorCode": "base-instantiated"
+}

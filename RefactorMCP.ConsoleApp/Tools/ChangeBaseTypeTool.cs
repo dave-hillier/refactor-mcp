@@ -114,7 +114,7 @@ public static class ChangeBaseTypeTool
         return changed;
     }
 
-    private static TypeDeclarationSyntax WithoutBase(TypeDeclarationSyntax declaration, BaseTypeSyntax current)
+    internal static TypeDeclarationSyntax WithoutBase(TypeDeclarationSyntax declaration, BaseTypeSyntax current)
     {
         var list = declaration.BaseList!;
         if (list.Types.Count > 1)

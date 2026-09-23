@@ -1,0 +1,8 @@
+{
+  "refactoring": "collapse-hierarchy",
+  "description": "A base class merged into a subclass must have no other subclass, which would lose its base",
+  "target": { "symbol": "T:Staff.Employee" },
+  "arguments": { "into": "Salesman" },
+  "expect": "error",
+  "errorCode": "several-subclasses"
+}

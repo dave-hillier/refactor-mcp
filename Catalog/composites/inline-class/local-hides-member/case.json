@@ -1,0 +1,5 @@
+{
+  "refactoring": "inline-class",
+  "description": "A use through the holder where a parameter has the member's name becomes a use through this, so it still reaches the member",
+  "target": { "symbol": "T:Shop.Address" }
+}

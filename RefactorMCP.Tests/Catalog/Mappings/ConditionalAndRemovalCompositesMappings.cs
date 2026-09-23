@@ -90,6 +90,28 @@ internal sealed class ConditionalAndRemovalCompositesMappings : ICatalogMappings
                 ("holder-not-created", "creates the object in its initializer"),
                 ("member-exists", "already has a member named"),
                 ("holder-escapes", "other than to reach a member of"))),
+        new CatalogMapping(
+            "collapse-hierarchy",
+            "collapse-hierarchy",
+            async context =>
+            {
+                var arguments = await TypeArguments(context);
+                if (context.HasArgument("into"))
+                    arguments["into"] = context.RequiredArgument("into");
+                return arguments;
+            },
+            Codes(
+                ("unsupported-class", "cannot be collapsed because it"),
+                ("no-base-class", "has no base class declared in the solution"),
+                ("not-related", "is neither the base class nor a direct subclass"),
+                ("several-subclasses", "has other subclasses besides"),
+                ("has-subclasses", "has subclasses"),
+                ("declares-constructor", "declares a constructor"),
+                ("overrides-member", "overrides a member"),
+                ("member-exists", "already has a member named"),
+                ("type-tested", "tests for or names"),
+                ("base-instantiated", "itself, which would gain the behaviour"),
+                ("uses-base", "through base"))),
     };
 
     /// <summary>The file declaring the <c>target.symbol</c> type, and its name.</summary>

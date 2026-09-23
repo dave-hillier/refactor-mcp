@@ -1,0 +1,5 @@
+{
+  "refactoring": "collapse-hierarchy",
+  "description": "A subclass is merged into its base class: its members move up, every reference names the base class, and it is deleted",
+  "target": { "symbol": "T:Staff.Salesman" }
+}

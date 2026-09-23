@@ -1,0 +1,10 @@
+{
+  "refactoring": "collapse-hierarchy",
+  "description": "The recipe: pull every member of the subclass up, change the parameter that named it to the base class, then delete it",
+  "steps": [
+    { "refactoring": "pull-up-field", "target": { "symbol": "F:Staff.Salesman._commission" } },
+    { "refactoring": "pull-up-method", "target": { "symbol": "M:Staff.Salesman.Bonus(System.Decimal)" } },
+    { "refactoring": "change-type", "target": { "symbol": "M:Staff.Payroll.Pay(Staff.Salesman,System.Decimal)" }, "arguments": { "parameter": "salesman", "to": "Employee" } },
+    { "refactoring": "safe-delete-type", "target": { "symbol": "T:Staff.Salesman" } }
+  ]
+}

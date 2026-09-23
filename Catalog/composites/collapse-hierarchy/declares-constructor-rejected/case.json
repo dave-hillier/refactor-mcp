@@ -1,0 +1,7 @@
+{
+  "refactoring": "collapse-hierarchy",
+  "description": "A constructor of the removed class would have to be merged with the other class's construction",
+  "target": { "symbol": "T:Staff.Salesman" },
+  "expect": "error",
+  "errorCode": "declares-constructor"
+}

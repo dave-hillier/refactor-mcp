@@ -1,0 +1,8 @@
+{
+  "refactoring": "collapse-hierarchy",
+  "description": "An override that calls the base class's version through base has no base version once the classes are merged",
+  "target": { "symbol": "T:Drawing.Shape" },
+  "arguments": { "into": "Circle" },
+  "expect": "error",
+  "errorCode": "uses-base"
+}

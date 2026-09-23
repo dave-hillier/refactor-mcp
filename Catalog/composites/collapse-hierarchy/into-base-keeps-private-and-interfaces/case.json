@@ -1,0 +1,6 @@
+{
+  "refactoring": "collapse-hierarchy",
+  "description": "Private members stay private, since the subclass is gone; construction and generic type arguments name the base class; the subclass's interfaces and usings move up with it",
+  "target": { "symbol": "T:Staff.Salesman" },
+  "arguments": { "into": "Employee" }
+}
