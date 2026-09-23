@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-primary-constructor-to-constructor",
+  "description": "Turns the arguments on the base type into a base(...) call",
+  "target": { "symbol": "T:Shop.Discount" }
+}

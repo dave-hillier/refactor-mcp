@@ -1,0 +1,6 @@
+{
+  "refactoring": "replace-constructor-with-factory-method",
+  "description": "Makes the constructor protected so a derived class can still call it, keeping its documentation and default value",
+  "target": { "symbol": "M:Shop.Notice.#ctor(System.String,System.Int32)" },
+  "arguments": { "accessibility": "protected" }
+}

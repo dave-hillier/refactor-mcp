@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-record-to-class",
+  "description": "Refuses a record copied with a with expression, which a class does not support",
+  "target": { "symbol": "T:Shop.Point" },
+  "expect": "error",
+  "errorCode": "with-expression",
+  "errorContains": "Mover.cs"
+}

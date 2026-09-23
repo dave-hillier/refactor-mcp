@@ -1,0 +1,8 @@
+{
+  "refactoring": "invert-boolean",
+  "description": "Refuses a method used as a delegate, whose callers cannot be negated",
+  "target": { "symbol": "M:Shop.Sample.IsReady" },
+  "arguments": { "name": "IsBusy" },
+  "expect": "error",
+  "errorCode": "used-as-method-group"
+}

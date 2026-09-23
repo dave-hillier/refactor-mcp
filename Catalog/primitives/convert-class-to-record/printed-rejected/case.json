@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-class-to-record",
+  "description": "Refuses when an instance is formatted in a string, where the record's ToString would replace the type name",
+  "target": { "symbol": "T:Shop.Sku" },
+  "expect": "error",
+  "errorCode": "to-string-observed"
+}

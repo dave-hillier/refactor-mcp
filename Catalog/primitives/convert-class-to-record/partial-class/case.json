@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-class-to-record",
+  "description": "Changes every part of a partial class, keeping the constructor in the body",
+  "target": { "symbol": "T:Shop.Tag" }
+}

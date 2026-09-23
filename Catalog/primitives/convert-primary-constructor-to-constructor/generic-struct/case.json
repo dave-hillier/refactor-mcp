@@ -1,0 +1,5 @@
+{
+  "refactoring": "convert-primary-constructor-to-constructor",
+  "description": "Converts a generic readonly struct with a constraint, in a block-scoped namespace",
+  "target": { "symbol": "T:Shop.Measure`1" }
+}

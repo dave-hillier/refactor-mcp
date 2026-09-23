@@ -1,0 +1,7 @@
+{
+  "refactoring": "convert-record-to-class",
+  "description": "Refuses a record that derives from another record",
+  "target": { "symbol": "T:Shop.Discount" },
+  "expect": "error",
+  "errorCode": "record-hierarchy"
+}

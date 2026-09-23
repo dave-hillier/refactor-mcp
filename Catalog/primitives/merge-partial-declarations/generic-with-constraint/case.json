@@ -1,0 +1,5 @@
+{
+  "refactoring": "merge-partial-declarations",
+  "description": "Brings the constraint stated on the other part of a generic class",
+  "target": { "symbol": "T:Shop.Cache`1", "file": "Cache.cs" }
+}

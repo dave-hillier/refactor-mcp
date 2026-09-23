@@ -1,0 +1,6 @@
+{
+  "refactoring": "invert-boolean",
+  "description": "A computed property's getter returns the negation, with its comparison flipped",
+  "target": { "symbol": "P:Shop.Cart.IsEmpty" },
+  "arguments": { "name": "HasItems" }
+}

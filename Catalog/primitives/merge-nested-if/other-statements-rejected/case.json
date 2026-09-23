@@ -1,0 +1,7 @@
+{
+  "refactoring": "merge-nested-if",
+  "description": "Refuses an outer if whose body does more than the inner if",
+  "target": { "file": "Sample.cs", "caret": "marker" },
+  "expect": "error",
+  "errorCode": "not-only-statement"
+}

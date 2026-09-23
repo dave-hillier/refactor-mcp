@@ -1,0 +1,5 @@
+{
+  "refactoring": "merge-partial-declarations",
+  "description": "Keeps the comment above the other part and the region around its members, reindenting them for a block-scoped namespace",
+  "target": { "symbol": "T:Shop.Report", "file": "Report.cs" }
+}

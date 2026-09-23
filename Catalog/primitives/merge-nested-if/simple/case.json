@@ -1,0 +1,5 @@
+{
+  "refactoring": "merge-nested-if",
+  "description": "An if whose only statement is another if becomes one if on both conditions",
+  "target": { "file": "Shipping.cs", "caret": "marker" }
+}

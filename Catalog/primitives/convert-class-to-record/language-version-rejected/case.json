@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-class-to-record",
+  "description": "Refuses when the project's language version predates records",
+  "target": { "symbol": "T:Shop.Point" },
+  "project": { "langVersion": "8" },
+  "expect": "error",
+  "errorCode": "language-version"
+}

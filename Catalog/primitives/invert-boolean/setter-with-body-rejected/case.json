@@ -1,0 +1,8 @@
+{
+  "refactoring": "invert-boolean",
+  "description": "Refuses a property whose setter has a body, which would store the inverted value",
+  "target": { "symbol": "P:Shop.Sample.IsOpen" },
+  "arguments": { "name": "IsClosed" },
+  "expect": "error",
+  "errorCode": "setter-with-body"
+}

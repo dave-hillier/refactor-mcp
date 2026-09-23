@@ -1,0 +1,6 @@
+{
+  "refactoring": "convert-tuple-to-named-type",
+  "description": "Makes the named type generic over the type parameter the tuple uses",
+  "target": { "symbol": "M:Shop.Lists.Ends``1(System.Collections.Generic.IReadOnlyList{``0})" },
+  "arguments": { "name": "Bounds" }
+}

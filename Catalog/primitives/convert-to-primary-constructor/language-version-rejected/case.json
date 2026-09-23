@@ -1,0 +1,8 @@
+{
+  "refactoring": "convert-to-primary-constructor",
+  "description": "Refuses when the project's language version predates primary constructors on classes",
+  "target": { "symbol": "T:Shop.Greeter" },
+  "project": { "langVersion": "11" },
+  "expect": "error",
+  "errorCode": "language-version"
+}

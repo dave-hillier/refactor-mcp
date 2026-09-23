@@ -1,0 +1,5 @@
+{
+  "refactoring": "merge-partial-declarations",
+  "description": "Moves the members of the other part into Basket.cs, deletes the emptied file and drops partial",
+  "target": { "symbol": "T:Shop.Basket", "file": "Basket.cs" }
+}

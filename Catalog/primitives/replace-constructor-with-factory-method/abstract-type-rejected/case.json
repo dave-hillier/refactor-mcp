@@ -1,0 +1,7 @@
+{
+  "refactoring": "replace-constructor-with-factory-method",
+  "description": "Refuses a constructor of an abstract class, which a factory method cannot instantiate",
+  "target": { "symbol": "M:Shop.Adjustment.#ctor(System.Decimal)" },
+  "expect": "error",
+  "errorCode": "abstract-type"
+}

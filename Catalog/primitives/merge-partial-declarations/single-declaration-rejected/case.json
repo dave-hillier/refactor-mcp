@@ -1,0 +1,7 @@
+{
+  "refactoring": "merge-partial-declarations",
+  "description": "Refuses a partial class that has only one declaration",
+  "target": { "symbol": "T:Shop.Invoice" },
+  "expect": "error",
+  "errorCode": "single-declaration"
+}
