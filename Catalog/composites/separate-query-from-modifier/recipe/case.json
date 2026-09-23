@@ -1,0 +1,30 @@
+{
+  "refactoring": "separate-query-from-modifier",
+  "description": "Runs the recipe: Extract Method on the statements that change state and on the returned value, give both the method's accessibility, then Inline Method so callers call both",
+  "steps": [
+    {
+      "refactoring": "extract-method",
+      "target": { "file": "Account.cs", "selection": "marker" },
+      "arguments": { "name": "Debit" }
+    },
+    {
+      "refactoring": "extract-method",
+      "target": { "file": "Account.cs", "range": "16:20-16:28" },
+      "arguments": { "name": "Balance" }
+    },
+    {
+      "refactoring": "change-accessibility",
+      "target": { "symbol": "M:Bank.Account.Balance" },
+      "arguments": { "accessibility": "public" }
+    },
+    {
+      "refactoring": "change-accessibility",
+      "target": { "symbol": "M:Bank.Account.Debit(System.Decimal)" },
+      "arguments": { "accessibility": "public" }
+    },
+    {
+      "refactoring": "inline-method",
+      "target": { "symbol": "M:Bank.Account.Withdraw(System.Decimal)" }
+    }
+  ]
+}

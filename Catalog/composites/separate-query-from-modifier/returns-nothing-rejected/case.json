@@ -1,0 +1,8 @@
+{
+  "refactoring": "separate-query-from-modifier",
+  "description": "Refuses a void method, which has no query to separate",
+  "target": { "symbol": "M:Bank.Account.Deposit(System.Decimal)" },
+  "arguments": { "queryName": "Balance", "modifierName": "Credit" },
+  "expect": "error",
+  "errorCode": "returns-nothing"
+}

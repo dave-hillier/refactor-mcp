@@ -118,6 +118,32 @@ internal sealed class MethodCompositesMappings : ICatalogMappings
                 ["method-group-reference"] = "is used as a method group",
                 ["external-member"] = "which is declared outside the solution",
             }),
+        new CatalogMapping(
+            "separate-query-from-modifier",
+            "separate-query-from-modifier",
+            async context =>
+            {
+                var arguments = await MethodArguments(context);
+                arguments["queryName"] = context.RequiredArgument("queryName");
+                arguments["modifierName"] = context.RequiredArgument("modifierName");
+                return arguments;
+            },
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["returns-nothing"] = "returns nothing, so it has no query to separate",
+                ["no-modifier"] = "has no statements that change state",
+                ["query-has-side-effects"] = "has side effects of its own",
+                ["modifier-reads-result"] = "the value the query returns",
+                ["returns-early"] = "returns before its last statement",
+                ["polymorphic-method"] = "is virtual, an override or an interface implementation",
+                ["expression-bodied-member"] = "is expression-bodied",
+                ["call-in-expression"] = "is part of a larger expression",
+                ["returned-before-modifier"] = "which the query must compute before the modifier runs",
+                ["receiver-has-side-effects"] = "is made on an expression that would be evaluated twice",
+                ["argument-has-side-effects"] = "passes an argument with side effects",
+                ["method-group-reference"] = "is used as a method group",
+                ["name-conflict"] = "already has a member named",
+            }),
     };
 
     /// <summary>

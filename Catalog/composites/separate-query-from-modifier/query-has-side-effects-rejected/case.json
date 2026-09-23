@@ -1,0 +1,8 @@
+{
+  "refactoring": "separate-query-from-modifier",
+  "description": "Refuses when the value returned is computed by a call, which may change state itself",
+  "target": { "symbol": "M:Tickets.Dispenser.Issue" },
+  "arguments": { "queryName": "Current", "modifierName": "Record" },
+  "expect": "error",
+  "errorCode": "query-has-side-effects"
+}

@@ -1,0 +1,5 @@
+{
+  "refactoring": "inline-method",
+  "description": "A method that computes its result in several statements is inlined where each call starts its statement: the statements go first and the result takes the call's place, or is dropped when discarded",
+  "target": { "symbol": "M:Sample.Counter.Next" }
+}
