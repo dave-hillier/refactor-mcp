@@ -54,6 +54,28 @@ internal sealed class GeneratorsTypeCodeMappings : ICatalogMappings
                 ("code-changes", "changes after construction"),
                 ("unsupported-constructor", "must have one constructor that assigns"),
                 ("breaks-compilation", "would not compile"))),
+
+        new CatalogMapping(
+            "replace-conditional-with-polymorphism",
+            "replace-conditional-with-polymorphism",
+            async context =>
+            {
+                var location = await context.SymbolLocationAsync();
+                return new Dictionary<string, JsonElement>
+                {
+                    ["solutionPath"] = Json(context.SolutionPath),
+                    ["filePath"] = Json(location.FilePath),
+                    ["methodName"] = Json(location.Symbol.Name),
+                    ["line"] = Json(location.Line),
+                };
+            },
+            Codes(
+                ("no-conditional", "is not a single switch or if chain"),
+                ("unsupported-case", "cannot be moved to one subclass"),
+                ("subclass-without-case", "has no case and there is no default"),
+                ("base-not-abstract", "is not abstract"),
+                ("uses-caller-members", "which the subclass cannot reach"),
+                ("breaks-compilation", "would not compile"))),
     };
 
     private static IReadOnlyDictionary<string, string> Codes(params (string Code, string Fragment)[] codes) =>

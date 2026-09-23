@@ -1,0 +1,5 @@
+{
+  "refactoring": "replace-conditional-with-polymorphism",
+  "description": "Moves the branches of an if chain comparing the type code into overrides, and the statements after it into the virtual default",
+  "target": { "symbol": "M:Bank.Account.Rate" }
+}

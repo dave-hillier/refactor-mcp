@@ -1,0 +1,5 @@
+{
+  "refactoring": "replace-conditional-with-polymorphism",
+  "description": "Moves each arm of a switch on the type code into an override, leaving the method abstract when the only default throws",
+  "target": { "symbol": "M:Staff.Employee.Bonus" }
+}
