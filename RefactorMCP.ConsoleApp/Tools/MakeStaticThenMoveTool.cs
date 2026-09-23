@@ -1,5 +1,6 @@
 using ModelContextProtocol.Server;
 using ModelContextProtocol;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading;
@@ -62,7 +63,7 @@ public static class MakeStaticThenMoveTool
         CompositeRecipe recipe,
         string typeId,
         string methodName,
-        System.Collections.Generic.IReadOnlyList<ITypeSymbol> oldParameters,
+        IReadOnlyList<ITypeSymbol> oldParameters,
         CancellationToken cancellationToken)
     {
         var type = (INamedTypeSymbol)(await recipe.FindAsync(typeId, cancellationToken)).Symbol;

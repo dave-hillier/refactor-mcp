@@ -100,7 +100,7 @@ public static class ExtractClassTool
     /// Moves one member: an instance member through the new field, a static
     /// one to the new class by name.
     /// </summary>
-    internal static async Task MoveAsync(
+    private static async Task MoveAsync(
         CompositeRecipe recipe,
         string memberId,
         string via,

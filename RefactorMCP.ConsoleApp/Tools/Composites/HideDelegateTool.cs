@@ -90,26 +90,33 @@ public static class HideDelegateTool
         return $"Successfully added {server.Name}.{name}, forwarding to {delegateName}.{memberName}, and repointed {repointed} use(s)";
     }
 
-    /// <summary>The instance fields, properties and methods of that name the delegate's type has, its base types' included.</summary>
+    /// <summary>
+    /// The instance fields, properties and methods of that name the delegate's
+    /// type declares, or else the nearest base type or, for an interface, base
+    /// interface that does.
+    /// </summary>
     private static List<ISymbol> InstanceMembers(ITypeSymbol type, string name)
     {
-        var found = new List<ISymbol>();
-        for (var current = type; current is not null; current = current.BaseType)
+        var searched = type.TypeKind == TypeKind.Interface
+            ? type.AllInterfaces.Prepend(type)
+            : BaseTypes(type);
+        foreach (var current in searched)
         {
-            found.AddRange(current.GetMembers(name).Where(m => !m.IsStatic && m is IFieldSymbol
-                or IPropertySymbol { IsIndexer: false }
-                or IMethodSymbol { MethodKind: MethodKind.Ordinary }));
+            var found = current.GetMembers(name)
+                .Where(m => !m.IsStatic && m is IFieldSymbol or IPropertySymbol { IsIndexer: false } or IMethodSymbol { MethodKind: MethodKind.Ordinary })
+                .Select(m => m.OriginalDefinition)
+                .ToList();
             if (found.Count > 0)
-                break;
+                return found;
         }
 
-        foreach (var interfaceType in type.TypeKind == TypeKind.Interface ? type.AllInterfaces : Enumerable.Empty<INamedTypeSymbol>())
-        {
-            if (found.Count == 0)
-                found.AddRange(interfaceType.GetMembers(name).Where(m => m is IPropertySymbol or IMethodSymbol { MethodKind: MethodKind.Ordinary }));
-        }
+        return new List<ISymbol>();
+    }
 
-        return found.Select(m => m.OriginalDefinition).ToList();
+    private static IEnumerable<ITypeSymbol> BaseTypes(ITypeSymbol type)
+    {
+        for (var current = type; current is not null; current = current.BaseType)
+            yield return current;
     }
 
     /// <summary>
