@@ -910,6 +910,63 @@ MathUtilities - 4 lines
 Logger - 8 lines
 ```
 
+## Find References, Implementations, Overrides and Callers
+
+**Purpose**: Answer where a symbol is used and what builds on it, without
+changing any code. Each tool names the symbol by `filePath` and name, like
+`rename-symbol`: the file may declare the symbol or just use it, and `line`
+(with `column` for the exact token) chooses between symbols of the same name.
+A name that could mean several symbols is refused with the candidates listed.
+Locations are relative to the solution's directory.
+
+- `find-references` lists every reference, grouped by file with the line of
+  code at each. Writes, implicit uses, and uses through an interface or base
+  member are marked. `includeDeclarations` adds the declarations, and
+  `maxResults` (200 by default) caps a long list.
+- `find-implementations` lists the types implementing an interface, or the
+  members implementing an interface member.
+- `find-overrides` lists the overrides of a virtual, abstract or override
+  member, at every level below it.
+- `find-callers` lists the members that call a method or use a property or
+  event, grouped by caller. Calls made through an interface or base member are
+  marked.
+
+### Example
+**Command**:
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json find-references \
+  '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Counter.cs","symbolName":"Count"}'
+
+dotnet run --project RefactorMCP.ConsoleApp -- --json find-implementations \
+  '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/IShape.cs","symbolName":"IShape"}'
+
+dotnet run --project RefactorMCP.ConsoleApp -- --json find-overrides \
+  '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Animal.cs","memberName":"Speak"}'
+
+dotnet run --project RefactorMCP.ConsoleApp -- --json find-callers \
+  '{"solutionPath":"./RefactorMCP.sln","filePath":"./src/Service.cs","memberName":"Log","line":3}'
+```
+
+**Expected Output** (`find-references`):
+```
+3 references to property Counter.Count in 2 files
+src/Counter.cs
+  5:26  [write] public void Bump() { Count++; }
+src/Report.cs
+  9:17  var total = counter.Count;
+  14:9  [write] counter.Count = 0;
+```
+
+**Expected Output** (`find-callers`):
+```
+3 calls to method Service.Log(string) from 2 callers
+method Service.A()
+  src/Service.cs:4:23  public void A() { Log("a"); Log("b"); }
+  src/Service.cs:4:33  public void A() { Log("a"); Log("b"); }
+method Worker.Run(Service)
+  src/Worker.cs:8:13  service.Log("run");
+```
+
 ## 15. Extract Interface
 
 **Purpose**: Generate an interface from specific class members.
