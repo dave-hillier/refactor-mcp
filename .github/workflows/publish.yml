@@ -1,0 +1,27 @@
+name: Publish
+
+on:
+  push:
+    tags: [ 'v*' ]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+      - name: Version from tag
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+      - run: dotnet restore
+      - run: dotnet build --no-restore -c Release -p:Version=$VERSION
+      - run: dotnet test --no-build -c Release --verbosity normal
+      - run: dotnet pack RefactorMCP.ConsoleApp --no-build -c Release -p:Version=$VERSION -o artifacts
+      - run: dotnet nuget push "artifacts/*.nupkg" --api-key "${{ secrets.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
+      - name: GitHub release
+        run: gh release create "$GITHUB_REF_NAME" artifacts/*.nupkg --generate-notes
+        env:
+          GH_TOKEN: ${{ github.token }}
