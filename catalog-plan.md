@@ -176,9 +176,14 @@ Each project's files live in `before/<name>/` and `after/<name>/`.
 - A single xUnit theory discovers every `case.json` and runs it. Test names
   are `<tier>/<refactoring>/<case>` so failures point at a directory.
 - The runner copies `before/` into a temp directory, strips markers, generates
-  and restores project files, applies the refactoring or each step in turn
-  through a small adapter that maps catalog names and arguments onto the
-  current tools, compiles the result, then diffs against `after/`.
+  project files, applies the refactoring or each step in turn through a small
+  adapter that maps catalog names and arguments onto the current tools,
+  compiles the result, then diffs against `after/`.
+- Each distinct set of generated project files is restored and loaded through
+  MSBuild once per run. Cases sharing it get an in-memory solution with the
+  references and options MSBuild resolved, which the tools' session is given in
+  place of loading the solution itself. `CATALOG_MSBUILD=1` restores and loads
+  every case through MSBuild instead, exercising the path a client takes.
 - The adapter invokes tools through `ToolDispatcher` by name, the same path the
   CLI and daemon use, so a case exercises the tool as a client would.
 - A case marked `unimplemented` still has its `before/` compiled, so backlog

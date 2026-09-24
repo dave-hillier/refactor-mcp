@@ -69,6 +69,11 @@ Each case is reported as `<tier>/<refactoring>/<case>`. A case whose
 `case.json` has `"status": "unimplemented"` is skipped while it fails and fails
 once it passes, so the skipped count is the backlog.
 
+Cases with the same project settings share one MSBuild restore and load per
+run, and each case runs against an in-memory solution built from what MSBuild
+resolved. To restore and load every case through MSBuild, as a client of the
+tools would, set `CATALOG_MSBUILD=1`; it is much slower.
+
 To accept new behaviour, rewrite `after/` from the actual output and review the
 change as a diff before committing:
 

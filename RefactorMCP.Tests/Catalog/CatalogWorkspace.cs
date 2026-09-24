@@ -13,6 +13,11 @@ namespace RefactorMCP.Tests.Catalog;
 /// <summary>
 /// A temporary solution built from a case's <c>before/</c> files. The runner
 /// generates the project and solution files, so fixtures never carry them.
+///
+/// The session is given an in-memory solution built by
+/// <see cref="ProjectLayouts"/>, which restores and loads each distinct set of
+/// project files through MSBuild only once per run. Set <c>CATALOG_MSBUILD=1</c>
+/// to restore and load every case through MSBuild instead, as a client would.
 /// </summary>
 internal sealed class CatalogWorkspace : IDisposable
 {
@@ -20,13 +25,17 @@ internal sealed class CatalogWorkspace : IDisposable
     private const string DefaultProjectName = "Catalog";
 
     private readonly Dictionary<string, SourceMarkers> _markers;
+    private readonly Workspace? _workspace;
 
-    private CatalogWorkspace(string root, string solutionPath, Dictionary<string, SourceMarkers> markers)
+    private CatalogWorkspace(string root, string solutionPath, Dictionary<string, SourceMarkers> markers, Workspace? workspace)
     {
         Root = root;
         SolutionPath = solutionPath;
         _markers = markers;
+        _workspace = workspace;
     }
+
+    private static bool LoadEveryCaseThroughMsBuild => Environment.GetEnvironmentVariable("CATALOG_MSBUILD") == "1";
 
     public string Root { get; }
 
@@ -50,9 +59,16 @@ internal sealed class CatalogWorkspace : IDisposable
         var projects = WriteProjects(root, catalogCase.Definition);
         var solutionPath = Path.Combine(root, "Catalog.sln");
         await File.WriteAllTextAsync(solutionPath, SolutionText(projects));
-        await RestoreAsync(solutionPath);
 
-        return new CatalogWorkspace(root, solutionPath, markers);
+        if (LoadEveryCaseThroughMsBuild)
+        {
+            await RestoreAsync(solutionPath);
+            return new CatalogWorkspace(root, solutionPath, markers, workspace: null);
+        }
+
+        var workspace = await ProjectLayouts.CreateWorkspaceAsync(root, solutionPath, projects);
+        SessionRegistry.GetOrCreate(solutionPath).Replace(workspace.CurrentSolution);
+        return new CatalogWorkspace(root, solutionPath, markers, workspace);
     }
 
     /// <summary>The markers found in a <c>before/</c> file, by its path relative to <c>before/</c>.</summary>
@@ -112,6 +128,7 @@ internal sealed class CatalogWorkspace : IDisposable
     public void Dispose()
     {
         SessionRegistry.Unload(SolutionPath);
+        _workspace?.Dispose();
         foreach (var file in Directory.EnumerateFiles(Root, "*.cs", SearchOption.AllDirectories))
             RefactoringHelpers.EvictFileCaches(file);
 
@@ -164,14 +181,16 @@ internal sealed class CatalogWorkspace : IDisposable
         return string.Equals(owner, projectDirectory, StringComparison.Ordinal);
     }
 
-    private sealed record GeneratedProject(string Name, string RelativePath, Guid Id);
-
     private static List<GeneratedProject> WriteProjects(string root, CaseDefinition definition)
     {
         if (definition.Projects is not { Count: > 0 } projects)
         {
-            File.WriteAllText(Path.Combine(root, $"{DefaultProjectName}.csproj"), ProjectText(definition.Project, references: null));
-            return new List<GeneratedProject> { new(DefaultProjectName, $"{DefaultProjectName}.csproj", Guid.NewGuid()) };
+            var text = ProjectText(definition.Project, references: null);
+            File.WriteAllText(Path.Combine(root, $"{DefaultProjectName}.csproj"), text);
+            return new List<GeneratedProject>
+            {
+                new(DefaultProjectName, $"{DefaultProjectName}.csproj", Guid.NewGuid(), text, Array.Empty<string>()),
+            };
         }
 
         var generated = new List<GeneratedProject>();
@@ -179,11 +198,10 @@ internal sealed class CatalogWorkspace : IDisposable
         {
             var directory = Path.Combine(root, project.Name);
             Directory.CreateDirectory(directory);
-            var references = project.References?.Select(r => $"../{r}/{r}.csproj").ToList();
-            File.WriteAllText(
-                Path.Combine(directory, $"{project.Name}.csproj"),
-                ProjectText(project.Settings ?? definition.Project, references));
-            generated.Add(new GeneratedProject(project.Name, $"{project.Name}/{project.Name}.csproj", Guid.NewGuid()));
+            var referenced = project.References ?? new List<string>();
+            var text = ProjectText(project.Settings ?? definition.Project, referenced.Select(r => $"../{r}/{r}.csproj").ToList());
+            File.WriteAllText(Path.Combine(directory, $"{project.Name}.csproj"), text);
+            generated.Add(new GeneratedProject(project.Name, $"{project.Name}/{project.Name}.csproj", Guid.NewGuid(), text, referenced));
         }
 
         return generated;
@@ -217,7 +235,7 @@ internal sealed class CatalogWorkspace : IDisposable
     /// A solution with its configuration sections. Without them the workspace
     /// loads the projects' documents but resolves no metadata references.
     /// </summary>
-    private static string SolutionText(IReadOnlyList<GeneratedProject> projects)
+    internal static string SolutionText(IReadOnlyList<GeneratedProject> projects)
     {
         const string csharpProjectType = "{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}";
         var builder = new StringBuilder();
@@ -245,7 +263,7 @@ internal sealed class CatalogWorkspace : IDisposable
         static string Id(GeneratedProject project) => $"{{{project.Id.ToString().ToUpperInvariant()}}}";
     }
 
-    private static async Task RestoreAsync(string solutionPath)
+    internal static async Task RestoreAsync(string solutionPath)
     {
         // A single node: a solution of several projects otherwise starts worker
         // nodes that inherit the output pipes and can outlive the restore,
@@ -269,3 +287,6 @@ internal sealed class CatalogWorkspace : IDisposable
             throw new InvalidOperationException($"dotnet restore failed for the generated solution:\n{await output}\n{await error}");
     }
 }
+
+/// <summary>A generated project file: its name, path relative to the case root, text and the projects it references.</summary>
+internal sealed record GeneratedProject(string Name, string RelativePath, Guid Id, string Text, IReadOnlyList<string> References);
