@@ -1,0 +1,6 @@
+{
+  "refactoring": "feature-flag-wrapping",
+  "description": "Rewrites only the nested class holding the flag check; the class around it keeps its members and constructors",
+  "target": { "file": "Checkout.cs" },
+  "arguments": { "flag": "NewCheckout" }
+}
