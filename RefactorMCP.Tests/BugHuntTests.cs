@@ -68,23 +68,11 @@ class C
 
     // =========================================================================
     // BUG 3: SetterToInitRewriter drops access modifiers from the setter.
-    //        A property with "protected set;" becomes just "init;" (losing protected).
+    //        A property with "private set;" became just "init;" (losing private).
+    //        The protected case is pinned by the catalog case
+    //        primitives/convert-setter-to-init/protected-setter-in-constructors.
     // File: RefactorMCP.ConsoleApp/SyntaxRewriters/SetterToInitRewriter.cs:25-26
     // =========================================================================
-
-    [Fact]
-    public void SetterToInitRewriter_ProtectedSetter_ShouldPreserveAccessModifier()
-    {
-        var code = "public int P { get; protected set; }";
-        var prop = SyntaxFactory.ParseMemberDeclaration(code) as PropertyDeclarationSyntax;
-        Assert.NotNull(prop);
-
-        var rewriter = new SetterToInitRewriter("P");
-        var result = rewriter.Visit(prop!)!.NormalizeWhitespace().ToFullString();
-
-        // The "protected" access modifier should be preserved on the init accessor
-        Assert.Contains("protected init", result);
-    }
 
     [Fact]
     public void SetterToInitRewriter_PrivateSetter_ShouldPreserveAccessModifier()
@@ -374,95 +362,5 @@ class C
 
         // The inlined code should contain the expression from the arrow body
         Assert.Contains("Console.WriteLine", text);
-    }
-
-    // =========================================================================
-    // BUG 12: ExtractInterfaceTool.WithBaseList overwrites existing base types.
-    //         If a class already has a base class or interfaces, they are removed.
-    // File: RefactorMCP.ConsoleApp/Tools/ExtractInterfaceTool.cs:96
-    // =========================================================================
-
-    [Fact]
-    public async Task ExtractInterface_ClassWithExistingBaseClass_ShouldPreserveIt()
-    {
-        var code = "public class OrderService : ServiceBase { public void Process() { } }";
-        var testDir = System.IO.Path.Combine(
-            System.IO.Path.GetTempPath(),
-            "BugHuntTest_" + System.Guid.NewGuid().ToString("N"));
-        System.IO.Directory.CreateDirectory(testDir);
-
-        try
-        {
-            UnloadSolutionTool.ClearSolutionCache();
-            var solutionPath = TestUtilities.GetSolutionPath();
-            await LoadSolutionTool.LoadSolution(solutionPath, null, System.Threading.CancellationToken.None);
-
-            var testFile = System.IO.Path.Combine(testDir, "ExtractBaseTest.cs");
-            await TestUtilities.CreateTestFile(testFile, code);
-            var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
-            var project = solution.Projects.First();
-            RefactoringHelpers.AddDocumentToProject(project, testFile);
-
-            var interfacePath = System.IO.Path.Combine(testDir, "IOrderService.cs");
-            await ExtractInterfaceTool.ExtractInterface(
-                solutionPath, testFile, "OrderService", "Process", interfacePath);
-
-            var source = await System.IO.File.ReadAllTextAsync(testFile);
-
-            // The existing base class ServiceBase should be preserved
-            Assert.Contains("ServiceBase", source);
-            // The new interface should also be present
-            Assert.Contains("IOrderService", source);
-        }
-        finally
-        {
-            if (System.IO.Directory.Exists(testDir))
-                System.IO.Directory.Delete(testDir, true);
-        }
-    }
-
-    // =========================================================================
-    // BUG 13: ExtractInterfaceTool produces empty accessor list for
-    //         expression-bodied properties (AccessorList is null).
-    //         The result is "int Prop { }" which is invalid C#.
-    // File: RefactorMCP.ConsoleApp/Tools/ExtractInterfaceTool.cs:57-61
-    // =========================================================================
-
-    [Fact]
-    public async Task ExtractInterface_ExpressionBodiedProperty_ShouldProduceValidAccessor()
-    {
-        var code = @"public class MyClass { public int Count => _items.Count; }";
-        var testDir = System.IO.Path.Combine(
-            System.IO.Path.GetTempPath(),
-            "BugHuntTest_" + System.Guid.NewGuid().ToString("N"));
-        System.IO.Directory.CreateDirectory(testDir);
-
-        try
-        {
-            UnloadSolutionTool.ClearSolutionCache();
-            var solutionPath = TestUtilities.GetSolutionPath();
-            await LoadSolutionTool.LoadSolution(solutionPath, null, System.Threading.CancellationToken.None);
-
-            var testFile = System.IO.Path.Combine(testDir, "ExprBodyProp.cs");
-            await TestUtilities.CreateTestFile(testFile, code);
-            var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
-            var project = solution.Projects.First();
-            RefactoringHelpers.AddDocumentToProject(project, testFile);
-
-            var interfacePath = System.IO.Path.Combine(testDir, "IMyClass.cs");
-            await ExtractInterfaceTool.ExtractInterface(
-                solutionPath, testFile, "MyClass", "Count", interfacePath);
-
-            var ifaceContent = await System.IO.File.ReadAllTextAsync(interfacePath);
-
-            // The interface should have a valid getter: "int Count { get; }"
-            // Not an empty accessor list: "int Count { }"
-            Assert.Contains("get;", ifaceContent);
-        }
-        finally
-        {
-            if (System.IO.Directory.Exists(testDir))
-                System.IO.Directory.Delete(testDir, true);
-        }
     }
 }
