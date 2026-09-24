@@ -35,9 +35,6 @@ public static class LoadSolutionTool
 
             var session = SessionRegistry.GetOrCreate(solutionPath);
 
-            var metricsDir = Path.Combine(session.SolutionDirectory, ".refactor-mcp", "metrics");
-            Directory.CreateDirectory(metricsDir);
-
             var solution = await session.GetOrLoadAsync(progress, cancellationToken);
 
             var projects = solution.Projects.Select(p => p.Name).ToList();

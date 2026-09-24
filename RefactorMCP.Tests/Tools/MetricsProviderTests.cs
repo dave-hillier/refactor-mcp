@@ -19,7 +19,7 @@ public class MetricsProviderTests : TestBase
 
         var solutionDir = Path.GetDirectoryName(SolutionPath)!;
         var relative = Path.GetRelativePath(solutionDir, ExampleFilePath);
-        var metricsPath = Path.Combine(solutionDir, ".refactor-mcp", "metrics", relative);
+        var metricsPath = Path.Combine(StateDirectory.Metrics(SolutionPath), relative);
         var metricsFile = Path.ChangeExtension(metricsPath, ".json");
 
         Assert.True(File.Exists(metricsFile));
