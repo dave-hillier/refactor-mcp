@@ -2282,10 +2282,10 @@ This URI returns metrics for the `Calculate` method. Omitting the method name
 returns metrics for the whole class, and specifying only the file gives all
 classes and methods.
 
-Metrics are cached in `.refactor-mcp/metrics/` once a solution is loaded. The path mirrors the solution's folder structure. For example after running `load-solution` on `RefactorMCP.sln` metrics for `RefactorMCP.Tests/ExampleCode.cs` are written to:
+Metrics are cached under your home directory, in `~/.refactor-mcp/<solution>-<hash>/metrics/`, so nothing is written into the repository you are working on. The hash comes from the solution's full path and keeps two checkouts of the same solution apart. Set `REFACTOR_MCP_HOME` to use a different root than `~/.refactor-mcp`. The path below the metrics folder mirrors the solution's folder structure. For example metrics for `RefactorMCP.Tests/ExampleCode.cs` in `RefactorMCP.sln` are written to:
 
 ```text
-.refactor-mcp/metrics/RefactorMCP.Tests/ExampleCode.cs.json
+~/.refactor-mcp/RefactorMCP-<hash>/metrics/RefactorMCP.Tests/ExampleCode.cs.json
 ```
 
 ## Summary Resource
@@ -2303,7 +2303,7 @@ hold an expression, so there is no placeholder that parses in its place.
 
 Recording the calls made in a session is opt in, because a plain command line
 call should leave nothing behind. Set `REFACTOR_MCP_LOG=1` to append to
-`<solution directory>/.refactor-mcp/tool-call-log-<timestamp>-<pid>.jsonl`, or
+`~/.refactor-mcp/<solution>-<hash>/tool-call-log-<timestamp>-<pid>.jsonl`, or
 set `REFACTOR_MCP_LOG` to a file path to choose the file yourself:
 
 ```bash

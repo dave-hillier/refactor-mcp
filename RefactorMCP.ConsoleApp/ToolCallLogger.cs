@@ -7,8 +7,8 @@ using System.Text.Json;
 /// Records the tool calls made in a session, to debug what a client asked for.
 ///
 /// Logging is opt in. Set <c>REFACTOR_MCP_LOG</c> to a file path, or to
-/// <c>1</c> / <c>true</c> to write into the loaded solution's
-/// <c>.refactor-mcp</c> directory. With it unset nothing is written, so a one
+/// <c>1</c> / <c>true</c> to write into the loaded solution's folder under
+/// <see cref="StateDirectory"/>. With it unset nothing is written, so a one
 /// shot CLI call leaves no trace behind.
 /// </summary>
 internal static class ToolCallLogger
@@ -60,10 +60,10 @@ internal static class ToolCallLogger
 
         if (setting is "1" or "true")
         {
-            var sessionDirectory = SessionRegistry.Current?.SolutionDirectory;
-            return sessionDirectory is null
+            var solutionPath = SessionRegistry.Current?.SolutionPath;
+            return solutionPath is null
                 ? null
-                : Path.Combine(sessionDirectory, ".refactor-mcp", SessionLogFileName);
+                : Path.Combine(StateDirectory.For(solutionPath), SessionLogFileName);
         }
 
         return setting;

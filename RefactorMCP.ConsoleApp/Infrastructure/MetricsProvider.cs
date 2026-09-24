@@ -17,7 +17,7 @@ public static class MetricsProvider
     {
         var solutionDir = Path.GetDirectoryName(solutionPath)!;
         var relative = Path.GetRelativePath(solutionDir, filePath);
-        var metricsPath = Path.Combine(solutionDir, ".refactor-mcp", "metrics", relative);
+        var metricsPath = Path.Combine(StateDirectory.Metrics(solutionPath), relative);
         return Path.ChangeExtension(metricsPath, ".json");
     }
 

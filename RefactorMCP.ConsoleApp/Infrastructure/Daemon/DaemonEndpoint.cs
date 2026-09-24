@@ -62,7 +62,7 @@ internal sealed class DaemonEndpoint
     }
 
     /// <summary>File name used for every socket and discovery file of a solution.</summary>
-    private static string Hash(string solutionPath)
+    internal static string Hash(string solutionPath)
     {
         var digest = SHA256.HashData(Encoding.UTF8.GetBytes(solutionPath));
         return Convert.ToHexString(digest)[..16].ToLowerInvariant();
