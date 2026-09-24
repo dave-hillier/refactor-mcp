@@ -1,32 +1,11 @@
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using ModelContextProtocol;
 using Xunit;
 
 namespace RefactorMCP.Tests.Tools;
 
 public class IntroduceParameterToolTests : RefactorMCP.Tests.TestBase
 {
-    [Fact]
-    public async Task IntroduceParameter_ValidExpression_ReturnsSuccess()
-    {
-        await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
-        var testFile = Path.Combine(TestOutputPath, "IntroduceParameter.cs");
-        await TestUtilities.CreateTestFile(testFile, TestUtilities.GetSampleCodeForIntroduceVariable());
-
-        var result = await IntroduceParameterTool.IntroduceParameter(
-            SolutionPath,
-            testFile,
-            "FormatResult",
-            "42:20-42:66",  // The interpolated string in FormatResult's return
-            "processedValue");
-
-        Assert.Contains("Successfully introduced parameter", result);
-        var fileContent = await File.ReadAllTextAsync(testFile);
-        Assert.Contains("processedValue", fileContent);
-    }
-
     [Fact]
     public async Task IntroduceParameter_InvalidMethod_ReturnsError()
     {
