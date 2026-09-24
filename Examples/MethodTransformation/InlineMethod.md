@@ -84,6 +84,7 @@ public class CustomerService
 ### Tool Usage
 ```bash
 dotnet run --project RefactorMCP.ConsoleApp -- --json inline-method '{
+    "solutionPath": "MyProject.sln",
     "filePath": "CustomerService.cs",
     "methodName": "FindCustomerByIdAsync"
 }'

@@ -129,8 +129,6 @@ internal sealed class CatalogWorkspace : IDisposable
     {
         SessionRegistry.Unload(SolutionPath);
         _workspace?.Dispose();
-        foreach (var file in Directory.EnumerateFiles(Root, "*.cs", SearchOption.AllDirectories))
-            RefactoringHelpers.EvictFileCaches(file);
 
         try
         {

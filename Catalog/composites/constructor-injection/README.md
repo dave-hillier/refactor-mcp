@@ -4,10 +4,9 @@ Turns an object a method constructs for itself into a dependency the class
 receives through its constructor and keeps in a field. Every construction of
 the class passes a new instance, built as the method built it.
 
-The tool is `inject-constructor-dependency`. The older
-`convert-to-constructor-injection` tool moves a method parameter to the
-constructor instead; callers lose the value they passed, so it does not
-preserve behaviour and is not this refactoring.
+The tool is `inject-constructor-dependency`. Moving a method parameter to the
+constructor instead is not this refactoring: callers would lose the value they
+passed, so it does not preserve behaviour.
 
 ## Recipe
 

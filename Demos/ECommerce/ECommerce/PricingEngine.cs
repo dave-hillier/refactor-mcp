@@ -6,7 +6,7 @@ namespace ECommerce;
 /// Refactoring opportunities:
 ///   - introduce-variable: complex discount expression in CalculateLineTotal
 ///   - introduce-field: repeated magic number 0.15m (max discount cap)
-///   - convert-to-static-with-parameters: CalculateShippingCost uses no instance state
+///   - make-method-static: CalculateShippingCost uses no instance state
 ///   - feature-flag-refactor: EnableNewPricingEngine branching in ApplyDynamicPricing
 ///   - extract-method: CalculateBulkDiscount has multiple logical sections
 ///   - inline-method: GetBaseMultiplier is trivial, called once

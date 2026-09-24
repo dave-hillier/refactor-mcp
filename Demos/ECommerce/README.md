@@ -1,6 +1,6 @@
 # RefactorMCP Live Demos — E-Commerce Refactoring Showcase
 
-An end-to-end demonstration of **30 refactoring tools** applied to a realistic e-commerce codebase. Each demo starts from intentionally messy but realistic code and transforms it step-by-step.
+An end-to-end demonstration of **24 refactoring tools** applied to a realistic e-commerce codebase. Each demo starts from intentionally messy but realistic code and transforms it step-by-step.
 
 ## The Scenario
 
@@ -10,7 +10,7 @@ You've inherited a small e-commerce platform with typical code smells:
 |------|-------------|
 | `OrderProcessor.cs` | God class — validation, pricing, payment, logging all mixed together. Unused methods and fields. Poorly named variables. |
 | `PricingEngine.cs` | Unreadable one-liner expressions, pure functions trapped as instance methods, feature flag branching. |
-| `CustomerService.cs` | Concrete dependencies instead of interfaces, method-level injection that should be constructor-level, unused parameters. |
+| `CustomerService.cs` | Concrete dependencies instead of interfaces, a service passed per call that the constructor already injects, unused parameters. |
 | `NotificationService.cs` | No interface for testing, unused imports, utility methods that should be extension methods, types crammed into one file. |
 | `ReportGenerator.cs` | Static utilities in the wrong class, unused local variables. |
 | `InventoryManager.cs` | Poorly named parameters, no events for monitoring, no adapter for external APIs, mutable DTOs. |
@@ -22,10 +22,10 @@ You've inherited a small e-commerce platform with typical code smells:
 | 1 | **Analysis & Metrics** | `analyze-refactoring-opportunities`, `list-class-lengths` | [demo-01](docs/demo-01-analysis.md) |
 | 2 | **Method Transformation** | `extract-method`, `inline-method` | [demo-02](docs/demo-02-method-transformation.md) |
 | 3 | **Introduce Variable/Field/Parameter** | `introduce-variable`, `introduce-field`, `introduce-parameter` | [demo-03](docs/demo-03-introduction.md) |
-| 4 | **Method Moving** | `move-instance-method`, `move-static-method`, `move-to-separate-file` | [demo-04](docs/demo-04-method-moving.md) |
-| 5 | **Conversion & DI** | `convert-to-static-with-parameters`, `convert-to-extension-method`, `use-interface`, `convert-to-constructor-injection`, `make-field-readonly`, `transform-setter-to-init` | [demo-05](docs/demo-05-conversion.md) |
+| 4 | **Method Moving** | `move-member`, `move-to-separate-file` | [demo-04](docs/demo-04-method-moving.md) |
+| 5 | **Conversion & Interfaces** | `make-method-static`, `convert-to-extension-method`, `use-interface`, `make-field-readonly`, `transform-setter-to-init` | [demo-05](docs/demo-05-conversion.md) |
 | 6 | **Design Patterns** | `extract-interface`, `extract-decorator`, `create-adapter`, `add-observer`, `feature-flag-refactor` | [demo-06](docs/demo-06-design-patterns.md) |
-| 7 | **Cleanup & Safe Deletion** | `safe-delete-method`, `safe-delete-field`, `safe-delete-parameter`, `safe-delete-variable`, `rename-symbol`, `cleanup-usings` | [demo-07](docs/demo-07-cleanup.md) |
+| 7 | **Cleanup & Safe Deletion** | `safe-delete-member`, `remove-unused-parameter`, `safe-delete-local`, `rename-symbol`, `cleanup-usings` | [demo-07](docs/demo-07-cleanup.md) |
 
 ## Quick Start
 
@@ -46,7 +46,7 @@ cd Demos/ECommerce
 ```bash
 ./run-demos.sh 1    # Analysis only
 ./run-demos.sh 2    # Method transformation only
-./run-demos.sh 5    # Conversion & DI only
+./run-demos.sh 5    # Conversion & interfaces only
 ```
 
 ### Reset Files to Original State

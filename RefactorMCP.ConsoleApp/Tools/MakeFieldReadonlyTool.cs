@@ -22,11 +22,10 @@ public static class MakeFieldReadonlyTool
     {
         try
         {
-            return await RefactoringHelpers.RunWithSolutionOrFile(
+            return await RefactoringHelpers.RunWithSolution(
                 solutionPath,
                 filePath,
-                doc => MakeFieldReadonlyWithSolution(doc, fieldName),
-                path => MakeFieldReadonlySingleFile(path, fieldName));
+                doc => MakeFieldReadonlyWithSolution(doc, fieldName));
         }
         catch (Exception ex)
         {
@@ -131,30 +130,4 @@ public static class MakeFieldReadonlyTool
         || modifier.IsKind(SyntaxKind.ProtectedKeyword) || modifier.IsKind(SyntaxKind.InternalKeyword)
         || modifier.IsKind(SyntaxKind.StaticKeyword) || modifier.IsKind(SyntaxKind.NewKeyword);
 
-    private static Task<string> MakeFieldReadonlySingleFile(string filePath, string fieldName)
-    {
-        return RefactoringHelpers.ApplySingleFileEdit(
-            filePath,
-            text => MakeFieldReadonlyInSource(text, fieldName),
-            $"Successfully made field '{fieldName}' readonly in {filePath} (single file mode)");
-    }
-
-    public static string MakeFieldReadonlyInSource(string sourceText, string fieldName)
-    {
-        var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
-        var syntaxRoot = syntaxTree.GetRoot();
-
-        var fieldDeclaration = syntaxRoot.DescendantNodes()
-            .OfType<FieldDeclarationSyntax>()
-            .FirstOrDefault(f => f.Declaration.Variables.Any(v => v.Identifier.ValueText == fieldName));
-
-        if (fieldDeclaration == null)
-            throw new McpException($"Error: No field named '{fieldName}' found");
-
-        var rewriter = new ReadonlyFieldRewriter(fieldName);
-        var newRoot = rewriter.Visit(syntaxRoot);
-
-        var formattedRoot = Formatter.Format(newRoot!, RefactoringHelpers.SharedWorkspace);
-        return formattedRoot.ToFullString();
-    }
 }

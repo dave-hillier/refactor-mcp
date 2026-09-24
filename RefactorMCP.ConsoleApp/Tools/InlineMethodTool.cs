@@ -38,33 +38,6 @@ public static class InlineMethodTool
         return $"Successfully inlined {kind} '{methodName}' at {uses} use(s) in {document.FilePath} (solution mode)";
     }
 
-    private static Task<string> InlineMethodSingleFile(string filePath, string methodName)
-    {
-        return RefactoringHelpers.ApplySingleFileEdit(
-            filePath,
-            text => InlineMethodInSource(text, methodName),
-            $"Successfully inlined method '{methodName}' in {filePath} (single file mode)");
-    }
-
-    public static string InlineMethodInSource(string sourceText, string methodName)
-    {
-        var tree = CSharpSyntaxTree.ParseText(sourceText);
-        var root = tree.GetRoot();
-        var method = root.DescendantNodes().OfType<MethodDeclarationSyntax>()
-            .FirstOrDefault(m => m.Identifier.ValueText == methodName && m.ParameterList.Parameters.Count == 0);
-        if (method == null)
-            throw new McpException($"Error: Method '{methodName}' not found or has parameters");
-
-        var rewriter = new InlineInvocationRewriter(method);
-        var newRoot = rewriter.Visit(root)!;
-        var updatedMethod = newRoot.DescendantNodes()
-            .OfType<MethodDeclarationSyntax>()
-            .First(m => m.Identifier.ValueText == methodName && m.ParameterList.Parameters.Count == 0);
-        newRoot = newRoot.RemoveNode(updatedMethod, SyntaxRemoveOptions.KeepNoTrivia);
-        var formatted = Formatter.Format(newRoot!, RefactoringHelpers.SharedWorkspace);
-        return formatted.ToFullString();
-    }
-
     [McpServerTool, Description("Inline a method, or a read-only property whose getter computes its value, at every use and remove its declaration (preferred for large C# file refactoring)")]
     public static async Task<string> InlineMethod(
         [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
@@ -74,11 +47,10 @@ public static class InlineMethodTool
     {
         try
         {
-            return await RefactoringHelpers.RunWithSolutionOrFile(
+            return await RefactoringHelpers.RunWithSolution(
                 solutionPath,
                 filePath,
-                doc => InlineMethodWithSolution(doc, methodName, line),
-                path => InlineMethodSingleFile(path, methodName));
+                doc => InlineMethodWithSolution(doc, methodName, line));
         }
         catch (Exception ex)
         {

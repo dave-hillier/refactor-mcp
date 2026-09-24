@@ -34,35 +34,6 @@ public static class UseInterfaceTool
         return $"Successfully changed parameter '{parameterName}' to interface '{interfaceName}' in method '{methodName}' in {document.FilePath} (solution mode)";
     }
 
-    private static Task<string> UseInterfaceSingleFile(string filePath, string methodName, string parameterName, string interfaceName)
-    {
-        return RefactoringHelpers.ApplySingleFileEdit(
-            filePath,
-            text => UseInterfaceInSource(text, methodName, parameterName, interfaceName),
-            $"Successfully changed parameter '{parameterName}' to interface '{interfaceName}' in method '{methodName}' in {filePath} (single file mode)");
-    }
-
-    public static string UseInterfaceInSource(string sourceText, string methodName, string parameterName, string interfaceName)
-    {
-        var tree = CSharpSyntaxTree.ParseText(sourceText);
-        var root = tree.GetRoot();
-        var method = root.DescendantNodes()
-            .OfType<MethodDeclarationSyntax>()
-            .FirstOrDefault(m => m.Identifier.ValueText == methodName);
-        if (method == null)
-            return $"Error: No method named '{methodName}' found";
-        var param = method.ParameterList.Parameters
-            .FirstOrDefault(p => p.Identifier.ValueText == parameterName);
-        if (param == null)
-            return $"Error: No parameter named '{parameterName}' found";
-
-        var newParam = param.WithType(SyntaxFactory.ParseTypeName(interfaceName));
-        var newMethod = method.ReplaceNode(param, newParam);
-        var newRoot = root.ReplaceNode(method, newMethod);
-        var formatted = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
-        return formatted.ToFullString();
-    }
-
     [McpServerTool, Description("Change a method parameter type to an interface (preferred for large C# file refactoring)")]
     public static async Task<string> UseInterface(
         [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
@@ -73,11 +44,10 @@ public static class UseInterfaceTool
     {
         try
         {
-            return await RefactoringHelpers.RunWithSolutionOrFile(
+            return await RefactoringHelpers.RunWithSolution(
                 solutionPath,
                 filePath,
-                doc => UseInterfaceWithSolution(doc, methodName, parameterName, interfaceName),
-                path => UseInterfaceSingleFile(path, methodName, parameterName, interfaceName));
+                doc => UseInterfaceWithSolution(doc, methodName, parameterName, interfaceName));
         }
         catch (Exception ex)
         {

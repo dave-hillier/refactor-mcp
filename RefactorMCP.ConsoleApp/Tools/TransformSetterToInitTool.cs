@@ -19,11 +19,10 @@ public static class TransformSetterToInitTool
     {
         try
         {
-            return await RefactoringHelpers.RunWithSolutionOrFile(
+            return await RefactoringHelpers.RunWithSolution(
                 solutionPath,
                 filePath,
-                doc => TransformSetterToInitWithSolution(doc, propertyName),
-                path => TransformSetterToInitSingleFile(path, propertyName));
+                doc => TransformSetterToInitWithSolution(doc, propertyName));
         }
         catch (Exception ex)
         {
@@ -85,32 +84,4 @@ public static class TransformSetterToInitTool
         return false;
     }
 
-    private static Task<string> TransformSetterToInitSingleFile(string filePath, string propertyName)
-    {
-        return RefactoringHelpers.ApplySingleFileEdit(
-            filePath,
-            text => TransformSetterToInitInSource(text, propertyName),
-            $"Successfully converted setter to init for '{propertyName}' in {filePath} (single file mode)");
-    }
-
-    public static string TransformSetterToInitInSource(string sourceText, string propertyName)
-    {
-        var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
-        var syntaxRoot = syntaxTree.GetRoot();
-
-        var property = syntaxRoot.DescendantNodes()
-            .OfType<PropertyDeclarationSyntax>()
-            .FirstOrDefault(p => p.Identifier.ValueText == propertyName);
-        if (property == null)
-            throw new McpException($"Error: No property named '{propertyName}' found");
-
-        var setter = property.AccessorList?.Accessors.FirstOrDefault(a => a.IsKind(SyntaxKind.SetAccessorDeclaration));
-        if (setter == null)
-            throw new McpException($"Error: Property '{propertyName}' has no setter");
-
-        var rewriter = new SetterToInitRewriter(propertyName);
-        var newRoot = rewriter.Visit(syntaxRoot);
-        var formatted = Formatter.Format(newRoot!, RefactoringHelpers.SharedWorkspace);
-        return formatted.ToFullString();
-    }
 }

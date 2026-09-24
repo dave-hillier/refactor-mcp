@@ -14,21 +14,13 @@ public static class CleanupUsingsTool
 {
     [McpServerTool, Description("Remove unused using directives from a C# file (preferred for large C# file refactoring)")]
     public static async Task<string> CleanupUsings(
-        [Description("Absolute path to the solution file (.sln or .slnx)")] string? solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         CancellationToken cancellationToken = default)
     {
         try
         {
-            if (!string.IsNullOrWhiteSpace(solutionPath))
-            {
-                var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath);
-                var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
-                if (document != null)
-                    return await CleanupUsingsWithSolution(document);
-            }
-
-            return await CleanupUsingsSingleFile(filePath);
+            return await RefactoringHelpers.RunWithSolution(solutionPath, filePath, CleanupUsingsWithSolution);
         }
         catch (Exception ex)
         {
@@ -67,31 +59,4 @@ public static class CleanupUsingsTool
         return $"Removed unused usings in {document.FilePath}";
     }
 
-    private static Task<string> CleanupUsingsSingleFile(string filePath)
-    {
-        return RefactoringHelpers.ApplySingleFileEdit(
-            filePath,
-            CleanupUsingsInSource,
-            $"Removed unused usings in {filePath} (single file mode)");
-    }
-
-    public static string CleanupUsingsInSource(string sourceText)
-    {
-        var tree = CSharpSyntaxTree.ParseText(sourceText);
-        var compilation = CSharpCompilation.Create("Cleanup")
-            .AddReferences(
-                MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
-                MetadataReference.CreateFromFile(typeof(Console).Assembly.Location))
-            .AddSyntaxTrees(tree);
-        var diagnostics = compilation.GetDiagnostics();
-        var root = tree.GetRoot();
-        var unused = diagnostics
-            .Where(d => d.Id == "CS8019")
-            .Select(d => root.FindNode(d.Location.SourceSpan))
-            .OfType<UsingDirectiveSyntax>()
-            .Distinct()
-            .ToList();
-
-        return DeclarationRemoval.RemoveUsings(root, unused).ToFullString();
-    }
 }

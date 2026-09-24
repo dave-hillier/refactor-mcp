@@ -14,7 +14,7 @@ RefactorMCP is a Model Context Protocol server that exposes Roslyn-based refacto
   - `Tools/`: Individual refactoring tool implementations (40+ tools)
   - `SyntaxRewriters/`: Roslyn syntax tree rewriting components
   - `SyntaxWalkers/`: Code analysis and traversal utilities
-  - `Move/`: Specialized method moving logic
+  - `Tools/Moving/`: Moving members and types between types, files and namespaces
 
 - **RefactorMCP.Tests**: Comprehensive xUnit test suite
   - Each tool has corresponding test coverage
@@ -39,10 +39,10 @@ dotnet build
 dotnet test
 
 # Run tests with filter
-dotnet test --filter "FullyQualifiedName~MoveInstanceMethod"
+dotnet test --filter "FullyQualifiedName~RenameSymbol"
 
 # Run a specific test
-dotnet test --filter "FullyQualifiedName=RefactorMCP.Tests.Tools.MoveInstanceMethodTests.Move_MethodWithNamedArguments_Success"
+dotnet test --filter "FullyQualifiedName=RefactorMCP.Tests.Tools.RenameSymbolToolTests.RenameSymbol_Field_RenamesReferences"
 ```
 
 ### Run Application
@@ -65,7 +65,7 @@ dotnet format
 ## Working with Refactoring Tools
 
 ### Tool Naming Convention
-- Tools use kebab-case names (e.g., `extract-method`, `move-instance-method`)
+- Tools use kebab-case names (e.g., `extract-method`, `move-member`)
 - Each tool has a corresponding class in `RefactorMCP.ConsoleApp/Tools/`
 
 ### Adding New Tools
@@ -76,6 +76,7 @@ dotnet format
 
 ### Testing Patterns
 - Tests use `TestBase` for common setup
+- Tools only work on files in the loaded solution, so a test that writes a fixture to `TestOutput/` adds it with `RefactoringHelpers.AddDocumentToProject`
 - Each test typically:
   1. Creates test code as a string
   2. Applies the refactoring
@@ -90,10 +91,10 @@ dotnet format
 - Semantic model analysis for type and symbol information
 
 ### Method Moving Logic
-- Complex dependency tracking for moved methods
-- Automatic static conversion when instance members aren't accessed
-- Constructor and parameter injection for dependencies
-- Support for overloaded methods and inheritance hierarchies
+- `Tools/Moving/` holds the move engine behind `move-member` and the composites built on it
+- An instance member moves through a field, property or parameter of the target type, and the move refuses when the class has none
+- A static member moves to a named type, which is created as a static class if it does not exist
+- `make-static-then-move` covers moving an instance method to a class it holds no reference to
 
 ### Resource Schemes
 - `metrics://` - Code metrics analysis
@@ -102,7 +103,7 @@ dotnet format
 ## Common Development Tasks
 
 ### Debug a Specific Refactoring
-1. Identify the tool class (e.g., `MoveInstanceMethodTool`)
+1. Identify the tool class (e.g., `MoveMemberTool`)
 2. Find corresponding test file
 3. Run specific test or create minimal reproduction
 4. Use debugger breakpoints in tool implementation

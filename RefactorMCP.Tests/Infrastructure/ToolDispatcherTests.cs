@@ -78,12 +78,9 @@ public class ToolDispatcherTests
     [Fact]
     public void ListTools_HidesInjectedParameters()
     {
-        var tool = ToolDispatcher.Default.Resolve("move-static-method")!;
+        var tool = ToolDispatcher.Default.Resolve("load-solution")!;
 
-        Assert.DoesNotContain(tool.CallerParameters, p => p.Name == "cancellationToken");
-        Assert.DoesNotContain(tool.CallerParameters, p => p.Name == "progress");
-        Assert.Equal("targetFilePath", tool.CallerParameters.Last().Name);
-        Assert.False(tool.CallerParameters.Last().IsRequired);
+        Assert.Equal(new[] { "solutionPath" }, tool.CallerParameters.Select(p => p.Name));
     }
 
     [Fact]

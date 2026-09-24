@@ -25,7 +25,7 @@ public class Sample
 
         await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
         var testFile = Path.Combine(TestOutputPath, "InvalidRange.cs");
-        await TestUtilities.CreateTestFile(testFile, initialCode);
+        await AddToSolutionAsync(testFile, initialCode);
 
         await Assert.ThrowsAsync<McpException>(async () =>
             await ExtractMethodTool.ExtractMethod(
@@ -61,7 +61,7 @@ public class A { public void M() { } }
 
         await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
         var testFile = Path.Combine(TestOutputPath, "InvalidFormat.cs");
-        await TestUtilities.CreateTestFile(testFile, initialCode);
+        await AddToSolutionAsync(testFile, initialCode);
 
         await Assert.ThrowsAsync<McpException>(async () =>
             await ExtractMethodTool.ExtractMethod(
@@ -82,7 +82,7 @@ public class A { public void M() { } }
 
         await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
         var testFile = Path.Combine(TestOutputPath, "InvalidValues.cs");
-        await TestUtilities.CreateTestFile(testFile, initialCode);
+        await AddToSolutionAsync(testFile, initialCode);
 
         await Assert.ThrowsAsync<McpException>(async () =>
             await ExtractMethodTool.ExtractMethod(

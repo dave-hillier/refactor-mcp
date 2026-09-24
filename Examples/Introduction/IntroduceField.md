@@ -103,6 +103,7 @@ public class EmailNotificationService
 ### Tool Usage
 ```bash
 dotnet run --project RefactorMCP.ConsoleApp -- --json introduce-field '{
+    "solutionPath": "MyProject.sln",
     "filePath": "EmailNotificationService.cs",
     "startLine": 9,
     "startColumn": 20,

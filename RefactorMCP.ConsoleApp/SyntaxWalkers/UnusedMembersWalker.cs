@@ -92,7 +92,7 @@ namespace RefactorMCP.ConsoleApp.SyntaxWalkers
                 {
                     var refs = await SymbolFinder.FindReferencesAsync(symbol, _solution!);
                     if (refs.All(r => r.Locations.All(l => l.Location.SourceSpan == method.Identifier.Span)))
-                        Suggestions.Add($"Method '{method.Identifier}' appears unused -> safe-delete-method");
+                        Suggestions.Add($"Method '{method.Identifier}' appears unused -> safe-delete-member");
                 }
             }
 
@@ -102,7 +102,7 @@ namespace RefactorMCP.ConsoleApp.SyntaxWalkers
                 {
                     var refs = await SymbolFinder.FindReferencesAsync(symbol, _solution!);
                     if (refs.All(r => r.Locations.All(l => l.Location.SourceSpan == variable.Identifier.Span)))
-                        Suggestions.Add($"Field '{variable.Identifier}' appears unused -> safe-delete-field");
+                        Suggestions.Add($"Field '{variable.Identifier}' appears unused -> safe-delete-member");
                 }
             }
         }
@@ -115,7 +115,7 @@ namespace RefactorMCP.ConsoleApp.SyntaxWalkers
                     continue;
                 _invocations.TryGetValue(name, out var count);
                 if (count == 0)
-                    Suggestions.Add($"Method '{name}' appears unused -> safe-delete-method");
+                    Suggestions.Add($"Method '{name}' appears unused -> safe-delete-member");
             }
 
             foreach (var (name, _) in _fields)
@@ -124,7 +124,7 @@ namespace RefactorMCP.ConsoleApp.SyntaxWalkers
                 // a declarator token, so one reference means exactly one use.
                 _fieldRefs.TryGetValue(name, out var count);
                 if (count == 0)
-                    Suggestions.Add($"Field '{name}' appears unused -> safe-delete-field");
+                    Suggestions.Add($"Field '{name}' appears unused -> safe-delete-member");
             }
         }
     }

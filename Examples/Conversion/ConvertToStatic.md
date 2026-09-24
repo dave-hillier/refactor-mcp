@@ -1,10 +1,12 @@
 # Convert to Static Refactoring
 
 ## Overview
-RefactorMCP provides two ways to convert instance methods to static:
+The `make-method-static` tool makes an instance method static and updates every call across the solution. Its `pass` argument chooses what the static method receives:
 
-1. **convert-to-static-with-instance**: Adds the instance as a parameter (good for moving methods)
-2. **convert-to-static-with-parameters**: Adds each used member as a parameter (good for pure functions)
+1. **`"pass": "instance"`** (the default): the instance becomes the first parameter (good for moving methods)
+2. **`"pass": "parameters"`**: each instance field or property the method reads becomes a parameter (good for pure functions)
+
+A method that uses no instance state simply becomes static, whichever `pass` is chosen.
 
 ## When to Use
 - When preparing to move a method to another class
@@ -92,7 +94,7 @@ public class Invoice
 }
 ```
 
-### After (convert-to-static-with-instance)
+### After (`"pass": "instance"`)
 ```csharp
 public class Invoice
 {
@@ -104,10 +106,8 @@ public class Invoice
     public Customer Customer { get; set; }
     public InvoiceStatus Status { get; set; }
 
-    // Wrapper method preserves the original API
-    public byte[] GeneratePdf() => GeneratePdf(this);
-
-    // Static version that can be moved to InvoicePdfGenerator
+    // Static version that can be moved to InvoicePdfGenerator;
+    // every call such as invoice.GeneratePdf() becomes Invoice.GeneratePdf(invoice)
     public static byte[] GeneratePdf(Invoice invoice)
     {
         var document = new PdfDocument();
@@ -173,11 +173,15 @@ public class Invoice
 
 ### Tool Usage
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --json convert-to-static-with-instance '{
+dotnet run --project RefactorMCP.ConsoleApp -- --json make-method-static '{
+    "solutionPath": "MyProject.sln",
     "filePath": "Models/Invoice.cs",
-    "methodName": "GeneratePdf"
+    "methodName": "GeneratePdf",
+    "parameterName": "invoice"
 }'
 ```
+
+To make the method static and move it to `InvoicePdfGenerator` in one step, use `make-static-then-move` with `"targetClass": "InvoicePdfGenerator"`.
 
 ---
 
@@ -227,7 +231,7 @@ public class ShippingCalculator
 }
 ```
 
-### After (convert-to-static-with-parameters)
+### After (`"pass": "parameters"`)
 ```csharp
 public class ShippingCalculator
 {
@@ -248,31 +252,15 @@ public class ShippingCalculator
         _expeditedMultiplier = expeditedMultiplier;
     }
 
-    // Wrapper preserves original API
-    public decimal CalculateRate(
-        decimal weightInPounds,
-        bool isInternational,
-        bool isExpedited)
-    {
-        return CalculateRate(
-            weightInPounds,
-            isInternational,
-            isExpedited,
-            _baseRate,
-            _ratePerPound,
-            _internationalSurcharge,
-            _expeditedMultiplier);
-    }
-
     // Pure function - all inputs are parameters, no side effects
     public static decimal CalculateRate(
-        decimal weightInPounds,
-        bool isInternational,
-        bool isExpedited,
         decimal baseRate,
         decimal ratePerPound,
         decimal internationalSurcharge,
-        decimal expeditedMultiplier)
+        decimal expeditedMultiplier,
+        decimal weightInPounds,
+        bool isInternational,
+        bool isExpedited)
     {
         var rate = baseRate + (weightInPounds * ratePerPound);
 
@@ -293,11 +281,15 @@ public class ShippingCalculator
 
 ### Tool Usage
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --json convert-to-static-with-parameters '{
+dotnet run --project RefactorMCP.ConsoleApp -- --json make-method-static '{
+    "solutionPath": "MyProject.sln",
     "filePath": "Services/ShippingCalculator.cs",
-    "methodName": "CalculateRate"
+    "methodName": "CalculateRate",
+    "pass": "parameters"
 }'
 ```
+
+The fields read become leading parameters, and every call is rewritten to pass their values. Because the fields here are private, a call from outside `ShippingCalculator` could not pass them, so the tool refuses when such a call exists; pass the instance instead in that case. It also refuses when the method assigns a field, since a parameter cannot carry the value back.
 
 ---
 
@@ -355,8 +347,6 @@ public class OrderValidator
     private readonly IInventoryService _inventory;
     private readonly ICustomerService _customers;
 
-    public ValidationResult Validate(Order order) => Validate(order);
-
     // Pure validation - easily unit tested without any dependencies
     public static ValidationResult Validate(Order order)
     {
@@ -393,6 +383,8 @@ public class OrderValidator
     }
 }
 
+// Validate reads no instance state, so it simply becomes static:
+//   make-method-static {"solutionPath": "MyProject.sln", "filePath": "Services/OrderValidator.cs", "methodName": "Validate"}
 // Now we can easily test:
 [Fact]
 public void Validate_EmptyOrder_ReturnsError()

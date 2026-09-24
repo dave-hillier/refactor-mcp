@@ -49,7 +49,7 @@ public class OrderProcessor
     /// <summary>
     /// This method formats audit log entries but it really belongs in AuditLogger.
     /// It only uses OrderProcessor state minimally -- prime candidate for
-    /// move-instance-method.
+    /// move-member through _auditLogger.
     /// </summary>
     public string FormatAuditLogEntry(Order order, Customer customer,
                                       decimal amount, string transactionId)
@@ -91,14 +91,17 @@ public class AuditLogger
 
 ### CLI Command
 
+`OrderProcessor` holds its `AuditLogger` in the `_auditLogger` field, so the method
+moves through that field (`via`). `keepStub: false` updates the caller instead of
+leaving a delegating method behind.
+
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --json move-instance-method '{
+dotnet run --project RefactorMCP.ConsoleApp -- --json move-member '{
   "solutionPath": "./Demos/ECommerce/ECommerce.sln",
-  "sourceFilePath": "ECommerce/OrderProcessor.cs",
-  "methodName": "FormatAuditLogEntry",
-  "sourceClassName": "OrderProcessor",
-  "targetClassName": "AuditLogger",
-  "targetFieldName": "_auditLogger"
+  "filePath": "./Demos/ECommerce/ECommerce/OrderProcessor.cs",
+  "memberName": "FormatAuditLogEntry",
+  "via": "_auditLogger",
+  "keepStub": false
 }'
 ```
 
@@ -122,13 +125,12 @@ public class AuditLogger
     public void Clear() => _entries.Clear();
 
     /// <summary>
-    /// Moved from OrderProcessor. The processedCount parameter replaces the
-    /// original _processedCount field access, since AuditLogger does not own
-    /// that state.
+    /// Moved from OrderProcessor. It still reads OrderProcessor's
+    /// _processedCount, so it takes the OrderProcessor as its first parameter.
     /// </summary>
-    public string FormatAuditLogEntry(Order order, Customer customer,
-                                      decimal amount, string transactionId,
-                                      int processedCount)
+    public string FormatAuditLogEntry(OrderProcessor orderProcessor, Order order,
+                                      Customer customer, decimal amount,
+                                      string transactionId)
     {
         var sb = new StringBuilder();
         sb.AppendLine($"=== Order Audit Entry ===");
@@ -139,7 +141,7 @@ public class AuditLogger
         sb.AppendLine($"Amount: {amount:C}");
         sb.AppendLine($"Transaction: {transactionId}");
         sb.AppendLine($"Status: {order.Status}");
-        sb.AppendLine($"Processor Count: {processedCount}");
+        sb.AppendLine($"Processor Count: {orderProcessor._processedCount}");
         sb.AppendLine($"========================");
         return sb.ToString();
     }
@@ -149,11 +151,11 @@ public class AuditLogger
 **`OrderProcessor.cs`** -- now delegates to `_auditLogger`:
 
 ```csharp
+internal int _processedCount;   // was private; the moved method reads it
+
 // Phase 5: Audit logging
-var logEntry = _auditLogger.FormatAuditLogEntry(
-    order, customer, totalAmount,
-    paymentResult.TransactionId ?? "N/A",
-    _processedCount);
+var logEntry = _auditLogger.FormatAuditLogEntry(this, order, customer, totalAmount,
+                                                paymentResult.TransactionId ?? "N/A");
 _auditLogger.WriteEntry(logEntry);
 ```
 
@@ -161,8 +163,9 @@ _auditLogger.WriteEntry(logEntry);
 
 | Concern | How the tool handled it |
 |---|---|
-| **Dependency on `_processedCount`** | The field belongs to `OrderProcessor`, not `AuditLogger`. The tool promoted it to an explicit parameter on the moved method and updated the call site to pass `_processedCount`. |
-| **Call-site rewriting** | Every place that called `FormatAuditLogEntry(...)` now calls `_auditLogger.FormatAuditLogEntry(...)` with the extra argument. |
+| **Moving through `_auditLogger`** | The field's `AuditLogger` becomes `this` in the moved method. Without a field, property or parameter of the target type, `move-member` refuses; `make-static-then-move` is the tool for that case. |
+| **Dependency on `_processedCount`** | The field belongs to `OrderProcessor`, not `AuditLogger`. The moved method reaches it through an `OrderProcessor` parameter, and the private field is raised to `internal` so `AuditLogger` can read it. |
+| **Call-site rewriting** | Every place that called `FormatAuditLogEntry(...)` now calls `_auditLogger.FormatAuditLogEntry(this, ...)`. |
 | **Removed the original** | The method body is deleted from `OrderProcessor` to avoid duplication. |
 
 ### Why This Improves the Code
@@ -264,13 +267,15 @@ public class TableFormatter
 
 ### CLI Command
 
+A static method moves to the named `targetType`. `keepStub` defaults to true, leaving
+a delegating method behind.
+
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --json move-static-method '{
+dotnet run --project RefactorMCP.ConsoleApp -- --json move-member '{
   "solutionPath": "./Demos/ECommerce/ECommerce.sln",
-  "sourceFilePath": "ECommerce/ReportGenerator.cs",
-  "methodName": "FormatAsTable",
-  "sourceClassName": "ReportGenerator",
-  "targetClassName": "TableFormatter"
+  "filePath": "./Demos/ECommerce/ECommerce/ReportGenerator.cs",
+  "memberName": "FormatAsTable",
+  "targetType": "TableFormatter"
 }'
 ```
 
@@ -299,11 +304,13 @@ public class ReportGenerator
     }
 
     /// <summary>
-    /// Delegating call preserved so existing callers of
-    /// ReportGenerator.FormatAsTable still compile.
+    /// A static utility method that doesn't belong in ReportGenerator.
+    /// Should be moved to a dedicated TableFormatter class.
     /// </summary>
     public static string FormatAsTable(List<string[]> rows, string[] headers)
-        => TableFormatter.FormatAsTable(rows, headers);
+    {
+        return TableFormatter.FormatAsTable(rows, headers);
+    }
 }
 ```
 
@@ -464,7 +471,7 @@ public class NotificationTemplate
 ```bash
 dotnet run --project RefactorMCP.ConsoleApp -- --json move-to-separate-file '{
   "solutionPath": "./Demos/ECommerce/ECommerce.sln",
-  "sourceFilePath": "ECommerce/NotificationService.cs",
+  "filePath": "./Demos/ECommerce/ECommerce/NotificationService.cs",
   "typeName": "NotificationTemplate"
 }'
 ```
@@ -578,8 +585,8 @@ public class NotificationTemplate
 
 | Demo | Tool | What moved | Key insight |
 |---|---|---|---|
-| **4a** | `move-instance-method` | `FormatAuditLogEntry` from `OrderProcessor` to `AuditLogger` | The tool detects that `_processedCount` is owned by the source class and promotes it to a parameter on the moved method. |
-| **4b** | `move-static-method` | `FormatAsTable` from `ReportGenerator` to `TableFormatter` | A delegating call is left behind so existing callers are not broken. |
+| **4a** | `move-member` (via `_auditLogger`) | `FormatAuditLogEntry` from `OrderProcessor` to `AuditLogger` | The method moves through the field that holds the target; the `_processedCount` it still reads is reached through an `OrderProcessor` parameter. |
+| **4b** | `move-member` (to `TableFormatter`) | `FormatAsTable` from `ReportGenerator` to `TableFormatter` | A delegating call is left behind so existing callers are not broken. |
 | **4c** | `move-to-separate-file` | `NotificationTemplate` out of `NotificationService.cs` | The namespace is preserved and a new file is created automatically. |
 
 All three moves share a common theme: **put code where it belongs**. When methods and

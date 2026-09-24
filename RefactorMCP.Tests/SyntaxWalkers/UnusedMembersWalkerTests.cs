@@ -23,7 +23,7 @@ class C
         walker.Visit(tree.GetRoot());
         await walker.PostProcessAsync();
 
-        Assert.Contains(walker.Suggestions, s => s.Contains("UnusedMethod") && s.Contains("safe-delete-method"));
+        Assert.Contains(walker.Suggestions, s => s.Contains("UnusedMethod") && s.Contains("safe-delete-member"));
     }
 
     [Fact]
@@ -56,7 +56,7 @@ class C
         walker.Visit(tree.GetRoot());
         await walker.PostProcessAsync();
 
-        Assert.Contains(walker.Suggestions, s => s.Contains("unusedField") && s.Contains("safe-delete-field"));
+        Assert.Contains(walker.Suggestions, s => s.Contains("unusedField") && s.Contains("safe-delete-member"));
     }
 
     [Fact]

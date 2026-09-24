@@ -7,7 +7,7 @@ namespace Examples.MoveInstanceMethod;
 
 /// <summary>
 /// Example: OrderService with pricing methods that exhibit "feature envy" - they belong in a PricingCalculator.
-/// Refactoring: move-instance-method for CalculateSubtotal, CalculateTax, CalculateShipping to PricingCalculator
+/// Refactoring: make-static-then-move for CalculateSubtotal, CalculateTax, CalculateShipping to PricingCalculator
 /// </summary>
 public class OrderService
 {

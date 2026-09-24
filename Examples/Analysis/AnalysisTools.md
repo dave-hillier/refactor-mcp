@@ -19,6 +19,7 @@ Scans a C# file and identifies potential refactoring opportunities based on comm
 ### Example Usage
 ```bash
 dotnet run --project RefactorMCP.ConsoleApp -- --json analyze-refactoring-opportunities '{
+    "solutionPath": "MyApp.sln",
     "filePath": "Services/OrderService.cs"
 }'
 ```
@@ -200,6 +201,7 @@ Removes unused `using` directives from C# files, cleaning up unnecessary imports
 ### Example Usage
 ```bash
 dotnet run --project RefactorMCP.ConsoleApp -- --json cleanup-usings '{
+    "solutionPath": "MyApp.sln",
     "filePath": "Services/OrderService.cs"
 }'
 ```

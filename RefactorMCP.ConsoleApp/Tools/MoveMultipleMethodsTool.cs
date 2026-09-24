@@ -1,211 +1,128 @@
-using ModelContextProtocol.Server;
-using ModelContextProtocol;
 using System;
-using System.ComponentModel;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Formatting;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
-using System.IO;
-using System.Threading.Tasks;
 using System.Threading;
-using Microsoft.CodeAnalysis.Text;
-using RefactorMCP.ConsoleApp.SyntaxWalkers;
-using RefactorMCP.ConsoleApp.Tools;
+using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using ModelContextProtocol;
+using ModelContextProtocol.Server;
+using RefactorMCP.ConsoleApp.Tools.Composites;
+using RefactorMCP.ConsoleApp.Tools.Moving;
 
 [McpServerToolType]
-public static partial class MoveMultipleMethodsTool
+public static class MoveMultipleMethodsTool
 {
-    private static async Task<(string message, Document updatedDocument)> MoveSingleMethod(
-        Document document,
-        string sourceClass,
-        string methodName,
-        bool isStatic,
-        bool ctorInjection,
-        string targetClass,
-        string accessMember,
-        string accessMemberType,
-        string targetPath,
-        CancellationToken cancellationToken)
-    {
-        string message;
-        if (isStatic)
-        {
-            message = await MoveMethodFileService.MoveStaticMethodInFile(document.FilePath!, methodName, targetClass, targetPath, progress: null, cancellationToken);
-        }
-        else
-        {
-            var ctor = ctorInjection ? new[] { "this" } : Array.Empty<string>();
-            var param = ctorInjection ? Array.Empty<string>() : new[] { "this" };
-            message = await MoveMethodFileService.MoveInstanceMethodInFile(
-                document.FilePath!,
-                sourceClass,
-                methodName,
-                ctor,
-                param,
-                targetClass,
-                accessMember,
-                accessMemberType,
-                targetPath,
-                progress: null,
-                cancellationToken);
-        }
-
-        var (newText, _) = await RefactoringHelpers.ReadFileWithEncodingAsync(document.FilePath!, cancellationToken);
-        var newRoot = await CSharpSyntaxTree.ParseText(newText).GetRootAsync(cancellationToken);
-        var solution = document.Project.Solution.WithDocumentSyntaxRoot(document.Id, newRoot);
-
-        var project = solution.GetProject(document.Project.Id)!;
-        var targetDocument = project.Documents.FirstOrDefault(d => d.FilePath == targetPath);
-        if (targetDocument == null)
-        {
-            var (targetText, targetEncoding) = await RefactoringHelpers.ReadFileWithEncodingAsync(targetPath, cancellationToken);
-            var targetSource = SourceText.From(targetText, targetEncoding);
-            targetDocument = project.AddDocument(Path.GetFileName(targetPath), targetSource, filePath: targetPath);
-            solution = targetDocument.Project.Solution;
-        }
-        else
-        {
-            var (targetText, targetEncoding) = await RefactoringHelpers.ReadFileWithEncodingAsync(targetPath, cancellationToken);
-            var targetSource = SourceText.From(targetText, targetEncoding);
-            solution = solution.WithDocumentText(targetDocument.Id, targetSource);
-        }
-
-        var updatedDoc = solution.GetDocument(document.Id)!;
-        RefactoringHelpers.UpdateSolutionCache(updatedDoc);
-
-        return (message, updatedDoc);
-    }
-
-    private static Task<string> MoveMultipleMethodsInternal(
-        string solutionPath,
-        string filePath,
-        string sourceClass,
-        string[] methodNames,
-        string targetClass,
-        string? targetFilePath,
-        bool ctorInjection,
-        CancellationToken cancellationToken)
-        => MoveMultipleMethodsCore(solutionPath, filePath, sourceClass, methodNames, targetClass, targetFilePath, ctorInjection, cancellationToken);
-
-    private static async Task<string> MoveMultipleMethodsCore(
-        string solutionPath,
-        string filePath,
-        string sourceClass,
-        string[] methodNames,
-        string targetClass,
-        string? targetFilePath,
-        bool ctorInjection,
-        CancellationToken cancellationToken)
+    [McpServerTool, Description("Move several methods of a class to another type, one Move Instance Method or Move Static Method at a time, " +
+        "methods before the ones that call them. Instance methods move through a field, property or parameter (via, or the one of targetType); " +
+        "static methods move to the target type. Refuses, changing nothing, if any move would.")]
+    public static async Task<string> MoveMultipleMethods(
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
+        [Description("Path to the C# file declaring the class")] string filePath,
+        [Description("Name of the class declaring the methods")] string className,
+        [Description("Names of the methods to move; a name moves every overload")] string[] methodNames,
+        [Description("The field or property to move instance methods through (optional when targetType is given)")] string? via = null,
+        [Description("The type to move to: required when no via is given, and for static methods when the via's type is not meant")] string? targetType = null,
+        [Description("Leave a delegating stub for each moved method (default true) instead of updating its callers")] bool keepStubs = true,
+        CancellationToken cancellationToken = default)
     {
         if (methodNames.Length == 0)
             throw new McpException("Error: No method names provided");
-
-        var dupes = methodNames.GroupBy(m => m).Where(g => g.Count() > 1).Select(g => g.Key).ToList();
-        if (dupes.Count > 0)
-            return $"Error: Duplicate method names are not supported: {string.Join(", ", dupes)}";
-
-        foreach (var methodName in methodNames)
-            MoveMethodTool.EnsureNotAlreadyMoved(filePath, methodName);
+        if (via is null && targetType is null)
+            throw new McpException("Error: Name the member to move through (via) or the type to move to (targetType)");
 
         var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath, cancellationToken);
-        var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
-        if (document == null)
-            throw new McpException("Error: Could not find document in solution and AST fallback is disabled.");
+        var document = MovingSupport.DocumentOrThrow(solution, filePath);
+        var type = (INamedTypeSymbol)await MovingSupport.FindDeclaredSymbolAsync(
+            document, className, null, s => s is INamedTypeSymbol, "type", cancellationToken);
 
-        var root = await document.GetSyntaxRootAsync(cancellationToken) ?? throw new McpException("Error: Could not get syntax root");
-
-        var collector = new ClassCollectorWalker();
-        collector.Visit(root);
-        if (!collector.Classes.TryGetValue(sourceClass, out var sourceClassNode))
-            throw new McpException($"Error: Source class '{sourceClass}' not found");
-
-        var visitor = new MethodAndMemberVisitor();
-        visitor.Visit(sourceClassNode);
-        var accessMemberName = MoveMethodAst.GenerateAccessMemberName(visitor.Members.Keys, targetClass);
-
-        var staticWalker = new MethodStaticWalker(methodNames);
-        staticWalker.Visit(sourceClassNode);
-
-        var memberWalker = new AccessMemberTypeWalker(accessMemberName);
-        memberWalker.Visit(sourceClassNode);
-        var instanceMemberType = memberWalker.MemberType ?? "field";
-
-        var isStatic = new bool[methodNames.Length];
-        var accessMemberTypes = new string[methodNames.Length];
-        for (int i = 0; i < methodNames.Length; i++)
+        var methods = new List<IMethodSymbol>();
+        foreach (var name in methodNames.Distinct())
         {
-            var methodName = methodNames[i];
-            if (!staticWalker.IsStaticMap.TryGetValue(methodName, out var isStaticMethod))
-                return $"Error: No method named '{methodName}' in class '{sourceClass}'";
-
-            isStatic[i] = isStaticMethod;
-            accessMemberTypes[i] = isStaticMethod ? string.Empty : instanceMemberType;
+            var overloads = type.GetMembers(name).OfType<IMethodSymbol>().Where(m => m.MethodKind == MethodKind.Ordinary).ToList();
+            if (overloads.Count == 0)
+                throw new McpException($"Error: {className} has no method named '{name}'");
+            methods.AddRange(overloads);
         }
 
-        var orderedIndices = OrderOperations(root, Enumerable.Repeat(sourceClass, methodNames.Length).ToArray(), methodNames);
+        var staticTarget = targetType ?? ViaType(type, via!);
+        var ordered = await CalleesFirstAsync(solution, methods, cancellationToken);
 
-        var results = new List<string>();
-        var moved = new List<(string file, string method)>();
-        var currentDoc = document;
-        var targetPath = targetFilePath ?? Path.Combine(Path.GetDirectoryName(document.FilePath!)!, $"{targetClass}.cs");
-
-        foreach (var idx in orderedIndices)
+        await CompositeRecipe.RunAsync(solutionPath, async recipe =>
         {
-            try
+            foreach (var id in ordered)
             {
-                var result = await MoveSingleMethod(
-                    currentDoc,
-                    sourceClass,
-                    methodNames[idx],
-                    isStatic[idx],
-                    ctorInjection,
-                    targetClass,
-                    accessMemberName,
-                    accessMemberTypes[idx],
-                    targetPath,
-                    cancellationToken);
-                currentDoc = result.updatedDocument;
-                moved.Add((document.FilePath!, methodNames[idx]));
-                results.Add(result.message);
+                var method = await recipe.FindAsync(id, cancellationToken);
+                var isStatic = method.Symbol.IsStatic;
+                await recipe.StepAsync(isStatic ? "move-static-method" : "move-instance-method", () => MoveMemberTool.MoveMember(
+                    solutionPath,
+                    method.FilePath,
+                    method.Symbol.Name,
+                    via: isStatic ? null : via,
+                    targetType: isStatic ? staticTarget : via is null ? targetType : null,
+                    keepStub: keepStubs,
+                    line: method.Line,
+                    cancellationToken: cancellationToken));
             }
-            catch (Exception ex)
-            {
-                results.Add($"Error moving method '{methodNames[idx]}': {ex.Message}\nStack Trace:\n{ex.StackTrace}");
-            }
-        }
+        }, cancellationToken);
 
-        foreach (var (file, method) in moved)
-            MoveMethodTool.MarkMoved(file, method);
-
-        return string.Join("\n", results);
+        return $"Successfully moved {string.Join(", ", methodNames.Distinct())} from {className}";
     }
 
+    /// <summary>The type of the field or property that instance methods move through, which static methods move to.</summary>
+    private static string ViaType(INamedTypeSymbol type, string via)
+    {
+        var member = type.GetMembers(via).FirstOrDefault(m => m is IFieldSymbol or IPropertySymbol)
+            ?? throw new McpException($"Error: {type.Name} has no field or property named '{via}' to move through");
+        var viaType = member is IFieldSymbol field ? field.Type : ((IPropertySymbol)member).Type;
+        return viaType.WithNullableAnnotation(NullableAnnotation.None).ToDisplayString();
+    }
 
+    /// <summary>
+    /// The methods' documentation ids, each method after the ones it calls.
+    /// Without stubs this is what lets a caller follow its callee: the
+    /// callee's move rewrites the call to go through the via, which the
+    /// caller's move then turns into a call on <c>this</c>. Methods calling
+    /// each other in a cycle move in the order they were named, as far as the
+    /// cycle allows.
+    /// </summary>
+    private static async Task<List<string>> CalleesFirstAsync(Solution solution, IReadOnlyList<IMethodSymbol> methods, CancellationToken cancellationToken)
+    {
+        var calls = new Dictionary<IMethodSymbol, HashSet<IMethodSymbol>>(SymbolEqualityComparer.Default);
+        foreach (var method in methods)
+        {
+            var called = new HashSet<IMethodSymbol>(SymbolEqualityComparer.Default);
+            foreach (var reference in method.DeclaringSyntaxReferences)
+            {
+                var node = await reference.GetSyntaxAsync(cancellationToken);
+                var model = (await solution.GetDocument(node.SyntaxTree)!.GetSemanticModelAsync(cancellationToken))!;
+                foreach (var name in node.DescendantNodes().OfType<SimpleNameSyntax>())
+                {
+                    if (model.GetSymbolInfo(name, cancellationToken).Symbol is IMethodSymbol target
+                        && !SymbolEqualityComparer.Default.Equals(target, method)
+                        && methods.Contains(target, SymbolEqualityComparer.Default))
+                        called.Add(target);
+                }
+            }
 
-    // Solution/Document operations that use the AST layer
+            calls[method] = called;
+        }
 
-    [McpServerTool, Description("Move multiple methods to a target class and transform them to static with an injected 'this' parameter.")]
-    public static Task<string> MoveMultipleMethodsStatic(
-        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
-        [Description("Path to the C# file containing the methods")] string filePath,
-        [Description("Name of the source class containing the methods")] string sourceClass,
-        [Description("Names of the methods to move")] string[] methodNames,
-        [Description("Name of the target class")] string targetClass,
-        [Description("Path to the target file (optional, target class will be automatically created if it doesnt exist or its unspecified)")] string? targetFilePath = null,
-        CancellationToken cancellationToken = default)
-        => MoveMultipleMethodsInternal(solutionPath, filePath, sourceClass, methodNames, targetClass, targetFilePath, false, cancellationToken);
+        var ordered = new List<IMethodSymbol>();
+        var visiting = new HashSet<IMethodSymbol>(SymbolEqualityComparer.Default);
+        void Visit(IMethodSymbol method)
+        {
+            if (ordered.Contains(method, SymbolEqualityComparer.Default) || !visiting.Add(method))
+                return;
+            foreach (var callee in calls[method])
+                Visit(callee);
+            ordered.Add(method);
+        }
 
-    [McpServerTool, Description("Move multiple methods and keep them as instance methods in the target class. The source instance is injected via the constructor if needed.")]
-    public static Task<string> MoveMultipleMethodsInstance(
-        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
-        [Description("Path to the C# file containing the methods")] string filePath,
-        [Description("Name of the source class containing the methods")] string sourceClass,
-        [Description("Names of the methods to move")] string[] methodNames,
-        [Description("Name of the target class")] string targetClass,
-        [Description("Path to the target file (optional, target class will be automatically created if it doesnt exist or its unspecified)")] string? targetFilePath = null,
-        CancellationToken cancellationToken = default)
-        => MoveMultipleMethodsInternal(solutionPath, filePath, sourceClass, methodNames, targetClass, targetFilePath, true, cancellationToken);
+        foreach (var method in methods)
+            Visit(method);
+
+        return ordered.Select(m => m.GetDocumentationCommentId()!).ToList();
+    }
 }

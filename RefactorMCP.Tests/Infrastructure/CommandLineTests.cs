@@ -18,15 +18,14 @@ public class ParsedCommandTests
     [Fact]
     public void OptionsTakeOneValueAndLeaveTheRestPositional()
     {
-        // --constructor-injections takes 'this'; Logger stays a positional, which
-        // is what the documented move-instance-method example relies on.
+        // --tag takes 'this'; Target stays a positional.
         var command = ParsedCommand.Parse(new[]
         {
-            "move-instance-method", "./App.sln", "./a.cs", "Source", "Method",
-            "--constructor-injections", "this", "Target"
+            "probe", "./App.sln", "./a.cs", "Source", "Method",
+            "--tag", "this", "Target"
         });
 
-        Assert.Equal(new[] { "this" }, command.OptionValues("constructor-injections"));
+        Assert.Equal(new[] { "this" }, command.OptionValues("tag"));
         Assert.Equal(new[] { "./App.sln", "./a.cs", "Source", "Method", "Target" }, command.Positionals);
     }
 

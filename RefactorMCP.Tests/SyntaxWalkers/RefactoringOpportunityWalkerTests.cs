@@ -187,7 +187,7 @@ class C
             Assert.True(
                 suggestion.Contains("safe-delete") ||
                 suggestion.Contains("move-method") ||
-                suggestion.Contains("make-static") ||
+                suggestion.Contains("make-method-static") ||
                 suggestion.Contains("splitting") ||
                 suggestion.Contains("introduce-parameter-object"),
                 $"Suggestion should contain actionable tool: {suggestion}");

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using RefactorMCP.ConsoleApp.Tools;
+using RefactorMCP.ConsoleApp.Tools.Moving;
 using Xunit;
 
 namespace RefactorMCP.Tests.Examples;
@@ -41,10 +42,7 @@ public class ExampleVerificationTests : TestBase
         var sourceFile = Path.Combine(ExamplesRoot, "ExtractMethodExample.cs");
         var code = await File.ReadAllTextAsync(sourceFile);
 
-        // Copy to test output directory
-        await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
-        var testFile = Path.Combine(TestOutputPath, "ExtractMethodExample.cs");
-        await File.WriteAllTextAsync(testFile, code);
+        var testFile = await AddToSolutionAsync("ExtractMethodExample.cs", code);
 
         // Extract the validation block (lines 26-49 in the original)
         var result = await ExtractMethodTool.ExtractMethod(
@@ -88,9 +86,7 @@ public class ExampleVerificationTests : TestBase
         var sourceFile = Path.Combine(ExamplesRoot, "IntroduceVariableExample.cs");
         var code = await File.ReadAllTextAsync(sourceFile);
 
-        await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
-        var testFile = Path.Combine(TestOutputPath, "IntroduceVariableExample.cs");
-        await File.WriteAllTextAsync(testFile, code);
+        var testFile = await AddToSolutionAsync("IntroduceVariableExample.cs", code);
 
         // Introduce variable for the filtered transactions expression (using range format)
         var result = await IntroduceVariableTool.IntroduceVariable(
@@ -125,24 +121,20 @@ public class ExampleVerificationTests : TestBase
         var sourceFile = Path.Combine(ExamplesRoot, "MoveInstanceMethodExample.cs");
         var code = await File.ReadAllTextAsync(sourceFile);
 
-        await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
-        var testFile = Path.Combine(TestOutputPath, "MoveInstanceMethodExample.cs");
-        await File.WriteAllTextAsync(testFile, code);
+        var testFile = await AddToSolutionAsync("MoveInstanceMethodExample.cs", code);
 
         var targetFile = Path.Combine(TestOutputPath, "PricingCalculator.cs");
 
-        // Move the CalculateSubtotal method
-        var result = await MoveMethodTool.MoveInstanceMethod(
+        // CalculateSubtotal uses no instance state, and OrderService holds no
+        // PricingCalculator to move it through, so it moves as a static method
+        var result = await MakeStaticThenMoveTool.MakeStaticThenMove(
             SolutionPath,
             testFile,
-            "OrderService",
-            new[] { "CalculateSubtotal" },
+            "CalculateSubtotal",
             "PricingCalculator",
-            targetFile,
-            Array.Empty<string>(),
-            Array.Empty<string>());
+            targetFilePath: targetFile);
 
-        Assert.Contains("Successfully moved", result);
+        Assert.Contains("Successfully made CalculateSubtotal static and moved it to PricingCalculator", result);
 
         // Verify target file was created
         Assert.True(File.Exists(targetFile));
@@ -171,16 +163,14 @@ public class ExampleVerificationTests : TestBase
         var sourceFile = Path.Combine(ExamplesRoot, "ConvertToStaticExample.cs");
         var code = await File.ReadAllTextAsync(sourceFile);
 
-        await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
-        var testFile = Path.Combine(TestOutputPath, "ConvertToStaticExample.cs");
-        await File.WriteAllTextAsync(testFile, code);
+        var testFile = await AddToSolutionAsync("ConvertToStaticExample.cs", code);
 
-        var result = await ConvertToStaticWithInstanceTool.ConvertToStaticWithInstance(
+        var result = await MakeMethodStaticTool.MakeMethodStatic(
             SolutionPath,
             testFile,
             "GenerateSummary");
 
-        Assert.Contains("Successfully converted", result);
+        Assert.Contains("Successfully made GenerateSummary static", result);
 
         var refactoredCode = await File.ReadAllTextAsync(testFile);
         Assert.Contains("static", refactoredCode);
@@ -206,15 +196,7 @@ public class ExampleVerificationTests : TestBase
         var sourceFile = Path.Combine(ExamplesRoot, "ExtractInterfaceExample.cs");
         var code = await File.ReadAllTextAsync(sourceFile);
 
-        UnloadSolutionTool.ClearSolutionCache();
-        await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
-        var testFile = Path.Combine(TestOutputPath, "ExtractInterfaceExample.cs");
-        await File.WriteAllTextAsync(testFile, code);
-
-        // Register the test file in the solution
-        var solution = await RefactoringHelpers.GetOrLoadSolution(SolutionPath);
-        var project = solution.Projects.First();
-        RefactoringHelpers.AddDocumentToProject(project, testFile);
+        var testFile = await AddToSolutionAsync("ExtractInterfaceExample.cs", code);
 
         var interfaceFile = Path.Combine(TestOutputPath, "IWeatherService.cs");
 
@@ -258,11 +240,9 @@ public class ExampleVerificationTests : TestBase
         var sourceFile = Path.Combine(ExamplesRoot, "SafeDeleteExample.cs");
         var code = await File.ReadAllTextAsync(sourceFile);
 
-        await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
-        var testFile = Path.Combine(TestOutputPath, "SafeDeleteExample.cs");
-        await File.WriteAllTextAsync(testFile, code);
+        var testFile = await AddToSolutionAsync("SafeDeleteExample.cs", code);
 
-        var result = await SafeDeleteTool.SafeDeleteMethod(
+        var result = await SafeDeleteSymbolTool.SafeDeleteMember(
             SolutionPath,
             testFile,
             "FormatUserLegacy");
@@ -292,6 +272,22 @@ public class ExampleVerificationTests : TestBase
 
         var errors = diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error).ToList();
         Assert.Empty(errors);
+    }
+
+    /// <summary>
+    /// Writes an example into the test output directory and adds it to the
+    /// loaded solution, which the refactoring tools work on.
+    /// </summary>
+    private async Task<string> AddToSolutionAsync(string fileName, string code)
+    {
+        UnloadSolutionTool.ClearSolutionCache();
+        await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
+        var testFile = Path.Combine(TestOutputPath, fileName);
+        await File.WriteAllTextAsync(testFile, code);
+
+        var solution = await RefactoringHelpers.GetOrLoadSolution(SolutionPath);
+        RefactoringHelpers.AddDocumentToProject(solution.Projects.First(), testFile);
+        return testFile;
     }
 
     private static Compilation CreateCompilation(string code)

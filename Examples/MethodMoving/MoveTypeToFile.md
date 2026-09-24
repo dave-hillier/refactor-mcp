@@ -1,7 +1,7 @@
 # Move Type to File Refactoring
 
 ## Overview
-The `move-type-to-file` refactoring moves a top-level type (class, struct, interface, enum, record) from a file that contains multiple types into its own dedicated file.
+The `move-to-separate-file` refactoring moves a top-level type (class, struct, interface, enum, record) from a file that contains multiple types into its own dedicated file.
 
 ## When to Use
 - When a file contains multiple types and is getting hard to navigate
@@ -374,15 +374,15 @@ namespace ECommerce.Domain.Models
 ### Tool Usage
 ```bash
 # Move each type one at a time
-dotnet run --project RefactorMCP.ConsoleApp -- --json move-type-to-file '{
+dotnet run --project RefactorMCP.ConsoleApp -- --json move-to-separate-file '{
     "solutionPath": "ECommerce.sln",
-    "sourceFilePath": "Domain/Models.cs",
+    "filePath": "Domain/Models.cs",
     "typeName": "Order"
 }'
 
-dotnet run --project RefactorMCP.ConsoleApp -- --json move-type-to-file '{
+dotnet run --project RefactorMCP.ConsoleApp -- --json move-to-separate-file '{
     "solutionPath": "ECommerce.sln",
-    "sourceFilePath": "Domain/Models.cs",
+    "filePath": "Domain/Models.cs",
     "typeName": "Customer"
 }'
 ```

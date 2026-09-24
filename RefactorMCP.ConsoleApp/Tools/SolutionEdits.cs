@@ -199,7 +199,6 @@ internal static class SolutionEdits
             {
                 var path = original.GetDocument(documentId)!.FilePath!;
                 File.Delete(path);
-                RefactoringHelpers.EvictFileCaches(path);
                 if (changed.FilePath is not null)
                     SessionRegistry.GetOrCreate(changed.FilePath).Replace(changed);
             }

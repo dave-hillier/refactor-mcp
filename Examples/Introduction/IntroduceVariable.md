@@ -98,6 +98,7 @@ public class SalesAnalyzer
 ### Tool Usage
 ```bash
 dotnet run --project RefactorMCP.ConsoleApp -- --json introduce-variable '{
+    "solutionPath": "MyProject.sln",
     "filePath": "SalesAnalyzer.cs",
     "startLine": 10,
     "startColumn": 17,

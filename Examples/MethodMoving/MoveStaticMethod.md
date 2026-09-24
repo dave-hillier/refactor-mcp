@@ -1,7 +1,7 @@
 # Move Static Method Refactoring
 
 ## Overview
-The `move-static-method` refactoring moves a static method from one class to another, optionally leaving a delegating method in the original class to preserve backward compatibility.
+Move Static Method moves a static method from one class to another with `move-member` (or several with `move-multiple-methods`), creating the target as a static class if it does not exist, and optionally leaving a delegating method in the original class to preserve backward compatibility.
 
 ## When to Use
 - When a static utility method is in the wrong class
@@ -148,15 +148,37 @@ public static class FormatHelper
 ```
 
 ### Tool Usage
+Move one method with `move-member`, naming the `targetType`. `PathHelper` does not
+exist yet, so it is created as a static class, in `targetFilePath` when given and
+otherwise in `PathHelper.cs` beside the source file:
+
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --json move-static-method '{
+dotnet run --project RefactorMCP.ConsoleApp -- --json move-member '{
     "solutionPath": "MyProject.sln",
-    "sourceFilePath": "Helpers/StringHelper.cs",
-    "methodName": "GetSafeFileName",
-    "targetClassName": "PathHelper",
-    "targetFilePath": "Helpers/PathHelper.cs"
+    "filePath": "Helpers/StringHelper.cs",
+    "memberName": "GetSafeFileName",
+    "targetType": "PathHelper",
+    "targetFilePath": "Helpers/PathHelper.cs",
+    "keepStub": false
 }'
 ```
+
+Or move a group of methods at once with `move-multiple-methods`:
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json move-multiple-methods '{
+    "solutionPath": "MyProject.sln",
+    "filePath": "Helpers/StringHelper.cs",
+    "className": "StringHelper",
+    "methodNames": ["GetSafeFileName", "EnsureExtension", "NormalizePath"],
+    "targetType": "PathHelper",
+    "keepStubs": false
+}'
+```
+
+With `keepStub` (or `keepStubs`) left at its default of true, each moved method
+leaves a stub in `StringHelper` that delegates to the new location, so existing
+callers keep compiling unchanged.
 
 ---
 

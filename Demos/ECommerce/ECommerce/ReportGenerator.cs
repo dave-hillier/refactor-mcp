@@ -6,10 +6,10 @@ namespace ECommerce;
 /// Report generation with static methods that should be reorganized.
 ///
 /// Refactoring opportunities:
-///   - move-static-method: FormatAsTable is generic utility, belongs in a TableFormatter class
+///   - move-member: FormatAsTable is generic utility, belongs in a TableFormatter class
 ///   - extract-method: GenerateOrderReport has distinct formatting sections
 ///   - create-adapter: wrap ReportGenerator for a different report format interface
-///   - safe-delete-variable: unused 'separator' variable in GenerateSalesReport
+///   - safe-delete-local: unused 'separator' variable in GenerateSalesReport
 /// </summary>
 public class ReportGenerator
 {
@@ -66,7 +66,7 @@ public class ReportGenerator
     }
 
     /// <summary>
-    /// Contains an unused local variable — safe-delete-variable candidate.
+    /// Contains an unused local variable — safe-delete-local candidate.
     /// </summary>
     public string GenerateSalesReport(List<Order> orders)
     {

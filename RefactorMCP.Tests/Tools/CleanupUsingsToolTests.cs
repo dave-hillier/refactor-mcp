@@ -10,9 +10,9 @@ public class CleanupUsingsToolTests : RefactorMCP.Tests.TestBase
     [Fact]
     public async Task CleanupUsings_DoesNotRemoveUsingsFromOtherFiles()
     {
-        // FileA has an unused using (System.Text)
+        // FileA has an unused using (System.Text); the test project imports
+        // System implicitly, so neither file names it.
         const string fileACode = """
-using System;
 using System.Text;
 
 public class FileA
@@ -23,7 +23,6 @@ public class FileA
 
         // FileB uses System.Text - it should NOT be removed
         const string fileBCode = """
-using System;
 using System.Text;
 
 public class FileB
@@ -34,7 +33,6 @@ public class FileB
 
         // FileB should remain unchanged since System.Text is used
         const string expectedFileBCode = """
-using System;
 using System.Text;
 
 public class FileB
@@ -47,8 +45,8 @@ public class FileB
 
         var fileA = Path.Combine(TestOutputPath, "FileA.cs");
         var fileB = Path.Combine(TestOutputPath, "FileB.cs");
-        await TestUtilities.CreateTestFile(fileA, fileACode);
-        await TestUtilities.CreateTestFile(fileB, fileBCode);
+        await AddToSolutionAsync(fileA, fileACode);
+        await AddToSolutionAsync(fileB, fileBCode);
 
         // Clean up FileB - should NOT remove System.Text even though FileA has it unused
         var result = await CleanupUsingsTool.CleanupUsings(SolutionPath, fileB);

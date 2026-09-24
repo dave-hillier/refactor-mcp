@@ -7,7 +7,7 @@ namespace Examples.ConstructorInjection;
 
 /// <summary>
 /// Example: Processor with methods that take repeated dependency parameters.
-/// Refactoring: constructor-injection to convert parameters to constructor-injected fields.
+/// Refactoring (by hand): turn the repeated dependency parameters into constructor-injected fields.
 /// </summary>
 public class NotificationProcessor
 {

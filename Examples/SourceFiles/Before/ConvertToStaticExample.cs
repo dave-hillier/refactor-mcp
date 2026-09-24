@@ -6,7 +6,7 @@ namespace Examples.ConvertToStatic;
 
 /// <summary>
 /// Example: Invoice class with a GenerateSummary method that should be static (it only uses its parameters).
-/// Refactoring: convert-to-static-with-instance on GenerateSummary
+/// Refactoring: make-method-static on GenerateSummary
 /// </summary>
 public class Invoice
 {

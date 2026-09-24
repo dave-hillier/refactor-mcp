@@ -150,6 +150,7 @@ var searchable = title.RemoveDiacritics().ToLower();
 ### Tool Usage
 ```bash
 dotnet run --project RefactorMCP.ConsoleApp -- --json convert-to-extension-method '{
+    "solutionPath": "MyProject.sln",
     "filePath": "Utilities/StringUtilities.cs",
     "methodName": "TruncateWithEllipsis",
     "extensionClassName": "StringExtensions",

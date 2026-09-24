@@ -38,11 +38,10 @@ public static class ConvertToExtensionMethodTool
                     return await ExtensionMethodConversions.ToExtensionAsync(solution, method, cancellationToken);
             }
 
-            return await RefactoringHelpers.RunWithSolutionOrFile(
+            return await RefactoringHelpers.RunWithSolution(
                 solutionPath,
                 filePath,
-                doc => ConvertToExtensionMethodWithSolution(doc, methodName, extensionClass),
-                path => ConvertToExtensionMethodSingleFile(path, methodName, extensionClass));
+                doc => ConvertToExtensionMethodWithSolution(doc, methodName, extensionClass));
         }
         catch (Exception ex)
         {
@@ -138,99 +137,4 @@ public static class ConvertToExtensionMethodTool
         return $"Successfully converted method '{methodName}' to extension method in {document.FilePath} (solution mode)";
     }
 
-    private static Task<string> ConvertToExtensionMethodSingleFile(string filePath, string methodName, string? extensionClass)
-    {
-        return RefactoringHelpers.ApplySingleFileEdit(
-            filePath,
-            text => ConvertToExtensionMethodInSource(text, methodName, extensionClass),
-            $"Successfully converted method '{methodName}' to extension method in {filePath} (single file mode)");
-    }
-
-    public static string ConvertToExtensionMethodInSource(string sourceText, string methodName, string? extensionClass)
-    {
-        var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
-        var syntaxRoot = syntaxTree.GetRoot();
-
-        var method = syntaxRoot.DescendantNodes()
-            .OfType<MethodDeclarationSyntax>()
-            .FirstOrDefault(m => m.Identifier.ValueText == methodName);
-        if (method == null)
-            return $"Error: No method named '{methodName}' found";
-
-        var classDecl = method.Ancestors().OfType<ClassDeclarationSyntax>().FirstOrDefault();
-        if (classDecl == null)
-            throw new McpException($"Error: Method '{methodName}' is not inside a class");
-
-        var className = classDecl.Identifier.ValueText;
-        var extClassName = extensionClass ?? className + "Extensions";
-        var paramName = char.ToLower(className[0]) + className.Substring(1);
-
-        var instanceMembers = classDecl.Members
-            .Where(m => m is FieldDeclarationSyntax or PropertyDeclarationSyntax)
-            .Select(m => m switch
-            {
-                FieldDeclarationSyntax f => f.Declaration.Variables.First().Identifier.ValueText,
-                PropertyDeclarationSyntax p => p.Identifier.ValueText,
-                _ => string.Empty
-            })
-            .Where(n => !string.IsNullOrEmpty(n))
-            .ToHashSet();
-
-        var rewriter = new ExtensionMethodRewriter(paramName, className, instanceMembers);
-        var updatedMethod = rewriter.Rewrite(method);
-
-        // Replace the original method with a wrapper that calls the new extension
-        var wrapperArgs = new List<ArgumentSyntax> { SyntaxFactory.Argument(SyntaxFactory.ThisExpression()) };
-        wrapperArgs.AddRange(method.ParameterList.Parameters.Select(p =>
-            SyntaxFactory.Argument(SyntaxFactory.IdentifierName(p.Identifier))));
-
-        var extensionInvocation = SyntaxFactory.InvocationExpression(
-            SyntaxFactory.MemberAccessExpression(
-                SyntaxKind.SimpleMemberAccessExpression,
-                SyntaxFactory.IdentifierName(extClassName),
-                SyntaxFactory.IdentifierName(method.Identifier)))
-            .WithArgumentList(SyntaxFactory.ArgumentList(SyntaxFactory.SeparatedList(wrapperArgs)));
-
-        StatementSyntax callStatement = method.ReturnType is PredefinedTypeSyntax pts &&
-                                         pts.Keyword.IsKind(SyntaxKind.VoidKeyword)
-            ? SyntaxFactory.ExpressionStatement(extensionInvocation)
-            : SyntaxFactory.ReturnStatement(extensionInvocation);
-
-        var wrapperMethod = method.WithBody(SyntaxFactory.Block(callStatement))
-            .WithExpressionBody(null)
-            .WithSemicolonToken(default);
-
-        var newRoot = syntaxRoot.ReplaceNode(method, wrapperMethod);
-
-        var extClass = newRoot.DescendantNodes().OfType<ClassDeclarationSyntax>()
-            .FirstOrDefault(c => c.Identifier.ValueText == extClassName);
-        if (extClass != null)
-        {
-            var updatedClass = extClass.AddMembers(updatedMethod);
-            newRoot = newRoot.ReplaceNode(extClass, updatedClass);
-        }
-        else
-        {
-            var extensionClassDecl = SyntaxFactory.ClassDeclaration(extClassName)
-                .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.StaticKeyword))
-                .AddMembers(updatedMethod);
-
-            // The namespace starts before the replaced method, so its position
-            // finds it in the updated tree.
-            if (classDecl.Parent is BaseNamespaceDeclarationSyntax oldNs)
-            {
-                var ns = newRoot.DescendantNodes().OfType<BaseNamespaceDeclarationSyntax>()
-                    .First(n => n.SpanStart == oldNs.SpanStart);
-                var updatedNs = ns.AddMembers(extensionClassDecl);
-                newRoot = newRoot.ReplaceNode(ns, updatedNs);
-            }
-            else
-            {
-                newRoot = ((CompilationUnitSyntax)newRoot).AddMembers(extensionClassDecl);
-            }
-        }
-
-        var formatted = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
-        return formatted.ToFullString();
-    }
 }

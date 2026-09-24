@@ -25,7 +25,7 @@ Roslyn's full semantic model to verify **zero references** before touching a sin
 
 ## Demo 7a: Safe Delete Method -- Remove `LegacyExportXml`
 
-**Tool:** `safe-delete-method`
+**Tool:** `safe-delete-member`
 
 `OrderProcessor` carries a leftover XML export method from a retired integration.
 Nobody calls it, but nobody dares delete it "just in case." The safe-delete tool proves
@@ -46,9 +46,10 @@ public string LegacyExportXml(Order order)
 ### CLI Command
 
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --json safe-delete-method '{
+dotnet run --project RefactorMCP.ConsoleApp -- --json safe-delete-member '{
+  "solutionPath": "Demos/ECommerce/ECommerce.sln",
   "filePath": "Demos/ECommerce/ECommerce/OrderProcessor.cs",
-  "methodName": "LegacyExportXml"
+  "memberName": "LegacyExportXml"
 }'
 ```
 
@@ -66,7 +67,9 @@ method disappears.
 
 The tool performs a **solution-wide reference search** using Roslyn's `FindReferencesAsync`.
 If any project, test, or script references `LegacyExportXml` -- even via a delegate or
-reflection attribute -- the tool will **refuse to delete** and report every call site.
+a method group -- the tool will **refuse to delete** and report where it is used. It also
+refuses a member that overrides another, is overridden, or implements an interface member,
+since calls reach those without naming them.
 This is fundamentally more reliable than `grep` or `Ctrl+Shift+F`, which miss indirect
 references and produce false positives on comments.
 
@@ -74,7 +77,7 @@ references and produce false positives on comments.
 
 ## Demo 7b: Safe Delete Field -- Remove `_migrationTimestamp`
 
-**Tool:** `safe-delete-field`
+**Tool:** `safe-delete-member`
 
 `OrderProcessor` declares a `_migrationTimestamp` field that is never read or written
 anywhere in the class body. It was likely added for a data migration that has long since
@@ -98,9 +101,10 @@ public class OrderProcessor
 ### CLI Command
 
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --json safe-delete-field '{
+dotnet run --project RefactorMCP.ConsoleApp -- --json safe-delete-member '{
+  "solutionPath": "Demos/ECommerce/ECommerce.sln",
   "filePath": "Demos/ECommerce/ECommerce/OrderProcessor.cs",
-  "fieldName": "_migrationTimestamp"
+  "memberName": "_migrationTimestamp"
 }'
 ```
 
@@ -118,15 +122,15 @@ public class OrderProcessor
 }
 ```
 
-The `_migrationTimestamp` declaration line is gone. No constructor assignments or method
-references needed updating because none existed -- the tool confirmed this before making
-the deletion.
+The `_migrationTimestamp` declaration line is gone. The tool confirmed first that nothing
+reads or writes it: even a constructor assignment counts as a reference and would make it
+refuse.
 
 ---
 
-## Demo 7c: Safe Delete Parameter -- Remove Unused `verbose` Parameter
+## Demo 7c: Remove Unused Parameter -- Remove Unused `verbose` Parameter
 
-**Tool:** `safe-delete-parameter`
+**Tool:** `remove-unused-parameter`
 
 `CustomerService.GetCustomerSummary` accepts a `bool verbose` parameter, but the method
 body never reads it. Every call site passes a value that is silently ignored -- a source
@@ -136,7 +140,7 @@ of confusion for future maintainers.
 
 ```csharp
 /// <summary>
-/// The 'verbose' parameter is never actually used — safe-delete-parameter candidate.
+/// The 'verbose' parameter is never actually used — remove-unused-parameter candidate.
 /// </summary>
 public string GetCustomerSummary(Customer customer, bool verbose)
 {
@@ -153,7 +157,8 @@ var summary = customerService.GetCustomerSummary(customer, true);
 ### CLI Command
 
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --json safe-delete-parameter '{
+dotnet run --project RefactorMCP.ConsoleApp -- --json remove-unused-parameter '{
+  "solutionPath": "Demos/ECommerce/ECommerce.sln",
   "filePath": "Demos/ECommerce/ECommerce/CustomerService.cs",
   "methodName": "GetCustomerSummary",
   "parameterName": "verbose"
@@ -182,15 +187,15 @@ var summary = customerService.GetCustomerSummary(customer);
 ### Why This Is Safe
 
 The tool verifies that `verbose` is never read inside the method body -- not in `if`
-statements, not passed to other methods, not captured in a lambda. It also updates **all**
-call sites across the solution to drop the corresponding argument, so the build stays
-green.
+statements, not passed to other methods, not captured in a lambda -- in the method or in
+any override or implementation of it. It also updates **all** call sites across the
+solution to drop the corresponding argument, so the build stays green.
 
 ---
 
-## Demo 7d: Safe Delete Variable -- Remove Unused `separator` Local
+## Demo 7d: Safe Delete Local -- Remove Unused `separator` Local
 
-**Tool:** `safe-delete-variable`
+**Tool:** `safe-delete-local`
 
 `ReportGenerator.GenerateSalesReport` declares a local string `separator` that was likely
 intended for formatting but is never referenced after its initialization.
@@ -212,11 +217,14 @@ public string GenerateSalesReport(List<Order> orders)
 
 ### CLI Command
 
+`line` and `column` point at the local's name in its declaration.
+
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --json safe-delete-variable '{
+dotnet run --project RefactorMCP.ConsoleApp -- --json safe-delete-local '{
+  "solutionPath": "Demos/ECommerce/ECommerce.sln",
   "filePath": "Demos/ECommerce/ECommerce/ReportGenerator.cs",
-  "methodName": "GenerateSalesReport",
-  "variableName": "separator"
+  "line": 74,
+  "column": 16
 }'
 ```
 
@@ -239,9 +247,11 @@ The surrounding code and its indentation remain untouched.
 
 ### Why This Is Safe
 
-The tool uses Roslyn's data-flow analysis to confirm that `separator` is assigned but
-never subsequently read. If any line -- even a commented-out debug statement that was
-later uncommented -- referenced `separator`, the tool would refuse the deletion.
+The tool confirms that nothing references `separator` after its declaration. If any line
+-- even a commented-out debug statement that was later uncommented -- referenced
+`separator`, the tool would refuse the deletion. An initializer with side effects, such as
+a method call, would be kept as a statement of its own; this one is a plain literal, so the
+whole declaration goes.
 
 ---
 
@@ -270,6 +280,7 @@ subtotal *= (1 - x);
 
 ```bash
 dotnet run --project RefactorMCP.ConsoleApp -- --json rename-symbol '{
+  "solutionPath": "Demos/ECommerce/ECommerce.sln",
   "filePath": "Demos/ECommerce/ECommerce/OrderProcessor.cs",
   "line": 79,
   "column": 16,
@@ -337,6 +348,7 @@ public bool ReserveStock(string productId, int q)
 
 ```bash
 dotnet run --project RefactorMCP.ConsoleApp -- --json rename-symbol '{
+  "solutionPath": "Demos/ECommerce/ECommerce.sln",
   "filePath": "Demos/ECommerce/ECommerce/InventoryManager.cs",
   "symbolName": "q",
   "methodName": "ReserveStock",
@@ -403,6 +415,7 @@ public class NotificationService
 
 ```bash
 dotnet run --project RefactorMCP.ConsoleApp -- --json cleanup-usings '{
+  "solutionPath": "Demos/ECommerce/ECommerce.sln",
   "filePath": "Demos/ECommerce/ECommerce/NotificationService.cs"
 }'
 ```
@@ -432,10 +445,10 @@ etc.) remain in place.
 
 | Sub-Demo | Tool | What Was Removed / Changed | Safety Mechanism |
 |---|---|---|---|
-| 7a | `safe-delete-method` | `LegacyExportXml` method | Solution-wide caller search |
-| 7b | `safe-delete-field` | `_migrationTimestamp` field | Read/write reference analysis |
-| 7c | `safe-delete-parameter` | `verbose` parameter + all call-site args | Body usage check + call-site rewrite |
-| 7d | `safe-delete-variable` | `separator` local variable | Data-flow analysis (assigned but never read) |
+| 7a | `safe-delete-member` | `LegacyExportXml` method | Solution-wide caller search |
+| 7b | `safe-delete-member` | `_migrationTimestamp` field | Read/write reference analysis |
+| 7c | `remove-unused-parameter` | `verbose` parameter + all call-site args | Body usage check + call-site rewrite |
+| 7d | `safe-delete-local` | `separator` local variable | Reference check within the method |
 | 7e | `rename-symbol` | `x` renamed to `tierDiscountRate` | Semantic scope resolution via line/column |
 | 7f | `rename-symbol` | `q` renamed to `quantity` | Scoped rename with named-argument support |
 | 7g | `cleanup-usings` | Unused `using System.Diagnostics` | Namespace reference analysis |
