@@ -94,3 +94,15 @@ git diff Catalog/
    refactoring, mark the case `unimplemented`. A mapping class implements
    `ICatalogMappings` and is discovered automatically, one class per catalog
    group.
+
+## Website
+
+`site/build.py` renders the catalog as a static website: an index of every
+refactoring, and a page for each with its README and every case as a diff from
+`before/` to `after/`. The `Catalog site` workflow builds it on each change
+and publishes it to GitHub Pages from `main`. To preview it locally:
+
+```bash
+python3 site/build.py --out _site
+python3 -m http.server -d _site
+```

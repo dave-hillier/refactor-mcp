@@ -434,3 +434,6 @@ BuildHost-net472/
 BuildHost-netcore/ 
 TestOutput/codeMetricsCache.json
 .refactor-mcp/
+
+# Catalog site output
+_site/
