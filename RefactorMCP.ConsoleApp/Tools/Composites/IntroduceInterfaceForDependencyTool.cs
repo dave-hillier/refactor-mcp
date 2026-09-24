@@ -19,7 +19,7 @@ public static class IntroduceInterfaceForDependencyTool
         "and declare that dependency as the interface. For a field or property, constructor parameters assigned to it change too. " +
         "Refuses, changing nothing, if any step would.")]
     public static async Task<string> IntroduceInterfaceForDependency(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the dependency")] string filePath,
         [Description("Name of the field or property; for a parameter, the name of its method, or of its class for a constructor")] string name,
         [Description("Name of the interface to extract")] string interfaceName,

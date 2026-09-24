@@ -13,7 +13,7 @@ public static class InlineClassTool
 {
     [McpServerTool, Description("Move every member of a class into the one class that holds an instance of it in a field or get-only property, make the uses through that holder direct, and delete the class")]
     public static async Task<string> InlineClass(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the class to inline")] string filePath,
         [Description("Name of the class to inline")] string className,
         CancellationToken cancellationToken = default)

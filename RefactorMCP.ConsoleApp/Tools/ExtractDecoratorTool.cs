@@ -11,7 +11,7 @@ public static class ExtractDecoratorTool
     [McpServerTool, Description("Generate a decorator for an interface, or for the one interface a class implements: " +
         "a class implementing the interface that wraps an instance of it and forwards every member to it, in a new file")]
     public static async Task<string> ExtractDecorator(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the interface or class")] string filePath,
         [Description("Name of the interface to decorate, or of a class implementing exactly one interface")] string typeName,
         [Description("Name of the decorator class (optional; defaults to the interface name without its I, followed by Decorator)")] string? decoratorName = null,

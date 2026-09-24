@@ -14,7 +14,7 @@ public static class ConvertToAsyncTool
 {
     [McpServerTool, Description("Make a method that blocks on tasks async, awaiting them instead, and make its callers await it in turn, up to callers that cannot be async, which go on blocking")]
     public static async Task<string> ConvertToAsync(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the method")] string filePath,
         [Description("Name of the method")] string methodName,
         [Description("A line of the method's declaration (1-based), to choose between overloads")] int? line = null,

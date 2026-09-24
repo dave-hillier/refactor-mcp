@@ -20,7 +20,7 @@ public static class AddNullChecksTool
     [McpServerTool, Description("Add ArgumentNullException.ThrowIfNull guards at the start of a method or constructor " +
         "for each reference-type parameter that does not accept null and is not already guarded")]
     public static async Task<string> AddNullChecks(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the method")] string filePath,
         [Description("Name of the method, or of the type for a constructor")] string methodName,
         [Description("Line of the method's declaration (1-based, optional), to choose between overloads")] int? line = null,

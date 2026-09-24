@@ -15,7 +15,7 @@ public static class ConvertPropertyToMethodsTool
 {
     [McpServerTool, Description("Convert a property into Get and Set methods, giving an auto-property a backing field, and turn every read and write into a call")]
     public static async Task<string> ConvertPropertyToMethods(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the property")] string filePath,
         [Description("Name of the property to convert")] string propertyName)
     {

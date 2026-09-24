@@ -13,7 +13,7 @@ public static class ConvertLocalToFieldTool
 {
     [McpServerTool, Description("Promote a local variable to a private field of the containing type")]
     public static async Task<string> ConvertLocalToField(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Line of the local's declaration or of a use of it (1-based)")] int line,
         [Description("Column of the local's name on that line (1-based)")] int column,

@@ -18,7 +18,7 @@ public static class NamespaceStyleTool
 {
     [McpServerTool, Description("Convert a file's namespace block to a file-scoped namespace declaration (C# 10 or later)")]
     public static async Task<string> ConvertToFileScopedNamespace(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         CancellationToken cancellationToken = default)
     {
@@ -66,7 +66,7 @@ public static class NamespaceStyleTool
 
     [McpServerTool, Description("Convert a file-scoped namespace declaration to a namespace block")]
     public static async Task<string> ConvertToBlockNamespace(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         CancellationToken cancellationToken = default)
     {

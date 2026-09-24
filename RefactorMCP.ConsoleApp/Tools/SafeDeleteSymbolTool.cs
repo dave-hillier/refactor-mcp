@@ -11,7 +11,7 @@ public static class SafeDeleteSymbolTool
 {
     [McpServerTool, Description("Delete an unused method, property, field or event, refusing when anything refers to it, overrides it or relies on it to implement an interface")]
     public static async Task<string> SafeDeleteMember(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the member")] string filePath,
         [Description("Name of the member to delete")] string memberName,
         [Description("Line of the member's declaration, to choose between overloads (1-based, optional)")] int? line = null,
@@ -46,7 +46,7 @@ public static class SafeDeleteSymbolTool
 
     [McpServerTool, Description("Delete an unused type, and each file left with nothing else in it, refusing when anything refers to the type or its members")]
     public static async Task<string> SafeDeleteType(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the type")] string filePath,
         [Description("Name of the type to delete")] string typeName,
         [Description("Line of the type's declaration, to choose between types of the same name (1-based, optional)")] int? line = null,
@@ -98,7 +98,7 @@ public static class SafeDeleteSymbolTool
 
     [McpServerTool, Description("Delete an unused local variable, keeping an initializer with side effects as a statement")]
     public static async Task<string> SafeDeleteLocal(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Line of the local's declaration (1-based)")] int line,
         [Description("Column of the local's name (1-based)")] int column,

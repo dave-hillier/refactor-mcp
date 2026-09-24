@@ -11,7 +11,7 @@ public static class ConvertToExpressionBodyTool
 {
     [McpServerTool, Description("Convert a method, property, accessor, constructor, operator or local function whose body is a single return, expression or throw statement to an expression body")]
     public static async Task<string> ConvertToExpressionBody(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Line of the member's name, or of the accessor's keyword (1-based)")] int line,
         [Description("Column on that line (1-based)")] int column,

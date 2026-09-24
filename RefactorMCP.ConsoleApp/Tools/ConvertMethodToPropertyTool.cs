@@ -14,7 +14,7 @@ public static class ConvertMethodToPropertyTool
 {
     [McpServerTool, Description("Convert a parameterless method that returns a value into a get-only property, with its overrides, and turn every call into a property read")]
     public static async Task<string> ConvertMethodToProperty(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the method")] string filePath,
         [Description("Name of the method to convert; its parameterless overload is converted")] string methodName,
         [Description("Name for the property (optional, the method name without a leading 'Get' by default)")] string? propertyName = null)

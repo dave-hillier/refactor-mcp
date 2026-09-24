@@ -18,7 +18,7 @@ public static class ConvertToExtensionMethodTool
         "An instance method moves to a static extension class, and a wrapper method remains so existing call sites continue to work. " +
         "The extension class will be automatically created if it doesn't exist.")]
     public static async Task<string> ConvertToExtensionMethod(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Name of the method to convert")] string methodName,
         [Description("Name of the extension class - optional, class will be automatically created if it doesn't exist or us unspecified")] string? extensionClass = null,

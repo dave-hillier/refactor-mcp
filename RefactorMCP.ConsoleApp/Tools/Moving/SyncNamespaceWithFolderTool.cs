@@ -18,7 +18,7 @@ public static class SyncNamespaceWithFolderTool
     [McpServerTool, Description("Set a file's namespace to the project's root namespace followed by the file's " +
         "folders, updating references and usings across the solution")]
     public static async Task<string> SyncNamespaceWithFolder(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file whose namespace should match its folder")] string filePath,
         CancellationToken cancellationToken = default)
     {

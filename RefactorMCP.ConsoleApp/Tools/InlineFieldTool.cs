@@ -12,7 +12,7 @@ public static class InlineFieldTool
 {
     [McpServerTool, Description("Replace every read of a field that is only assigned by its initializer with that initializer, then remove the field")]
     public static async Task<string> InlineField(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the field")] string filePath,
         [Description("Name of the field to inline")] string fieldName)
     {

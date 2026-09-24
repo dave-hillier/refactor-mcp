@@ -14,7 +14,7 @@ public static class ReplaceExpressionWithFieldTool
 {
     [McpServerTool, Description("Replace an expression with a readonly field that every construction of the class sets, through a constructor parameter, to an equivalent value")]
     public static async Task<string> ReplaceExpressionWithField(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file containing the expression")] string filePath,
         [Description("Name of the readonly field to use in place of the expression")] string fieldName,
         [Description("Range of the expression in format 'startLine:startColumn-endLine:endColumn'; or give memberName and expression")] string? selectionRange = null,

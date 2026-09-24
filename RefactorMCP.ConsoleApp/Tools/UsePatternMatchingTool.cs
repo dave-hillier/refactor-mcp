@@ -12,7 +12,7 @@ public static class UsePatternMatchingTool
 {
     [McpServerTool, Description("Replace a type test followed by casts, or an as conversion followed by a null check, with a declaration pattern in the if statement")]
     public static async Task<string> UsePatternMatching(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Line of the if keyword (1-based)")] int line,
         [Description("Column of the if keyword (1-based)")] int column,

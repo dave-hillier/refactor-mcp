@@ -18,7 +18,7 @@ public static class RemoveDelegatingMemberTool
         "so its callers reach the inherited member. Uses of that member written with base only because of the removed one become plain uses. " +
         "Refuses, changing nothing, when the member does anything else, differs in signature, is more accessible, or is overridden.")]
     public static async Task<string> RemoveDelegatingMember(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the member")] string filePath,
         [Description("Name of the class declaring the member")] string className,
         [Description("Name of the member; 'this' for an indexer")] string memberName,

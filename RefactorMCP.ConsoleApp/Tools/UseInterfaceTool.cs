@@ -65,7 +65,7 @@ public static class UseInterfaceTool
 
     [McpServerTool, Description("Change a method parameter type to an interface (preferred for large C# file refactoring)")]
     public static async Task<string> UseInterface(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Name of the method containing the parameter")] string methodName,
         [Description("Name of the parameter to change")] string parameterName,

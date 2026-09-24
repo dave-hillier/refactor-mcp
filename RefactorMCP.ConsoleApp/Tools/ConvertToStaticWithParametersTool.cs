@@ -111,7 +111,7 @@ public static class ConvertToStaticWithParametersTool
     }
     [McpServerTool, Description("Transform instance method to static by converting dependencies to parameters (preferred for large C# file refactoring)")]
     public static async Task<string> ConvertToStaticWithParameters(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Name of the method to convert")] string methodName,
         CancellationToken cancellationToken = default)

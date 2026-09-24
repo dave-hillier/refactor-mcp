@@ -14,7 +14,7 @@ public static class ConvertAutoPropertyToBackingFieldTool
 {
     [McpServerTool, Description("Convert an auto-property into a property with a private backing field and accessors that read and write it")]
     public static async Task<string> ConvertAutoPropertyToBackingField(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the property")] string filePath,
         [Description("Name of the auto-property to convert")] string propertyName,
         [Description("Name for the backing field (optional, _camelCase of the property by default)")] string? fieldName = null)

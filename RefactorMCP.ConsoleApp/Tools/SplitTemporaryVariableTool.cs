@@ -12,7 +12,7 @@ public static class SplitTemporaryVariableTool
 {
     [McpServerTool, Description("Give a local that is reassigned for an unrelated purpose a new local from that assignment on")]
     public static async Task<string> SplitTemporaryVariable(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Line of the assignment to split at (1-based)")] int line,
         [Description("Column of the assigned local's name on that line (1-based)")] int column,

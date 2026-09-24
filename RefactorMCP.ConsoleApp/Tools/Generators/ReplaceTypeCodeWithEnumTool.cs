@@ -24,7 +24,7 @@ public static class ReplaceTypeCodeWithEnumTool
         "Every reference to a constant becomes the enum member, and every field, property, parameter, local and return type " +
         "the codes flow into is retyped to the enum.")]
     public static async Task<string> ReplaceTypeCodeWithEnum(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the constants")] string filePath,
         [Description("Name of the type declaring the constants")] string typeName,
         [Description("Names of the constants that make up the type code, in the order the enum lists them")] string[] constantNames,

@@ -13,7 +13,7 @@ public static class SeparateQueryFromModifierTool
 {
     [McpServerTool, Description("Split a method that changes state and returns a value into a modifier that makes the change and a query that returns the value, and make every caller call both")]
     public static async Task<string> SeparateQueryFromModifier(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the method")] string filePath,
         [Description("Name of the method")] string methodName,
         [Description("Name of the query that returns the value")] string queryName,

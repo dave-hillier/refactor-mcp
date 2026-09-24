@@ -13,7 +13,7 @@ public static class CreateTypeTool
 
     [McpServerTool, Description("Create an empty class, interface, record or struct in a new file or at the end of an existing one")]
     public static async Task<string> CreateType(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path of the file to create, or of an existing file to add the type to")] string filePath,
         [Description("Name of the new type, with type parameters when generic, e.g. Page<T>")] string name,
         [Description("class, interface, record or struct (default class)")] string kind = "class",

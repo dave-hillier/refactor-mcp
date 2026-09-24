@@ -11,7 +11,7 @@ public static class IntroduceGenericTypeParameterTool
 {
     [McpServerTool, Description("Replace a concrete type used in a class or method with a new type parameter, constrained as its uses need, and pass the old type at every use")]
     public static async Task<string> IntroduceGenericTypeParameter(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the class")] string filePath,
         [Description("Name of the class to make generic, or that declares the method")] string className,
         [Description("The concrete type to replace, as written in the file")] string typeToReplace,

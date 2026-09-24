@@ -11,7 +11,7 @@ public static class ConvertMethodGroupToLambdaTool
 {
     [McpServerTool, Description("Replace a method group used as a delegate, such as Format, with a lambda calling it, such as x => Format(x)")]
     public static async Task<string> ConvertMethodGroupToLambda(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Line of the method group's name (1-based)")] int line,
         [Description("Column of the method group's name (1-based)")] int column,

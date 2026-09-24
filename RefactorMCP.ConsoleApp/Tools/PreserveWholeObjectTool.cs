@@ -10,7 +10,7 @@ public static class PreserveWholeObjectTool
 {
     [McpServerTool, Description("Replace parameters that every call fills from members of one object with a parameter taking the object itself")]
     public static async Task<string> PreserveWholeObject(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the method")] string filePath,
         [Description("Name of the method, or of the type for a constructor")] string methodName,
         [Description("The parameters every call fills from members of the same object")] string[] parameters,

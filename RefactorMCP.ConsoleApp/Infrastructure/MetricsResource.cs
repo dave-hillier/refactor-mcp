@@ -14,7 +14,7 @@ public static class MetricsResource
     [Description("Return code metrics for directories, files, classes or methods")]
     public static async Task<TextResourceContents> ReadMetrics(
         [Description("Target path within the solution")] string path,
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath)
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath)
     {
         var fullPath = Path.GetFullPath(path);
         if (Directory.Exists(fullPath))

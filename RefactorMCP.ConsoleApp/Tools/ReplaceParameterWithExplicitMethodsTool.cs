@@ -23,7 +23,7 @@ public static class ReplaceParameterWithExplicitMethodsTool
 {
     [McpServerTool, Description("Give each value a method dispatches on a method of its own, and make calls that pass that value as a constant call it directly")]
     public static async Task<string> ReplaceParameterWithExplicitMethods(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the method")] string filePath,
         [Description("Name of the method")] string methodName,
         [Description("The parameter the method dispatches on")] string parameterName,

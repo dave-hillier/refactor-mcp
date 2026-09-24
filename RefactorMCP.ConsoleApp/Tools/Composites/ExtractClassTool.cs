@@ -19,7 +19,7 @@ public static class ExtractClassTool
         "and move the named fields, properties and methods into it through that field. " +
         "Moved methods leave delegating stubs unless keepStubs is false. Refuses, changing nothing, if any step would.")]
     public static async Task<string> ExtractClass(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the class")] string filePath,
         [Description("Name of the class to extract from")] string className,
         [Description("Name of the new class")] string newClassName,

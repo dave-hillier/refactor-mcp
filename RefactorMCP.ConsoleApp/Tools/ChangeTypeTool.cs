@@ -11,7 +11,7 @@ public static class ChangeTypeTool
 {
     [McpServerTool, Description("Change the declared type of a local, parameter, field, property or method return value, typically to a base type or interface")]
     public static async Task<string> ChangeType(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file with the declaration")] string filePath,
         [Description("Name of the local, field, property or method; for a parameter, the method's name")] string name,
         [Description("The new type, as it would be written in the file")] string newType,

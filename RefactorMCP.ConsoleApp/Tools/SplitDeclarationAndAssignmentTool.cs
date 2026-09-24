@@ -12,7 +12,7 @@ public static class SplitDeclarationAndAssignmentTool
 {
     [McpServerTool, Description("Split a local declaration with an initializer into a declaration with an explicit type and an assignment")]
     public static async Task<string> SplitDeclarationAndAssignment(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Line of the local's declaration or of a use of it (1-based)")] int line,
         [Description("Column of the local's name on that line (1-based)")] int column,

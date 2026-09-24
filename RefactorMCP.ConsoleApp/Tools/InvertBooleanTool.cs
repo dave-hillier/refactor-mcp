@@ -19,7 +19,7 @@ public static class InvertBooleanTool
 
     [McpServerTool, Description("Invert the meaning of a bool field, property, method or local: rename it, negate every value it is given and every use of it")]
     public static async Task<string> InvertBoolean(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Line of the symbol's declaration or of a use of it (1-based)")] int line,
         [Description("Column of the symbol's name on that line (1-based)")] int column,

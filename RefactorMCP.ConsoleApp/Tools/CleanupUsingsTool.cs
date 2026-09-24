@@ -14,7 +14,7 @@ public static class CleanupUsingsTool
 {
     [McpServerTool, Description("Remove unused using directives from a C# file (preferred for large C# file refactoring)")]
     public static async Task<string> CleanupUsings(
-        [Description("Absolute path to the solution file (.sln)")] string? solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string? solutionPath,
         [Description("Path to the C# file")] string filePath,
         CancellationToken cancellationToken = default)
     {

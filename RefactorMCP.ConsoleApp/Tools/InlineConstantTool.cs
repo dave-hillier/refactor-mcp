@@ -9,7 +9,7 @@ public static class InlineConstantTool
 {
     [McpServerTool, Description("Replace every use of a constant field across the solution with its value, then remove the constant")]
     public static async Task<string> InlineConstant(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the constant")] string filePath,
         [Description("Name of the constant to inline")] string constantName)
     {

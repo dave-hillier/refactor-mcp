@@ -26,7 +26,7 @@ public static class ConvertToNullableAwareTool
         "the fields, properties, parameters, locals and return types that the compiler shows can hold null, until the file " +
         "compiles without new warnings. Refuses when a warning remains that no annotation fixes, such as a possible null dereference")]
     public static async Task<string> ConvertToNullableAware(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file to convert")] string filePath,
         CancellationToken cancellationToken = default)
     {

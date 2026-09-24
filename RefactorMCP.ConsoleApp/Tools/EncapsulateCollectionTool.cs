@@ -15,7 +15,7 @@ public static class EncapsulateCollectionTool
 {
     [McpServerTool, Description("Encapsulate a private List<T> field: expose it as a read-only list, add Add and Remove methods, and point callers that added or removed through the exposing property at them")]
     public static async Task<string> EncapsulateCollection(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the field")] string filePath,
         [Description("Name of the list field, optionally qualified by its type as Type.field")] string fieldName,
         [Description("Singular name for one element, used in AddX and RemoveX (optional, derived from the property name by default)")] string? elementName = null)

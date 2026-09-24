@@ -12,7 +12,7 @@ public static class PushDownTool
 {
     [McpServerTool, Description("Move a field from a class into the subclasses that use it, or into every subclass when none does")]
     public static async Task<string> PushDownField(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the field")] string filePath,
         [Description("Name of the class declaring the field")] string className,
         [Description("Name of the field to push down")] string fieldName,
@@ -59,7 +59,7 @@ public static class PushDownTool
 
     [McpServerTool, Description("Move a method from a class into the subclasses that use it, or remove an abstract declaration and keep the subclasses' implementations")]
     public static async Task<string> PushDownMethod(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the method")] string filePath,
         [Description("Name of the class declaring the method")] string className,
         [Description("Name of the method to push down")] string methodName,

@@ -13,7 +13,7 @@ public static class ConvertMethodToLocalFunctionTool
 {
     [McpServerTool, Description("Move a private method used by only one member into that member as a local function")]
     public static async Task<string> ConvertMethodToLocalFunction(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file containing the method")] string filePath,
         [Description("Name of the method")] string methodName,
         [Description("Line of the method's declaration, to choose between overloads (1-based, optional)")] int? line = null,

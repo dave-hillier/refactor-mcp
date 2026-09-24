@@ -23,7 +23,7 @@ public static class IntroduceNullObjectTool
     [McpServerTool, Description("Generate a null object for the interface a field is typed as, and replace the field's null checks " +
         "across the solution with calls on it. Null assignments to the field assign the null object instead.")]
     public static async Task<string> IntroduceNullObject(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the field")] string filePath,
         [Description("Name of the field whose null checks the null object replaces")] string fieldName,
         CancellationToken cancellationToken = default)

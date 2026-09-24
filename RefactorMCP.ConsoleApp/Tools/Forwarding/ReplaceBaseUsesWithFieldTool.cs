@@ -20,7 +20,7 @@ public static class ReplaceBaseUsesWithFieldTool
         "so its base class part is no longer used. Refuses, changing nothing, when code elsewhere uses the inherited members or converts the class to its base class, " +
         "the class overrides or uses protected members of the base class, or the field is already used.")]
     public static async Task<string> ReplaceBaseUsesWithField(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the class")] string filePath,
         [Description("Name of the class")] string className,
         [Description("Name of the private field of the base class's type, initialised with a new instance")] string fieldName,

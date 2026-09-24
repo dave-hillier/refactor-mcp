@@ -12,7 +12,7 @@ public static class ConvertConcatenationToInterpolationTool
 {
     [McpServerTool, Description("Convert a string concatenation with + into an interpolated string")]
     public static async Task<string> ConvertConcatenationToInterpolation(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Line of the concatenation (1-based)")] int line,
         [Description("Column on that line inside the concatenation (1-based)")] int column,

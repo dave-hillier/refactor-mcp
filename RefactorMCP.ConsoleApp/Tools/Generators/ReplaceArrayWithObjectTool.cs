@@ -22,7 +22,7 @@ public static class ReplaceArrayWithObjectTool
     [McpServerTool, Description("Replace an array field or local whose elements mean different things with a new class " +
         "that has one property per element, rewriting its creations and constant-index accesses.")]
     public static async Task<string> ReplaceArrayWithObject(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file containing the array")] string filePath,
         [Description("Line of the array's declaration or of a use of it (1-based)")] int line,
         [Description("Column on that line of the array's name (1-based)")] int column,

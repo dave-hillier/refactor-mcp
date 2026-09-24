@@ -23,7 +23,7 @@ public static class ReplaceConditionalWithPolymorphismTool
         "keeping the default. A conditional on a parameter's type gains a method in the parameter's class, which the " +
         "original method delegates to.")]
     public static async Task<string> ReplaceConditionalWithPolymorphism(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the method")] string filePath,
         [Description("Name of the method whose body is the conditional")] string methodName,
         [Description("Line of the method's declaration (1-based, optional), to choose between overloads")] int? line = null,

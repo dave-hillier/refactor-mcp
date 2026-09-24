@@ -12,7 +12,7 @@ public static class IntroduceConstantTool
 {
     [McpServerTool, Description("Introduce a constant from a selected literal or constant expression, optionally replacing every occurrence of the same value in the type")]
     public static async Task<string> IntroduceConstant(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Range in format 'startLine:startColumn-endLine:endColumn'")] string selectionRange,
         [Description("Name for the new constant")] string constantName,

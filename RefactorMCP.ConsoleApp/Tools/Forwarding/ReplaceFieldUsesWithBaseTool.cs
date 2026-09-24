@@ -19,7 +19,7 @@ public static class ReplaceFieldUsesWithBaseTool
         "(the member, this.member or base.member, whichever means the same) and remove the field. Refuses, changing nothing, when the field is assigned or used as a value, " +
         "the class overrides members of the base class, or code already uses the inherited members or converts the class to its base class.")]
     public static async Task<string> ReplaceFieldUsesWithBase(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the class")] string filePath,
         [Description("Name of the class")] string className,
         [Description("Name of the private field of the base class's type, initialised with a new instance")] string fieldName,

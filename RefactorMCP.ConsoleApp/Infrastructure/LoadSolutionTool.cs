@@ -16,7 +16,7 @@ public static class LoadSolutionTool
 {
     [McpServerTool, Description("Start a new session by clearing caches then load a solution file")]
     public static async Task<string> LoadSolution(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         IProgress<string>? progress = null,
         CancellationToken cancellationToken = default)
     {

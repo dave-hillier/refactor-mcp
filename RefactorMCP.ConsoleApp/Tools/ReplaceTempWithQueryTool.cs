@@ -11,7 +11,7 @@ public static class ReplaceTempWithQueryTool
 {
     [McpServerTool, Description("Replace a local variable that holds the result of an expression with a query method, called wherever the local was used")]
     public static async Task<string> ReplaceTempWithQuery(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Line of the local's declaration or of a use of it (1-based)")] int line,
         [Description("Column of the local's name on that line (1-based)")] int column,

@@ -189,7 +189,7 @@ public static partial class MoveMultipleMethodsTool
 
     [McpServerTool, Description("Move multiple methods to a target class and transform them to static with an injected 'this' parameter.")]
     public static Task<string> MoveMultipleMethodsStatic(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file containing the methods")] string filePath,
         [Description("Name of the source class containing the methods")] string sourceClass,
         [Description("Names of the methods to move")] string[] methodNames,
@@ -200,7 +200,7 @@ public static partial class MoveMultipleMethodsTool
 
     [McpServerTool, Description("Move multiple methods and keep them as instance methods in the target class. The source instance is injected via the constructor if needed.")]
     public static Task<string> MoveMultipleMethodsInstance(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file containing the methods")] string filePath,
         [Description("Name of the source class containing the methods")] string sourceClass,
         [Description("Names of the methods to move")] string[] methodNames,

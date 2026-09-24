@@ -11,7 +11,7 @@ public static class ConvertRecordToClassTool
 {
     [McpServerTool, Description("Convert a record to a class, generating the constructor, properties, Deconstruct, equality, ToString and operators the record provided")]
     public static async Task<string> ConvertRecordToClass(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the record")] string filePath,
         [Description("Name of the record")] string typeName,
         [Description("A line of the declaration (1-based), to choose between types of the same name")] int? line = null,

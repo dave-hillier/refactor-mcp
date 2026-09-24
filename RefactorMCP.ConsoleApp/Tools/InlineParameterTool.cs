@@ -10,7 +10,7 @@ public static class InlineParameterTool
 {
     [McpServerTool, Description("Remove a parameter every call passes the same constant for, using the constant in the method body instead")]
     public static async Task<string> InlineParameter(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the method")] string filePath,
         [Description("Name of the method, or of the type for a constructor")] string methodName,
         [Description("Name of the parameter to inline")] string parameterName,

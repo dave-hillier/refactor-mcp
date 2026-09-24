@@ -11,7 +11,7 @@ public static class ExtractInterfaceTool
 {
     [McpServerTool, Description("Extract an interface from a class's public members into a new file, and make the class implement it")]
     public static async Task<string> ExtractInterface(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file containing the class")] string filePath,
         [Description("Name of the class to extract from")] string className,
         [Description("Comma separated list of member names to include; empty for every public instance member")] string memberList,

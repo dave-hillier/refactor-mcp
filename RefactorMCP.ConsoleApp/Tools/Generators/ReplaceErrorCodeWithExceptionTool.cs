@@ -20,7 +20,7 @@ public static class ReplaceErrorCodeWithExceptionTool
     [McpServerTool, Description("Make a method that returns an int error code (0 for success) or a bool (true for success) " +
         "return void and throw instead, and turn each caller's if on the result into a try/catch.")]
     public static async Task<string> ReplaceErrorCodeWithException(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the method")] string filePath,
         [Description("Name of the method returning the error code")] string methodName,
         [Description("Exception type to throw and catch (optional, defaults to InvalidOperationException)")] string exceptionType = "InvalidOperationException",

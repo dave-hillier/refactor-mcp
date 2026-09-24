@@ -18,7 +18,7 @@ public static class MakeMethodInstanceTool
     [McpServerTool, Description("Make a static method that takes an instance of its own type into an instance " +
         "method on that parameter; every call becomes a call on the argument it passed")]
     public static async Task<string> MakeMethodInstance(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the method")] string filePath,
         [Description("Name of the static method")] string methodName,
         [Description("The parameter to become the instance (optional, defaults to the first of the method's own type)")] string? parameterName = null,

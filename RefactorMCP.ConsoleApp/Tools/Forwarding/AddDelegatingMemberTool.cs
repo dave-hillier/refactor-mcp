@@ -22,7 +22,7 @@ public static class AddDelegatingMemberTool
         "Uses of an inherited member the new one hides inside the class are written with base so they keep their meaning; " +
         "refuses when code elsewhere would reach something different.")]
     public static async Task<string> AddDelegatingMember(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the class")] string filePath,
         [Description("Name of the class")] string className,
         [Description("The member to forward to: its name, 'this' for an indexer, or its documentation comment id when overloads share the name")] string memberName,

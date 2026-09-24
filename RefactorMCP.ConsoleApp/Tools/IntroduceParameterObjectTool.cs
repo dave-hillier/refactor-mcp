@@ -11,7 +11,7 @@ public static class IntroduceParameterObjectTool
 {
     [McpServerTool, Description("Replace a group of a method's parameters with one parameter of a new record holding them, updating the body and every call")]
     public static async Task<string> IntroduceParameterObject(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the method")] string filePath,
         [Description("Name of the method")] string methodName,
         [Description("The parameters to group, in the order the record declares them")] string[] parameters,

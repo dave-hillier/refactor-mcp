@@ -20,7 +20,7 @@ public static class MakeMethodStaticTool
         "With pass 'instance' the method takes the instance as its first parameter; with pass 'parameters' " +
         "each instance field or property it reads becomes a parameter instead.")]
     public static async Task<string> MakeMethodStatic(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the method")] string filePath,
         [Description("Name of the method")] string methodName,
         [Description("What the static method receives: 'instance' (default) or 'parameters'")] string pass = "instance",
