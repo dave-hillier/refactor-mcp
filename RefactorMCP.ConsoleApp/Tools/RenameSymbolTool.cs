@@ -3,7 +3,6 @@ using ModelContextProtocol;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Rename;
-using Microsoft.CodeAnalysis.FindSymbols;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
@@ -29,13 +28,7 @@ public static class RenameSymbolTool
                 throw new McpException($"Error: '{newName}' is not a valid identifier");
 
             var solution = await RefactoringHelpers.GetOrLoadSolution(solutionPath, cancellationToken);
-            var document = RefactoringHelpers.GetDocumentByPath(solution, filePath);
-            if (document == null)
-                throw new McpException($"Error: File {filePath} not found in solution");
-
-            var symbol = await FindSymbol(document, oldName, line, column, cancellationToken);
-            if (symbol == null)
-                throw new McpException($"Error: Symbol '{oldName}' not found");
+            var symbol = await SymbolLookup.FindAsync(solution, filePath, oldName, line, column, cancellationToken);
 
             var renamed = await Renamer.RenameSymbolAsync(solution, symbol, new SymbolRenameOptions(), newName, cancellationToken);
 
@@ -99,62 +92,5 @@ public static class RenameSymbolTool
         }
 
         return solution;
-    }
-
-    private static async Task<ISymbol?> FindSymbol(Document document, string name, int? line, int? column, CancellationToken cancellationToken)
-    {
-        var model = await document.GetSemanticModelAsync(cancellationToken);
-        var root = await document.GetSyntaxRootAsync(cancellationToken);
-        if (model == null || root == null)
-            return null;
-
-        if (line.HasValue && column.HasValue)
-        {
-            var text = await document.GetTextAsync(cancellationToken);
-            if (line.Value > 0 && line.Value <= text.Lines.Count && column.Value > 0)
-            {
-                var pos = text.Lines[line.Value - 1].Start + column.Value - 1;
-                var token = root.FindToken(pos);
-                var node = token.Parent;
-                while (node != null)
-                {
-                    var sym = model.GetDeclaredSymbol(node) ?? model.GetSymbolInfo(node).Symbol;
-                    if (sym != null && sym.Name == name)
-                        return sym;
-                    node = node.Parent;
-                }
-            }
-        }
-
-        var decls = await SymbolFinder.FindDeclarationsAsync(document.Project, name, false, cancellationToken);
-        var declaration = decls.FirstOrDefault();
-        if (declaration != null)
-            return declaration;
-
-        // Locals, parameters and local functions are not declarations of the
-        // project, so the symbol finder cannot see them. Look in this document.
-        return FindLocalInDocument(model, root, name);
-    }
-
-    private static ISymbol? FindLocalInDocument(SemanticModel model, SyntaxNode root, string name)
-    {
-        var matches = root.DescendantNodes()
-            .Select(node => model.GetDeclaredSymbol(node))
-            .OfType<ISymbol>()
-            .Where(symbol => symbol.Name == name && IsLocalSymbol(symbol))
-            .Distinct(SymbolEqualityComparer.Default)
-            .ToList();
-
-        if (matches.Count > 1)
-            throw new McpException($"Error: Multiple symbols named '{name}' found in the document; pass line and column to choose one");
-
-        return matches.FirstOrDefault();
-    }
-
-    private static bool IsLocalSymbol(ISymbol symbol)
-    {
-        return symbol.Kind == SymbolKind.Local
-            || symbol.Kind == SymbolKind.Parameter
-            || symbol is IMethodSymbol { MethodKind: MethodKind.LocalFunction };
     }
 }
