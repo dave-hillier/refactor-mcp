@@ -7,7 +7,7 @@ namespace Examples.SafeDelete;
 
 /// <summary>
 /// Example: UserService with unused fields, methods, and parameters that can be safely deleted.
-/// Refactoring: safe-delete-field, safe-delete-method, safe-delete-parameter
+/// Refactoring: safe-delete-member, remove-unused-parameter
 /// </summary>
 public class UserService
 {

@@ -2,6 +2,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using RefactorMCP.ConsoleApp.Tools.Moving;
 using Xunit;
 
 namespace RefactorMCP.Tests.Workflows;
@@ -48,7 +49,7 @@ public class ServiceWithUnusedField
         Assert.Contains("safe-delete", analysis.ToLowerInvariant());
 
         // Step 3: Perform the safe-delete refactoring
-        var result = await SafeDeleteTool.SafeDeleteField(
+        var result = await SafeDeleteSymbolTool.SafeDeleteMember(
             SolutionPath,
             testFile,
             "_unusedField");
@@ -87,11 +88,11 @@ public class Utility
         var analysis = await AnalyzeRefactoringOpportunitiesTool.AnalyzeRefactoringOpportunities(
             SolutionPath, testFile);
 
-        // Step 2: Verify make-static suggestion exists
-        Assert.Contains("make-static", analysis.ToLowerInvariant());
+        // Step 2: Verify make-method-static suggestion exists
+        Assert.Contains("make-method-static", analysis.ToLowerInvariant());
 
         // Step 3: Perform the conversion
-        var result = await ConvertToStaticWithInstanceTool.ConvertToStaticWithInstance(
+        var result = await MakeMethodStaticTool.MakeMethodStatic(
             SolutionPath,
             testFile,
             "Calculate");
@@ -132,10 +133,10 @@ public class MessyClass
         RefactoringHelpers.AddDocumentToProject(project, testFile);
 
         // Delete first unused field
-        await SafeDeleteTool.SafeDeleteField(SolutionPath, testFile, "_unusedField1");
+        await SafeDeleteSymbolTool.SafeDeleteMember(SolutionPath, testFile, "_unusedField1");
 
         // Delete second unused field
-        await SafeDeleteTool.SafeDeleteField(SolutionPath, testFile, "_unusedField2");
+        await SafeDeleteSymbolTool.SafeDeleteMember(SolutionPath, testFile, "_unusedField2");
 
         // Verify both fields are removed
         var fileContent = await File.ReadAllTextAsync(testFile);
@@ -171,7 +172,7 @@ public class TargetHelper { }
         RefactoringHelpers.AddDocumentToProject(project, testFile);
 
         // First make the method static so it can be moved
-        await ConvertToStaticWithInstanceTool.ConvertToStaticWithInstance(
+        await MakeMethodStaticTool.MakeMethodStatic(
             SolutionPath,
             testFile,
             "Process");

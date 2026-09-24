@@ -41,8 +41,7 @@ demonstrated; fill in the rest the same way.
 
 ### Loading a Solution
 A solution is loaded on demand by the first tool that needs it. Loading it
-explicitly starts a fresh session, which clears cached data and the record of
-moved methods:
+explicitly starts a fresh session, which clears cached data:
 
 ```bash
 refactor load-solution --solution ./RefactorMCP.sln
@@ -248,68 +247,7 @@ public string FormatResult(int value, int processedValue)
 }
 ```
 
-## 6. Convert to Static with Parameters
-
-**Purpose**: Convert an instance method to static by turning field and property usages into parameters.
-
-### Example
-**Before** (in `ExampleCode.cs` line 46):
-```csharp
-private string _operatorSymbol;
-
-public string GetFormattedNumber(int number)
-{
-    return $"{_operatorSymbol}: {number}";
-}
-```
-
-**Command**:
-```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --cli convert-to-static-with-parameters \
-  "./RefactorMCP.sln" \
-  "./RefactorMCP.Tests/ExampleCode.cs" \
-  GetFormattedNumber
-```
-
-**After**:
-```csharp
-public static string GetFormattedNumber(string operatorSymbol, int number)
-{
-    return $"{operatorSymbol}: {number}";
-}
-```
-
-## 7. Convert to Static with Instance
-
-**Purpose**: Convert an instance method to static and add an explicit instance parameter for member access.
-
-### Example
-**Before** (same as previous example):
-```csharp
-public string GetFormattedNumber(int number)
-{
-    return $"{operatorSymbol}: {number}";
-}
-```
-
-**Command**:
-```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --cli convert-to-static-with-instance \
-  "./RefactorMCP.sln" \
-  "./RefactorMCP.Tests/ExampleCode.cs" \
-  GetFormattedNumber \
-  "calculator"
-```
-
-**After**:
-```csharp
-public static string GetFormattedNumber(Calculator calculator, int number)
-{
-    return $"{calculator.operatorSymbol}: {number}";
-}
-```
-
-## 8. Convert To Extension Method
+## 6. Convert To Extension Method
 
 **Purpose**: Transform an instance method into an extension method in a static class.
 
@@ -341,97 +279,7 @@ public static class CalculatorExtensions
 }
 ```
 
-## 9. Move Static Method
-
-**Purpose**: Move a static method to another class.
-
-### Example
-**Before** (in `ExampleCode.cs` line 63):
-```csharp
-public static string FormatCurrency(decimal amount)
-{
-    return $"${amount:F2}";
-}
-```
-
-**Command**:
-```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --cli move-static-method \
-  "./RefactorMCP.sln" \
-  "./RefactorMCP.Tests/ExampleCode.cs" \
-  FormatCurrency \
-  MathUtilities
-```
-
-**After**:
-```csharp
-public class MathUtilities
-{
-    public static string FormatCurrency(decimal amount)
-    {
-        return $"${amount:F2}";
-    }
-}
-```
-The original method remains in `ExampleCode.cs` as a wrapper that forwards to `MathUtilities.FormatCurrency`.
-Running `move-static-method` again on this wrapper will now fail. Use `inline-method` if you want to remove it.
-
-## 10. Move Instance Method
-
-**Purpose**: Move an instance method to another class while leaving a wrapper behind. Protected override methods cannot be moved and will result in an error.
-
-### Example
-**Before** (in `ExampleCode.cs` line 69):
-```csharp
-public void LogOperation(string operation)
-{
-    Console.WriteLine($"[{DateTime.Now}] {operation}");
-}
-```
-
-**Command**:
-```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --cli move-instance-method \
-  "./RefactorMCP.sln" \
-  "./RefactorMCP.Tests/ExampleCode.cs" \
-  Calculator \
-  LogOperation \
-  --constructor-injections this \
-  Logger \
-  
-```
-
-**After**:
-```csharp
-public class Calculator
-{
-    private readonly Logger _logger = new Logger();
-
-    public void LogOperation(string operation)
-    {
-        _logger.LogOperation(operation);
-    }
-}
-
-public class Logger
-{
-    public void Log(string message)
-    {
-        Console.WriteLine($"[LOG] {message}");
-    }
-
-    public static void LogOperation(string operation)
-    {
-        Console.WriteLine($"[{DateTime.Now}] {operation}");
-    }
-}
-```
-The original method in `Calculator` now delegates to the static `Logger.LogOperation` method, preserving existing call sites.
-If you run `move-instance-method` again on this wrapper, an error will be reported. Use `inline-method` to remove the wrapper if desired.
-When the target class lives in another file, pass `--target-file`; without it the method is added to the file it came from.
-When a moved method references private fields from its original class, those values are passed as additional parameters.
-
-## 10. Make Static Then Move
+## 7. Make Static Then Move
 
 **Purpose**: Convert an instance method to static with an explicit instance parameter and move it to another class.
 
@@ -474,104 +322,7 @@ public class MathUtilities
 ```
 The wrapper in `Calculator` preserves call sites while the actual logic moves to `MathUtilities`.
 
-## 10. Move Multiple Methods
-
-**Purpose**: Move several methods at once, ordered by dependencies.
-
-### Example
-**Before**:
-```csharp
-class Helper
-{
-    public void A() { B(); }
-    public void B() { Console.WriteLine("B"); }
-}
-
-class Target { }
-```
-
-**Command**:
-```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --cli move-multiple-methods-instance \
-  "./RefactorMCP.sln" \
-  "./RefactorMCP.Tests/ExampleCode.cs" \
-  Helper \
-  "A,B" \
-  Target \
-  "./Target.cs"
-```
-
-### Cross-file Example
-Move methods to a separate file using the `targetFile` property or by passing a default path:
-
-```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --cli move-multiple-methods-instance \
-  "./RefactorMCP.sln" \
-  "./RefactorMCP.Tests/ExampleCode.cs" \
-  Helper \
-  A \
-  Target \
-  "./Target.cs"
-```
-
-### Static Parameter Injection
-Move the same methods but convert them to static members with an explicit `this` parameter:
-
-```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --cli move-multiple-methods-static \
-  "./RefactorMCP.sln" \
-  "./RefactorMCP.Tests/ExampleCode.cs" \
-  Helper \
-  "A,B" \
-  Target
-```
-
-**After**:
-```csharp
-class Helper
-{
-    private readonly Target _target = new Target();
-
-    public void A()
-    {
-        _target.A();
-    }
-
-    public void B()
-    {
-        _target.B();
-    }
-}
-
-class Target
-{
-    public void B()
-    {
-        Console.WriteLine("B");
-    }
-
-    public void A()
-    {
-        B();
-    }
-}
-```
-Each moved method in `Helper` now delegates to the corresponding method on `Target`, preserving the original public interface.
-Because an access field didn't exist, the refactoring introduced a private readonly field named `_target` automatically.
-
-## 11. Batch Move Methods
-
-**Purpose**: Move several methods at once. Use `move-multiple-methods-static` to convert
-them to static with a `this` parameter, or `move-multiple-methods-instance` to keep them
-as instance methods with the source instance injected through the constructor.
-
-### Example
-```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --json move-multiple-methods-static \
-  '{"solutionPath":"./RefactorMCP.sln","filePath":"./RefactorMCP.Tests/ExampleCode.cs","sourceClass":"Helper","methodNames":["A","B"],"targetClass":"Target"}'
-```
-
-## 12. Move Type to Separate File
+## 8. Move Type to Separate File
 
 **Purpose**: Move a top-level type into its own file named after the type. Works for classes, interfaces, structs, records, enums and delegates.
 
@@ -607,7 +358,7 @@ public class Logger
 }
 ```
 
-## 12. Inline Method
+## 9. Inline Method
 
 **Purpose**: Replace method calls with the method body and remove the original method.
 
@@ -642,37 +393,7 @@ public void Call()
     Console.WriteLine("Done");
 }
 ```
-## 11. Safe Delete Parameter
-
-**Purpose**: Remove an unused method parameter and update call sites.
-
-### Example
-**Before** (in `ExampleCode.cs` line 74):
-```csharp
-public int Multiply(int x, int y, int unusedParam)
-{
-    return x * y; // unusedParam can be safely deleted
-}
-```
-
-**Command**:
-```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --cli safe-delete-parameter \
-  "./RefactorMCP.sln" \
-  "./RefactorMCP.Tests/ExampleCode.cs" \
-  Multiply \
-  unusedParam
-```
-
-**After**:
-```csharp
-public int Multiply(int x, int y)
-{
-    return x * y;
-}
-```
-
-## 12. Transform Setter to Init
+## 10. Transform Setter to Init
 
 **Purpose**: Convert a property setter to an init-only setter.
 
@@ -695,56 +416,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli transform-setter-to-init \
 public string Name { get; init; } = "Default Calculator";
 ```
 
-## 13. Safe Delete Field
-
-**Purpose**: Remove an unused field from a class.
-
-### Example
-**Before** (in `ExampleCode.cs` line 88):
-```csharp
-private int deprecatedCounter = 0; // Not used anywhere
-```
-
-**Command**:
-```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --cli safe-delete-field \
-  "./RefactorMCP.sln" \
-  "./RefactorMCP.Tests/ExampleCode.cs" \
-  deprecatedCounter
-```
-
-**After**:
-```csharp
-// Field 'deprecatedCounter' removed from Calculator class
-```
-
-## 14. Safe Delete Method
-
-**Purpose**: Remove an unused method and update call sites.
-
-### Example
-**Command**:
-```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --cli safe-delete-method \
-  "./RefactorMCP.sln" \
-  "./RefactorMCP.Tests/ExampleCode.cs" \
-  FormatUserLegacy
-```
-
-## 15. Safe Delete Variable
-
-**Purpose**: Remove a local variable using a line range.
-
-### Example
-**Command**:
-```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --cli safe-delete-variable \
-  "./RefactorMCP.sln" \
-  "./RefactorMCP.Tests/ExampleCode.cs" \
-  "12:9-12:31"
-```
-
-## 12. Cleanup Usings
+## 11. Cleanup Usings
 
 **Purpose**: Remove unused using directives from a file.
 
@@ -777,9 +449,9 @@ public class CleanupSample
 }
 ```
 
-## 6. Load Solution (Utility Command)
+## 12. Load Solution (Utility Command)
 
-**Purpose**: Clear previous caches, reset move history, and load a solution file before performing refactorings.
+**Purpose**: Clear previous caches and load a solution file before performing refactorings.
 
 ### Example
 **Command**:
@@ -795,7 +467,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli load-solution "./RefactorMC
 Successfully loaded solution 'RefactorMCP.sln' with 2 projects: RefactorMCP.ConsoleApp, RefactorMCP.Tests
 ```
 
-## 9. Unload Solution (Utility Command)
+## 13. Unload Solution (Utility Command)
 
 **Purpose**: Remove a loaded solution from the in-memory cache.
 
@@ -810,7 +482,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli unload-solution "./Refactor
 Unloaded solution 'RefactorMCP.sln' from cache
 ```
 
-## 10. Clear Solution Cache (Utility Command)
+## 14. Clear Solution Cache (Utility Command)
 
 **Purpose**: Remove all cached solutions when projects change on disk.
 
@@ -825,29 +497,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli clear-solution-cache
 Cleared all cached solutions
 ```
 
-## Reset Move History (Utility Command)
-
-**Purpose**: Allow previously moved methods to be moved again in the same session. Loading a solution automatically clears this history.
-
-### Example
-**Command**:
-```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --cli reset-move-history
-```
-
-**Expected Output**:
-```
-Cleared move history
-```
-
-### Failed Move Example
-A failed move does not record the method:
-```json
-{"tool":"move-instance-method","solutionPath":"./RefactorMCP.sln","filePath":"./RefactorMCP.Tests/ExampleCode.cs","sourceClass":"Wrong","methodNames":["LogOperation"],"targetClass":"Logger"}
-```
-Running the command again with the correct `sourceClass` succeeds.
-
-## 11. List Tools (Utility Command)
+## 15. List Tools (Utility Command)
 
 **Purpose**: Display all available refactoring tools and their status.
 
@@ -860,7 +510,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --json ListTools '{}'
 **Output**: one kebab-case tool name per line, e.g. `add-observer`, `extract-method`,
 `load-solution`. `refactor list-tools` prints the same names with their descriptions.
 
-## 12. Version Info (Utility Command)
+## 16. Version Info (Utility Command)
 
 **Purpose**: Display the current build version and timestamp.
 
@@ -875,7 +525,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli version
 Version: 1.0.0.0 (Build 2024-01-01 00:00:00Z)
 ```
 
-## 13. Analyze Refactoring Opportunities
+## 17. Analyze Refactoring Opportunities
 
 **Purpose**: Prompt the server to inspect a file for smells such as long methods, long parameter lists, large classes, or unused members.
 
@@ -888,11 +538,11 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli analyze-refactoring-opportu
 **Expected Output**:
 ```
 Suggestions:
-- Method 'UnusedHelper' appears unused -> safe-delete-method
-- Field 'deprecatedCounter' appears unused -> safe-delete-field
+- Method 'UnusedHelper' appears unused -> safe-delete-member
+- Field 'deprecatedCounter' appears unused -> safe-delete-member
 ```
 
-## 14. List Class Lengths
+## 18. List Class Lengths
 
 **Purpose**: Display each class in the solution with its number of lines as a simple complexity metric.
 
@@ -967,7 +617,7 @@ method Worker.Run(Service)
   src/Worker.cs:8:13  service.Log("run");
 ```
 
-## 15. Extract Interface
+## 19. Extract Interface
 
 **Purpose**: Generate an interface from specific class members.
 
@@ -1007,7 +657,7 @@ public class Person : IPerson
 ```
 
 
-## 16. Rename Symbol
+## 20. Rename Symbol
 
 **Purpose**: Rename a field or method across the entire file.
 
@@ -1051,7 +701,7 @@ values.Add(result);
 return values.Sum() / (double)values.Count;
 ```
 
-## 17. Feature Flag Refactor
+## 21. Feature Flag Refactor
 
 **Purpose**: Replace a `features.IsEnabled(flag)` check with strategy classes chosen by a property that checks the flag.
 
@@ -1090,7 +740,7 @@ private ICoolFeatureStrategy CoolFeature => featureFlags.IsEnabled("CoolFeature"
 ```
 
 `CoolFeatureStrategy` and `NoCoolFeatureStrategy` implement `ICoolFeatureStrategy`, and their `Apply` methods hold the two branches.
-## 18. Extract Decorator
+## 22. Extract Decorator
 
 **Purpose**: Generate a decorator that implements an interface and forwards every member to a wrapped instance.
 
@@ -1129,7 +779,7 @@ public class GreeterDecorator : IGreeter
 }
 ```
 
-## 19. Create Adapter
+## 23. Create Adapter
 
 **Purpose**: Implement an interface over an existing class by forwarding to its members.
 
@@ -1168,7 +818,7 @@ public class LegacyLoggerAdapter : ILogger
 }
 ```
 
-## 20. Add Observer
+## 24. Add Observer
 
 **Purpose**: Add an event and raise it within a method.
 
@@ -1203,74 +853,7 @@ public void Update(int value)
 }
 ```
 
-## 21. Constructor Injection
-
-**Purpose**: Convert one or more method parameters to constructor-injected fields.
-
-### Example
-**Before**:
-```csharp
-
-class C
-{
-    int Add(int a)
-    {
-        return a + 1;
-    }
-
-    int Multiply(int b)
-    {
-        return b * 2;
-    }
-
-    void Call()
-    {
-        Add(1);
-        Multiply(2);
-    }
-}
-```
-
-**Command**:
-```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --cli convert-to-constructor-injection \
-  "./RefactorMCP.sln" \
-  "./RefactorMCP.Tests/ExampleCode.cs" \
-  '[{"methodName":"Add","parameterName":"a"},{"methodName":"Multiply","parameterName":"b"}]'
-```
-
-**After**:
-```csharp
-class C
-{
-    private readonly int _a;
-    private readonly int _b;
-
-    public C(int a, int b)
-    {
-        _a = a;
-        _b = b;
-    }
-
-    int Add()
-    {
-        return _a + 1;
-    }
-
-    int Multiply()
-    {
-        return _b * 2;
-    }
-
-    void Call()
-    {
-        Add();
-        Multiply();
-    }
-}
-```
-
-## 22. Use Interface
+## 25. Use Interface
 
 **Purpose**: Change a method parameter type to an implemented interface when only interface members are used.
 
@@ -1399,37 +982,6 @@ dotnet run --project RefactorMCP.ConsoleApp -- --cli extract-method "./RefactorM
 # For a file in the test project  
 dotnet run --project RefactorMCP.ConsoleApp -- --cli extract-method "./RefactorMCP.sln" "./RefactorMCP.Tests/TestFile.cs" "5:1-8:10" "TestMethod"
 ```
-
-### File-Scoped Namespace Example
-When a tool needs to create a new file, the namespace uses the file-scoped style:
-
-```json
-{"tool":"move-static-method","solutionPath":"./RefactorMCP.sln","filePath":"./RefactorMCP.Tests/ExampleCode.cs","methodName":"Add","targetClass":"MathHelpers","targetFilePath":"./RefactorMCP.Tests/MathHelpers.cs"}
-```
-
-### Overloaded Methods Example
-`move-multiple-methods-static` now works when the source class contains overloaded methods:
-
-```json
-{"tool":"move-multiple-methods-static","solutionPath":"./RefactorMCP.sln","filePath":"./RefactorMCP.Tests/ExampleCode.cs","sourceClass":"Helper","methodNames":["A","A"],"targetClass":"Target","targetFilePath":"./Target.cs"}
-```
-
-### JSON Example
-Provide `methodNames` as a list (this property is required):
-
-```json
-{"tool":"move-instance-method","solutionPath":"./RefactorMCP.sln","filePath":"./RefactorMCP.Tests/ExampleCode.cs","sourceClass":"Calculator","methodNames":["LogOperation"],"targetClass":"Logger"}
-```
-
-### Interface/Base Member Example
-Inherited members are automatically qualified when moved:
-
-```json
-{"tool":"move-instance-method","solutionPath":"./RefactorMCP.sln","filePath":"./RefactorMCP.Tests/ExampleCode.cs","sourceClass":"Derived","methodNames":["PrintName"],"targetClass":"Target"}
-```
-
-### Automatic Static Conversion
-When a moved instance method has no dependencies on instance members, it is made static automatically.
 
 ## Catalog Refactorings
 

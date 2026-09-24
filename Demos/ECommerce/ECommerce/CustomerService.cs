@@ -5,10 +5,10 @@ namespace ECommerce;
 ///
 /// Refactoring opportunities:
 ///   - use-interface: UpdateCustomerTier takes concrete CustomerRepository, should take ICustomerRepository
-///   - constructor-injection: RegisterCustomer takes EmailService as method param, should be injected
+///   - RegisterCustomer takes EmailService as a method param though the constructor already injects one
 ///   - make-field-readonly: _repository is set only in constructor
 ///   - introduce-parameter: hardcoded tier thresholds in CalculateTierUpgrade
-///   - safe-delete-parameter: unused 'verbose' parameter in GetCustomerSummary
+///   - remove-unused-parameter: unused 'verbose' parameter in GetCustomerSummary
 /// </summary>
 public class CustomerService
 {
@@ -71,7 +71,7 @@ public class CustomerService
     }
 
     /// <summary>
-    /// The 'verbose' parameter is never actually used — safe-delete-parameter candidate.
+    /// The 'verbose' parameter is never actually used — remove-unused-parameter candidate.
     /// </summary>
     public string GetCustomerSummary(Customer customer, bool verbose)
     {

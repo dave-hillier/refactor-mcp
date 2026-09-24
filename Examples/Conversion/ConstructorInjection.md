@@ -1,7 +1,9 @@
 # Constructor Injection Refactoring
 
 ## Overview
-The `constructor-injection` refactoring converts method parameters to constructor-injected dependencies. This transforms methods that receive their dependencies as parameters into a class that stores dependencies as fields, making them available to all methods.
+Constructor injection gives a class its dependencies through its constructor and keeps them in fields, making them available to all methods.
+
+The `inject-constructor-dependency` tool handles the case where a method constructs an object for itself: the object becomes a constructor parameter kept in a `private readonly` field, and every construction of the class passes a new one, built as the method built it. Examples 2 and 3 show the other common shape, dependencies passed into every method as parameters. Moving such a parameter to the constructor changes what each caller supplies, so no tool does it automatically; they show the target design to work towards by hand.
 
 ## When to Use
 - When multiple methods need the same dependencies
@@ -11,7 +13,72 @@ The `constructor-injection` refactoring converts method parameters to constructo
 
 ---
 
-## Example 1: Convert Repeated Parameters to Fields
+## Example 1: Inject an Object the Method Constructs
+
+### Before
+```csharp
+public class InvoiceService
+{
+    private readonly IInvoiceRepository _repository;
+
+    public InvoiceService(IInvoiceRepository repository)
+    {
+        _repository = repository;
+    }
+
+    public async Task SendAsync(int invoiceId)
+    {
+        var invoice = await _repository.GetAsync(invoiceId);
+        var mailer = new SmtpMailer("smtp.example.com");
+        await mailer.SendAsync(invoice.CustomerEmail, $"Invoice {invoice.Number}");
+    }
+}
+
+// Elsewhere
+var service = new InvoiceService(repository);
+```
+
+### After
+```csharp
+public class InvoiceService
+{
+    private readonly IInvoiceRepository _repository;
+    private readonly SmtpMailer _mailer;
+
+    public InvoiceService(IInvoiceRepository repository, SmtpMailer mailer)
+    {
+        _repository = repository;
+        _mailer = mailer;
+    }
+
+    public async Task SendAsync(int invoiceId)
+    {
+        var invoice = await _repository.GetAsync(invoiceId);
+        await _mailer.SendAsync(invoice.CustomerEmail, $"Invoice {invoice.Number}");
+    }
+}
+
+// Elsewhere
+var service = new InvoiceService(repository, new SmtpMailer("smtp.example.com"));
+```
+
+### Tool Usage
+`line` and `column` locate the local holding the constructed object, on its declaration or any use. `parameterName` and `fieldName` are optional, defaulting to the local's name and the local's name with a leading underscore.
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json inject-constructor-dependency '{
+    "solutionPath": "MyProject.sln",
+    "filePath": "Services/InvoiceService.cs",
+    "line": 13,
+    "column": 13
+}'
+```
+
+The tool refuses when the construction's arguments read the method's state, when the object is built with an object initializer, or when the class has several constructors. One object now serves every call of the method, so an object that keeps state between uses behaves differently.
+
+---
+
+## Example 2: Convert Repeated Parameters to Fields
 
 ### Before
 ```csharp
@@ -221,18 +288,9 @@ public class OrderProcessor
 }
 ```
 
-### Tool Usage
-```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --json constructor-injection '{
-    "filePath": "Services/OrderProcessor.cs",
-    "methodName": "ProcessNewOrderAsync",
-    "parameterNames": ["inventory", "payments", "shipping", "notifications", "logger"]
-}'
-```
-
 ---
 
-## Example 2: Convert Static Helper to Injectable Service
+## Example 3: Convert Static Helper to Injectable Service
 
 ### Before
 ```csharp

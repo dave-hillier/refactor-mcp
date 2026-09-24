@@ -71,7 +71,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --json analyze-refactoring-opport
       },
       "description": "Field '_migrationTimestamp' of type 'DateTime' is declared but never read or written anywhere in the class.",
       "suggestedRefactorings": [
-        "safe-delete-field: Remove '_migrationTimestamp' from OrderProcessor"
+        "safe-delete-member: Remove '_migrationTimestamp' from OrderProcessor"
       ]
     },
     {
@@ -85,7 +85,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --json analyze-refactoring-opport
       },
       "description": "Method 'LegacyExportXml' is declared public but has no callers anywhere in the solution.",
       "suggestedRefactorings": [
-        "safe-delete-method: Remove 'LegacyExportXml' from OrderProcessor"
+        "safe-delete-member: Remove 'LegacyExportXml' from OrderProcessor"
       ]
     },
     {
@@ -132,8 +132,8 @@ dotnet run --project RefactorMCP.ConsoleApp -- --json analyze-refactoring-opport
 | Finding | Severity | Suggested Action |
 |---------|----------|-----------------|
 | `ProcessOrder` is 107 lines | **High** | `extract-method` -- split into validation, pricing, payment phases |
-| `_migrationTimestamp` is unused | Medium | `safe-delete-field` -- remove the dead field |
-| `LegacyExportXml` has no callers | Medium | `safe-delete-method` -- remove the dead method |
+| `_migrationTimestamp` is unused | Medium | `safe-delete-member` -- remove the dead field |
+| `LegacyExportXml` has no callers | Medium | `safe-delete-member` -- remove the dead method |
 | Variable `x` on line 79 | **High** | `rename-symbol` -- rename to `tierDiscountRate` |
 | `_paymentGateway` not readonly | Low | `make-field-readonly` -- add `readonly` modifier |
 
@@ -255,7 +255,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --json analyze-refactoring-opport
       },
       "description": "Method 'CalculateShippingCost' does not access any instance fields or properties. It is a pure function that operates only on its parameters and can be safely converted to a static method.",
       "suggestedRefactorings": [
-        "convert-to-static-with-parameters: Make 'CalculateShippingCost' static"
+        "make-method-static: Make 'CalculateShippingCost' static"
       ]
     },
     {
@@ -303,7 +303,7 @@ dotnet run --project RefactorMCP.ConsoleApp -- --json analyze-refactoring-opport
 | Finding | Severity | Suggested Action |
 |---------|----------|-----------------|
 | Complex chained ternary in `CalculateLineTotal` (line 29) | **High** | `introduce-variable` -- break into `tierDiscount`, `seasonalMultiplier`, `bulkMultiplier` |
-| `CalculateShippingCost` uses no instance state | Medium | `convert-to-static-with-parameters` -- mark as `static` |
+| `CalculateShippingCost` uses no instance state | Medium | `make-method-static` -- mark as `static` |
 | Feature flag fork in `ApplyDynamicPricing` | **High** | `extract-method` or strategy pattern -- separate the two pricing paths |
 | `GetBaseMultiplier` is trivial one-liner | Low | `inline-method` -- inline at call site |
 
@@ -322,9 +322,9 @@ Priority  File                  Finding                           Tool to Apply
   3       PricingEngine.cs      Feature flag branching in         extract-method
                                 ApplyDynamicPricing
   4       OrderProcessor.cs     Variable 'x' is poorly named     rename-symbol
-  5       OrderProcessor.cs     _migrationTimestamp is unused     safe-delete-field
-  6       OrderProcessor.cs     LegacyExportXml has no callers   safe-delete-method
-  7       PricingEngine.cs      CalculateShippingCost can be      convert-to-static-with-parameters
+  5       OrderProcessor.cs     _migrationTimestamp is unused     safe-delete-member
+  6       OrderProcessor.cs     LegacyExportXml has no callers   safe-delete-member
+  7       PricingEngine.cs      CalculateShippingCost can be      make-method-static
                                 static
   8       PricingEngine.cs      GetBaseMultiplier is trivial      inline-method
   9       OrderProcessor.cs     _paymentGateway not readonly      make-field-readonly

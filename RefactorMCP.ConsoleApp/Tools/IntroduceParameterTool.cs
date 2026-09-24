@@ -200,48 +200,6 @@ public static class IntroduceParameterTool
             ?? throw new McpException($"Error: A call passes no single value for '{parameter.Name}', so the expression cannot be computed there");
     }
 
-    private static Task<string> IntroduceParameterSingleFile(string filePath, string methodName, string selectionRange, string parameterName)
-    {
-        return RefactoringHelpers.ApplySingleFileEdit(
-            filePath,
-            text => IntroduceParameterInSource(text, methodName, selectionRange, parameterName),
-            $"Successfully introduced parameter '{parameterName}' from {selectionRange} in method '{methodName}' in {filePath} (single file mode)");
-    }
-
-    public static string IntroduceParameterInSource(string sourceText, string methodName, string selectionRange, string parameterName)
-    {
-        var syntaxTree = CSharpSyntaxTree.ParseText(sourceText);
-        var syntaxRoot = syntaxTree.GetRoot();
-        var text = SourceText.From(sourceText);
-
-        var method = syntaxRoot.DescendantNodes()
-            .OfType<MethodDeclarationSyntax>()
-            .FirstOrDefault(m => m.Identifier.ValueText == methodName);
-        if (method == null)
-            return $"Error: No method named '{methodName}' found";
-
-        var span = RefactoringHelpers.ParseSelectionRange(text, selectionRange);
-
-        var selectedExpression = syntaxRoot.DescendantNodes()
-            .OfType<ExpressionSyntax>()
-            .Where(e => span.Contains(e.Span) || e.Span.Contains(span))
-            .OrderBy(e => Math.Abs(e.Span.Length - span.Length))
-            .ThenBy(e => e.Span.Length)
-            .FirstOrDefault();
-        if (selectedExpression == null)
-            throw new McpException("Error: Selected code is not a valid expression");
-
-        var parameter = SyntaxFactory.Parameter(SyntaxFactory.Identifier(parameterName))
-            .WithType(SyntaxFactory.ParseTypeName("object"));
-
-        var parameterReference = SyntaxFactory.IdentifierName(parameterName);
-        var generator = SyntaxGenerator.GetGenerator(RefactoringHelpers.SharedWorkspace, LanguageNames.CSharp);
-        var rewriter = new ParameterIntroductionRewriter(selectedExpression, methodName, parameter, parameterReference, generator);
-        var newRoot = rewriter.Visit(syntaxRoot);
-
-        var formattedRoot = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
-        return formattedRoot.ToFullString();
-    }
     [McpServerTool, Description("Create a new parameter from selected code (preferred for large C# file refactoring)")]
     public static async Task<string> IntroduceParameter(
         [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
@@ -252,11 +210,10 @@ public static class IntroduceParameterTool
     {
         try
         {
-            return await RefactoringHelpers.RunWithSolutionOrFile(
+            return await RefactoringHelpers.RunWithSolution(
                 solutionPath,
                 filePath,
-                doc => IntroduceParameterWithSolution(doc, methodName, selectionRange, parameterName),
-                path => IntroduceParameterSingleFile(path, methodName, selectionRange, parameterName));
+                doc => IntroduceParameterWithSolution(doc, methodName, selectionRange, parameterName));
         }
         catch (Exception ex)
         {

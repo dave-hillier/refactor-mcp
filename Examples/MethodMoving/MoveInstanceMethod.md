@@ -1,7 +1,7 @@
 # Move Instance Method Refactoring
 
 ## Overview
-The `move-instance-method` refactoring moves one or more instance methods from one class to another. It handles dependency injection, creates wrapper methods to preserve the API, and auto-creates target classes when needed.
+Move Instance Method relocates an instance method to the class it belongs with. `move-member` moves it through a field, property or parameter of the target type (`via`), which becomes `this` in the target; `move-multiple-methods` moves several at once. When the source class has no reference to the target, `make-static-then-move` makes the method static, taking the instance if it uses it, and moves it, creating the target as a static class if needed. Each can leave a delegating stub behind (the default) or update the callers.
 
 ## When to Use
 - When a method uses more features of another class than its own (Feature Envy)
@@ -96,18 +96,15 @@ public class OrderService
     private readonly IOrderRepository _orderRepository;
     private readonly IInventoryService _inventoryService;
     private readonly ILogger<OrderService> _logger;
-    private readonly PricingCalculator _pricingCalculator;
 
     public OrderService(
         IOrderRepository orderRepository,
         IInventoryService inventoryService,
-        ILogger<OrderService> logger,
-        PricingCalculator pricingCalculator)
+        ILogger<OrderService> logger)
     {
         _orderRepository = orderRepository;
         _inventoryService = inventoryService;
         _logger = logger;
-        _pricingCalculator = pricingCalculator;
     }
 
     public async Task<Order> CreateOrderAsync(OrderRequest request)
@@ -119,9 +116,9 @@ public class OrderService
             CreatedAt = DateTime.UtcNow
         };
 
-        order.Subtotal = _pricingCalculator.CalculateSubtotal(order.Items);
-        order.Tax = _pricingCalculator.CalculateTax(order.Subtotal, request.ShippingAddress.State);
-        order.ShippingCost = _pricingCalculator.CalculateShipping(order.Items, request.ShippingAddress);
+        order.Subtotal = PricingCalculator.CalculateSubtotal(order.Items);
+        order.Tax = PricingCalculator.CalculateTax(order.Subtotal, request.ShippingAddress.State);
+        order.ShippingCost = PricingCalculator.CalculateShipping(order.Items, request.ShippingAddress);
         order.Total = order.Subtotal + order.Tax + order.ShippingCost;
 
         await _orderRepository.SaveAsync(order);
@@ -129,15 +126,15 @@ public class OrderService
     }
 }
 
-// PricingCalculator.cs - New class with focused pricing responsibility
-public class PricingCalculator
+// PricingCalculator.cs - New static class with focused pricing responsibility
+public static class PricingCalculator
 {
-    public decimal CalculateSubtotal(List<OrderItem> items)
+    internal static decimal CalculateSubtotal(List<OrderItem> items)
     {
         return items.Sum(item => item.UnitPrice * item.Quantity);
     }
 
-    public decimal CalculateTax(decimal subtotal, string state)
+    internal static decimal CalculateTax(decimal subtotal, string state)
     {
         var taxRates = new Dictionary<string, decimal>
         {
@@ -151,7 +148,7 @@ public class PricingCalculator
         return Math.Round(subtotal * rate, 2);
     }
 
-    public decimal CalculateShipping(List<OrderItem> items, Address address)
+    internal static decimal CalculateShipping(List<OrderItem> items, Address address)
     {
         var totalWeight = items.Sum(i => i.Weight * i.Quantity);
 
@@ -169,13 +166,51 @@ public class PricingCalculator
 ```
 
 ### Tool Usage
+`OrderService` holds no `PricingCalculator` in a field, property or parameter, so
+`move-member` has nothing to move these instance methods through and refuses.
+`make-static-then-move` makes each method static first (none of them reads the
+instance, so no parameter is added) and then moves it, creating `PricingCalculator`
+as a static class. With `keepStub` false the callers are updated instead of a
+delegating stub being left behind.
+
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --json move-instance-method '{
+for method in CalculateSubtotal CalculateTax CalculateShipping; do
+dotnet run --project RefactorMCP.ConsoleApp -- --json make-static-then-move '{
     "solutionPath": "MyProject.sln",
-    "sourceFilePath": "Services/OrderService.cs",
+    "filePath": "Services/OrderService.cs",
+    "methodName": "'"$method"'",
+    "targetClass": "PricingCalculator",
+    "targetFilePath": "Services/PricingCalculator.cs",
+    "keepStub": false
+}'
+done
+```
+
+### Moving Through a Field
+When the source class does hold the target, `move-member` moves an instance method
+through that field, property or parameter (`via`), which becomes `this` in the target.
+Had `OrderService` a `_pricingCalculator` field, the move would be:
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json move-member '{
+    "solutionPath": "MyProject.sln",
+    "filePath": "Services/OrderService.cs",
+    "memberName": "CalculateSubtotal",
+    "via": "_pricingCalculator",
+    "keepStub": false
+}'
+```
+
+`move-multiple-methods` moves several methods through the same `via` in one call:
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json move-multiple-methods '{
+    "solutionPath": "MyProject.sln",
+    "filePath": "Services/OrderService.cs",
+    "className": "OrderService",
     "methodNames": ["CalculateSubtotal", "CalculateTax", "CalculateShipping"],
-    "targetClassName": "PricingCalculator",
-    "targetFilePath": "Services/PricingCalculator.cs"
+    "via": "_pricingCalculator",
+    "keepStubs": false
 }'
 ```
 

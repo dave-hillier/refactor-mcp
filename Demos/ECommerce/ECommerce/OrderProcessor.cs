@@ -7,9 +7,9 @@ namespace ECommerce;
 ///
 /// Refactoring opportunities:
 ///   - extract-method: ProcessOrder is 100+ lines with distinct phases
-///   - move-instance-method: FormatAuditLogEntry belongs in AuditLogger
-///   - safe-delete-method: LegacyExportXml is never called
-///   - safe-delete-field: _migrationTimestamp is unused
+///   - move-member (via _auditLogger): FormatAuditLogEntry belongs in AuditLogger
+///   - safe-delete-member: LegacyExportXml is never called
+///   - safe-delete-member: _migrationTimestamp is unused
 ///   - introduce-parameter: hardcoded tax rate 0.08m
 ///   - make-field-readonly: _paymentGateway, _auditLogger never reassigned
 ///   - rename-symbol: poorly named 'x' variable
@@ -149,7 +149,7 @@ public class OrderProcessor
 
     /// <summary>
     /// This method formats audit log entries but it really belongs in AuditLogger.
-    /// It only uses OrderProcessor state minimally — prime candidate for move-instance-method.
+    /// It only uses OrderProcessor state minimally — prime candidate for move-member via _auditLogger.
     /// </summary>
     public string FormatAuditLogEntry(Order order, Customer customer, decimal amount, string transactionId)
     {

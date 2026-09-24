@@ -3,10 +3,10 @@
 ## Overview
 Safe Delete refactorings verify that code elements have no references before removing them. This prevents accidental breaking changes. RefactorMCP provides safe deletion for:
 
-- **safe-delete-field**: Remove unused fields
-- **safe-delete-method**: Remove unused methods
-- **safe-delete-parameter**: Remove unused parameters (updates all callers)
-- **safe-delete-variable**: Remove unused local variables
+- **safe-delete-member**: Remove an unused method, property, field or event
+- **safe-delete-type**: Remove an unused type, and any file left empty
+- **remove-unused-parameter**: Remove a parameter no body reads (updates all callers)
+- **safe-delete-local**: Remove an unused local variable
 
 ## When to Use
 - When cleaning up dead code
@@ -97,18 +97,39 @@ public class UserService
 ```
 
 ### Tool Usage
-```bash
-# Each field deletion is safe-checked independently
-dotnet run --project RefactorMCP.ConsoleApp -- --json safe-delete-field '{
-    "solutionPath": "MyApp.sln",
-    "filePath": "Services/UserService.cs",
-    "fieldName": "_legacyAuth"
-}'
+Each field deletion is safe-checked independently. `_maxCacheSize` is referenced
+nowhere but its own declaration, so it is deleted straight away:
 
-dotnet run --project RefactorMCP.ConsoleApp -- --json safe-delete-field '{
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json safe-delete-member '{
     "solutionPath": "MyApp.sln",
     "filePath": "Services/UserService.cs",
-    "fieldName": "_userCache"
+    "memberName": "_maxCacheSize"
+}'
+```
+
+An assignment is a reference too, so `_legacyAuth`, `_userCache`, `_cacheTimeout`
+and `_lastCacheCleanup` are refused while their assignments remain:
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json safe-delete-member '{
+    "solutionPath": "MyApp.sln",
+    "filePath": "Services/UserService.cs",
+    "memberName": "_legacyAuth"
+}'
+# Error deleting member: Error: 'UserService._legacyAuth' is referenced 1 time(s): UserService.cs(25,9)
+```
+
+Remove the assignments, delete the fields, and the constructor's `legacyAuth`
+parameter is left unread. `remove-unused-parameter` takes the type's name for a
+constructor, and drops the argument every construction passes:
+
+```bash
+dotnet run --project RefactorMCP.ConsoleApp -- --json remove-unused-parameter '{
+    "solutionPath": "MyApp.sln",
+    "filePath": "Services/UserService.cs",
+    "methodName": "UserService",
+    "parameterName": "legacyAuth"
 }'
 ```
 
@@ -221,10 +242,10 @@ public class OrderCalculator
 
 ### Tool Usage
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --json safe-delete-method '{
+dotnet run --project RefactorMCP.ConsoleApp -- --json safe-delete-member '{
     "solutionPath": "MyApp.sln",
     "filePath": "Services/OrderCalculator.cs",
-    "methodName": "CalculateTotalLegacy"
+    "memberName": "CalculateTotalLegacy"
 }'
 ```
 
@@ -354,7 +375,7 @@ await notificationService.SendShippingNotificationAsync(
 
 ### Tool Usage
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --json safe-delete-parameter '{
+dotnet run --project RefactorMCP.ConsoleApp -- --json remove-unused-parameter '{
     "solutionPath": "MyApp.sln",
     "filePath": "Services/NotificationService.cs",
     "methodName": "SendOrderConfirmationAsync",
@@ -439,13 +460,21 @@ public class DataProcessor
 ```
 
 ### Tool Usage
+`line` and `column` locate the local's name in its declaration; here `recordCount`:
+
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --json safe-delete-variable '{
+dotnet run --project RefactorMCP.ConsoleApp -- --json safe-delete-local '{
+    "solutionPath": "MyApp.sln",
     "filePath": "Services/DataProcessor.cs",
-    "startLine": 5,
-    "endLine": 5
+    "line": 6,
+    "column": 13
 }'
 ```
+
+An initializer with side effects is kept as a statement. `validRecords` is
+initialized by method calls, so deleting it leaves
+`data.Records.Where(r => r.IsValid).ToList();` in place, to remove by hand once
+you know the calls do nothing that matters.
 
 ---
 
@@ -455,27 +484,21 @@ Each safe-delete operation:
 1. **Scans for references** - Searches entire solution for usages
 2. **Reports if blocked** - Returns an error if references exist
 3. **Shows blockers** - Lists where the element is referenced
+   (a member that overrides, is overridden or implements an interface member is refused too)
 4. **Atomic operation** - Either succeeds completely or makes no changes
 
 ## When Safe Delete Fails
 
 ```bash
 # Example: Trying to delete a method that's still called
-dotnet run --project RefactorMCP.ConsoleApp -- --json safe-delete-method '{
+dotnet run --project RefactorMCP.ConsoleApp -- --json safe-delete-member '{
     "solutionPath": "MyApp.sln",
     "filePath": "Services/Calculator.cs",
-    "methodName": "CalculateTax"
+    "memberName": "CalculateTax"
 }'
 
 # Response:
-# {
-#   "success": false,
-#   "error": "Cannot delete 'CalculateTax': method is referenced",
-#   "references": [
-#     "OrderService.cs:45 - CalculateTotal",
-#     "InvoiceService.cs:23 - GenerateInvoice"
-#   ]
-# }
+# Error deleting member: Error: 'Calculator.CalculateTax(decimal, string)' is referenced 2 time(s): OrderService.cs(45,20), InvoiceService.cs(23,19)
 ```
 
 ---

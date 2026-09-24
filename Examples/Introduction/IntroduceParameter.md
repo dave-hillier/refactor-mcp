@@ -120,6 +120,7 @@ public class PasswordValidator
 ### Tool Usage
 ```bash
 dotnet run --project RefactorMCP.ConsoleApp -- --json introduce-parameter '{
+    "solutionPath": "MyProject.sln",
     "filePath": "PasswordValidator.cs",
     "startLine": 9,
     "startColumn": 31,

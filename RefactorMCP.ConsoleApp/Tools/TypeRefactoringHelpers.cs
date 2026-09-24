@@ -446,14 +446,12 @@ internal static class TypeRefactoringHelpers
                 var text = (await document.GetTextAsync(cancellationToken)).ToString();
                 Directory.CreateDirectory(Path.GetDirectoryName(document.FilePath!)!);
                 await File.WriteAllTextAsync(document.FilePath!, text, EncodingFor(document.FilePath!), cancellationToken);
-                RefactoringHelpers.EvictFileCaches(document.FilePath!);
             }
 
             foreach (var id in projectChanges.GetRemovedDocuments())
             {
                 var path = before.GetDocument(id)!.FilePath!;
                 File.Delete(path);
-                RefactoringHelpers.EvictFileCaches(path);
             }
         }
 

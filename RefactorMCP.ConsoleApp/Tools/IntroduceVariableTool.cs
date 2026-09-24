@@ -20,11 +20,10 @@ public static class IntroduceVariableTool
     {
         try
         {
-            return await RefactoringHelpers.RunWithSolutionOrFile(
+            return await RefactoringHelpers.RunWithSolution(
                 solutionPath,
                 filePath,
-                doc => IntroduceVariableWithSolution(doc, selectionRange, variableName),
-                path => IntroduceVariableSingleFile(path, selectionRange, variableName));
+                doc => IntroduceVariableWithSolution(doc, selectionRange, variableName));
         }
         catch (Exception ex)
         {
@@ -44,30 +43,6 @@ public static class IntroduceVariableTool
         await RefactoringHelpers.WriteAndUpdateCachesAsync(document, (await formatted.GetSyntaxRootAsync())!);
 
         return $"Successfully introduced variable '{variableName}' from {selectionRange} in {document.FilePath} (solution mode)";
-    }
-
-    private static async Task<string> IntroduceVariableSingleFile(string filePath, string selectionRange, string variableName)
-    {
-        filePath = RefactoringHelpers.ResolvePath(filePath)!;
-
-        if (!File.Exists(filePath))
-            throw new McpException($"Error: File {filePath} not found");
-
-        var (sourceText, encoding) = await RefactoringHelpers.ReadFileWithEncodingAsync(filePath);
-        var model = await RefactoringHelpers.GetOrCreateSemanticModelAsync(filePath);
-        var newText = IntroduceVariableInSource(sourceText, selectionRange, variableName, model);
-        await File.WriteAllTextAsync(filePath, newText, encoding);
-        RefactoringHelpers.UpdateFileCaches(filePath, newText);
-        return $"Successfully introduced variable '{variableName}' from {selectionRange} in {filePath} (single file mode)";
-    }
-
-    public static string IntroduceVariableInSource(string sourceText, string selectionRange, string variableName, SemanticModel? model = null)
-    {
-        var syntaxTree = model?.SyntaxTree ?? CSharpSyntaxTree.ParseText(sourceText);
-        var span = RefactoringHelpers.ParseSelectionRange(syntaxTree.GetText(), selectionRange);
-
-        var newRoot = Introduce(syntaxTree.GetRoot(), span, variableName, model, RefactoringHelpers.SharedWorkspace);
-        return Formatter.Format(newRoot, Formatter.Annotation, RefactoringHelpers.SharedWorkspace).ToFullString();
     }
 
     /// <summary>

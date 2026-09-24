@@ -10,16 +10,13 @@ using ModelContextProtocol;
 
 /// <summary>
 /// Everything that belongs to one loaded solution: the workspace that loaded
-/// it, the current immutable <see cref="Solution"/>, and the move history that
-/// stops the same method being moved twice in a session.
+/// it and the current immutable <see cref="Solution"/>.
 ///
 /// A session also owns the solution directory, so tools can resolve relative
 /// file paths without the process's current directory being moved under them.
 /// </summary>
 internal sealed class SolutionSession : IDisposable
 {
-    private readonly HashSet<string> _movedMethods = new(StringComparer.Ordinal);
-    private readonly object _movedMethodsLock = new();
     private readonly object _workspaceLock = new();
 
     private readonly object _solutionLock = new();
@@ -138,7 +135,6 @@ internal sealed class SolutionSession : IDisposable
                     _solution = solution.WithDocumentText(document.Id, SourceText.From(text, encoding));
             }
 
-            RefactoringHelpers.EvictFileCaches(filePath);
         }
         catch (Exception)
         {
@@ -216,37 +212,6 @@ internal sealed class SolutionSession : IDisposable
             : Path.GetFullPath(Path.Combine(SolutionDirectory, path));
     }
 
-    public void EnsureNotAlreadyMoved(string filePath, string methodName)
-    {
-        lock (_movedMethodsLock)
-        {
-            if (_movedMethods.Contains(MoveKey(filePath, methodName)))
-            {
-                throw new McpException(
-                    $"Error: Method '{methodName}' appears to have been moved already during this session. " +
-                    "Consider using inline-method if you want to remove the wrapper.");
-            }
-        }
-    }
-
-    public void MarkMoved(string filePath, string methodName)
-    {
-        lock (_movedMethodsLock)
-        {
-            _movedMethods.Add(MoveKey(filePath, methodName));
-        }
-    }
-
-    public void ResetMoveHistory()
-    {
-        lock (_movedMethodsLock)
-        {
-            _movedMethods.Clear();
-        }
-    }
-
-    private string MoveKey(string filePath, string methodName) => $"{ResolvePath(filePath)}::{methodName}";
-
     private MSBuildWorkspace GetOrCreateWorkspace()
     {
         lock (_workspaceLock)
@@ -274,7 +239,5 @@ internal sealed class SolutionSession : IDisposable
         {
             _solution = null;
         }
-
-        ResetMoveHistory();
     }
 }

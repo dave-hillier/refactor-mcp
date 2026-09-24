@@ -16,18 +16,18 @@ This directory contains comprehensive, realistic examples demonstrating each ref
 | `introduce-variable` | Introduction | Extract expression into a named variable |
 | `introduce-field` | Introduction | Extract expression into a class field |
 | `introduce-parameter` | Introduction | Convert hardcoded value to method parameter |
-| `move-instance-method` | Method Moving | Move instance method to another class |
-| `move-static-method` | Method Moving | Move static method to another class |
-| `move-type-to-file` | Method Moving | Move a type to its own file |
-| `convert-to-static-with-instance` | Conversion | Make method static with instance parameter |
-| `convert-to-static-with-parameters` | Conversion | Make method static with member parameters |
+| `move-member` | Method Moving | Move a method, field or property to another type |
+| `move-multiple-methods` | Method Moving | Move several methods of a class to another type |
+| `make-static-then-move` | Method Moving | Make an instance method static and move it to another class |
+| `move-to-separate-file` | Method Moving | Move a type to its own file |
+| `make-method-static` | Conversion | Make method static, passing the instance or the members it reads |
 | `convert-to-extension-method` | Conversion | Convert to extension method |
-| `constructor-injection` | Conversion | Convert parameters to injected fields |
+| `inject-constructor-dependency` | Conversion | Turn an object a method constructs into a constructor-injected dependency |
 | `use-interface` | Conversion | Change parameter type to interface |
-| `safe-delete-field` | Safe Deletion | Remove field if no references |
-| `safe-delete-method` | Safe Deletion | Remove method if no callers |
-| `safe-delete-parameter` | Safe Deletion | Remove parameter if unused |
-| `safe-delete-variable` | Safe Deletion | Remove variable if unused |
+| `safe-delete-member` | Safe Deletion | Remove method, property, field or event if nothing refers to it |
+| `safe-delete-type` | Safe Deletion | Remove type if nothing refers to it |
+| `remove-unused-parameter` | Safe Deletion | Remove parameter no body reads, and its arguments |
+| `safe-delete-local` | Safe Deletion | Remove local variable if unused |
 | `extract-interface` | Design Patterns | Create interface from class members |
 | `extract-decorator` | Design Patterns | Create decorator wrapper class |
 | `create-adapter` | Design Patterns | Create adapter for incompatible interface |
@@ -78,18 +78,9 @@ This directory contains comprehensive, realistic examples demonstrating each ref
 
 ### Using the Tools
 
-#### Solution Mode (Recommended)
 ```bash
 dotnet run --project RefactorMCP.ConsoleApp -- --json <tool-name> '{
     "solutionPath": "path/to/your.sln",
-    "filePath": "path/to/file.cs",
-    ...additional parameters...
-}'
-```
-
-#### Single File Mode
-```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --json <tool-name> '{
     "filePath": "path/to/file.cs",
     ...additional parameters...
 }'
@@ -99,11 +90,11 @@ dotnet run --project RefactorMCP.ConsoleApp -- --json <tool-name> '{
 
 | Parameter | Description |
 |-----------|-------------|
-| `solutionPath` | Path to .sln file for solution-wide refactoring |
+| `solutionPath` | Path to the .sln file; the file being refactored must belong to it |
 | `filePath` | Path to the C# file to refactor |
 | `methodName` | Name of the method to refactor |
 | `startLine` / `endLine` | Line range for selection-based refactorings |
-| `targetClassName` | Target class name for move operations |
+| `targetType` / `via` | Target type, or the field, property or parameter to move through, for `move-member` |
 | `targetFilePath` | Target file path for move operations |
 
 ## Best Practices
@@ -143,16 +134,16 @@ dotnet run --project RefactorMCP.ConsoleApp -- --json <tool-name> '{
 dotnet run -- --json class-length-metrics '{"solutionPath": "MyApp.sln"}'
 
 # 2. Find opportunities
-dotnet run -- --json analyze-refactoring-opportunities '{"filePath": "GodClass.cs"}'
+dotnet run -- --json analyze-refactoring-opportunities '{"solutionPath": "MyApp.sln", "filePath": "GodClass.cs"}'
 
 # 3. Extract interface for testing
 dotnet run -- --json extract-interface '{...}'
 
-# 4. Move related methods to new class
-dotnet run -- --json move-instance-method '{...}'
+# 4. Move related methods to the class they belong in
+dotnet run -- --json move-member '{...}'
 
 # 5. Clean up unused code
-dotnet run -- --json safe-delete-method '{...}'
+dotnet run -- --json safe-delete-member '{...}'
 ```
 
 ### Scenario 2: Preparing for Dependency Injection
@@ -162,7 +153,7 @@ dotnet run -- --json safe-delete-method '{...}'
 dotnet run -- --json use-interface '{...}'
 
 # 2. Inject dependencies through constructor
-dotnet run -- --json constructor-injection '{...}'
+dotnet run -- --json inject-constructor-dependency '{...}'
 
 # 3. Extract interface if needed
 dotnet run -- --json extract-interface '{...}'
@@ -172,7 +163,7 @@ dotnet run -- --json extract-interface '{...}'
 
 ```bash
 # 1. Analyze the method
-dotnet run -- --json analyze-refactoring-opportunities '{"filePath": "LongMethod.cs"}'
+dotnet run -- --json analyze-refactoring-opportunities '{"solutionPath": "MyApp.sln", "filePath": "LongMethod.cs"}'
 
 # 2. Introduce variables for clarity
 dotnet run -- --json introduce-variable '{...}'

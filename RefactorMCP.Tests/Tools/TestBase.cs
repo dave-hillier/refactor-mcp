@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace RefactorMCP.Tests;
 
@@ -17,6 +19,17 @@ public abstract class TestBase : IDisposable
         Directory.CreateDirectory(TestOutputRoot);
         TestOutputPath = Path.Combine(TestOutputRoot, Guid.NewGuid().ToString());
         Directory.CreateDirectory(TestOutputPath);
+    }
+
+    /// <summary>
+    /// Writes a fixture and adds it to the loaded solution, which is the only
+    /// place the refactoring tools look for files.
+    /// </summary>
+    protected static async Task AddToSolutionAsync(string filePath, string code)
+    {
+        await TestUtilities.CreateTestFile(filePath, code);
+        var solution = await RefactoringHelpers.GetOrLoadSolution(SolutionPath);
+        RefactoringHelpers.AddDocumentToProject(solution.Projects.First(), filePath);
     }
 
     public void Dispose()

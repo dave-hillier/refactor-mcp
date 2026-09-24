@@ -189,32 +189,6 @@ public class SessionRegistryTests : IDisposable
         Assert.Equal(Path.GetFullPath(Path.Combine(root, "one", "Foo.cs")), first.ResolvePath("Foo.cs"));
         Assert.Equal(Path.GetFullPath(Path.Combine(root, "two", "Foo.cs")), second.ResolvePath("Foo.cs"));
     }
-
-    [Fact]
-    public void MoveHistory_BelongsToTheSession()
-    {
-        var first = SessionRegistry.GetOrCreate(SolutionPath);
-        var second = SessionRegistry.GetOrCreate(Path.Combine(Path.GetDirectoryName(SolutionPath)!, "Other.sln"));
-
-        first.MarkMoved(SolutionPath, "Calculate");
-
-        Assert.Throws<ModelContextProtocol.McpException>(() => first.EnsureNotAlreadyMoved(SolutionPath, "Calculate"));
-        second.EnsureNotAlreadyMoved(SolutionPath, "Calculate");
-
-        first.ResetMoveHistory();
-        first.EnsureNotAlreadyMoved(SolutionPath, "Calculate");
-    }
-
-    [Fact]
-    public void MoveHistory_ResolvesRelativeFilePathsAgainstTheSolution()
-    {
-        var session = new SolutionSession(SolutionPath);
-        var relative = Path.GetRelativePath(session.SolutionDirectory, SolutionPath);
-
-        session.MarkMoved(relative, "Calculate");
-
-        Assert.Throws<ModelContextProtocol.McpException>(() => session.EnsureNotAlreadyMoved(SolutionPath, "Calculate"));
-    }
 }
 
 public class DaemonEndpointTests

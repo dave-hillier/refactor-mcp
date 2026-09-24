@@ -25,13 +25,12 @@ public static class IntroduceFieldTool
     {
         try
         {
-            return await RefactoringHelpers.RunWithSolutionOrFile(
+            return await RefactoringHelpers.RunWithSolution(
                 solutionPath,
                 filePath,
                 doc => fieldType is null
                     ? IntroduceFieldWithSolution(doc, selectionRange, fieldName, accessModifier)
-                    : AddFieldOfTypeWithSolution(doc, selectionRange, fieldName, accessModifier, fieldType),
-                path => IntroduceFieldSingleFile(path, selectionRange, fieldName, accessModifier));
+                    : AddFieldOfTypeWithSolution(doc, selectionRange, fieldName, accessModifier, fieldType));
         }
         catch (Exception ex)
         {
@@ -237,81 +236,6 @@ public static class IntroduceFieldTool
         return SyntaxFactory.FieldDeclaration(
                 SyntaxFactory.VariableDeclaration(type, SyntaxFactory.SingletonSeparatedList(variable)))
             .WithModifiers(modifiers);
-    }
-
-    private static async Task<string> IntroduceFieldSingleFile(string filePath, string selectionRange, string fieldName, string accessModifier)
-    {
-        filePath = RefactoringHelpers.ResolvePath(filePath)!;
-
-        if (!File.Exists(filePath))
-            throw new McpException($"Error: File {filePath} not found");
-
-        var (sourceText, encoding) = await RefactoringHelpers.ReadFileWithEncodingAsync(filePath);
-        var model = await RefactoringHelpers.GetOrCreateSemanticModelAsync(filePath);
-        var newText = IntroduceFieldInSource(sourceText, selectionRange, fieldName, accessModifier, model);
-        if (newText.StartsWith("Error:"))
-            return newText;
-
-        await File.WriteAllTextAsync(filePath, newText, encoding);
-        RefactoringHelpers.UpdateFileCaches(filePath, newText);
-        return $"Successfully introduced {accessModifier} field '{fieldName}' from {selectionRange} in {filePath} (single file mode)";
-    }
-
-    public static string IntroduceFieldInSource(string sourceText, string selectionRange, string fieldName, string accessModifier, SemanticModel? model = null)
-    {
-        var syntaxTree = model?.SyntaxTree ?? CSharpSyntaxTree.ParseText(sourceText);
-        var syntaxRoot = syntaxTree.GetRoot();
-        var text = syntaxTree.GetText();
-        var span = RefactoringHelpers.ParseSelectionRange(text, selectionRange);
-
-        var selectedExpression = syntaxRoot.DescendantNodes()
-            .OfType<ExpressionSyntax>()
-            .FirstOrDefault(e => span.Contains(e.Span) || e.Span.Contains(span));
-
-        if (selectedExpression == null)
-            throw new McpException("Error: Selected code is not a valid expression");
-
-        var typeName = "var";
-        if (model != null)
-        {
-            var typeInfo = model.GetTypeInfo(selectedExpression);
-            if (typeInfo.Type != null)
-                typeName = typeInfo.Type.ToDisplayString();
-        }
-
-        // Create the field declaration
-        var accessModifierToken = accessModifier.ToLower() switch
-        {
-            "public" => SyntaxFactory.Token(SyntaxKind.PublicKeyword),
-            "protected" => SyntaxFactory.Token(SyntaxKind.ProtectedKeyword),
-            "internal" => SyntaxFactory.Token(SyntaxKind.InternalKeyword),
-            _ => SyntaxFactory.Token(SyntaxKind.PrivateKeyword)
-        };
-
-        var fieldDeclaration = SyntaxFactory.FieldDeclaration(
-            SyntaxFactory.VariableDeclaration(
-                SyntaxFactory.IdentifierName(typeName))
-            .WithVariables(SyntaxFactory.SingletonSeparatedList(
-                SyntaxFactory.VariableDeclarator(fieldName)
-                .WithInitializer(SyntaxFactory.EqualsValueClause(selectedExpression)))))
-            .WithModifiers(SyntaxFactory.TokenList(accessModifierToken));
-
-        var fieldReference = SyntaxFactory.IdentifierName(fieldName);
-        var containingClass = selectedExpression.Ancestors().OfType<ClassDeclarationSyntax>().FirstOrDefault();
-        if (containingClass != null)
-        {
-            var exists = containingClass.Members
-                .OfType<FieldDeclarationSyntax>()
-                .SelectMany(f => f.Declaration.Variables)
-                .Any(v => v.Identifier.ValueText == fieldName);
-            if (exists)
-                return $"Error: Field '{fieldName}' already exists";
-        }
-        var rewriter = new FieldIntroductionRewriter(selectedExpression, fieldReference, fieldDeclaration, containingClass);
-        var newRoot = rewriter.Visit(syntaxRoot);
-
-        var formattedRoot = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
-        return formattedRoot.ToFullString();
     }
 
 }

@@ -70,17 +70,15 @@ For usage examples see [EXAMPLES.md](./EXAMPLES.md).
 
 - **Extract Method** – create a new method from selected code and replace the original with a call (expression-bodied methods are not supported).
 - **Introduce Field/Parameter/Variable** – turn expressions into new members; fails if a field already exists.
-- **Convert to Static** – make instance methods static using parameters or an instance argument.
-- **Move Static Method** – relocate a static method and keep a wrapper in the original class.
-- **Move Instance Method** – move one or more instance methods to another class and delegate from the source. If a moved method no longer accesses instance members, it is made static automatically. Provide a `methodNames` list along with optional `constructor-injections` and `parameter-injections` to control dependencies.
-- **Move Multiple Methods (instance)** – move several methods and keep them as instance members of the target class. The source instance is injected via the constructor when required.
-- **Move Multiple Methods (static)** – move multiple methods and convert them to static, adding a `this` parameter.
+- **Make Method Static** – make an instance method static, passing the instance or the members it reads, and update every call.
+- **Move Member** – move a method, field or property to another type: an instance member through a field, property or parameter of the target type, a static member to the named type.
+- **Move Multiple Methods** – move several methods of a class in one step, each method before the ones that call it.
 - **Make Static Then Move** – convert an instance method to static and relocate it to another class in one step.
 - **Move Type to Separate File** – move a top-level type into its own file named after the type.
 - **Make Field Readonly** – move initialization into constructors and mark the field readonly.
 - **Transform Setter to Init** – convert property setters to init-only and initialize in constructors.
-- **Constructor Injection** – convert method parameters to constructor-injected fields or properties.
-- **Safe Delete** – remove fields or variables only after dependency checks.
+- **Inject Constructor Dependency** – turn an object a method constructs for itself into a dependency the constructor receives.
+- **Safe Delete** – remove an unused member, type or local, refusing when anything refers to it.
 - **Inline Method** – replace calls with the method body and delete the original.
 - **Extract Decorator** – create a decorator class that delegates to an existing method.
 - **Create Adapter** – generate an adapter class wrapping an existing method.

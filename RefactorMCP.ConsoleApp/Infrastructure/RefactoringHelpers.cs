@@ -3,7 +3,6 @@ using ModelContextProtocol;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.MSBuild;
 using Microsoft.Build.Locator;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.CodeAnalysis.CSharp;
 using System;
 using System.IO;
@@ -18,20 +17,10 @@ using System.Collections.Generic;
 
 internal static class RefactoringHelpers
 {
-    // Syntax trees and semantic models are keyed by absolute file path, so a
-    // single process wide cache serves every session. Solutions themselves are
-    // owned by the SolutionSession that loaded them.
-    internal static MemoryCache SyntaxTreeCache = new(new MemoryCacheOptions());
-    internal static MemoryCache ModelCache = new(new MemoryCacheOptions());
-
+    // Solutions are owned by the SolutionSession that loaded them.
     internal static void ClearAllCaches()
     {
         SessionRegistry.Clear();
-
-        SyntaxTreeCache.Dispose();
-        SyntaxTreeCache = new MemoryCache(new MemoryCacheOptions());
-        ModelCache.Dispose();
-        ModelCache = new MemoryCache(new MemoryCacheOptions());
     }
 
     private static readonly Lazy<AdhocWorkspace> _workspace =
@@ -217,27 +206,6 @@ internal static class RefactoringHelpers
     }
 
 
-    internal static async Task<string> ApplySingleFileEdit(
-        string filePath,
-        Func<string, string> transform,
-        string successMessage)
-    {
-        filePath = ResolvePath(filePath)!;
-
-        if (!File.Exists(filePath))
-            throw new McpException($"Error: File {filePath} not found (current dir: {Directory.GetCurrentDirectory()})");
-
-        var (sourceText, encoding) = await ReadFileWithEncodingAsync(filePath);
-        var newText = transform(sourceText);
-
-        if (newText.StartsWith("Error:"))
-            return newText;
-
-        await File.WriteAllTextAsync(filePath, newText, encoding);
-        UpdateFileCaches(filePath, newText);
-        return successMessage;
-    }
-
     internal static async Task<Document?> FindClassInSolution(
         Solution solution,
         string className,
@@ -300,62 +268,6 @@ internal static class RefactoringHelpers
         }
     }
 
-    private static CSharpCompilation CreateCompilation(SyntaxTree tree)
-    {
-        var refs = ((string?)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES")!)
-            .Split(Path.PathSeparator)
-            .Select(p => MetadataReference.CreateFromFile(p));
-        return CSharpCompilation.Create(
-            "SingleFile",
-            new[] { tree },
-            refs,
-            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
-    }
-
-    internal static async Task<SyntaxTree> GetOrParseSyntaxTreeAsync(string filePath)
-    {
-        filePath = ResolvePath(filePath)!;
-
-        if (SyntaxTreeCache.TryGetValue(filePath, out SyntaxTree? cached))
-            return cached!;
-        var (text, _) = await ReadFileWithEncodingAsync(filePath);
-        var tree = CSharpSyntaxTree.ParseText(text);
-        SyntaxTreeCache.Set(filePath, tree);
-        return tree;
-    }
-
-    internal static async Task<SemanticModel> GetOrCreateSemanticModelAsync(string filePath)
-    {
-        filePath = ResolvePath(filePath)!;
-
-        if (ModelCache.TryGetValue(filePath, out SemanticModel? cached))
-            return cached!;
-        var tree = await GetOrParseSyntaxTreeAsync(filePath);
-        var compilation = CreateCompilation(tree);
-        var model = compilation.GetSemanticModel(tree);
-        ModelCache.Set(filePath, model);
-        return model;
-    }
-
-    /// <summary>Drops the cached parse results for a file that changed on disk.</summary>
-    internal static void EvictFileCaches(string filePath)
-    {
-        filePath = ResolvePath(filePath)!;
-        SyntaxTreeCache.Remove(filePath);
-        ModelCache.Remove(filePath);
-    }
-
-    internal static void UpdateFileCaches(string filePath, string newText)
-    {
-        filePath = ResolvePath(filePath)!;
-
-        var tree = CSharpSyntaxTree.ParseText(newText);
-        SyntaxTreeCache.Set(filePath, tree);
-        var compilation = CreateCompilation(tree);
-        var model = compilation.GetSemanticModel(tree);
-        ModelCache.Set(filePath, model);
-    }
-
     internal static async Task<(string Text, Encoding Encoding)> ReadFileWithEncodingAsync(
         string filePath,
         CancellationToken cancellationToken = default)
@@ -399,29 +311,14 @@ internal static class RefactoringHelpers
         return Encoding.UTF8;
     }
 
-    internal static async Task WriteFileWithEncodingAsync(
-        string filePath,
-        string text,
-        Encoding encoding,
-        CancellationToken cancellationToken = default)
-    {
-        filePath = ResolvePath(filePath)!;
-
-        await File.WriteAllTextAsync(filePath, text, encoding, cancellationToken);
-        UpdateFileCaches(filePath, text);
-    }
-
-    internal static async Task<string> RunWithSolutionOrFile(
+    internal static async Task<string> RunWithSolution(
         string solutionPath,
         string filePath,
-        Func<Document, Task<string>> withSolution,
-        Func<string, Task<string>> singleFile)
+        Func<Document, Task<string>> withSolution)
     {
         var solution = await GetOrLoadSolution(solutionPath);
-        var document = GetDocumentByPath(solution, filePath);
-        if (document != null)
-            return await withSolution(document);
-
-        return await singleFile(filePath);
+        var document = GetDocumentByPath(solution, filePath)
+            ?? throw new McpException($"Error: File {filePath} not found in solution");
+        return await withSolution(document);
     }
 }

@@ -26,10 +26,11 @@ using System.Linq;
 
 public class Sample
 {
-    private double _avg = values.Sum() / (double)values.Length;
+    private double _avg;
 
     public double GetAverage(int[] values)
     {
+        _avg = values.Sum() / (double)values.Length;
         return _avg;
     }
 }
@@ -37,7 +38,7 @@ public class Sample
 
         await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
         var testFile = Path.Combine(TestOutputPath, "IntroduceField.cs");
-        await TestUtilities.CreateTestFile(testFile, initialCode);
+        await AddToSolutionAsync(testFile, initialCode);
 
         var result = await IntroduceFieldTool.IntroduceField(
             SolutionPath,
@@ -69,7 +70,7 @@ public class Sample
         foreach (var modifier in modifiers)
         {
             var file = Path.Combine(TestOutputPath, $"Access_{modifier}.cs");
-            await TestUtilities.CreateTestFile(file, code);
+            await AddToSolutionAsync(file, code);
 
             var result = await IntroduceFieldTool.IntroduceField(
                 SolutionPath,
@@ -89,15 +90,15 @@ public class Sample
     {
         await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
         var testFile = Path.Combine(TestOutputPath, "DuplicateField.cs");
-        await TestUtilities.CreateTestFile(testFile, TestUtilities.GetSampleCodeForIntroduceField());
+        await AddToSolutionAsync(testFile, TestUtilities.GetSampleCodeForIntroduceField());
 
-        var result = await IntroduceFieldTool.IntroduceField(
+        var ex = await Assert.ThrowsAsync<ModelContextProtocol.McpException>(() => IntroduceFieldTool.IntroduceField(
             SolutionPath,
             testFile,
-            "36:20-36:56",
+            "36:20-36:57",  // numbers.Sum() / (double)numbers.Count
             "numbers",
-            "private");
+            "private"));
 
-        Assert.Equal("Error: Field 'numbers' already exists", result);
+        Assert.Contains("already has a member named 'numbers'", ex.Message);
     }
 }

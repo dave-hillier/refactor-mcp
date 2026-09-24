@@ -107,7 +107,6 @@ internal static class MovingSupport
                 var path = original.GetDocument(id)!.FilePath!;
                 if (updated.Projects.SelectMany(p => p.Documents).All(d => d.FilePath != path) && File.Exists(path))
                     File.Delete(path);
-                RefactoringHelpers.EvictFileCaches(path);
             }
         }
 
@@ -119,7 +118,6 @@ internal static class MovingSupport
             var encoding = await EncodingOfAsync(path, cancellationToken);
             Directory.CreateDirectory(Path.GetDirectoryName(path)!);
             await File.WriteAllTextAsync(path, text.ToString(), encoding, cancellationToken);
-            RefactoringHelpers.EvictFileCaches(path);
         }
 
         if (!string.IsNullOrEmpty(updated.FilePath))

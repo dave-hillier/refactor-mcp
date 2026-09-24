@@ -1,10 +1,9 @@
-# Demo 5: Static Conversion, Dependency Injection & Interface Usage
+# Demo 5: Static Conversion, Extension Methods & Interface Usage
 
-This demo explores six refactoring tools that improve how methods interact with their
+This demo explores five refactoring tools that improve how methods interact with their
 enclosing class and its dependencies. The common theme: **tighten the contract** between
 a method and the state it actually needs. Methods that use no instance state should be
-static or extension methods. Parameters that carry concrete types should use interfaces.
-Dependencies passed ad-hoc through method parameters should be constructor-injected. Fields
+static or extension methods. Parameters that carry concrete types should use interfaces. Fields
 that never change after construction should be `readonly`. Properties set only at
 initialization time should use `init` accessors.
 
@@ -14,7 +13,7 @@ Each sub-demo targets a real method in the ECommerce codebase and can be run ind
 
 ## Demo 5a: Convert to Static -- `PricingEngine.CalculateShippingCost`
 
-**Tool:** `convert-to-static-with-parameters`
+**Tool:** `make-method-static`
 
 ### Why It Matters
 
@@ -73,12 +72,17 @@ public class PricingEngine
 ### Command
 
 ```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --json convert-to-static-with-parameters '{
+dotnet run --project RefactorMCP.ConsoleApp -- --json make-method-static '{
+  "solutionPath": "Demos/ECommerce/ECommerce.sln",
   "filePath": "Demos/ECommerce/ECommerce/PricingEngine.cs",
-  "className": "PricingEngine",
   "methodName": "CalculateShippingCost"
 }'
 ```
+
+Because the method reads no instance state, it simply becomes `static`, whichever `pass`
+is chosen, and every call is rewritten to `PricingEngine.CalculateShippingCost(...)`. For a
+method that does read fields, `"pass": "instance"` (the default) adds the instance as the
+first parameter, and `"pass": "parameters"` adds each field it reads.
 
 ### After
 
@@ -191,6 +195,7 @@ public class NotificationService
 
 ```bash
 dotnet run --project RefactorMCP.ConsoleApp -- --json convert-to-extension-method '{
+  "solutionPath": "Demos/ECommerce/ECommerce.sln",
   "filePath": "Demos/ECommerce/ECommerce/NotificationService.cs",
   "className": "NotificationService",
   "methodName": "FormatCurrency"
@@ -311,6 +316,7 @@ public class CustomerRepository : ICustomerRepository { /* ... */ }
 
 ```bash
 dotnet run --project RefactorMCP.ConsoleApp -- --json use-interface '{
+  "solutionPath": "Demos/ECommerce/ECommerce.sln",
   "filePath": "Demos/ECommerce/ECommerce/CustomerService.cs",
   "className": "CustomerService",
   "methodName": "UpdateCustomerTier",
@@ -366,116 +372,7 @@ implements `ICustomerRepository`.
 
 ---
 
-## Demo 5d: Constructor Injection -- `CustomerService.RegisterCustomer`
-
-**Tool:** `convert-to-constructor-injection`
-
-### Why It Matters
-
-`RegisterCustomer` receives an `EmailService emailService` parameter on every call. But
-`EmailService` is a service dependency, not request-specific data. Passing it as a method
-parameter means every caller must know how to create or locate an `EmailService`. This is
-the "service locator as parameter" anti-pattern. The class already has an `_emailService`
-field (injected via the constructor), so the method parameter is redundant. Converting to
-constructor injection removes the parameter, uses the existing field, and ensures a single,
-consistent `EmailService` instance across all methods.
-
-### Before
-
-```csharp
-// CustomerService.cs
-public class CustomerService
-{
-    private CustomerRepository _repository;
-    private readonly EmailService _emailService;
-
-    public CustomerService(CustomerRepository repository, EmailService emailService)
-    {
-        _repository = repository;
-        _emailService = emailService;
-    }
-
-    // EmailService passed as a method parameter -- should use the injected field
-    public void RegisterCustomer(string name, string email, EmailService emailService)
-    {
-        var customer = new Customer
-        {
-            Id = Guid.NewGuid().ToString("N")[..8],
-            Name = name,
-            Email = email,
-            MemberSince = DateTime.UtcNow
-        };
-
-        _repository.Save(customer);
-        emailService.Send(email, "Welcome!", $"Welcome to our store, {name}!");
-    }
-
-    // ...
-}
-```
-
-### Command
-
-```bash
-dotnet run --project RefactorMCP.ConsoleApp -- --json convert-to-constructor-injection '{
-  "filePath": "Demos/ECommerce/ECommerce/CustomerService.cs",
-  "className": "CustomerService",
-  "methodName": "RegisterCustomer",
-  "parameterName": "emailService"
-}'
-```
-
-### After
-
-```csharp
-// CustomerService.cs (after)
-public class CustomerService
-{
-    private CustomerRepository _repository;
-    private readonly EmailService _emailService;
-
-    public CustomerService(CustomerRepository repository, EmailService emailService)
-    {
-        _repository = repository;
-        _emailService = emailService;
-    }
-
-    // emailService parameter removed -- uses constructor-injected _emailService field
-    public void RegisterCustomer(string name, string email)
-    {
-        var customer = new Customer
-        {
-            Id = Guid.NewGuid().ToString("N")[..8],
-            Name = name,
-            Email = email,
-            MemberSince = DateTime.UtcNow
-        };
-
-        _repository.Save(customer);
-        _emailService.Send(email, "Welcome!", $"Welcome to our store, {name}!");
-    }
-
-    // ...
-}
-```
-
-### What Changed
-
-| Aspect | Before | After |
-|--------|--------|-------|
-| Method signature | `RegisterCustomer(string name, string email, EmailService emailService)` | `RegisterCustomer(string name, string email)` |
-| Email sending | `emailService.Send(...)` (local param) | `_emailService.Send(...)` (injected field) |
-| Caller responsibility | Must supply an `EmailService` on every call | Only supplies business data (`name`, `email`) |
-| Constructor | Already had `EmailService` -- unchanged | Same constructor, now the sole source of `EmailService` |
-
-In this case, the class already had a constructor-injected `_emailService` field. The tool
-recognized this, removed the redundant method parameter, and rewired the method body to use
-the existing field. If no matching field had existed, the tool would have added a new
-constructor parameter and backing field automatically.
-
----
-
-## Demo 5e: Make Field Readonly -- `OrderProcessor._paymentGateway`
+## Demo 5d: Make Field Readonly -- `OrderProcessor._paymentGateway`
 
 **Tool:** `make-field-readonly`
 
@@ -521,6 +418,7 @@ public class OrderProcessor
 
 ```bash
 dotnet run --project RefactorMCP.ConsoleApp -- --json make-field-readonly '{
+  "solutionPath": "Demos/ECommerce/ECommerce.sln",
   "filePath": "Demos/ECommerce/ECommerce/OrderProcessor.cs",
   "className": "OrderProcessor",
   "fieldName": "_paymentGateway"
@@ -573,7 +471,7 @@ because the runtime knows the field reference will not change after construction
 
 ---
 
-## Demo 5f: Transform Setter to Init -- `StockSnapshot.ProductId`
+## Demo 5e: Transform Setter to Init -- `StockSnapshot.ProductId`
 
 **Tool:** `transform-setter-to-init`
 
@@ -618,6 +516,7 @@ public StockSnapshot GetSnapshot(string productId)
 
 ```bash
 dotnet run --project RefactorMCP.ConsoleApp -- --json transform-setter-to-init '{
+  "solutionPath": "Demos/ECommerce/ECommerce.sln",
   "filePath": "Demos/ECommerce/ECommerce/InventoryManager.cs",
   "className": "StockSnapshot",
   "propertyName": "ProductId"
@@ -661,14 +560,13 @@ blocked.
 
 | Demo | Tool | Target | Core Change |
 |------|------|--------|-------------|
-| 5a | `convert-to-static-with-parameters` | `PricingEngine.CalculateShippingCost` | Add `static` to method that uses no instance state |
+| 5a | `make-method-static` | `PricingEngine.CalculateShippingCost` | Add `static` to method that uses no instance state |
 | 5b | `convert-to-extension-method` | `NotificationService.FormatCurrency` | Move to static extension class; `amount.FormatCurrency()` |
 | 5c | `use-interface` | `CustomerService.UpdateCustomerTier` | `CustomerRepository` param becomes `ICustomerRepository` |
-| 5d | `convert-to-constructor-injection` | `CustomerService.RegisterCustomer` | Remove `EmailService` param; use injected `_emailService` field |
-| 5e | `make-field-readonly` | `OrderProcessor._paymentGateway` | Add `readonly` to field set only in constructor |
-| 5f | `transform-setter-to-init` | `StockSnapshot.ProductId` | `{ get; set; }` becomes `{ get; init; }` |
+| 5d | `make-field-readonly` | `OrderProcessor._paymentGateway` | Add `readonly` to field set only in constructor |
+| 5e | `transform-setter-to-init` | `StockSnapshot.ProductId` | `{ get; set; }` becomes `{ get; init; }` |
 
-All six refactorings share a principle: **reduce the gap between what a piece of code
+All five refactorings share a principle: **reduce the gap between what a piece of code
 actually needs and what it declares it needs.** A method that uses no instance state should
 not require an instance. A parameter that only calls interface methods should not demand a
 concrete type. A field that never changes should say so. These small, mechanical

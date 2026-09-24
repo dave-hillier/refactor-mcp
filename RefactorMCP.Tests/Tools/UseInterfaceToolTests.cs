@@ -32,7 +32,7 @@ public interface ILogger { }
 
         await LoadSolutionTool.LoadSolution(SolutionPath, null, CancellationToken.None);
         var testFile = Path.Combine(TestOutputPath, "UseInterface.cs");
-        await TestUtilities.CreateTestFile(testFile, initialCode);
+        await AddToSolutionAsync(testFile, initialCode);
 
         var result = await UseInterfaceTool.UseInterface(
             SolutionPath,

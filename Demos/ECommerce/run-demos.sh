@@ -170,26 +170,24 @@ demo_4_method_moving() {
 
     step "4a. Move FormatAuditLogEntry from OrderProcessor to AuditLogger"
     show_before "FormatAuditLogEntry is in OrderProcessor but logically belongs in AuditLogger"
-    run_tool "move-instance-method" "{
+    run_tool "move-member" "{
         \"solutionPath\": \"$SLN\",
         \"filePath\": \"$SRC/OrderProcessor.cs\",
-        \"sourceClass\": \"OrderProcessor\",
-        \"methodNames\": [\"FormatAuditLogEntry\"],
-        \"targetClass\": \"AuditLogger\",
-        \"targetFilePath\": \"$SRC/AuditLogger.cs\"
+        \"memberName\": \"FormatAuditLogEntry\",
+        \"via\": \"_auditLogger\",
+        \"keepStub\": false
     }"
     show_after "FormatAuditLogEntry moved to AuditLogger, OrderProcessor calls through _auditLogger"
 
     step "4b. Move static FormatAsTable from ReportGenerator to TableFormatter"
     show_before "FormatAsTable is a generic table utility living in ReportGenerator"
-    run_tool "move-static-method" "{
+    run_tool "move-member" "{
         \"solutionPath\": \"$SLN\",
         \"filePath\": \"$SRC/ReportGenerator.cs\",
-        \"methodName\": \"FormatAsTable\",
-        \"targetClass\": \"TableFormatter\",
-        \"targetFilePath\": \"$SRC/ReportGenerator.cs\"
+        \"memberName\": \"FormatAsTable\",
+        \"targetType\": \"TableFormatter\"
     }"
-    show_after "FormatAsTable now lives in TableFormatter class"
+    show_after "FormatAsTable now lives in TableFormatter class, with a delegating stub left in ReportGenerator"
 
     step "4c. Move NotificationTemplate to its own file"
     show_before "NotificationTemplate is defined in NotificationService.cs"
@@ -201,14 +199,14 @@ demo_4_method_moving() {
     show_after "NotificationTemplate is now in its own NotificationTemplate.cs file"
 }
 
-# ── Demo 5: Conversion, DI & Interfaces ──────────────────────────
+# ── Demo 5: Conversion & Interfaces ──────────────────────────────
 
 demo_5_conversion() {
-    banner "Demo 5: Static Conversion, DI & Interface Usage"
+    banner "Demo 5: Static Conversion & Interface Usage"
 
     step "5a. Convert PricingEngine.CalculateShippingCost to static (uses no instance state)"
     show_before "CalculateShippingCost is an instance method but uses no fields"
-    run_tool "convert-to-static-with-parameters" "{
+    run_tool "make-method-static" "{
         \"solutionPath\": \"$SLN\",
         \"filePath\": \"$SRC/PricingEngine.cs\",
         \"methodName\": \"CalculateShippingCost\"
@@ -235,17 +233,7 @@ demo_5_conversion() {
     }"
     show_after "Parameter type changed to ICustomerRepository — now testable with mocks"
 
-    step "5d. Convert EmailService parameter to constructor injection"
-    show_before "RegisterCustomer takes EmailService as method parameter"
-    run_tool "convert-to-constructor-injection" "{
-        \"solutionPath\": \"$SLN\",
-        \"filePath\": \"$SRC/CustomerService.cs\",
-        \"methodParameters\": [{\"method\": \"RegisterCustomer\", \"parameter\": \"emailService\"}],
-        \"useProperty\": false
-    }"
-    show_after "EmailService is now constructor-injected as a field"
-
-    step "5e. Make OrderProcessor._paymentGateway readonly"
+    step "5d. Make OrderProcessor._paymentGateway readonly"
     show_before "_paymentGateway is set only in constructor but not marked readonly"
     run_tool "make-field-readonly" "{
         \"solutionPath\": \"$SLN\",
@@ -254,7 +242,7 @@ demo_5_conversion() {
     }"
     show_after "_paymentGateway is now readonly — compiler enforces immutability"
 
-    step "5f. Transform StockSnapshot setters to init-only"
+    step "5e. Transform StockSnapshot setters to init-only"
     show_before "StockSnapshot properties have regular setters but are only set during creation"
     run_tool "transform-setter-to-init" "{
         \"solutionPath\": \"$SLN\",
@@ -329,25 +317,25 @@ demo_7_cleanup() {
 
     step "7a. Safe-delete unused LegacyExportXml method from OrderProcessor"
     show_before "LegacyExportXml is never called anywhere in the solution"
-    run_tool "safe-delete-method" "{
+    run_tool "safe-delete-member" "{
         \"solutionPath\": \"$SLN\",
         \"filePath\": \"$SRC/OrderProcessor.cs\",
-        \"methodName\": \"LegacyExportXml\"
+        \"memberName\": \"LegacyExportXml\"
     }"
     show_after "Dead method removed safely — tool verified no callers exist"
 
     step "7b. Safe-delete unused _migrationTimestamp field from OrderProcessor"
     show_before "_migrationTimestamp is declared but never read or written"
-    run_tool "safe-delete-field" "{
+    run_tool "safe-delete-member" "{
         \"solutionPath\": \"$SLN\",
         \"filePath\": \"$SRC/OrderProcessor.cs\",
-        \"fieldName\": \"_migrationTimestamp\"
+        \"memberName\": \"_migrationTimestamp\"
     }"
     show_after "Unused field removed — no references found"
 
     step "7c. Safe-delete unused 'verbose' parameter from GetCustomerSummary"
     show_before "GetCustomerSummary has 'verbose' parameter but never uses it"
-    run_tool "safe-delete-parameter" "{
+    run_tool "remove-unused-parameter" "{
         \"solutionPath\": \"$SLN\",
         \"filePath\": \"$SRC/CustomerService.cs\",
         \"methodName\": \"GetCustomerSummary\",
@@ -355,11 +343,12 @@ demo_7_cleanup() {
     }"
     show_after "Unused parameter removed from method and all call sites"
 
-    step "7d. Safe-delete unused 'separator' variable in ReportGenerator"
-    run_tool "safe-delete-variable" "{
+    step "7d. Safe-delete unused 'separator' local in ReportGenerator"
+    run_tool "safe-delete-local" "{
         \"solutionPath\": \"$SLN\",
         \"filePath\": \"$SRC/ReportGenerator.cs\",
-        \"selectionRange\": \"68:9-68:58\"
+        \"line\": 74,
+        \"column\": 16
     }"
     show_after "Unused local variable removed"
 

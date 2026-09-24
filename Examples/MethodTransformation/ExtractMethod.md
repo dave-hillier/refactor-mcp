@@ -130,6 +130,7 @@ public class OrderProcessor
 ### Tool Usage
 ```bash
 dotnet run --project RefactorMCP.ConsoleApp -- --json extract-method '{
+    "solutionPath": "MyProject.sln",
     "filePath": "OrderProcessor.cs",
     "startLine": 12,
     "endLine": 32,

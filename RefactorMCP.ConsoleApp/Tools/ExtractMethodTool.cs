@@ -19,11 +19,10 @@ public static class ExtractMethodTool
     {
         try
         {
-            return await RefactoringHelpers.RunWithSolutionOrFile(
+            return await RefactoringHelpers.RunWithSolution(
                 solutionPath,
                 filePath,
-                doc => ExtractMethodWithSolution(doc, selectionRange, methodName),
-                path => ExtractMethodSingleFile(path, selectionRange, methodName));
+                doc => ExtractMethodWithSolution(doc, selectionRange, methodName));
         }
         catch (Exception ex)
         {
@@ -244,61 +243,6 @@ public static class ExtractMethodTool
         var line = early.GetLocation().GetLineSpan().StartLinePosition.Line + 1;
         throw new McpException(
             $"Error: The extracted block returns from '{containingMethod.Identifier.ValueText}' at line {line}, which the new method cannot do for it");
-    }
-
-    private static async Task<string> ExtractMethodSingleFile(string filePath, string selectionRange, string methodName)
-    {
-        var semanticModel = await RefactoringHelpers.GetOrCreateSemanticModelAsync(filePath);
-        return await RefactoringHelpers.ApplySingleFileEdit(
-            filePath,
-            text => ExtractMethodInSource(text, selectionRange, methodName, semanticModel),
-            $"Successfully extracted method '{methodName}' from {selectionRange} in {filePath} (single file mode)");
-    }
-
-    public static string ExtractMethodInSource(string sourceText, string selectionRange, string methodName, SemanticModel? model = null)
-    {
-        var syntaxTree = model?.SyntaxTree ?? CSharpSyntaxTree.ParseText(sourceText);
-        var syntaxRoot = syntaxTree.GetRoot();
-        var text = syntaxTree.GetText();
-        var span = RefactoringHelpers.ParseSelectionRange(text, selectionRange);
-
-        var selectedNodes = syntaxRoot.DescendantNodes()
-            .Where(n => span.Contains(n.Span))
-            .ToList();
-
-        if (!selectedNodes.Any())
-            throw new McpException("Error: No valid code selected");
-
-        var containingMethod = selectedNodes.First().Ancestors().OfType<MethodDeclarationSyntax>().FirstOrDefault();
-        if (containingMethod == null)
-            throw new McpException("Error: Selected code is not within a method");
-        if (containingMethod.Body == null)
-        {
-            if (containingMethod.ExpressionBody != null)
-                throw new McpException("Error: Extraction from expression-bodied methods is not supported");
-
-            throw new McpException("Error: Selected code is not within a block-bodied method");
-        }
-
-        var statementsToExtract = containingMethod.Body.Statements
-            .Where(s => span.IntersectsWith(s.FullSpan))
-            .ToList();
-
-        if (!statementsToExtract.Any())
-            throw new McpException("Error: Selected code does not contain extractable statements");
-
-        var containingClass = containingMethod.Ancestors().OfType<ClassDeclarationSyntax>().FirstOrDefault();
-        EnsureDeclaredLocalsStayInside(containingMethod, statementsToExtract, model);
-        EnsureAssignedLocalsStayInside(
-            containingMethod,
-            TextSpan.FromBounds(statementsToExtract.First().SpanStart, statementsToExtract.Last().Span.End),
-            model?.AnalyzeDataFlow(statementsToExtract.First(), statementsToExtract.Last()),
-            model);
-        var rewriter = new ExtractMethodRewriter(containingMethod, containingClass, statementsToExtract, methodName, model, span);
-        var newRoot = rewriter.Visit(syntaxRoot);
-
-        var formattedRoot = Formatter.Format(newRoot, RefactoringHelpers.SharedWorkspace);
-        return formattedRoot.ToFullString();
     }
 
     /// <summary>

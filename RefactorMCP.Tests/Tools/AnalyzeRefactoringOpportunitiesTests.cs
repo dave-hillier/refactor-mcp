@@ -22,8 +22,8 @@ public class AnalyzeRefactoringOpportunitiesTests : IDisposable
     {
         await LoadSolutionTool.LoadSolution(SolutionPath);
         var result = await AnalyzeRefactoringOpportunitiesTool.AnalyzeRefactoringOpportunities(SolutionPath, ExampleFilePath);
-        Assert.Contains("safe-delete-field", result, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("safe-delete-method", result, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("make-static", result, StringComparison.OrdinalIgnoreCase);
+        Assert.Matches(@"Field '\w+' appears unused -> safe-delete-member", result);
+        Assert.Matches(@"Method '\w+' appears unused -> safe-delete-member", result);
+        Assert.Contains("make-method-static", result, StringComparison.OrdinalIgnoreCase);
     }
 }

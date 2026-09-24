@@ -34,7 +34,7 @@ namespace RefactorMCP.ConsoleApp.SyntaxWalkers
                 var accessesInstance = node.DescendantNodes().Any(n => n is ThisExpressionSyntax ||
                     n is MemberAccessExpressionSyntax ma && _model.GetSymbolInfo(ma).Symbol is { IsStatic: false });
                 if (!accessesInstance)
-                    Suggestions.Add($"Method '{node.Identifier}' does not access instance state -> make-static");
+                    Suggestions.Add($"Method '{node.Identifier}' does not access instance state -> make-method-static");
             }
         }
     }
