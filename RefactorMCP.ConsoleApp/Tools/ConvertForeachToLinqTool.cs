@@ -11,7 +11,7 @@ public static class ConvertForeachToLinqTool
 {
     [McpServerTool, Description("Convert a foreach loop that filters and projects into a list, sums, counts or looks for a match into a LINQ query in method syntax")]
     public static async Task<string> ConvertForeachToLinq(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Line of the foreach loop (1-based)")] int line,
         [Description("Column on that line inside the loop (1-based)")] int column,

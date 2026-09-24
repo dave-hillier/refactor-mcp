@@ -10,7 +10,7 @@ public static class DecomposeConditionalTool
 {
     [McpServerTool, Description("Extract the condition of an if statement and each of its branches into methods of their own")]
     public static async Task<string> DecomposeConditional(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Line of the if keyword (1-based)")] int line,
         [Description("Column of the if keyword (1-based)")] int column,

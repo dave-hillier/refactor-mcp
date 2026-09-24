@@ -10,7 +10,7 @@ public static class RemoveUnusedParameterTool
 {
     [McpServerTool, Description("Remove a parameter no body reads from a method, its overrides and implementations, and the argument every call passes for it")]
     public static async Task<string> RemoveUnusedParameter(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the method")] string filePath,
         [Description("Name of the method, or of the type for a constructor")] string methodName,
         [Description("Name of the parameter to remove")] string parameterName,

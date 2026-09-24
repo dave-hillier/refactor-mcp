@@ -15,7 +15,7 @@ public static class CollapseHierarchyTool
 {
     [McpServerTool, Description("Merge a class into its base class, or a base class into its only subclass: move its members across, make every reference name the class that stays, and delete it")]
     public static async Task<string> CollapseHierarchy(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the class to remove")] string filePath,
         [Description("Name of the class to remove")] string className,
         [Description("Name of the class to merge it into: its base class (the default) or its only direct subclass")] string? into = null,

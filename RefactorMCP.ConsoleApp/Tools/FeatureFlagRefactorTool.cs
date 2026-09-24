@@ -14,7 +14,7 @@ public static class FeatureFlagRefactorTool
         "each branch moves to the Apply method of its own class, and a private property named after the flag checks it " +
         "and returns the strategy to apply")]
     public static async Task<string> FeatureFlagRefactor(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Feature flag name")] string flagName,
         CancellationToken cancellationToken = default)

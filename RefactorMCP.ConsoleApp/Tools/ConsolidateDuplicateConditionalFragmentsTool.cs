@@ -12,7 +12,7 @@ public static class ConsolidateDuplicateConditionalFragmentsTool
 {
     [McpServerTool, Description("Move statements that start or end every branch of an if/else chain out of the conditional, before or after it")]
     public static async Task<string> ConsolidateDuplicateConditionalFragments(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Line of the first if keyword (1-based)")] int line,
         [Description("Column of the first if keyword (1-based)")] int column,

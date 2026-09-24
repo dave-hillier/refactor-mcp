@@ -13,7 +13,7 @@ public static class TransformSetterToInitTool
 {
     [McpServerTool, Description("Convert property setter to init-only setter (preferred for large C# file refactoring)")]
     public static async Task<string> TransformSetterToInit(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Name of the property to transform, optionally qualified by its type as Type.Property")] string propertyName)
     {

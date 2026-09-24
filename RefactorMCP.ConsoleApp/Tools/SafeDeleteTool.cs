@@ -15,7 +15,7 @@ public static class SafeDeleteTool
 {
     [McpServerTool, Description("Safely delete an unused field (preferred for large C# file refactoring)")]
     public static async Task<string> SafeDeleteField(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Name of the field to delete")] string fieldName)
     {
@@ -35,7 +35,7 @@ public static class SafeDeleteTool
 
     [McpServerTool, Description("Safely delete an unused method (preferred for large C# file refactoring)")]
     public static async Task<string> SafeDeleteMethod(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Name of the method to delete")] string methodName)
     {
@@ -55,7 +55,7 @@ public static class SafeDeleteTool
 
     [McpServerTool, Description("Safely delete an unused parameter from a method")]
     public static async Task<string> SafeDeleteParameter(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Name of the method containing the parameter")] string methodName,
         [Description("Name of the parameter to delete")] string parameterName)
@@ -76,7 +76,7 @@ public static class SafeDeleteTool
 
     [McpServerTool, Description("Safely delete a local variable using a line range")]
     public static async Task<string> SafeDeleteVariable(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Range of the variable declaration in format 'startLine:startCol-endLine:endCol'")] string selectionRange)
     {

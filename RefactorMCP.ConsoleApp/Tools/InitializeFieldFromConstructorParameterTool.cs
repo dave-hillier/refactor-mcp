@@ -13,7 +13,7 @@ public static class InitializeFieldFromConstructorParameterTool
 {
     [McpServerTool, Description("Assign a field that nothing uses yet from a constructor parameter, at the end of the constructor")]
     public static async Task<string> InitializeFieldFromConstructorParameter(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the constructor")] string filePath,
         [Description("Name of the class whose constructor assigns the field")] string className,
         [Description("Name of the field to assign")] string fieldName,

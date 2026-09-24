@@ -7,7 +7,7 @@ public static class MakeMethodAsyncTool
 {
     [McpServerTool, Description("Make a method that blocks on tasks async: it awaits them and returns a task, calls in async methods await it, and every other caller blocks on the task it returns")]
     public static async Task<string> MakeMethodAsync(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the method")] string filePath,
         [Description("Name of the method")] string methodName,
         [Description("A line of the method's declaration (1-based), to choose between overloads")] int? line = null,

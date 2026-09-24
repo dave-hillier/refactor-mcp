@@ -12,7 +12,7 @@ public static class ReplaceNestedConditionalWithGuardClausesTool
 {
     [McpServerTool, Description("Flatten nested if statements into guard clauses: an if ending a method or loop body becomes an early return or continue, and an else after a branch that always jumps away follows the if instead, repeatedly")]
     public static async Task<string> ReplaceNestedConditionalWithGuardClauses(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Line of the outermost if keyword (1-based)")] int line,
         [Description("Column of the outermost if keyword (1-based)")] int column,

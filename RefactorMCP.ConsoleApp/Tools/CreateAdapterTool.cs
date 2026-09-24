@@ -11,7 +11,7 @@ public static class CreateAdapterTool
     [McpServerTool, Description("Generate an adapter: a class implementing an interface by wrapping an existing class and " +
         "forwarding each interface member to the member it maps to, or to one of the same name, in a new file beside the class")]
     public static async Task<string> CreateAdapter(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the class to adapt")] string filePath,
         [Description("Name of the class to adapt")] string className,
         [Description("The interface the adapter implements, as written in the class's file, such as IRepository<Order>")] string interfaceName,

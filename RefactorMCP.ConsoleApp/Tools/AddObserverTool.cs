@@ -19,7 +19,7 @@ public static class AddObserverTool
     [McpServerTool, Description("Declare an event that a void method raises when it completes: an Action taking the " +
         "method's parameters, declared before the method and raised at its end and before each return")]
     public static async Task<string> AddObserver(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Name of the class containing the method")] string className,
         [Description("Name of the method to raise the event from")] string methodName,

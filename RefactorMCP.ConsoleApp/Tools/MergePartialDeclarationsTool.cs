@@ -19,7 +19,7 @@ public static class MergePartialDeclarationsTool
 
     [McpServerTool, Description("Merge every part of a partial type into the declaration in the given file, deleting files left empty")]
     public static async Task<string> MergePartialDeclarations(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file whose declaration receives the members")] string filePath,
         [Description("Name of the type")] string typeName,
         [Description("A line of the receiving declaration (1-based), when the file has several")] int? line = null,

@@ -16,7 +16,7 @@ public static class IntroduceFieldTool
         "A constant expression becomes a readonly field initialised where it is declared; any other expression is assigned to the field " +
         "just before the statement that uses it. With fieldType, adds a field of that type to the type containing the selection instead.")]
     public static async Task<string> IntroduceField(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Range in format 'startLine:startColumn-endLine:endColumn'")] string selectionRange,
         [Description("Name for the new field")] string fieldName,

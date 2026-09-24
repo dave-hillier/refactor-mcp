@@ -14,7 +14,7 @@ public static class MoveTypeToFileTool
 {
     [McpServerTool, Description("Move a top-level type to a separate file with the same name")]
     public static async Task<string> MoveToSeparateFile(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file containing the type")] string filePath,
         [Description("Name of the type to move")] string typeName,
         CancellationToken cancellationToken = default)

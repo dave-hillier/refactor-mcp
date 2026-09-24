@@ -10,7 +10,7 @@ public static class UseNamedArgumentsTool
 {
     [McpServerTool, Description("Name the arguments of the call at a position, leaving arguments already named and those passed to a params array")]
     public static async Task<string> UseNamedArguments(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file containing the call")] string filePath,
         [Description("Line inside the call (1-based)")] int line,
         [Description("Column inside the call (1-based)")] int column,

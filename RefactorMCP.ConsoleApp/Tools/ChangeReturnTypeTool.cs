@@ -16,7 +16,7 @@ public static class ChangeReturnTypeTool
 
     [McpServerTool, Description("Change a method's return type, with its overrides and implementations, when its body and every caller still compile and bind as before")]
     public static async Task<string> ChangeReturnType(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the method")] string filePath,
         [Description("Name of the method")] string methodName,
         [Description("The new return type, as written in C#")] string returnType,

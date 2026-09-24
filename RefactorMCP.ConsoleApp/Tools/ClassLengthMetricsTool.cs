@@ -13,7 +13,7 @@ public static class ClassLengthMetricsTool
 {
     [McpServerPrompt, Description("List all classes in the solution with their line counts")]
     public static async Task<string> ListClassLengths(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         CancellationToken cancellationToken = default)
     {
         try

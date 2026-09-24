@@ -11,7 +11,7 @@ public static class IntroduceUsingDeclarationTool
 {
     [McpServerTool, Description("Convert a using statement that ends its block into a using declaration (C# 8), unwrapping its body")]
     public static async Task<string> IntroduceUsingDeclaration(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Line of the using statement (1-based)")] int line,
         [Description("Column on that line inside the using statement (1-based)")] int column,

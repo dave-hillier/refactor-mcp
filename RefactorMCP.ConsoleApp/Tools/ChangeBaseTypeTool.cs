@@ -18,7 +18,7 @@ public static class ChangeBaseTypeTool
 
     [McpServerTool, Description("Set, replace or remove the base class of a class, refusing when code relies on the old base")]
     public static async Task<string> ChangeBaseType(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the class")] string filePath,
         [Description("Name of the class")] string className,
         [Description("The new base class; omit to remove the base class")] string? newBaseType = null,

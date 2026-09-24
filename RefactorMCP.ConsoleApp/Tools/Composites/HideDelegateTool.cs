@@ -21,7 +21,7 @@ public static class HideDelegateTool
     [McpServerTool, Description("Hide Delegate: give a class a member that forwards to a member of the object one of its fields or properties holds, " +
         "and repoint every client that reached through the field (person.Department.Manager becomes person.Manager).")]
     public static async Task<string> HideDelegate(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the field or property that holds the delegate")] string filePath,
         [Description("Name of the field or property holding the delegate, such as Department")] string delegateName,
         [Description("Name of the delegate's field, property or method that clients use, such as Manager")] string memberName,

@@ -10,7 +10,7 @@ public static class AddParameterDefaultValueTool
 {
     [McpServerTool, Description("Give a method parameter a default value, on its overrides and implementations too, optionally dropping arguments that pass the same value")]
     public static async Task<string> AddParameterDefaultValue(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the method")] string filePath,
         [Description("Name of the method, or of the type for a constructor")] string methodName,
         [Description("Name of the parameter to give a default")] string parameterName,

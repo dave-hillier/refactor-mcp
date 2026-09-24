@@ -17,7 +17,7 @@ public static class TypeAliasTool
 
     [McpServerTool, Description("Add a using alias for the type named at a position and use it wherever the file names that type")]
     public static async Task<string> IntroduceTypeAlias(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Line of the type's name (1-based)")] int line,
         [Description("Column of the type's name (1-based)")] int column,
@@ -68,7 +68,7 @@ public static class TypeAliasTool
 
     [McpServerTool, Description("Replace every use of a using alias with the type it names and remove the alias")]
     public static async Task<string> InlineTypeAlias(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the alias")] string filePath,
         [Description("Name of the alias")] string aliasName,
         CancellationToken cancellationToken = default)

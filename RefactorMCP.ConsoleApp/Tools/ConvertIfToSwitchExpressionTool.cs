@@ -11,7 +11,7 @@ public static class ConvertIfToSwitchExpressionTool
 {
     [McpServerTool, Description("Convert an if/else-if chain that compares one value, and whose branches each return a value or assign one variable, into a switch expression")]
     public static async Task<string> ConvertIfToSwitchExpression(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Line of the first if keyword (1-based)")] int line,
         [Description("Column of the first if keyword (1-based)")] int column,

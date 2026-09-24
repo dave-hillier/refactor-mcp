@@ -12,7 +12,7 @@ public static class ConsolidateConditionalExpressionTool
 {
     [McpServerTool, Description("Combine the conditions of ifs that lead to the same code into one if: nested ifs join with &&, consecutive ifs and else if branches with the same body join with ||, and the combined condition can be extracted into a method")]
     public static async Task<string> ConsolidateConditionalExpression(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Line of the first if keyword (1-based)")] int line,
         [Description("Column of the first if keyword (1-based)")] int column,

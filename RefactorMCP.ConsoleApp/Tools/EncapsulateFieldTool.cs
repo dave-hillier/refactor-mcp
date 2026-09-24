@@ -14,7 +14,7 @@ public static class EncapsulateFieldTool
 {
     [McpServerTool, Description("Encapsulate a field: make it private behind a property that reads and writes it, and point code outside the type at the property")]
     public static async Task<string> EncapsulateField(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the field")] string filePath,
         [Description("Name of the field to encapsulate")] string fieldName,
         [Description("Name for the property (optional, derived from the field name by default)")] string? propertyName = null)

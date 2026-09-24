@@ -244,7 +244,7 @@ public static class IntroduceParameterTool
     }
     [McpServerTool, Description("Create a new parameter from selected code (preferred for large C# file refactoring)")]
     public static async Task<string> IntroduceParameter(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Name of the method to add parameter to")] string methodName,
         [Description("Range in format 'startLine:startColumn-endLine:endColumn'")] string selectionRange,

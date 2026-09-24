@@ -12,7 +12,7 @@ public static class RemoveRedundantElseTool
 {
     [McpServerTool, Description("Remove the else of an if statement whose branch always jumps away (returns, throws, breaks or continues), so the else's statements follow the if; an else if becomes an if of its own")]
     public static async Task<string> RemoveRedundantElse(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Line of the if keyword (1-based)")] int line,
         [Description("Column of the if keyword (1-based)")] int column,

@@ -22,7 +22,7 @@ public static class ReplaceDelegationWithInheritanceTool
         "remove the members that only forward to the field, reach the rest through inheritance, and remove the field. " +
         "Refuses, changing nothing, when the field escapes, is assigned, or the class would hide a member of the new base.")]
     public static async Task<string> ReplaceDelegationWithInheritance(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the class")] string filePath,
         [Description("Name of the class")] string className,
         [Description("Name of the private field holding the delegate")] string fieldName,

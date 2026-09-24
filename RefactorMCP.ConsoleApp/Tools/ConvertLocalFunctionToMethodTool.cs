@@ -12,7 +12,7 @@ public static class ConvertLocalFunctionToMethodTool
 {
     [McpServerTool, Description("Convert a local function to a private method of the containing type; the variables it captures become parameters")]
     public static async Task<string> ConvertLocalFunctionToMethod(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Line of the local function's name, or of a call to it (1-based)")] int line,
         [Description("Column of that name (1-based)")] int column,

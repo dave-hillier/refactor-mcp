@@ -12,7 +12,7 @@ public static class JoinDeclarationAndAssignmentTool
 {
     [McpServerTool, Description("Join a local declaration without an initializer and its first assignment into one declaration")]
     public static async Task<string> JoinDeclarationAndAssignment(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Line of the local's declaration or of a use of it (1-based)")] int line,
         [Description("Column of the local's name on that line (1-based)")] int column,

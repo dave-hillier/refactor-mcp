@@ -15,7 +15,7 @@ public static class ConvertLinqToForeachTool
 
     [McpServerTool, Description("Convert a LINQ query of Where and Select ending in ToList, Sum, Count or Any, assigned to a local or returned, into a foreach loop")]
     public static async Task<string> ConvertLinqToForeach(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Line of the query (1-based)")] int line,
         [Description("Column on that line inside the query (1-based)")] int column,

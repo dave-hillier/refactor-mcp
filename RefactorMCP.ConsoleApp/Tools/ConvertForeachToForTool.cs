@@ -14,7 +14,7 @@ public static class ConvertForeachToForTool
 
     [McpServerTool, Description("Convert a foreach loop over an indexable collection (array, string, span or list) into a for loop over its indices")]
     public static async Task<string> ConvertForeachToFor(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Line of the foreach loop (1-based)")] int line,
         [Description("Column on that line inside the loop (1-based)")] int column,

@@ -21,7 +21,7 @@ internal static class SolutionFileChanges
 {
     private static readonly string[] ProjectFiles =
     {
-        ".csproj", ".sln", ".slnf", ".props", ".targets", ".csx"
+        ".csproj", ".sln", ".slnx", ".slnf", ".props", ".targets", ".csx"
     };
 
     private static readonly string[] ProjectFileNames =

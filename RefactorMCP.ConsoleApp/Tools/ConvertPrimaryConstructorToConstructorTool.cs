@@ -11,7 +11,7 @@ public static class ConvertPrimaryConstructorToConstructorTool
 {
     [McpServerTool, Description("Replace a class or struct's primary constructor with an explicit constructor, storing captured parameters in private fields")]
     public static async Task<string> ConvertPrimaryConstructorToConstructor(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the class or struct")] string filePath,
         [Description("Name of the class or struct")] string typeName,
         [Description("A line of the declaration (1-based), to choose between types of the same name")] int? line = null,

@@ -12,7 +12,7 @@ public static class ConvertIfChainToSwitchTool
 {
     [McpServerTool, Description("Convert an if/else-if chain that compares one value with constants or patterns into a switch statement")]
     public static async Task<string> ConvertIfChainToSwitch(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Line of the first if keyword (1-based)")] int line,
         [Description("Column of the first if keyword (1-based)")] int column,

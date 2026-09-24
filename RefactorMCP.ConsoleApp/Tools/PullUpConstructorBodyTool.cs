@@ -13,7 +13,7 @@ public static class PullUpConstructorBodyTool
 {
     [McpServerTool, Description("Move the leading statements of a constructor that only set up the base class into a base constructor, and chain to it")]
     public static async Task<string> PullUpConstructorBody(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the constructor")] string filePath,
         [Description("Name of the class declaring the constructor")] string className,
         [Description("Line of the constructor's declaration, to choose between several (optional)")] int? line = null,

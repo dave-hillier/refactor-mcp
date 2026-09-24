@@ -12,6 +12,7 @@ public class SolutionFileChangesTests
     [InlineData("src/App.cs", FileChangeAction.Reload, WatcherChangeTypes.Deleted)]
     [InlineData("src/App.csproj", FileChangeAction.Reload)]
     [InlineData("App.sln", FileChangeAction.Reload)]
+    [InlineData("App.slnx", FileChangeAction.Reload)]
     [InlineData("Directory.Build.props", FileChangeAction.Reload)]
     [InlineData("Directory.Packages.props", FileChangeAction.Reload)]
     [InlineData("global.json", FileChangeAction.Reload)]

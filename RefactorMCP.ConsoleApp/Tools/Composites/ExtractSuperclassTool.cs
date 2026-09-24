@@ -20,7 +20,7 @@ public static class ExtractSuperclassTool
         "make the class derive from it, and pull the named fields and methods up into it. " +
         "Refuses, changing nothing, if any step would.")]
     public static async Task<string> ExtractSuperclass(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the class")] string filePath,
         [Description("Name of the class to extract from")] string className,
         [Description("Name of the new superclass")] string superclassName,

@@ -12,7 +12,7 @@ public static class InvertIfTool
 {
     [McpServerTool, Description("Negate the condition of an if statement and swap its branches, introducing or removing an early return or continue when it has no else")]
     public static async Task<string> InvertIf(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Line of the if keyword (1-based)")] int line,
         [Description("Column of the if keyword (1-based)")] int column,

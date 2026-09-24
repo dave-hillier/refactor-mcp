@@ -26,7 +26,7 @@ public static class ChangeSignatureTool
 {
     [McpServerTool, Description("Add, remove and reorder the parameters of a method or constructor, updating every call, override and interface implementation in the solution")]
     public static async Task<string> ChangeSignature(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the method")] string filePath,
         [Description("Name of the method, or of the type for a constructor")] string methodName,
         [Description("The new parameter list in order. Existing parameters are given by name; a new one also gives its type and either the value existing calls pass or a default")] SignatureParameter[] parameters,

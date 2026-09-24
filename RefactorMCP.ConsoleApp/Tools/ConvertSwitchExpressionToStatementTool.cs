@@ -13,7 +13,7 @@ public static class ConvertSwitchExpressionToStatementTool
 {
     [McpServerTool, Description("Convert a switch expression that is returned, assigned or used to initialise a local into a switch statement")]
     public static async Task<string> ConvertSwitchExpressionToStatement(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Line of the switch keyword (1-based)")] int line,
         [Description("Column of the switch keyword (1-based)")] int column,

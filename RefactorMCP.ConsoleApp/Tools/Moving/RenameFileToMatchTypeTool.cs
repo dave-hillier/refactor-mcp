@@ -17,7 +17,7 @@ public static class RenameFileToMatchTypeTool
     [McpServerTool, Description("Rename a C# file to the name of the single top-level type it declares, " +
         "keeping it in the same folder and project")]
     public static async Task<string> RenameFileToMatchType(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file to rename")] string filePath,
         CancellationToken cancellationToken = default)
     {

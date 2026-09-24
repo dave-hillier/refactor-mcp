@@ -12,7 +12,7 @@ public static class ConvertExtensionMethodToStaticTool
     [McpServerTool, Description("Convert an extension method to an ordinary static method by removing 'this' " +
         "from its first parameter; extension-style calls across the solution become static calls")]
     public static async Task<string> ConvertExtensionMethodToStatic(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the method")] string filePath,
         [Description("Name of the extension method")] string methodName,
         [Description("Line of the method's declaration (1-based, optional), to choose between overloads")] int? line = null,

@@ -12,7 +12,7 @@ public static class ParameteriseMethodTool
 {
     [McpServerTool, Description("Replace methods that differ only in literal values with one method taking those values as parameters, and make every call pass its method's values")]
     public static async Task<string> ParameteriseMethod(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the methods")] string filePath,
         [Description("The similar methods, by name; the first becomes the parameterised method")] string[] methods,
         [Description("Name of the parameterised method")] string name,

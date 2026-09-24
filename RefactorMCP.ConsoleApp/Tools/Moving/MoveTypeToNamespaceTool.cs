@@ -17,7 +17,7 @@ public static class MoveTypeToNamespaceTool
     [McpServerTool, Description("Move a top-level type to another namespace, updating qualified references " +
         "and adding usings across the solution. The type stays in its file.")]
     public static async Task<string> MoveTypeToNamespace(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the type")] string filePath,
         [Description("Name of the type to move")] string typeName,
         [Description("The namespace to move the type to, e.g. Shop.Billing")] string targetNamespace,

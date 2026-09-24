@@ -12,7 +12,7 @@ public static class RedirectCallsWithConstantArgumentTool
 {
     [McpServerTool, Description("Make calls that pass a constant for a parameter call the method the original runs for that value directly, without the parameter")]
     public static async Task<string> RedirectCallsWithConstantArgument(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the method whose calls are redirected")] string filePath,
         [Description("Name of the method whose calls are redirected")] string methodName,
         [Description("The parameter the calls pass the constant for")] string parameterName,

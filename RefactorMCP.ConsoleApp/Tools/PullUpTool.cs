@@ -11,7 +11,7 @@ public static class PullUpTool
 {
     [McpServerTool, Description("Move a field into the base class, removing identical copies from the other subclasses")]
     public static async Task<string> PullUpField(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the field")] string filePath,
         [Description("Name of the class declaring the field")] string className,
         [Description("Name of the field to pull up")] string fieldName,
@@ -78,7 +78,7 @@ public static class PullUpTool
 
     [McpServerTool, Description("Move a method into the base class, or declare it abstract there, removing identical copies from the other subclasses")]
     public static async Task<string> PullUpMethod(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the method")] string filePath,
         [Description("Name of the class declaring the method")] string className,
         [Description("Name of the method to pull up")] string methodName,

@@ -10,7 +10,7 @@ public static class MakeTypePartialTool
 {
     [McpServerTool, Description("Add the partial modifier to a class, struct, record or interface")]
     public static async Task<string> MakeTypePartial(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the type")] string filePath,
         [Description("Name of the type")] string typeName,
         [Description("A line of the declaration (1-based), to choose between types of the same name")] int? line = null,

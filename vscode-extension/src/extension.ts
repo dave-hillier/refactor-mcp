@@ -156,7 +156,7 @@ async function findSolutionFile(): Promise<string | undefined> {
         return undefined;
     }
 
-    const matches = await vscode.workspace.findFiles('**/*.sln', '**/node_modules/**', 1);
+    const matches = await vscode.workspace.findFiles('**/*.{sln,slnx}', '**/node_modules/**', 1);
     return matches.length > 0 ? matches[0].fsPath : undefined;
 }
 

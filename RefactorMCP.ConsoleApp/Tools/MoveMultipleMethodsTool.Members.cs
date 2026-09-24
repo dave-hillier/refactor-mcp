@@ -17,7 +17,7 @@ public static partial class MoveMultipleMethodsTool
         "methods before the ones that call them. Instance methods move through a field, property or parameter (via, or the one of targetType); " +
         "static methods move to the target type. Refuses, changing nothing, if any move would.")]
     public static async Task<string> MoveMultipleMethods(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the class")] string filePath,
         [Description("Name of the class declaring the methods")] string className,
         [Description("Names of the methods to move; a name moves every overload")] string[] methodNames,

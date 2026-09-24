@@ -12,7 +12,7 @@ public static class ConvertToBlockBodyTool
 {
     [McpServerTool, Description("Convert an expression-bodied method, property, indexer, accessor, constructor, operator or local function to a block body")]
     public static async Task<string> ConvertToBlockBody(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Line of the member's name, or of the accessor's keyword (1-based)")] int line,
         [Description("Column on that line (1-based)")] int column,

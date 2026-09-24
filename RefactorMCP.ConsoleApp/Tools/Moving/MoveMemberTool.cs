@@ -16,7 +16,7 @@ public static class MoveMemberTool
         "A static member moves to the named target type, which is created as a static class if it does not exist. " +
         "A moved method can leave a delegating stub behind instead of its callers being updated.")]
     public static async Task<string> MoveMember(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the member")] string filePath,
         [Description("Name of the method, field or property to move")] string memberName,
         [Description("For an instance member: the field, property or parameter whose type to move the member to")] string? via = null,

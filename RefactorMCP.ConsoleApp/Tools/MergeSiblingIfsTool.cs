@@ -11,7 +11,7 @@ public static class MergeSiblingIfsTool
 {
     [McpServerTool, Description("Merge an if statement with the else if or the if statement after it when both have the same body, into one if on both conditions joined by ||; a following if statement must share a body that always jumps away")]
     public static async Task<string> MergeSiblingIfs(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Line of the first if keyword (1-based)")] int line,
         [Description("Column of the first if keyword (1-based)")] int column,

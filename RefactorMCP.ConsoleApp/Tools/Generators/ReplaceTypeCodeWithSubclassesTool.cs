@@ -25,7 +25,7 @@ public static class ReplaceTypeCodeWithSubclassesTool
         "the code parameter, and a static Create factory maps a code to its subclass. Constructions that pass a known " +
         "code construct the subclass; the rest call the factory.")]
     public static async Task<string> ReplaceTypeCodeWithSubclasses(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the field")] string filePath,
         [Description("Name of the enum field holding the type code")] string fieldName,
         CancellationToken cancellationToken = default)

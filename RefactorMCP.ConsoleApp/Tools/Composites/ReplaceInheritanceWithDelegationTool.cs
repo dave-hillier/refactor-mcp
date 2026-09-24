@@ -23,7 +23,7 @@ public static class ReplaceInheritanceWithDelegationTool
         "reach inherited members through it, add forwarding members for the inherited members other code uses, and remove the base class. " +
         "Refuses, changing nothing, when the class overrides base members, uses protected ones, or code relies on it being its base class.")]
     public static async Task<string> ReplaceInheritanceWithDelegation(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the class")] string filePath,
         [Description("Name of the class")] string className,
         [Description("Name of the field that holds the old base class (optional, defaults to _ and the base class name in camel case)")] string? fieldName = null,

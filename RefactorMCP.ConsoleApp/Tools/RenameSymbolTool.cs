@@ -15,7 +15,7 @@ public static class RenameSymbolTool
 {
     [McpServerTool, Description("Rename a symbol across the solution using Roslyn, renaming the file of a type named after it")]
     public static async Task<string> RenameSymbol(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file containing the symbol")] string filePath,
         [Description("Current name of the symbol")] string oldName,
         [Description("New name for the symbol")] string newName,

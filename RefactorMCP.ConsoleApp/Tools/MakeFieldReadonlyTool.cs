@@ -15,7 +15,7 @@ public static class MakeFieldReadonlyTool
 {
     [McpServerTool, Description("Make a field readonly if assigned only during initialization (preferred for large C# file refactoring)")]
     public static async Task<string> MakeFieldReadonly(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Name of the field to make readonly, optionally qualified by its type as Type.field")] string fieldName,
         CancellationToken cancellationToken = default)

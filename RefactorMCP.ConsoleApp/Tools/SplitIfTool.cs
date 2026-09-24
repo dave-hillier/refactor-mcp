@@ -12,7 +12,7 @@ public static class SplitIfTool
 {
     [McpServerTool, Description("Split an if statement on its first && into nested ifs, or on its first || into two ifs with the same body")]
     public static async Task<string> SplitIf(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Line of the if keyword (1-based)")] int line,
         [Description("Column of the if keyword (1-based)")] int column,

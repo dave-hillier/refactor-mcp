@@ -11,7 +11,7 @@ public static class ConvertAnonymousTypeToClassTool
 {
     [McpServerTool, Description("Replace an anonymous type with a named class that keeps its value equality and ToString, constructing it throughout the containing member")]
     public static async Task<string> ConvertAnonymousTypeToClass(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file containing the anonymous object creation")] string filePath,
         [Description("Line of the anonymous object creation (1-based)")] int line,
         [Description("Column of the anonymous object creation (1-based)")] int column,

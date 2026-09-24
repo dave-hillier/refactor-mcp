@@ -13,7 +13,7 @@ public static class ConvertTupleToNamedTypeTool
 
     [McpServerTool, Description("Replace a tuple in a method's return type or a parameter with a named positional record, updating the body and callers")]
     public static async Task<string> ConvertTupleToNamedType(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the method")] string filePath,
         [Description("Name of the method")] string methodName,
         [Description("Name of the new type")] string typeName,

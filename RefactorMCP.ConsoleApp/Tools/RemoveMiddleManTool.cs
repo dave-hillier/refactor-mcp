@@ -13,7 +13,7 @@ public static class RemoveMiddleManTool
 {
     [McpServerTool, Description("Remove the methods and properties of a class that only delegate to one of its fields or properties, making their callers use that delegate directly")]
     public static async Task<string> RemoveMiddleMan(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the class")] string filePath,
         [Description("Name of the class that delegates")] string className,
         [Description("Name of the field or property holding the delegate")] string via,

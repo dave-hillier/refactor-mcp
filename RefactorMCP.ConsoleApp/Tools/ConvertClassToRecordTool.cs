@@ -23,7 +23,7 @@ public static class ConvertClassToRecordTool
 
     [McpServerTool, Description("Convert a class whose state is fixed by its constructor into a record, positional where the constructor only assigns properties, refusing when record equality or ToString would change behaviour")]
     public static async Task<string> ConvertClassToRecord(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the class")] string filePath,
         [Description("Name of the class")] string typeName,
         [Description("A line of the declaration (1-based), to choose between types of the same name")] int? line = null,

@@ -28,7 +28,7 @@ public static class ReplaceConstructorWithFactoryMethodTool
 
     [McpServerTool, Description("Add a static factory method for a constructor, narrow the constructor, and call the factory wherever the constructor was called")]
     public static async Task<string> ReplaceConstructorWithFactoryMethod(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the constructor")] string filePath,
         [Description("Name of the type whose constructor is replaced")] string typeName,
         [Description("A line of the constructor (1-based), to choose between overloads")] int? line = null,

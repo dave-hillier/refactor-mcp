@@ -11,7 +11,7 @@ public static class ConvertLambdaToMethodGroupTool
 {
     [McpServerTool, Description("Replace a lambda that only passes its parameters to a method, such as x => Format(x), with the method group Format")]
     public static async Task<string> ConvertLambdaToMethodGroup(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Line of a position inside the lambda (1-based)")] int line,
         [Description("Column of that position (1-based)")] int column,

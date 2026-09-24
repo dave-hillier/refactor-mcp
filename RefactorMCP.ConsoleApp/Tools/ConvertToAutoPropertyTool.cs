@@ -13,7 +13,7 @@ public static class ConvertToAutoPropertyTool
 {
     [McpServerTool, Description("Convert a property whose accessors only read and write a private field into an auto-property, removing the field")]
     public static async Task<string> ConvertToAutoProperty(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the property")] string filePath,
         [Description("Name of the property to convert")] string propertyName)
     {

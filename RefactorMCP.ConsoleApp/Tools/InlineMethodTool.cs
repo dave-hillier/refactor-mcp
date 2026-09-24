@@ -67,7 +67,7 @@ public static class InlineMethodTool
 
     [McpServerTool, Description("Inline a method, or a read-only property whose getter computes its value, at every use and remove its declaration (preferred for large C# file refactoring)")]
     public static async Task<string> InlineMethod(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file containing the method")] string filePath,
         [Description("Name of the method or property to inline")] string methodName,
         [Description("Line of the member's declaration, to choose between overloads (1-based, optional)")] int? line = null)

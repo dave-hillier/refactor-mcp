@@ -38,7 +38,7 @@ public static class ChangeAccessibilityTool
 
     [McpServerTool, Description("Change the accessibility of a type or member, on every partial declaration, when every reference and override still compiles and binds as before")]
     public static async Task<string> ChangeAccessibility(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the type or member")] string filePath,
         [Description("Name of the type or member, or of the type for a constructor")] string memberName,
         [Description("public, internal, protected, private, protected internal or private protected")] string accessibility,

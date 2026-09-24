@@ -17,7 +17,7 @@ public static class MakeStaticThenMoveTool
         "The method takes the instance as its first parameter, every call passes it, and the target class is created as a static class if it does not exist. " +
         "Refuses, changing nothing, if either step would.")]
     public static async Task<string> MakeStaticThenMove(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file containing the method")] string filePath,
         [Description("Name of the method to convert and move")] string methodName,
         [Description("Name of the target class")] string targetClass,

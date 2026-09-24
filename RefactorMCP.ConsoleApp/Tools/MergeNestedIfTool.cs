@@ -12,7 +12,7 @@ public static class MergeNestedIfTool
 {
     [McpServerTool, Description("Merge an if statement whose only statement is another if into one if on both conditions joined by &&")]
     public static async Task<string> MergeNestedIf(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         [Description("Line of the outer if keyword (1-based)")] int line,
         [Description("Column of the outer if keyword (1-based)")] int column,

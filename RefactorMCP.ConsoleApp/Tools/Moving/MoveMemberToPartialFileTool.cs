@@ -20,7 +20,7 @@ public static class MoveMemberToPartialFileTool
     [McpServerTool, Description("Move a member of a partial type into the part declared in another file, " +
         "creating the file with a new part when it does not exist")]
     public static async Task<string> MoveMemberToPartialFile(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the member")] string filePath,
         [Description("Name of the member to move")] string memberName,
         [Description("Path to the file holding, or to hold, the other part of the type")] string targetFilePath,

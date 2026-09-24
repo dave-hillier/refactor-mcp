@@ -24,7 +24,7 @@ public static class ReplaceMethodWithMethodObjectTool
         "the parameters and the locals, and make the method create an instance for each call and run it. " +
         "Refuses, changing nothing, when the body cannot move.")]
     public static async Task<string> ReplaceMethodWithMethodObject(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file declaring the method")] string filePath,
         [Description("Name of the method")] string methodName,
         [Description("Name of the new class")] string className,

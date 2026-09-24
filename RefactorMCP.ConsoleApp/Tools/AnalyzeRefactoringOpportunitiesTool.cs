@@ -11,7 +11,7 @@ public static class AnalyzeRefactoringOpportunitiesTool
 {
     [McpServerPrompt, Description("Analyze a C# file for refactoring opportunities like long methods or unused code")]
     public static async Task<string> AnalyzeRefactoringOpportunities(
-        [Description("Absolute path to the solution file (.sln)")] string solutionPath,
+        [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         [Description("Path to the C# file")] string filePath,
         CancellationToken cancellationToken = default)
     {
