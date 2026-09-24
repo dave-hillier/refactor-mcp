@@ -7,6 +7,27 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>refactor-mcp</ToolCommandName>
+    <PackageId>RefactorMCP</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>Dave Hillier</Authors>
+    <Description>Roslyn-based C# refactoring tools served over the command line, a resident daemon and the Model Context Protocol.</Description>
+    <PackageTags>roslyn;refactoring;csharp;mcp;model-context-protocol</PackageTags>
+    <PackageLicenseExpression>MPL-2.0</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/dave-hillier/refactor-mcp</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/dave-hillier/refactor-mcp</PackageProjectUrl>
+    <RepositoryType>git</RepositoryType>
+    <!-- Run on whichever newer runtime the machine has; MSBuildLocator then finds the matching SDK. -->
+    <RollForward>Major</RollForward>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.Build" Version="17.7.2" ExcludeAssets="runtime" />
     <PackageReference Include="Microsoft.Build.Framework" Version="17.7.2" ExcludeAssets="runtime" />

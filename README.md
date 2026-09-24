@@ -7,6 +7,22 @@ loaded, and a Model Context Protocol server.
 All three dispatch through the same tool dispatcher and session, so a tool
 behaves the same however it is called.
 
+## Install
+
+RefactorMCP is published to NuGet as a .NET tool. It needs a .NET SDK (9.0 or
+later) on the machine, since solutions are loaded through MSBuild.
+
+```bash
+dotnet tool install --global RefactorMCP
+```
+
+This puts `refactor-mcp` on the path. To serve it to an MCP client, register
+the command `refactor-mcp` with the argument `mcp`.
+
+The examples below run from source with `dotnet run --project
+RefactorMCP.ConsoleApp --`; with the tool installed, `refactor-mcp` takes its
+place.
+
 ## Usage
 
 ```bash
@@ -78,6 +94,20 @@ Metrics and summaries are also available via the `metrics://` and `summary://` r
 
 * Run `dotnet test` to ensure all tests pass.
 * Format the code with `dotnet format` before opening a pull request.
+
+## Releasing
+
+Pushing a tag named `v<version>` (for example `v0.2.0`) runs the Publish
+workflow: it builds and tests at that version, pushes the package to NuGet
+using the `NUGET_API_KEY` repository secret, and creates a GitHub release with
+the package attached.
+
+To try the package locally first:
+
+```bash
+dotnet pack RefactorMCP.ConsoleApp -c Release -o artifacts
+dotnet tool install --global RefactorMCP --add-source ./artifacts
+```
 
 ## License
 
