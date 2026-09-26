@@ -14,7 +14,9 @@ using System.Threading;
 [McpServerToolType]
 public static class LoadSolutionTool
 {
-    [McpServerTool, Description("Start a new session by clearing caches then load a solution file")]
+    [McpServerTool, Description("Optional: every tool loads the solution it is given on first use. " +
+        "This clears every loaded solution and cache, then loads this one and lists its projects. " +
+        "Use it to start afresh or to load a large solution before the first refactoring")]
     public static async Task<string> LoadSolution(
         [Description("Absolute path to the solution file (.sln or .slnx)")] string solutionPath,
         IProgress<string>? progress = null,

@@ -40,8 +40,12 @@ Most examples below show only the arguments that matter for the tool being
 demonstrated; fill in the rest the same way.
 
 ### Loading a Solution
-A solution is loaded on demand by the first tool that needs it. Loading it
-explicitly starts a fresh session, which clears cached data:
+A solution is loaded on demand by the first tool that needs it, so every tool
+takes `solutionPath` and `load-solution` is optional. Each call names its
+solution, which keeps it independent of what was loaded earlier: it still works
+after the server restarts, and with several solutions loaded at once.
+Loading a solution explicitly starts a fresh session, clearing every loaded
+solution and cached data, and lists the solution's projects:
 
 ```bash
 refactor load-solution --solution ./RefactorMCP.sln
@@ -2285,7 +2289,7 @@ classes and methods.
 Metrics are cached under your home directory, in `~/.refactor-mcp/<solution>-<hash>/metrics/`, so nothing is written into the repository you are working on. The hash comes from the solution's full path and keeps two checkouts of the same solution apart. Set `REFACTOR_MCP_HOME` to use a different root than `~/.refactor-mcp`. The path below the metrics folder mirrors the solution's folder structure. For example metrics for `RefactorMCP.Tests/ExampleCode.cs` in `RefactorMCP.sln` are written to:
 
 ```text
-~/.refactor-mcp/RefactorMCP-<hash>/metrics/RefactorMCP.Tests/ExampleCode.cs.json
+~/.refactor-mcp/RefactorMCP-<hash>/metrics/RefactorMCP.Tests/ExampleCode.json
 ```
 
 ## Summary Resource
