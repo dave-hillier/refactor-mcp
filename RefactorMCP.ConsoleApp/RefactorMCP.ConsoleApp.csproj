@@ -11,7 +11,7 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>refactor-mcp</ToolCommandName>
     <PackageId>RefactorMCP</PackageId>
-    <Version>0.1.0</Version>
+    <Version>0.2.0-preview.1</Version>
     <Authors>Dave Hillier</Authors>
     <Description>Roslyn-based C# refactoring tools served over the command line, a resident daemon and the Model Context Protocol.</Description>
     <PackageTags>roslyn;refactoring;csharp;mcp;model-context-protocol</PackageTags>

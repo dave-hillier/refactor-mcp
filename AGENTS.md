@@ -79,3 +79,19 @@ Keep messages actionable: *what happened*, *how to fix*.
 
 * MCP API reference (`ModelContextProtocol.Server` namespace).
 * Roslyn “Get started with syntax transformation” quick‑start for advanced tree rewrites.
+
+---
+
+## Cross-project type move qualification protocol
+
+For each early production use of `move-type-to-project`:
+
+1. Run `refactor-mcp move-type-to-project ... --dry-run true --no-daemon` before the write.
+2. Confirm source/target project identities, project-reference changes, namespace, all partial declarations and ABI/forwarder choice. Use the exact same arguments for the write, omitting `--dry-run true`.
+3. On `DEFECT_REPORT_REQUIRED`: **immediately surface the failure in the operating ChatGPT thread**, including stage, error, source/destination, rollback status and saved JSON path. Preserve the JSON.
+4. On RH, load `defectReportPayload` from the JSON, and submit with **`semantic plan defect-report create --payload $payload`**, where `$payload` is `ConvertTo-Json -Depth 25 -Compress` of the report's `defectReportPayload`; read it back with `ttd show <returned-ref>`.
+5. Put the canonical DefectReport reference visibly in the **same thread**. If Recorder fails, show **DEFECT REPORT SUBMISSION FAILED** with its output, and retain the JSON for retry.
+
+The report stores source/tool commits, environment, all paths, intended action, failed and successful steps, planned project-reference edits, compilation diagnostics, stack traces, and byte-exact rollback status. Retain verbose reporting for the initial several real work cycles; simplify only after qualification evidence supports doing so.
+
+Avoid applying a failed move manually before inspecting its rollback status. Keep test files and controlled fixtures outside production project roots. Use the RH Zellij tunnel for shell/build execution; close each finished pane to reclaim RH resources.

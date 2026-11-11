@@ -1317,6 +1317,59 @@ dotnet run --project RefactorMCP.ConsoleApp -- --json encapsulate-collection '{"
 
 <!-- Moving members and types: examples for this group's tools go below this line. -->
 
+`move-type-to-project` relocates any top-level C# class (including static or
+abstract), interface, record, record struct, struct, enum or delegate into another
+existing project in the loaded `.sln` / `.slnx`. Multiple declarations of a
+`partial` type move together to `<Type>.cs`, `<Type>.Part02.cs`, etc.
+Other types in the original files remain. It uses Roslyn to identify references,
+rewrite namespaces, identify the moved type's own project dependencies, and
+add the required `ProjectReference` edges. It rejects project-reference cycles
+and, by default, direct/transitive `*.Contracts -> *.Core` dependencies.
+
+Use `dryRun` first. The tool checks for new compiler diagnostics before any
+writes; persisted runs snapshot affected source/solution/project files, apply
+through MSBuildWorkspace, normalize SDK-style implicit `Compile` items, build
+the persisted solution, and reload it for verification. On failure, it restores
+those files byte-for-byte and reports whether rollback succeeded. Compilation
+intermediates (`obj/`, `bin/`) are external build outputs and can remain.
+
+```powershell
+refactor-mcp move-type-to-project --solution-path "D:\src\Objectified.slnx" --file-path "D:\src\Sem.Work.Core\WorkContract.cs" --type-name WorkContract --target-project-path "D:\src\Sem.Work.Contracts\Sem.Work.Contracts.csproj" --dry-run true --purpose "Move public work contract out of Core" --no-daemon
+refactor-mcp move-type-to-project --solution-path "D:\src\Objectified.slnx" --file-path "D:\src\Sem.Work.Core\WorkContract.cs" --type-name WorkContract --target-project-path "D:\src\Sem.Work.Contracts\Sem.Work.Contracts.csproj" --purpose "Move public work contract out of Core" --no-daemon
+```
+
+Options: `targetNamespace` preserves the existing namespace by default;
+`targetFilePath` chooses the first destination `.cs` file within the target
+project; `preserveBinaryCompatibility=true` optionally generates a
+`TypeForwardedTo` attribute in the original assembly for public, non-generic
+types whose full name is unchanged; `enforceContractsBoundary=false` disables
+the default architectural rule when explicitly authorized. Without forwarding,
+the tool reports that the public type's defining assembly changes and existing
+compiled consumers require recompilation.
+
+**Failures and defect reporting.** Any failed attempt emits
+`DEFECT_REPORT_REQUIRED` and saves a structured JSON report under
+`REFACTOR_MCP_HOME/defect-reports` or `~/.refactor-mcp/defect-reports`.
+It includes the source Git commit, tool build/commit, all source and destination
+paths, intent, completed and failed steps, attempted project references,
+diagnostics, exception/stack trace, file mutations and rollback status.
+For an Objectified-managed operation, the **operating ChatGPT thread must
+immediately report the failure visibly and submit a canonical DefectReport
+via RH Recorder**, using the embedded payload:
+
+```powershell
+$r = Get-Content -LiteralPath '<path from Reproduction JSON line>' -Raw | ConvertFrom-Json
+$payload = $r.defectReportPayload | ConvertTo-Json -Depth 25 -Compress
+semantic plan defect-report create --payload $payload
+ttd show <returned-defect-report-ref>
+```
+
+Paste the returned canonical reference, failed step, error and rollback status
+into the **same thread**. On Recorder submission failure, flag
+`DEFECT REPORT SUBMISSION FAILED` in the thread with the CLI output; retain
+the local JSON file for retry. Keep this verbose qualification protocol for
+the initial real-world runs, then reduce it after repeated successful uses.
+
 `move-member` moves a method, field or property. An instance member moves
 through a field, property or parameter of the target type (`via`), which
 becomes `this` in the target; a static member moves to `targetType`, created

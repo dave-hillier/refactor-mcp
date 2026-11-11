@@ -198,6 +198,23 @@ internal sealed class SolutionSession : IDisposable
         }
     }
 
+    /// <summary>Apply a prepared immutable solution through the loaded MSBuildWorkspace.</summary>
+    /// <remarks>The caller owns filesystem snapshots and rollback; a failed apply may have written files.</remarks>
+    public bool TryApplyChanges(Solution changed, IReadOnlyCollection<ApplyChangesKind> requiredChanges)
+    {
+        lock (_workspaceLock)
+        {
+            if (_workspace is null)
+                throw new InvalidOperationException("The solution workspace has not been loaded");
+            foreach (var kind in requiredChanges)
+            {
+                if (!_workspace.CanApplyChange(kind))
+                    throw new InvalidOperationException($"MSBuildWorkspace cannot persist {kind}; no changes were applied");
+            }
+            return _workspace.TryApplyChanges(changed);
+        }
+    }
+
     /// <summary>
     /// Makes <paramref name="path"/> absolute, resolving relative paths against
     /// the solution directory rather than the process's current directory.

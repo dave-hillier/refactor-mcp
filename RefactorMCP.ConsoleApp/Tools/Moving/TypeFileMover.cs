@@ -87,7 +87,7 @@ internal static class TypeFileMover
     /// The original file cut down to <paramref name="type"/> and the namespaces
     /// around it, keeping its header, usings and namespace form.
     /// </summary>
-    private static CompilationUnitSyntax OnlyType(MemberDeclarationSyntax type)
+    internal static CompilationUnitSyntax OnlyType(MemberDeclarationSyntax type)
     {
         MemberDeclarationSyntax kept = type;
         foreach (var container in type.Ancestors())

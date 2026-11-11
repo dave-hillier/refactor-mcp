@@ -21,7 +21,13 @@ internal static class Cli
 
     public static async Task<int> RunAsync(string[] args)
     {
-        if (args.Length == 0 || args[0] == "mcp")
+        if (args.Length == 0)
+        {
+            Console.WriteLine(Usage);
+            return 0;
+        }
+
+        if (args[0] == "mcp")
             return await McpCommand.RunAsync(args);
 
         switch (args[0])

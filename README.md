@@ -33,6 +33,10 @@ place.
 
 ## Usage
 
+Running `refactor-mcp` with no arguments displays CLI help. Invoke refactorings
+by name; MCP over stdio is opt-in through `refactor-mcp mcp`. The `serve`
+command is a resident CLI daemon, not an MCP HTTP endpoint.
+
 ```bash
 # Run a refactoring. Tool commands go to the daemon for that solution, which is
 # started on demand, so only the first call pays the MSBuild load.
@@ -107,7 +111,7 @@ when it cannot keep the code's behaviour.
 
 **Moving** – `move-member`, `move-multiple-methods`, `make-static-then-move`,
 `make-method-static`, `make-method-instance`, `move-to-separate-file`,
-`move-type-to-namespace`, `move-member-to-partial-file`, `make-type-partial`,
+`move-type-to-project`, `move-type-to-namespace`, `move-member-to-partial-file`, `make-type-partial`,
 `merge-partial-declarations`, `rename-file-to-match-type`,
 `sync-namespace-with-folder`, `convert-to-file-scoped-namespace`,
 `convert-to-block-namespace`, `cleanup-usings`, `create-type`.

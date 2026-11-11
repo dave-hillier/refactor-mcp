@@ -6,8 +6,8 @@ using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Server;
 
 /// <summary>
-/// The <c>mcp</c> verb (also what runs when the program is started with no
-/// arguments): serve the tools over the Model Context Protocol on stdio.
+/// The explicit <c>mcp</c> verb: serve tools over Model Context Protocol on stdio.
+/// Running the executable without arguments displays CLI usage instead.
 /// </summary>
 internal static class McpCommand
 {

@@ -96,6 +96,31 @@ internal static class NamespaceMover
         return updated;
     }
 
+    /// <summary>
+    /// Rewrite references to an existing type for a cross-project move while leaving
+    /// its declarations in place for subsequent extraction. Supports all partial parts.
+    /// Consumers receive globally-qualified references or simplifier annotations.
+    /// </summary>
+    internal static async Task<Solution> RewriteTypeReferencesOnlyAsync(
+        Solution solution, INamedTypeSymbol type, string newNamespace, CancellationToken cancellationToken)
+    {
+        var edits = new Dictionary<DocumentId, Dictionary<SyntaxNode, SyntaxNode>>();
+        var movedSpans = type.DeclaringSyntaxReferences
+            .Select(r => (r.SyntaxTree, r.Span)).ToList();
+        await RewriteReferencesAsync(solution, type, newNamespace, movedSpans, edits, cancellationToken);
+
+        var changed = solution;
+        foreach (var (id, replacements) in edits)
+        {
+            var document = solution.GetDocument(id)!;
+            var root = (CompilationUnitSyntax)(await document.GetSyntaxRootAsync(cancellationToken))!;
+            root = root.ReplaceNodes(replacements.Keys,
+                (original, rewritten) => replacements[original]);
+            changed = changed.WithDocumentSyntaxRoot(id, root);
+        }
+        return changed;
+    }
+
     /// <summary>A dotted name whose every part is an identifier.</summary>
     public static bool IsValidNamespace(string name) =>
         name.Split('.').All(part => SyntaxFacts.IsValidIdentifier(part) && SyntaxFacts.GetKeywordKind(part) == SyntaxKind.None);
